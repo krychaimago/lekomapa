@@ -1,0 +1,8 @@
+# Blok @przeprogramowani/10x-cli w CLAUDE.md jest generowany i nadpisywany przez `10x get` / `10x sync`.
+# Formatowanie go powoduje szum w diffie przy każdej synchronizacji.
+CLAUDE.md
+AGENTS.md
+
+dist
+.astro
+.wrangler

@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "typecheck": "astro check",
+    "prepare": "husky"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
