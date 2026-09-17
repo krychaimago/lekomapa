@@ -97,6 +97,14 @@ Skills must not write to `context/archive/`. Archived changes are immutable; if 
 
 <!-- END @przeprogramowani/10x-cli -->
 
+## Twarde reguły
+
+Trzy rzeczy, których naruszenie kosztuje najwięcej. Pełne brzmienie w sekcjach niżej.
+
+1. **Produkt informuje, nie diagnozuje** — nigdy „lek powoduje objaw", nigdy sugestia odstawienia lub zmiany dawki, nigdy porządkowanie leków wg podejrzenia. Szczegóły: `### Zasady komunikatów`.
+2. **Historia nie kłamie** — zmiana dawki zamyka okres i otwiera nowy, rdzeń wpisu niemodyfikowalny poza oknem korekty, lek się kończy z datą odstawienia zamiast znikać. Szczegóły: `### Nienaruszalność historii`.
+3. **RLS na każdej nowej tabeli** — polityki per-operacja i per-rola, od pierwszej migracji. To mechanizm izolacji danych zdrowotnych per-konto, nie opcja do odłożenia. Szczegóły: `### Konwencje kodu`.
+
 ## Projekt
 
 Osobisty dzienniczek leków i objawów. Dokumenty źródłowe: `context/foundation/prd.md` (wymagania) i `context/foundation/shape-notes.md` (ustalenia z sesji planistycznej wraz z odrzuconymi wariantami). Przeczytaj PRD przed pracą nad funkcją — poniżej są tylko rzeczy, których w nim nie widać albo których naruszenie kosztuje najwięcej.
@@ -127,7 +135,11 @@ Zestawianie objawów z lekami działa na osi czasu, więc historia nie może kł
 
 ### Jak pracować z autorką
 
-QA, nie programuje jeszcze, ~8h tygodniowo, termin 10.01.2027. Przy decyzjach projektowych podawaj warianty z kosztem (najszybszy / optymalny / najlepszy) zamiast jednego rozwiązania i nazywaj, co dany wybór przesądza na później.
+QA, nie programuje jeszcze, ~8h tygodniowo, termin 10.01.2027.
+
+- Pisz zwięźle, najważniejsze rzeczy w bulletach. Długie bloki prozy rozbijają skupienie i kosztują zrozumienie — to nie preferencja stylu.
+- Przy decyzjach projektowych podawaj warianty z kosztem (najszybszy / optymalny / najlepszy) zamiast jednego rozwiązania.
+- Nazywaj, co dany wybór przesądza na później.
 
 ## Stack
 
