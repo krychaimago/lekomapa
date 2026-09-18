@@ -36,3 +36,10 @@
 - **Problem**: Objaw „zmienna nie dociera" ma kilka równie prawdopodobnych przyczyn. Przy pierwszym wdrożeniu lekomapy dwie hipotezy były błędne, a jedna z nich pociągnęła niepotrzebne ponowne wdrożenie produkcji.
 - **Rule**: Zanim wdrożysz poprawkę na produkcję, zmierz, co runtime faktycznie widzi — tymczasowa trasa zwracająca typy i nazwy kluczy, nigdy wartości. Hipoteza bez pomiaru nie uzasadnia wdrożenia.
 - **Applies to**: implement, impl-review
+
+## Brakujący pakiet w locku naprawiaj jawną zależnością, nie regeneracją
+
+- **Context**: `npm ci` w CI pada komunikatem `Missing: <pakiet> from lock file`, a lokalnie wszystko przechodzi.
+- **Problem**: Warianty `wasm32` pakietów `sharp` i `@tailwindcss/oxide` wymagają `@emnapi/runtime` i `@emnapi/core`. npm na macOS tych wariantów nie wybiera, więc nie zapisuje ich zależności do locka; npm na Linuksie ich wymaga. Regeneracja locka na macOS problemu nie naprawia — sprawdzone dwukrotnie, także z `--os=linux --cpu=x64`. Objaw wychodzi wyłącznie w CI i wygląda na zepsuty lock, a lock jest poprawny dla platformy, na której powstał.
+- **Rule**: Dopisz brakujący pakiet do `devDependencies` z wersją, której żąda komunikat, i przegeneruj lock przez `npm install --package-lock-only`. Nie próbuj naprawiać tego regeneracją locka ani flagami `--os` / `--cpu`. Zależność dodaną w tym celu opisz w `CLAUDE.md`, inaczej ktoś usunie ją jako nieużywaną.
+- **Applies to**: implement, impl-review
