@@ -42,13 +42,13 @@ Zestawianie objawów z lekami działa na osi czasu, więc historia nie może kł
 
 QA, nie programuje jeszcze, ~8h tygodniowo, termin 10.01.2027.
 
-- Pisz zwięźle, najważniejsze rzeczy w bulletach. Długie bloki prozy rozbijają skupienie i kosztują zrozumienie — to nie preferencja stylu.
+- Pisz zwięźle, najważniejsze rzeczy w bulletach. Długie bloki prozy rozbijają skupienie i kosztują zrozumienie — to nie preferencja stylu. Wyjątek: ostrzeżenia o operacjach nieodwracalnych oraz sekwencje wielokrokowe, gdzie skrót grozi pomyleniem kolejności — tam pisz pełnymi zdaniami i nie kompresuj.
 - Przy decyzjach projektowych podawaj warianty z kosztem (najszybszy / optymalny / najlepszy) zamiast jednego rozwiązania.
 - Nazywaj, co dany wybór przesądza na później.
 
 ## Stack
 
-Projekt zescaffoldowany z `10x-astro-starter`: Astro 7 (SSR + API routes), React 19 (wyspy interaktywne), TypeScript, Tailwind 4, Supabase (PostgreSQL + auth + RLS), shadcn/ui, deploy na Cloudflare Workers. Log scaffoldu: `context/changes/bootstrap-verification/verification.md`.
+Lista technologii, setup, komendy, Supabase, CI i deploy: @README.md. Log scaffoldu ze startera `10x-astro-starter`: `context/changes/bootstrap-verification/verification.md`.
 
 `AGENTS.md` to symlink do tego pliku — jedno źródło reguł dla obu narzędzi.
 
@@ -56,19 +56,16 @@ Projekt zescaffoldowany z `10x-astro-starter`: Astro 7 (SSR + API routes), React
 
 ### Komendy
 
-- `npm run dev` — serwer deweloperski (runtime Cloudflare workerd)
-- `npm run build` — build produkcyjny (SSR przez `@astrojs/cloudflare`)
-- `npm run preview` — podgląd buildu produkcyjnego
-- `npm run lint` / `npm run lint:fix` — ESLint z regułami type-checked
-- `npm run format` — Prettier (z `prettier-plugin-astro` i `prettier-plugin-tailwindcss`)
-- `npm run typecheck` — `astro check`. CI ma to jako osobną bramkę, odpal przed pushem.
-- `npm run smoke` — test dymny ścieżki auth (`scripts/smoke.mjs`) przeciw działającemu serwerowi, zmienna `BASE_URL` (domyślnie `http://localhost:4321`). Uruchamiaj po aktualizacji zależności.
+Pełna lista: @package.json. Dwie rzeczy, których stamtąd nie widać:
 
-Pre-commit: husky + lint-staged uruchamia `eslint --fix` na `*.{ts,tsx,astro}` i `prettier --write` na `*.{json,css,md}`.
+- `npm run typecheck` odpal przed pushem — CI ma to jako osobną bramkę i wywróci się później niż ty.
+- `npm run smoke` uruchamiaj po każdej aktualizacji zależności. Wymaga osiągalnego Supabase.
 
 ### Renderowanie
 
-Pełny SSR (`output: "server"` w `astro.config.mjs`). Każda strona renderowana serwerowo. API routes muszą eksportować `const prerender = false`.
+Pełny SSR (`output: "server"` w `astro.config.mjs`). Każda strona renderowana serwerowo.
+
+API routes eksportują `export const prerender = false` mimo że przy `output: "server"` to i tak jest domyślne. Marker jest jawny celowo: gdyby `output` kiedykolwiek się zmieniło, trasy operujące na sesji i bazie zaczęłyby się prerenderować po cichu, a błąd wyszedłby dopiero na produkcji jako zwrócony z bufora stan cudzej sesji.
 
 ### Auth
 
@@ -100,20 +97,25 @@ Katalogi `src/lib/services/`, `src/components/hooks/` i `supabase/migrations/` t
 
 ### Środowisko
 
+Setup środowiska, Supabase i deploy: @README.md. Jedna rzecz, której tam nie ma:
+
 - Node.js 22.14.0 wg `.nvmrc`. Sprawdzone na v24.13.0: mimo ostrzeżenia `EBADENGINE` przy instalacji (`astro-eslint-parser` i `eslint-plugin-astro` deklarują `^22.22.3 || ^24.16.0 || >=26.3.0`) lint i build przechodzą czysto.
-- Zmienne: `SUPABASE_URL`, `SUPABASE_KEY`. Skopiuj `.env.example` do `.env` (Node) albo `.dev.vars` (lokalny Cloudflare, gitignorowany).
-- Lokalne Supabase: `npx supabase start` (wymaga Dockera).
-- Deploy: `npx wrangler deploy` (wymaga konta Cloudflare i autoryzacji `wrangler`).
 
 ### CI
 
-`.github/workflows/ci.yml`, push i PR do `main`, dwa joby:
-
-- `ci` — `npm ci`, `npx astro sync`, `npm run lint`, `npx astro check`, `npm run build`. Build wymaga sekretów repozytorium `SUPABASE_URL` i `SUPABASE_KEY`.
-- `smoke` — podnosi lokalne Supabase (`supabase start`), buduje, `npm run preview` na porcie 4321, `npm run smoke`.
+Definicja: @.github/workflows/ci.yml. Warunek, którego z pliku nie widać: job `ci` nie zbuduje się bez sekretów repozytorium `SUPABASE_URL` i `SUPABASE_KEY`.
 
 ### Kontekst projektu
 
 `context/foundation/` — PRD, shape-notes, tech-stack, lessons. `context/changes/` — zmiany w toku.
 
 Skille nie zapisują do `context/archive/`. Zarchiwizowane zmiany są niezmienne — jeśli docelowa ścieżka zaczyna się od `context/archive/`, przerwij i otwórz nową zmianę przez `/10x-new`.
+<!-- BEGIN @przeprogramowani/10x-cli -->
+
+## Moduł 1, Lekcja 5 — infrastruktura i pierwszy deploy
+
+Platforma wybrana i wdrożona: **Cloudflare Workers**, ścieżka `npx wrangler deploy` — nigdy `wrangler pages deploy`. Decyzja, historia operacyjna, zasady dostępu agenta do produkcji i rejestr ryzyk: `context/foundation/infrastructure.md`. Zatwierdzony plan pierwszego wdrożenia: `context/deployment/deploy-plan.md`.
+
+Materiał lekcyjny (router zadań, pięć kryteriów agent-friendly, cross-check antybiasowy): `docs/10xdevs/m1l5-infra.md` — treść jednorazowa, nie kontrakt projektu.
+
+<!-- END @przeprogramowani/10x-cli -->
