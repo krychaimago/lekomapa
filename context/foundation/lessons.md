@@ -22,3 +22,17 @@
 - **Problem**: Bez tej reguły historia zostaje naruszona i docelowo pokaże nieprawdę na wykresie objawów zestawionych z przyjmowanymi lekami.
 - **Rule**: Zawsze przy zmianie dawki zamknij bieżący okres i otwórz nowy, zamiast nadpisywać stary wpis.
 - **Applies to**: all
+
+## Weryfikuj wartość sekretu, nie obecność klucza
+
+- **Context**: Każde ustawianie sekretów Workera przez `wrangler secret put` — pierwsze wdrożenie, rotacja klucza, konfiguracja CI.
+- **Problem**: `wrangler secret put` przyjmuje pustą wartość bez ostrzeżenia, a `wrangler secret list` i `wrangler versions view` pokazują taki sekret jako istniejący. `astro:env` zamienia `""` na `undefined`, więc aplikacja zachowuje się dokładnie tak, jakby sekretu nie było — z komunikatem „nie skonfigurowano" zamiast błędu wskazującego przyczynę.
+- **Rule**: Po `wrangler secret put` zawsze potwierdź, że runtime widzi niepustą wartość. Obecność klucza na liście nie jest dowodem konfiguracji.
+- **Applies to**: implement, impl-review
+
+## Zmierz, zanim wdrożysz poprawkę na produkcję
+
+- **Context**: Diagnozowanie niedziałających zmiennych środowiskowych, sekretów i bindingów na wdrożonym środowisku.
+- **Problem**: Objaw „zmienna nie dociera" ma kilka równie prawdopodobnych przyczyn. Przy pierwszym wdrożeniu lekomapy dwie hipotezy były błędne, a jedna z nich pociągnęła niepotrzebne ponowne wdrożenie produkcji.
+- **Rule**: Zanim wdrożysz poprawkę na produkcję, zmierz, co runtime faktycznie widzi — tymczasowa trasa zwracająca typy i nazwy kluczy, nigdy wartości. Hipoteza bez pomiaru nie uzasadnia wdrożenia.
+- **Applies to**: implement, impl-review
