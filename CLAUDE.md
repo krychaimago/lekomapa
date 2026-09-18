@@ -103,7 +103,9 @@ Setup środowiska, Supabase i deploy: @README.md. Jedna rzecz, której tam nie m
 
 ### CI
 
-Definicja: @.github/workflows/ci.yml. Warunek, którego z pliku nie widać: job `ci` nie zbuduje się bez sekretów repozytorium `SUPABASE_URL` i `SUPABASE_KEY`.
+Definicja: @.github/workflows/ci.yml. Trzy joby: `ci` (lint, typy, build), `smoke` (ścieżka auth przeciw lokalnemu Supabase) i `deploy` na Cloudflare Workers po zielonych obu poprzednich, wyłącznie przy pushu do `main`.
+
+Warunki, których z pliku nie widać: `ci` nie zbuduje się bez sekretów repozytorium `SUPABASE_URL` i `SUPABASE_KEY`, a `deploy` bez `CLOUDFLARE_API_TOKEN` i `CLOUDFLARE_ACCOUNT_ID`. Merge do `main` wdraża na produkcję — to jedyna bramka, nie ma osobnego zatwierdzenia.
 
 ### Kontekst projektu
 
