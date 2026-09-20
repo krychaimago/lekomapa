@@ -80,12 +80,25 @@ Pliki w `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_krotki_opis.sql`. **Każda
 
 ## Testy
 
-Na razie jedynym testem jest `scripts/smoke.mjs` — bezzależnościowy skrypt przechodzący całą ścieżkę auth (rejestracja, logowanie, strona chroniona, wylogowanie) po HTTP. Wymaga osiągalnego Supabase z wyłączonym potwierdzaniem e-maila.
+Na razie jedynym testem jest `scripts/smoke.mjs` — bezzależnościowy skrypt przechodzący ścieżkę auth (rejestracja, logowanie, strona chroniona, wylogowanie) po HTTP. Wymaga osiągalnego Supabase.
 
 ```bash
 npm run dev                             # albo: npm run build && npm run preview
 BASE_URL=http://localhost:4321 npm run smoke
 ```
+
+Skrypt ma dwa tryby, wybierane przez zmienne środowiskowe:
+
+| Zmienna                         | Znaczenie                                                                                                                     |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `BASE_URL`                      | adres działającego serwera, domyślnie `http://localhost:4321`                                                                 |
+| `SMOKE_EMAIL`, `SMOKE_PASSWORD` | dane potwierdzonego konta testowego; ustawione razem przełączają skrypt w tryb istniejącego konta i pomijają krok rejestracji |
+| `SMOKE_EMAIL_DOMAIN`            | domena jednorazowego adresu, domyślnie `example.com` — do podmiany, gdy Supabase odrzuca ten adres                            |
+
+- **Konto jednorazowe** (domyślnie) — rejestruje świeży adres, potem się loguje. Działa tylko tam, gdzie potwierdzanie e-maila jest wyłączone, czyli lokalnie i w CI.
+  `npm run smoke` ładuje `.env`, jeśli istnieje (`node --env-file-if-exists`), więc te zmienne można trzymać tam zamiast podawać w wierszu poleceń. `.env` jest gitignorowany — hasło konta testowego nigdy nie trafia do repozytorium. Szablon bez wartości: `.env.example`.
+
+- **Istniejące konto** — `SMOKE_EMAIL` i `SMOKE_PASSWORD` wskazują konto już potwierdzone, więc krok rejestracji odpada. To tryb do uruchomienia przeciw produkcji: przechodzi mimo włączonego potwierdzania e-maila i nie zostawia nowych kont w bazie. Konto testowe zakładasz raz, ręcznie. Ustawienie tylko jednej z tych zmiennych kończy się błędem — skrypt nie zgaduje, którego trybu chcesz.
 
 To sanity check po aktualizacji zależności, nie zestaw testów. Logika okresów dawkowania i zestawiania objawów w czasie wymaga własnych testów jednostkowych — do dopisania razem z pierwszym serwisem w `src/lib/services/`.
 

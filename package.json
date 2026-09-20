@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "smoke": "node scripts/smoke.mjs",
+    "smoke": "node --env-file-if-exists=.env scripts/smoke.mjs",
     "typecheck": "astro check",
     "prepare": "husky"
   },
