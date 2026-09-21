@@ -34,26 +34,26 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## North star
 
-**S-02: użytkowniczka dodaje lek ze słownika i widzi przy nim znacznik możliwej kolizji** — to pierwsze Kryterium sukcesu w PRD i jedyny przepływ, który uruchamia regułę kolizji od danych po komunikat; przy celu `speed` wszystko inne ma sens dopiero wtedy, gdy ten przepływ działa.
+**S-02: użytkowniczka dodaje lek po nazwie handlowej i widzi przy nim znacznik możliwej kolizji** — to pierwsze Kryterium sukcesu w PRD i jedyny przepływ, który uruchamia regułę kolizji od danych po komunikat; przy celu `speed` wszystko inne ma sens dopiero wtedy, gdy ten przepływ działa.
 
 > Gwiazda przewodnia (north star) to tutaj najmniejszy przepływ od końca do końca, którego dowiezienie dowodzi, że główna hipoteza produktu się trzyma — dlatego stoi tak wcześnie, jak pozwalają jego wymagania wstępne.
 
 ## At a glance
 
-| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                 | Prerequisites | PRD refs                              | Status   |
-| ---- | ------------------------------------ | ------------------------------------------------------------------------------ | ------------- | ------------------------------------- | -------- |
-| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji     | —             | FR-003, FR-004, NFR izolacji          | ready    |
-| F-02 | interaction-rules-seed               | (fundament) słownik substancji czynnych i pary kolizji dostarczone z produktem | —             | FR-003, FR-006                        | blocked  |
-| F-03 | symptom-catalog-seed                 | (fundament) zamknięta lista objawów ze słowami wyszukiwania                    | —             | FR-008                                | blocked  |
-| S-01 | terms-acceptance-on-signup           | założyć konto, świadomie akceptując warunki korzystania                        | —             | FR-001, FR-002                        | ready    |
-| S-02 | add-medication-with-interaction-flag | dodać lek ze słownika i zobaczyć znacznik możliwej kolizji                     | F-01, F-02    | US-01, FR-003, FR-006, FR-007, FR-012 | proposed |
-| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera              | S-02          | US-04, FR-004                         | proposed |
-| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                 | S-02          | FR-005                                | proposed |
-| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                 | F-01, F-03    | US-02, FR-008                         | proposed |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                         | S-03, S-05    | US-02, FR-010, FR-012                 | proposed |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                      | S-05          | FR-009                                | blocked  |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                         | S-02, S-06    | US-03, FR-011, FR-012                 | proposed |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie             | S-02, S-05    | FR-001, NFR usunięcia konta           | proposed |
+| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                  | Prerequisites | PRD refs                              | Status   |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------------------------------------- | -------- |
+| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji      | —             | FR-003, FR-004, NFR izolacji          | ready    |
+| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem | —             | FR-003, FR-006                        | ready    |
+| F-03 | symptom-catalog-seed                 | (fundament) zamknięta lista objawów ze słowami wyszukiwania                     | —             | FR-008                                | blocked  |
+| S-01 | terms-acceptance-on-signup           | założyć konto, świadomie akceptując warunki korzystania                         | —             | FR-001, FR-002                        | ready    |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji              | F-01, F-02    | US-01, FR-003, FR-006, FR-007, FR-012 | proposed |
+| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera               | S-02          | US-04, FR-004                         | proposed |
+| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                  | S-02          | FR-005                                | proposed |
+| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                  | F-01, F-03    | US-02, FR-008                         | proposed |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                          | S-03, S-05    | US-02, FR-010, FR-012                 | proposed |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                       | S-05          | FR-009                                | blocked  |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                          | S-02, S-06    | US-03, FR-011, FR-012                 | proposed |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie              | S-02, S-05    | FR-001, NFR usunięcia konta           | proposed |
 
 ## Streams
 
@@ -93,20 +93,20 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 - **Risk:** Główne ryzyko kamienia milowego to `skills`, a migracje i RLS są warstwą jeszcze niepisaną samodzielnie — stąd fundament jawny, a nie migracja przemycona w plasterku. Zakres zamknięty na leki i okresy dawkowania: tabele dzienniczka powstają dopiero w S-05, razem z pierwszym ekranem, który ich potrzebuje. Realne zagrożenie: RLS odłożone „na później" — wtedy przy jednym koncie testowym nic nie ujawni wycieku.
 - **Status:** ready
 
-### F-02: Słownik substancji czynnych i pary kolizji
+### F-02: Pary kolizji na grupach ATC i rejestr leków
 
-- **Outcome:** (fundament) zbiór reguł dostarczony razem z produktem jest w bazie: słownik substancji czynnych do wyboru przy dodawaniu leku oraz pary substancji oddziałujących negatywnie, wspólne dla produktu i tylko do odczytu dla użytkownika.
+- **Outcome:** (fundament) dane dostarczone razem z produktem są w bazie: około 20 par kolizji zapisanych na poziomie grup ATC oraz rejestr leków — nazwy handlowe ze składem i kodami ATC, przepisane z Rejestru Produktów Leczniczych i zawężone do wybranych grup. Oba zbiory wspólne dla produktu i tylko do odczytu dla użytkownika.
 - **Change ID:** `interaction-rules-seed`
 - **Issue:** #10
-- **PRD refs:** FR-003, FR-006, `## Business Logic` (dwa zbiory reguł dostarczone z produktem), `## Access Control` (brak roli administratora reguł)
-- **Unlocks:** S-02 — bez słownika nie ma czego wybrać przy dodawaniu leku, a bez par kolizji nie ma czego oznaczyć.
+- **PRD refs:** FR-003, FR-006, `## Business Logic` (zbiór reguł plus rejestr leków), `## Access Control` (brak roli administratora reguł)
+- **Unlocks:** S-02 — bez rejestru leków nie ma czego wpisać przy dodawaniu leku, a bez par kolizji nie ma czego oznaczyć.
 - **Prerequisites:** —
 - **Parallel with:** F-01, F-03, S-01
 - **Blockers:** —
-- **Unknowns:**
-  - Ile par substancji czynnych trafia do zbioru i z jakiego źródła zostaną przepisane? — Owner: użytkowniczka. Block: yes. Issue: #2.
-- **Risk:** To praca poza kodem, wliczona w budżet czasu, i jedyna rzecz blokująca gwiazdę przewodnią. Zbiór jest z założenia niepełny — konsekwencją jest bariera z PRD mówiąca wprost, że brak ostrzeżenia nie oznacza bezpieczeństwa; ta bariera jest częścią S-02, nie tego fundamentu.
-- **Status:** blocked
+- **Unknowns:** — (Q-1 rozstrzygnięte 2026-09-21, issue #2)
+- **Risk:** Zbieranie par to praca poza kodem, wliczona w budżet czasu, nieusuwalna i niezlecalna agentowi — to dane zdrowotne, każda para wymaga sprawdzenia przy ulotce albo charakterystyce produktu leczniczego. Drugie ryzyko to jakość danych rejestru: nazwa leku bywa zlepiona z dawką i opakowaniem, substancje zapisywane niejednolicie. Dlatego pierwszym krokiem jest pobranie próbki i zmierzenie, jak te dane wyglądają, zanim powstanie migracja. Zbiór reguł jest z założenia niepełny — konsekwencją jest bariera z PRD mówiąca wprost, że brak ostrzeżenia nie oznacza bezpieczeństwa; ta bariera jest częścią S-02, nie tego fundamentu.
+- **Wymogi projektowe:** pary trzymane na kodach ATC, nie na tekstowych nazwach substancji. Przy leku zapisywany pełny skład, także substancje spoza wybranych grup. Zawężenie rejestru jest filtrem przy wczytywaniu, nigdy flagą na leku — inaczej późniejsze rozszerzenie na pełny rejestr wymaga przeliczenia wszystkiego zamiast doładowania wierszy. Każda para z polami źródła i daty sprawdzenia. RLS w tej samej migracji: polityka `SELECT` dla roli zalogowanej, brak polityk zapisu.
+- **Status:** ready
 
 ### F-03: Zamknięta lista objawów
 
@@ -139,9 +139,9 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 - **Risk:** Rejestracja, logowanie i odzyskiwanie dostępu są w baseline'ie obecne, więc plasterek jest wąski: dokłada akceptację warunków z zapisem daty i wersji dokumentu. Zagrożenie odwrotne do zwykłego — pisanie warstwy auth od zera zamiast oparcia się na tym, co starter już niesie.
 - **Status:** ready
 
-### S-02: Dodanie leku ze słownika ze znacznikiem możliwej kolizji
+### S-02: Dodanie leku po nazwie handlowej ze znacznikiem możliwej kolizji
 
-- **Outcome:** Użytkowniczka może dodać przyjmowany preparat, wybierając substancję czynną ze słownika i podając dawkowanie z datą rozpoczęcia, a przy nowo dodanej pozycji widzi dyskretny znacznik możliwej kolizji z pełną treścią w szczegółach leku.
+- **Outcome:** Użytkowniczka może dodać przyjmowany preparat, wpisując jego nazwę handlową i podając dawkowanie z datą rozpoczęcia; przy nowo dodanej pozycji widzi dyskretny znacznik możliwej kolizji, a w szczegółach leku pełną treść informacji wraz ze składem preparatu. Preparat spoza rejestru dodaje, wskazując substancję czynną z ulotki, i uczestniczy w regułach tak samo.
 - **Change ID:** `add-medication-with-interaction-flag`
 - **Issue:** #13
 - **PRD refs:** US-01, FR-003, FR-006, FR-007, FR-012
@@ -247,30 +247,33 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                              | Suggested issue title                                    | Ready for `/10x-plan` | Notes                                          | Issue |
-| ---------- | -------------------------------------- | -------------------------------------------------------- | --------------------- | ---------------------------------------------- | ----- |
-| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                 | yes                   | Uruchom `/10x-plan medication-schema-rls`      | #9    |
-| F-02       | `interaction-rules-seed`               | Słownik substancji czynnych i pary kolizji               | no                    | Czeka na zbiór par i jego źródło               | #10   |
-| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania          | no                    | Czeka na konkretną listę objawów               | #11   |
-| S-01       | `terms-acceptance-on-signup`           | Akceptacja warunków korzystania przy zakładaniu konta    | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup` | #12   |
-| S-02       | `add-medication-with-interaction-flag` | Dodanie leku ze słownika ze znacznikiem możliwej kolizji | no                    | Wymaga F-01 i F-02                             | #13   |
-| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy            | no                    | Wymaga S-02                                    | #14   |
-| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia         | no                    | Wymaga S-02                                    | #15   |
-| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami           | no                    | Wymaga F-01 i F-03                             | #16   |
-| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu           | no                    | Wymaga S-03 i S-05                             | #17   |
-| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                           | no                    | Czeka na miarę okna korekty                    | #18   |
-| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                         | no                    | Wymaga S-02 i S-06                             | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane          | no                    | Wymaga S-02 i S-05                             | #20   |
+| Roadmap ID | Change ID                              | Suggested issue title                                   | Ready for `/10x-plan` | Notes                                          | Issue |
+| ---------- | -------------------------------------- | ------------------------------------------------------- | --------------------- | ---------------------------------------------- | ----- |
+| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                | yes                   | Uruchom `/10x-plan medication-schema-rls`      | #9    |
+| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków             | yes                   | Uruchom `/10x-plan interaction-rules-seed`     | #10   |
+| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania         | no                    | Czeka na konkretną listę objawów               | #11   |
+| S-01       | `terms-acceptance-on-signup`           | Akceptacja warunków korzystania przy zakładaniu konta   | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup` | #12   |
+| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji | no                    | Wymaga F-01 i F-02                             | #13   |
+| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy           | no                    | Wymaga S-02                                    | #14   |
+| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia        | no                    | Wymaga S-02                                    | #15   |
+| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami          | no                    | Wymaga F-01 i F-03                             | #16   |
+| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu          | no                    | Wymaga S-03 i S-05                             | #17   |
+| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                          | no                    | Czeka na miarę okna korekty                    | #18   |
+| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                        | no                    | Wymaga S-02 i S-06                             | #19   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane         | no                    | Wymaga S-02 i S-05                             | #20   |
 
 ## Open Roadmap Questions
 
-1. (#2) **Ile par substancji czynnych i z jakiego źródła trafia do zbioru reguł?** — Owner: użytkowniczka. Block: F-02, a przez nie S-02 (gwiazda przewodnia), S-03, S-04, S-08, S-09.
-2. (#3) **Ile pozycji liczy zamknięta lista objawów i skąd pochodzi?** — Owner: użytkowniczka. Block: F-03, a przez nie S-05, S-06, S-07, S-08, S-09.
-3. (#4) **Jak długo trwa okno korekty wpisu dzienniczka?** — Owner: użytkowniczka. Block: S-07.
-4. (#5) **Jak długie jest okno czasowe poprzedzające objaw (około 30 dni roboczo)?** — Owner: użytkowniczka. Block: nie blokuje planowania S-06; wartość do potwierdzenia przed wdrożeniem.
-5. (#6) **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?** — Owner: użytkowniczka. Block: roadmap-wide w tym sensie, że bez progów nie da się zakresować obserwowalności (patrz `## Parked`).
-6. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
-7. (#8) **Jak brzmi treść warunków korzystania?** — Owner: użytkowniczka. Block: nie blokuje planowania S-01; treść potrzebna przed wdrożeniem.
+1. (#3) **Ile pozycji liczy zamknięta lista objawów i skąd pochodzi?** — Owner: użytkowniczka. Block: F-03, a przez nie S-05, S-06, S-07, S-08, S-09.
+2. (#4) **Jak długo trwa okno korekty wpisu dzienniczka?** — Owner: użytkowniczka. Block: S-07.
+3. (#5) **Jak długie jest okno czasowe poprzedzające objaw (około 30 dni roboczo)?** — Owner: użytkowniczka. Block: nie blokuje planowania S-06; wartość do potwierdzenia przed wdrożeniem.
+4. (#6) **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?** — Owner: użytkowniczka. Block: roadmap-wide w tym sensie, że bez progów nie da się zakresować obserwowalności (patrz `## Parked`).
+5. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
+6. (#8) **Jak brzmi treść warunków korzystania?** — Owner: użytkowniczka. Block: nie blokuje planowania S-01; treść potrzebna przed wdrożeniem.
+
+Rozstrzygnięte:
+
+- (#2) ~~**Ile par substancji czynnych i z jakiego źródła trafia do zbioru reguł?**~~ — 2026-09-21: około 20 par na grupach ATC (10–14 grup, wynikowo ~40 substancji), zbierane ręcznie z ulotek i charakterystyk produktów leczniczych. Nazwy handlowe i skład z Rejestru Produktów Leczniczych, zawężonego do wybranych grup. Użytkownik wpisuje nazwę handlową; lek spoza rejestru dodawany przez wskazanie substancji z ulotki. Odblokowało F-02, a przez nie S-02, S-03, S-04, S-08, S-09.
 
 ## Parked
 
@@ -281,6 +284,9 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 - **Przypomnienia o przyjęciu dawki** — Why parked: PRD `## Non-Goals`; produkt służy rozumieniu zestawu leków, nie pilnowaniu rutyny.
 - **Zdalne udostępnianie danych lekarzowi** — Why parked: PRD `## Non-Goals`; sekcja na wizytę jest do pokazania na ekranie.
 - **Reguła niedoborów mikro- i makroskładników** — Why parked: PRD `## Non-Goals`; przeniesiona do wersji drugiej.
+- **Zbiór znanych działań niepożądanych przypisanych substancjom** — Why parked: PRD wymieniał go jako drugi zbiór reguł dostarczony z produktem, ale zestawianie objawu z lekami (FR-010, S-06) działa wyłącznie na osi czasu — porównuje datę objawu z okresami dawkowania. Nic w M-1 tego zbioru nie czyta. Rozstrzygnięte 2026-09-21 razem z Q-1 (#2); PRD poprawione.
+- **Odświeżanie rejestru leków** — Why parked: rejestr wgrywany raz razem z produktem i starzejący się. Aktualizacja wymagałaby procesu, którego M-1 nie potrzebuje; lek spoza rejestru ma ścieżkę zapasową przez wskazanie substancji z ulotki.
+- **Rozszerzenie rejestru na wszystkie leki** — Why parked: M-1 wgrywa wyłącznie leki z wybranych grup ATC. Rozszerzenie to wyłączenie filtra przy wczytywaniu, bez zmiany schematu — ale wymaga osobnej decyzji o tym, jak komunikować lek znaleziony w rejestrze i pozostający poza zakresem reguł, bo pozycja bez znacznika wygląda wtedy jak sprawdzona.
 - **Interfejs dodawania kilku substancji czynnych w jednym preparacie** — Why parked: PRD `## Non-Goals`; struktura danych gotowa od MVP, interfejs później.
 - **Działanie bez połączenia z siecią** — Why parked: PRD `## Non-Goals` niefunkcjonalne.
 - **Formalna zgodność ze standardami dostępności** — Why parked: PRD `## Non-Goals`; czytelność na telefonie tak, certyfikowana dostępność nie w tej wersji.
