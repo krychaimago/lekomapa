@@ -3,6 +3,10 @@
 CLAUDE.md
 AGENTS.md
 
+# Skille 10x-cli są generowane przez `10x get` / `10x sync`.
+# Formatowanie ich powoduje konflikt `locally_modified` przy każdej lekcji.
+.claude/skills/
+
 dist
 .astro
 .wrangler
