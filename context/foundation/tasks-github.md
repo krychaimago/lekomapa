@@ -95,7 +95,7 @@ Sekcje puste w roadmapie („—") są pomijane, nie zostawiane jako nagłówek 
 
 19 issue w milestone M-1. Migracja odwzorowała stan roadmapy, niczego nie zamknęła i nie przestawiła statusów. Pozycje z sekcji `## Parked` nie mają issue — są świadomie poza MVP.
 
-Od migracji zamknięte: **#2 (Q-1)**, 2026-09-21 — rozstrzygnięcie przestawiło #10 (F-02) na `status:ready`.
+Od migracji zamknięte: **#2 (Q-1)** i **#3 (Q-2)**, oba 2026-09-21 — pierwsze rozstrzygnięcie przestawiło #10 (F-02) na `status:ready`, drugie #11 (F-03).
 
 ## Jak z tego korzystać
 
