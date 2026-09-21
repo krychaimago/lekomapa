@@ -121,4 +121,16 @@ Platforma wybrana i wdrożona: **Cloudflare Workers**, ścieżka `npx wrangler d
 
 Materiał lekcyjny (router zadań, pięć kryteriów agent-friendly, cross-check antybiasowy): `docs/10xdevs/m1l5-infra.md` — treść jednorazowa, nie kontrakt projektu.
 
+## Moduł 2, Lekcja 1 — roadmapa MVP
+
+`/10x-roadmap` czyta `context/foundation/prd.md` (plus `tech-stack.md`, `infrastructure.md`, `context/deployment/deploy-plan.md`, jeśli są) i pisze `context/foundation/roadmap.md`. Odpalaj przed zakładaniem folderów zmian — `/10x-new` przychodzi w kolejnej lekcji.
+
+Granice roadmapy:
+- domyślnie pionowe plasterki: efekt widoczny dla użytkowniczki, przecinający UI, dane, logikę i integracje,
+- praca pozioma tylko jako ograniczony enabler, który nazywa odblokowywany kamień milowy,
+- żadnych sierocych zadań poziomych („zbuduj całą bazę", „wszystkie endpointy", „cały UI") przed pierwszym przepływem widocznym dla użytkowniczki,
+- roadmapa to nie kalendarz — bez dat, story pointów i prędkości sprintu, chyba że poprosisz o osobny artefakt planistyczny.
+
+Materiał lekcyjny (router zadań, pełna lista ścieżek): `docs/10xdevs/m2l1-roadmap.md` — treść jednorazowa, nie kontrakt projektu.
+
 <!-- END @przeprogramowani/10x-cli -->
