@@ -93,7 +93,9 @@ Sekcje puste w roadmapie („—") są pomijane, nie zostawiane jako nagłówek 
 | S-03       | #14              | Q-1…Q-7    | #2…#8 |
 | S-04       | #15              |            |       |
 
-19 issue w milestone M-1, wszystkie otwarte. Migracja odwzorowała stan roadmapy, niczego nie zamknęła i nie przestawiła statusów. Pozycje z sekcji `## Parked` nie mają issue — są świadomie poza MVP.
+19 issue w milestone M-1. Migracja odwzorowała stan roadmapy, niczego nie zamknęła i nie przestawiła statusów. Pozycje z sekcji `## Parked` nie mają issue — są świadomie poza MVP.
+
+Od migracji zamknięte: **#2 (Q-1)** i **#3 (Q-2)**, oba 2026-09-21 — pierwsze rozstrzygnięcie przestawiło #10 (F-02) na `status:ready`, drugie #11 (F-03).
 
 ## Jak z tego korzystać
 
@@ -101,7 +103,19 @@ Sekcje puste w roadmapie („—") są pomijane, nie zostawiane jako nagłówek 
 - **Co stoi i dlaczego:** `gh issue list --label status:blocked`, treść issue linkuje do pytania blokującego
 - **Gwiazda przewodnia:** `gh issue list --label north-star`
 - **Jedna ścieżka:** `gh issue list --label stream:A-leki`
-- **Zamknięcie pytania:** odpowiedź w komentarzu, `gh issue close <nr>`, przeniesienie ustalenia do roadmapy, zdjęcie `status:blocked` z odblokowanych pozycji
+- **Zamknięcie pytania:** patrz `## Zamykanie pytania` poniżej
+
+## Zamykanie pytania
+
+Kolejność jest istotna: ustalenie musi trafić do dokumentów, zanim issue zniknie z listy otwartych, inaczej rozstrzygnięcie zostaje wyłącznie w komentarzu i nikt go tam nie szuka.
+
+1. Odpowiedź w komentarzu do issue pytania — pełne rozstrzygnięcie wraz z uzasadnieniem i źródłami, nie samo „ustalono X". Komentarz jest zapisem, dlaczego wybrano ten wariant; reszta dokumentów notuje wyłącznie wynik.
+2. Przeniesienie ustalenia do `context/foundation/prd.md`, jeśli rozstrzygnięcie dotyka wymagań, oraz do `context/foundation/roadmap.md` zawsze. W roadmapie pytanie wędruje z `## Open Roadmap Questions` do sekcji rozstrzygniętych pod nią, a pozostałe pytania są przenumerowane; numery issue zostają bez zmian.
+3. Przeniesienie wymogów projektowych do issue pozycji, którą pytanie blokowało — inaczej giną między rozmową a `/10x-plan`.
+4. Zdjęcie `status:blocked` i nadanie `status:ready` na odblokowanych pozycjach, w issue i w roadmapie równocześnie.
+5. `gh issue close <nr> --reason completed` z komentarzem wskazującym, gdzie ustalenie zostało zapisane.
+
+Gdy rozstrzygnięcie podważa zapis w PRD — na przykład uchyla Non-Goal — popraw PRD jawnie i wypisz w nim granice, które pozostają nienaruszone. Ciche ominięcie zapisu sprawia, że przy następnej pracy nikt nie wie, czy granica nadal obowiązuje.
 
 ## Zasady utrzymania
 

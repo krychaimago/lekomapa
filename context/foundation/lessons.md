@@ -43,3 +43,24 @@
 - **Problem**: Warianty `wasm32` pakietów `sharp` i `@tailwindcss/oxide` wymagają `@emnapi/runtime` i `@emnapi/core`. npm na macOS tych wariantów nie wybiera, więc nie zapisuje ich zależności do locka; npm na Linuksie ich wymaga. Regeneracja locka na macOS problemu nie naprawia — sprawdzone dwukrotnie, także z `--os=linux --cpu=x64`. Objaw wychodzi wyłącznie w CI i wygląda na zepsuty lock, a lock jest poprawny dla platformy, na której powstał.
 - **Rule**: Dopisz brakujący pakiet do `devDependencies` z wersją, której żąda komunikat, i przegeneruj lock przez `npm install --package-lock-only`. Nie próbuj naprawiać tego regeneracją locka ani flagami `--os` / `--cpu`. Zależność dodaną w tym celu opisz w `CLAUDE.md`, inaczej ktoś usunie ją jako nieużywaną.
 - **Applies to**: implement, impl-review
+
+## Otwarte pytanie może kryć niezadaną decyzję
+
+- **Context**: Rozstrzyganie pozycji z `## Open Roadmap Questions` i `## Open Questions` w PRD, zwłaszcza pytań o kształcie „ile czegoś i z jakiego źródła".
+- **Problem**: Q-1 brzmiało „ile par substancji czynnych i z jakiego źródła", a kryło trzecią sprawę, której nikt nie postawił: sposób wprowadzania leku przez użytkownika. Samo brzmienie pytania zakładało wybór substancji czynnej ze słownika jako rzecz przesądzoną, choć była to najbardziej kosztowna niewiadoma w całym fundamencie. Odpowiedź wprost na zadane pytanie utrwaliłaby barierę wejścia dla grupy, którą PRD wskazuje jako kierunek rozwoju produktu.
+- **Rule**: Zanim odpowiesz na otwarte pytanie, sprawdź, czy jego brzmienie nie zamyka po cichu wariantu, którego nikt nie rozważył. Rozłóż pytanie na składowe i nazwij te, które nie są w nim postawione. Jeśli rozstrzygnięcie podważa zapis w PRD, popraw PRD jawnie i wypisz granice, które pozostają nienaruszone — nie omijaj Non-Goal po cichu.
+- **Applies to**: frame, research, plan, roadmap
+
+## Niepełny zbiór reguł to co innego niż wyrzucone dane
+
+- **Context**: Projektowanie danych wejściowych reguły kolizji — skład preparatu, słowniki, zbiory dostarczone z produktem.
+- **Problem**: PRD uczciwie mówi, że zbiór reguł jest niepełny i brak ostrzeżenia niczego nie dowodzi. Ta bariera osłania lukę w regułach, o której wiadomo. Nie osłania sytuacji, w której produkt miał dane i sam je zawęził — preparat złożony zapisany z jedną substancją zamiast z pełnym składem daje brak znacznika przy leku, który faktycznie koliduje, a użytkowniczka nie ma jak odróżnić tego od leku sprawdzonego.
+- **Rule**: Nigdy nie zawężaj danych wejściowych tam, gdzie produkt mógłby powiedzieć więcej. Gdy struktura danych dopuszcza komplet, zapisuj komplet, nawet jeśli interfejs przyjmuje jedną rzecz. Ograniczenie interfejsu i ograniczenie danych to dwie różne decyzje i nie wolno ich mylić.
+- **Applies to**: plan, implement, impl-review
+
+## Zakres zbioru dostarczonego z produktem to filtr przy wczytywaniu, nie flaga w bazie
+
+- **Context**: Migracje seed z danymi dostarczonymi razem z produktem — rejestr leków w F-02, zamknięta lista objawów w F-03, każdy późniejszy zbiór referencyjny.
+- **Problem**: Zbiory wgrywane są w zakresie zawężonym względem źródła i zakres ten będzie się z czasem rozszerzał. Zapisanie przynależności do zakresu jako właściwości wiersza sprawia, że rozszerzenie wymaga przeliczenia wszystkich istniejących wierszy zamiast doładowania nowych. Objaw nie wychodzi przy pierwszym wgraniu — wychodzi dopiero przy pierwszym rozszerzeniu, gdy migracja okazuje się przeróbką.
+- **Rule**: Zawężenie stosuj jako filtr w momencie wczytywania danych. Nie zapisuj w bazie flagi „poza zakresem" ani niczego, co trzeba by przeliczyć po rozszerzeniu. Przy wierszu zapisuj pełną treść ze źródła, także pola nieużywane przez bieżące reguły.
+- **Applies to**: plan, implement, impl-review

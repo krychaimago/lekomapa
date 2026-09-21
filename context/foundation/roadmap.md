@@ -44,7 +44,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | ---- | ------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------------------------------------- | -------- |
 | F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji      | —             | FR-003, FR-004, NFR izolacji          | ready    |
 | F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem | —             | FR-003, FR-006                        | ready    |
-| F-03 | symptom-catalog-seed                 | (fundament) zamknięta lista objawów ze słowami wyszukiwania                     | —             | FR-008                                | blocked  |
+| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania          | —             | FR-008                                | ready    |
 | S-01 | terms-acceptance-on-signup           | założyć konto, świadomie akceptując warunki korzystania                         | —             | FR-001, FR-002                        | ready    |
 | S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji              | F-01, F-02    | US-01, FR-003, FR-006, FR-007, FR-012 | proposed |
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera               | S-02          | US-04, FR-004                         | proposed |
@@ -110,18 +110,18 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 
 ### F-03: Zamknięta lista objawów
 
-- **Outcome:** (fundament) zamknięta lista objawów jest w bazie wraz z potocznymi określeniami użytymi jako słowa wyszukiwania przy pozycjach listy.
+- **Outcome:** (fundament) katalog objawów jest w bazie: 34 pozycje w ośmiu kategoriach układów, każda z potocznymi określeniami użytymi jako słowa wyszukiwania i z kolumną na kod źródłowy, pustą w tej wersji. Zbiór wspólny dla produktu i tylko do odczytu dla użytkownika.
 - **Change ID:** `symptom-catalog-seed`
 - **Issue:** #11
-- **PRD refs:** FR-008, `## Business Logic` (znane działania niepożądane przypisane substancjom)
+- **PRD refs:** FR-008, `## Business Logic` (katalog objawów jako trzeci zbiór dostarczony z produktem), `## Access Control` (brak roli edytującej zbiory wspólne)
 - **Unlocks:** S-05 — bez listy nie ma z czego zaznaczyć objawu we wpisie dzienniczka.
 - **Prerequisites:** —
 - **Parallel with:** F-01, F-02, S-01
 - **Blockers:** —
-- **Unknowns:**
-  - Ile pozycji liczy lista objawów i skąd pochodzi? Przyjęto rząd 15–20 wraz z potocznymi określeniami, konkretna lista nieustalona. — Owner: użytkowniczka. Block: yes. Issue: #3.
-- **Risk:** Lista za wąska sprawi, że użytkowniczka nie znajdzie tego, co faktycznie czuje. PRD łagodzi to notatką własnymi słowami, która nie uczestniczy w regule — ale notatka jest częścią S-05, więc sama lista musi trafić w typowe objawy przyjmowanych leków.
-- **Status:** blocked
+- **Unknowns:** — (Q-2 rozstrzygnięte 2026-09-21, issue #3)
+- **Risk:** Lista za wąska sprawi, że użytkowniczka nie znajdzie tego, co faktycznie czuje. PRD łagodzi to notatką własnymi słowami, która nie uczestniczy w regule — ale notatka jest częścią S-05, więc sama lista musi trafić w typowe objawy przyjmowanych leków. Osiem kategorii i 34 pozycje to ryzyko zmniejszają, ale otwierają drugie: przy tej długości płaska lista na telefonie jest nie do przewinięcia, więc grupowanie i wyszukiwanie po słowach potocznych przestają być udogodnieniem i stają się warunkiem użyteczności — to wymóg dla S-05, nie dla tego fundamentu. Trzecie ryzyko: nazwy pozycji powstają bez źródła referencyjnego i będą dopracowywane w użyciu, więc niczego nie wolno wiązać z polską nazwą jako identyfikatorem.
+- **Wymogi projektowe:** nazwa polska, kategoria układu (osiem stałych wartości zapisanych przy wierszu, bez osobnej tabeli słownikowej), pole porządkujące do wyświetlania w kolejności od najczęstszych, kolumna na kod źródłowy dopuszczająca pustą wartość. Słowa wyszukiwania w osobnej tabeli powiązanej, nie jako tekst z przecinkami — po nich idzie główna droga wyboru w S-05. Kod źródłowy zostaje pusty w tej wersji, ale kolumna powstaje od pierwszej migracji: zaparkowany zbiór działań niepożądanych będzie się łączył po niej, nie po polskiej nazwie. Zawężenie zbioru stosowane jako filtr przy wczytywaniu, nigdy jako flaga w bazie — rozszerzenie listy to doładowanie wierszy. RLS w tej samej migracji: polityka `SELECT` dla roli zalogowanej, brak polityk zapisu. Typy encji w `src/types.ts`.
+- **Status:** ready
 
 ## Slices
 
@@ -189,6 +189,7 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Wpisy powstają głównie na telefonie i często wieczorem o porannym objawie — zła godzina fałszowałaby zbieżność z okresem dawkowania w S-06, więc możliwość cofnięcia czasu jest wymogiem, nie udogodnieniem. Notatka własnymi słowami nie uczestniczy w regule; wciągnięcie jej do reguły byłoby zmianą zakresu.
+- **Wymogi projektowe:** katalog z F-03 liczy 34 pozycje, więc lista jest grupowana po ośmiu kategoriach układów, a wyszukiwanie po słowach potocznych jest główną drogą wyboru, nie udogodnieniem. Płaski scroll całego katalogu jest niedopuszczalny. Objaw nieujęty w katalogu użytkowniczka zapisuje w notatce — pozycji „inny objaw" na liście nie ma (Q-2, issue #3).
 - **Status:** proposed
 
 ### S-06: Złożone pytanie do lekarza po zapisaniu objawu
@@ -251,7 +252,7 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 | ---------- | -------------------------------------- | ------------------------------------------------------- | --------------------- | ---------------------------------------------- | ----- |
 | F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                | yes                   | Uruchom `/10x-plan medication-schema-rls`      | #9    |
 | F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków             | yes                   | Uruchom `/10x-plan interaction-rules-seed`     | #10   |
-| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania         | no                    | Czeka na konkretną listę objawów               | #11   |
+| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania         | yes                   | Uruchom `/10x-plan symptom-catalog-seed`       | #11   |
 | S-01       | `terms-acceptance-on-signup`           | Akceptacja warunków korzystania przy zakładaniu konta   | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup` | #12   |
 | S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji | no                    | Wymaga F-01 i F-02                             | #13   |
 | S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy           | no                    | Wymaga S-02                                    | #14   |
@@ -264,23 +265,22 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 
 ## Open Roadmap Questions
 
-1. (#3) **Ile pozycji liczy zamknięta lista objawów i skąd pochodzi?** — Owner: użytkowniczka. Block: F-03, a przez nie S-05, S-06, S-07, S-08, S-09.
-2. (#4) **Jak długo trwa okno korekty wpisu dzienniczka?** — Owner: użytkowniczka. Block: S-07.
-3. (#5) **Jak długie jest okno czasowe poprzedzające objaw (około 30 dni roboczo)?** — Owner: użytkowniczka. Block: nie blokuje planowania S-06; wartość do potwierdzenia przed wdrożeniem.
-4. (#6) **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?** — Owner: użytkowniczka. Block: roadmap-wide w tym sensie, że bez progów nie da się zakresować obserwowalności (patrz `## Parked`).
-5. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
-6. (#8) **Jak brzmi treść warunków korzystania?** — Owner: użytkowniczka. Block: nie blokuje planowania S-01; treść potrzebna przed wdrożeniem.
+1. (#4) **Jak długo trwa okno korekty wpisu dzienniczka?** — Owner: użytkowniczka. Block: S-07.
+2. (#5) **Jak długie jest okno czasowe poprzedzające objaw (około 30 dni roboczo)?** — Owner: użytkowniczka. Block: nie blokuje planowania S-06; wartość do potwierdzenia przed wdrożeniem.
+3. (#6) **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?** — Owner: użytkowniczka. Block: roadmap-wide w tym sensie, że bez progów nie da się zakresować obserwowalności (patrz `## Parked`).
+4. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
+5. (#8) **Jak brzmi treść warunków korzystania?** — Owner: użytkowniczka. Block: nie blokuje planowania S-01; treść potrzebna przed wdrożeniem.
 
 Rozstrzygnięte:
 
 - (#2) ~~**Ile par substancji czynnych i z jakiego źródła trafia do zbioru reguł?**~~ — 2026-09-21: około 20 par na grupach ATC (10–14 grup, wynikowo ~40 substancji), zbierane ręcznie z ulotek i charakterystyk produktów leczniczych. Nazwy handlowe i skład z Rejestru Produktów Leczniczych, zawężonego do wybranych grup. Użytkownik wpisuje nazwę handlową; lek spoza rejestru dodawany przez wskazanie substancji z ulotki. Odblokowało F-02, a przez nie S-02, S-03, S-04, S-08, S-09.
+- (#3) ~~**Ile pozycji liczy zamknięta lista objawów i skąd pochodzi?**~~ — 2026-09-21: 34 pozycje w ośmiu kategoriach układów, dobrane jako objawy zauważalne przez pacjenta i opisane w ulotkach jako bardzo częste i częste. Źródłem jest zbiór ustalony w sesji rozstrzygania, nie obchód ulotek ani słownik kodowany — katalog nie jest wejściem reguły, bo zestawianie objawu z lekami idzie wyłącznie po osi czasu. Przy pozycji potoczne określenia jako słowa wyszukiwania oraz kolumna na kod źródłowy, pusta w M-1. Objaw nieujęty w katalogu zostaje w notatce własnymi słowami. Odblokowało F-03, a przez nie S-05, S-06, S-07, S-08, S-09.
 
 ## Parked
 
 - **Eksport własnych danych z aplikacji** — Why parked: uznany za potrzebny, świadomie odłożony poza pierwszą wersję (`shape-notes.md`, `## Forward: technical-roadmap`).
 - **Oś czasu: objawy i leki zestawione wizualnie lub jako raport** — Why parked: Kryterium sukcesu drugorzędne, a cel sekwencjonowania to `speed`; struktura okresów dawkowania z S-03 jest pod to gotowa.
 - **Integracja z zewnętrzną bazą interakcji** — Why parked: PRD `## Non-Goals`; reguły pochodzą wyłącznie ze zbioru dostarczonego z produktem.
-- **Rozpoznawanie nazw handlowych leków** — Why parked: PRD `## Non-Goals`; użytkowniczka podaje substancję czynną odczytaną z ulotki.
 - **Przypomnienia o przyjęciu dawki** — Why parked: PRD `## Non-Goals`; produkt służy rozumieniu zestawu leków, nie pilnowaniu rutyny.
 - **Zdalne udostępnianie danych lekarzowi** — Why parked: PRD `## Non-Goals`; sekcja na wizytę jest do pokazania na ekranie.
 - **Reguła niedoborów mikro- i makroskładników** — Why parked: PRD `## Non-Goals`; przeniesiona do wersji drugiej.
