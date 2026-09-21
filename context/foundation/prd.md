@@ -33,7 +33,7 @@ Kierunek rozwoju poza pierwszą wersją: osoby starsze przyjmujące kilka leków
 
 ### Primary
 
-- Po zalogowaniu użytkowniczka dodaje pojedynczo przyjmowane leki, wybierając substancję czynną ze słownika, i po dodaniu leku kolidującego z już zapisanym widzi informację o możliwej kolizji bez proszenia o nią.
+- Po zalogowaniu użytkowniczka dodaje pojedynczo przyjmowane leki, wpisując ich nazwy handlowe, i po dodaniu leku kolidującego z już zapisanym widzi informację o możliwej kolizji bez proszenia o nią.
 - Użytkowniczka zapisuje wpis o samopoczuciu z datą i godziną, wybierając objaw z zamkniętej listy, a produkt sam składa pytanie do lekarza zestawiające ten objaw z okresami dawkowania przyjmowanych leków.
 - Przed wizytą użytkowniczka otwiera sekcję „Do omówienia z lekarzem" i widzi w jednym miejscu możliwe kolizje oraz gotowe pytania o zbieżność objawów z okresami dawkowania.
 
@@ -54,7 +54,7 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 ### US-01: Użytkowniczka dodaje lek i dowiaduje się o możliwej kolizji
 
 - **Given** zalogowana użytkowniczka, która ma już na liście co najmniej jeden lek
-- **When** dodaje kolejny lek, wybierając jego substancję czynną ze słownika
+- **When** dodaje kolejny lek, wpisując jego nazwę handlową
 - **Then** przy nowo dodanej pozycji pojawia się dyskretny znacznik możliwej kolizji, a pełna treść informacji czeka w szczegółach leku
 
 #### Acceptance Criteria
@@ -63,6 +63,8 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 - Przy treści informacji stale widoczna jest nota o jej charakterze poglądowym wraz z zachętą do konsultacji z lekarzem lub farmaceutą.
 - Treść nie stwierdza zakazu łączenia leków ani nie porządkuje leków według stopnia podejrzenia.
 - Gdy dodany lek nie tworzy pary z żadnym już zapisanym, znacznik nie pojawia się, co nie jest równoznaczne z potwierdzeniem bezpieczeństwa.
+- Gdy preparatu nie ma w rejestrze leków, produkt prosi o wskazanie substancji czynnej z ulotki; tak dodany lek uczestniczy w sprawdzaniu kolizji na tych samych zasadach.
+- Szczegóły leku pokazują pełny skład preparatu, bo treść informacji o kolizji nazywa substancję czynną, a lista pokazuje nazwę handlową.
 
 ### US-02: Użytkowniczka zapisuje objaw i dostaje pytanie do lekarza
 
