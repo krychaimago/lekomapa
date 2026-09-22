@@ -78,3 +78,24 @@
 - **Problem**: `.env` w tym repozytorium wskazuje produkcyjne Supabase i niesie konto testowe, a wrangler czyta `.env` i przykrywa nim `.dev.vars` z wartościami lokalnymi. Bieg bramki idzie wtedy do produkcji, wygląda na poprawny i zużywa jej limity — przy F-01 kilka prób rejestracji zużyło produkcyjny limit maili. Dane zdrowotne trafiłyby tam równie cicho, gdyby krok izolacji nie był ograniczony do trybu kont jednorazowych.
 - **Rule**: Przed uruchomieniem bramki przeciw lokalnej bazie zmierz, gdzie ona faktycznie pisze — najprościej zapytaniem o świeże wiersze w lokalnym `auth.users`. Na czas biegu odsuń `.env` i zostaw wyłącznie `.dev.vars` z wartościami z `npx supabase status`. Obecność `.dev.vars` nie jest dowodem, że aplikacja ich używa.
 - **Applies to**: implement, impl-review
+
+## Bramka musi odróżnić blokadę od niewykonania
+
+- **Context**: Każdy test dowodzący, że coś jest _zablokowane_ — kroki izolacji w `scripts/smoke.mjs`, sprawdzenia w `supabase/tests/rls_checks.sql`, każdy późniejszy test RLS i wyzwalaczy.
+- **Problem**: „Nic się nie stało" ma dwie przyczyny: ochrona zadziałała albo krok w ogóle się nie wykonał. Przy F-01 krok „klucz publiczny bez sesji" uznawał każdy błąd za sukces, więc zły adres bazy czy literówka w nazwie tabeli dawały PASS. Sprawdzenia SQL łapały `exception when others`, więc błąd z dowolnego powodu wyglądał jak działający wyzwalacz. Obie bramki przechodziły, nie mierząc tego, co deklarują.
+- **Rule**: Test blokady musi wymagać konkretnego wyniku, nie byle jakiego. Łap nazwany błąd (`sqlstate 'P0001'`, `exclusion_violation`), nie `when others`. Tam, gdzie zmierzony wynik to brak błędu i zero wierszy — jak przy RLS w PostgREST — każdy błąd traktuj jako porażkę kroku. Zanim ustawisz warunek na konkretny kod, zmierz, co przychodzi naprawdę: przy F-01 zaproponowany kod `42501` nigdy nie wracał i wywróciłby bramkę fałszywie.
+- **Applies to**: plan, implement, impl-review
+
+## Ograniczenie na tabeli podrzędnej nie chroni, dopóki rodzic go nie ma
+
+- **Context**: Wyzwalacze i ograniczenia pilnujące nienaruszalności historii na tabelach powiązanych kluczem obcym z `on delete cascade`.
+- **Problem**: W F-01 `medication_substances` i `dosage_periods` miały wyzwalacze blokujące zmianę i usunięcie rdzenia, a `medications` nie miało żadnego. Guardy podrzędne celowo przepuszczają kaskadę, więc jeden `delete from medications` kasował całą historię dawkowania przy zamkniętym oknie korekty. Ochrona wyglądała na kompletną, bo każda chroniona tabela miała swój wyzwalacz. Ta sama luka ma drugą postać: guardy pilnowały wartości pól, ale nie `medication_id`, więc wiersz dało się przepiąć pod inny lek i przepisać historię obu naraz, nie ruszając żadnego chronionego pola.
+- **Rule**: Gwarancję nakładaj na całą ścieżkę zapisu, nie na wybrane tabele. Gdy chronisz wiersze podrzędne, sprawdź, czy tej samej reguły nie omija usunięcie rodzica, i policz klucz obcy jako część rdzenia wpisu — przepięcie pod innego rodzica jest zmianą historii tak samo jak zmiana wartości.
+- **Applies to**: plan, implement, impl-review
+
+## Pusty zakres omija ograniczenie wykluczające
+
+- **Context**: Tabele z okresami od–do chronione przez `exclude using gist (... with &&)` — `dosage_periods` w F-01, wpisy dzienniczka i okna korekty w S-05 i S-07.
+- **Problem**: `daterange(d, d, '[)')` jest pusty, a pusty zakres nie przecina się z niczym operatorem `&&`. Kontrola dat dopuszczająca `ended_on = started_on` wpuszczała więc dowolną liczbę okresów zerowej długości, także w środek okresu trwającego — ograniczenie wykluczające ich nie widziało. Objaw nie wychodzi przy żadnym zwykłym zapisie.
+- **Rule**: Przy kolumnie zakresu wymuś niepustość: `ended_on > started_on` albo `check (not isempty(period))`. Zapisz przy okazji, jak wygląda okres jednodniowy przy granicy `'[)'` — `started_on = d, ended_on = d + 1` — inaczej ktoś przywróci `>=`, żeby dało się go zapisać.
+- **Applies to**: plan, implement, impl-review
