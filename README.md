@@ -102,13 +102,14 @@ Skrypt ma dwa tryby, wybierane przez zmienne środowiskowe:
 | `BASE_URL`                      | adres działającego serwera, domyślnie `http://localhost:4321`                                                                 |
 | `SMOKE_EMAIL`, `SMOKE_PASSWORD` | dane potwierdzonego konta testowego; ustawione razem przełączają skrypt w tryb istniejącego konta i pomijają krok rejestracji |
 | `SMOKE_EMAIL_DOMAIN`            | domena jednorazowego adresu, domyślnie `example.com` — do podmiany, gdy Supabase odrzuca ten adres                            |
+| `SMOKE_ALLOW_REMOTE_WRITES`     | `1` pozwala uruchomić sprawdzenia izolacji przeciw bazie spoza `localhost`; domyślnie są wtedy pomijane                       |
 
 - **Konto jednorazowe** (domyślnie) — rejestruje świeży adres, potem się loguje. Działa tylko tam, gdzie potwierdzanie e-maila jest wyłączone, czyli lokalnie i w CI.
   `npm run smoke` ładuje `.env`, jeśli istnieje (`node --env-file-if-exists`), więc te zmienne można trzymać tam zamiast podawać w wierszu poleceń. `.env` jest gitignorowany — hasło konta testowego nigdy nie trafia do repozytorium. Szablon bez wartości: `.env.example`.
 
 - **Istniejące konto** — `SMOKE_EMAIL` i `SMOKE_PASSWORD` wskazują konto już potwierdzone, więc krok rejestracji odpada. To tryb do uruchomienia przeciw produkcji: przechodzi mimo włączonego potwierdzania e-maila i nie zostawia nowych kont w bazie. Konto testowe zakładasz raz, ręcznie. Ustawienie tylko jednej z tych zmiennych kończy się błędem — skrypt nie zgaduje, którego trybu chcesz.
 
-Sprawdzenia izolacji działają **wyłącznie w trybie konta jednorazowego**; w trybie istniejącego konta wypisywany jest wiersz `SKIP` z powodem. Potrzebują dwóch świeżych kont i zapisania przy każdym zmyślonego leku — na produkcji drugiego konta nie da się założyć, a zmyślone dane zdrowotne nie mają czego szukać w prawdziwym koncie. CI chodzi w trybie jednorazowym, więc bramka pozostaje w mocy. Nowa tabela z danymi konta dokłada tu swoje cztery kroki (opis w sekcji [Migracje](#migracje)).
+Sprawdzenia izolacji działają **wyłącznie w trybie konta jednorazowego i wyłącznie przeciw lokalnemu Supabase** (`SUPABASE_URL` na `localhost` albo `127.0.0.1`); w każdym innym wypadku wypisywany jest wiersz `SKIP` z powodem. Świadome uruchomienie ich przeciw zdalnej bazie wymaga jawnego `SMOKE_ALLOW_REMOTE_WRITES=1` — o adresie decyduje `SUPABASE_URL`, nie obecność `SMOKE_EMAIL`, bo ta zmienna nic o docelowej bazie nie mówi. Potrzebują dwóch świeżych kont i zapisania przy każdym zmyślonego leku — na produkcji drugiego konta nie da się założyć, a zmyślone dane zdrowotne nie mają czego szukać w prawdziwym koncie. CI chodzi w trybie jednorazowym, więc bramka pozostaje w mocy. Nowa tabela z danymi konta dokłada tu swoje cztery kroki (opis w sekcji [Migracje](#migracje)).
 
 To sanity check po aktualizacji zależności, nie zestaw testów. Logika okresów dawkowania i zestawiania objawów w czasie wymaga własnych testów jednostkowych — do dopisania razem z pierwszym serwisem w `src/lib/services/`.
 

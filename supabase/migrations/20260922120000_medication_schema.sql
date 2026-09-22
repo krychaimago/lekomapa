@@ -80,8 +80,13 @@ create table public.dosage_periods (
   -- na czym pracować; okres domknięty z lewej, otwarty z prawej
   period daterange generated always as (daterange(started_on, ended_on, '[)')) stored,
   created_at timestamptz not null default now(),
+  -- Data zakończenia musi być późniejsza niż data rozpoczęcia, nie równa:
+  -- daterange(d, d, '[)') jest pusty, a pusty zakres nie przecina się z niczym
+  -- operatorem &&, więc ograniczenie wykluczające poniżej by go nie zauważyło
+  -- i wpuściło okres zerowej długości w środek okresu trwającego. Okres
+  -- jednodniowy zapisuje się jako started_on = d, ended_on = d + 1.
   constraint dosage_periods_dates_check
-    check (ended_on is null or ended_on >= started_on),
+    check (ended_on is null or ended_on > started_on),
   -- dwa okresy tego samego leku nie mogą się nakładać: historia dawkowania
   -- to ciąg okresów, a nie zbiór wpisów, które mogą mówić dwie rzeczy naraz
   constraint dosage_periods_no_overlap
@@ -233,6 +238,14 @@ $$;
 comment on function public.medication_correction_window_open(uuid) is
   'ZAŚLEPKA Z TERMINEM — nie usuwać jako martwy kod. W F-01 zawsze zwraca true, bo tabela wpisów dzienniczka jeszcze nie istnieje. Migracja z S-05 podmienia treść tej funkcji na sprawdzenie, czy dla danego leku istnieje wpis objawu po dacie rozpoczęcia; wyzwalacze niemodyfikowalności na medication_substances i dosage_periods pytają wyłącznie tę funkcję. security definer, bo w S-05 funkcja będzie czytała tabelę chronioną RLS z wnętrza wyzwalacza.';
 
+-- security definer bez ograniczenia uprawnień dałoby w S-05 wyrocznię: funkcja
+-- będzie wtedy czytała wpisy dzienniczka prawami właściciela, więc każdy, kto
+-- może ją wywołać, dowiedziałby się po samym medication_id, czy dla cudzego
+-- leku istnieje wpis objawu. Wyzwalacze wołają ją jako własny definer, więc
+-- odebranie praw roli public ich nie dotyczy.
+revoke execute on function public.medication_correction_window_open(uuid) from public;
+grant execute on function public.medication_correction_window_open(uuid) to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- 6. Wyzwalacze niemodyfikowalności rdzenia wpisu
 -- ---------------------------------------------------------------------------
@@ -244,11 +257,15 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- medication_id należy do rdzenia wpisu tak samo jak nazwa substancji:
+  -- przepięcie wiersza pod inny lek przepisuje historię obu leków naraz,
+  -- nie ruszając żadnego z pozostałych pól.
   if new.substance_name is distinct from old.substance_name
-     or new.atc_code is distinct from old.atc_code then
+     or new.atc_code is distinct from old.atc_code
+     or new.medication_id is distinct from old.medication_id then
     if not public.medication_correction_window_open(old.medication_id) then
       raise exception
-        'Nie można zmienić pola substance_name ani atc_code: okno korekty dla tego leku jest już zamknięte, a skład zapisany przy leku jest częścią historii. Aby odnotować inny skład, zakończ tę pozycję datą odstawienia i dodaj nową.';
+        'Nie można zmienić pola substance_name, atc_code ani medication_id: okno korekty dla tego leku jest już zamknięte, a skład zapisany przy leku jest częścią historii. Aby odnotować inny skład, zakończ tę pozycję datą odstawienia i dodaj nową.';
     end if;
   end if;
   return new;
@@ -271,6 +288,13 @@ begin
     if new.started_on is distinct from old.started_on then
       raise exception
         'Nie można zmienić pola started_on: okno korekty jest już zamknięte, a data rozpoczęcia okresu jest częścią historii dawkowania.';
+    end if;
+
+    -- Przepięcie okresu pod inny lek przepisuje historię obu leków naraz,
+    -- nie ruszając żadnego z pozostałych pól — to też jest zmiana rdzenia.
+    if new.medication_id is distinct from old.medication_id then
+      raise exception
+        'Nie można zmienić pola medication_id: okno korekty jest już zamknięte, a przypisanie okresu dawkowania do leku jest częścią historii.';
     end if;
 
     -- Ustawienie ended_on z pustej wartości na datę przechodzi zawsze: na tym
@@ -333,6 +357,39 @@ begin
   return old;
 end;
 $$;
+
+-- Guard usunięcia leku. Ta sama zasada co na tabelach podrzędnych: usunięcie
+-- pozycji dodanej przez pomyłkę przechodzi, dopóki okno korekty jest otwarte
+-- (FR-005). Po jego zamknięciu lek tłumaczy już zapisane objawy i zamiast
+-- usunięcia służy data odstawienia.
+--
+-- Rozpoznanie kaskady z auth.users: usunięcie konta (S-09) kasuje wiersz
+-- użytkownika przed kaskadą do medications, więc brak wiersza w auth.users
+-- oznacza kasowanie konta — takie usunięcie musi przejść.
+
+create or replace function public.medications_guard_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from auth.users u where u.id = old.user_id) then
+    return old;
+  end if;
+
+  if not public.medication_correction_window_open(old.id) then
+    raise exception
+      'Nie można usunąć leku: okno korekty jest już zamknięte, a ten lek tłumaczy zapisane wcześniej objawy. Aby zakończyć jego przyjmowanie, użyj daty odstawienia (discontinued_on).';
+  end if;
+
+  return old;
+end;
+$$;
+
+create trigger medications_guard_delete
+  before delete on public.medications
+  for each row execute function public.medications_guard_delete();
 
 create trigger medication_substances_guard_core
   before update on public.medication_substances
