@@ -149,4 +149,21 @@ Granice:
 
 Materiał lekcyjny (router zadań, pełna lista ścieżek): `docs/10xdevs/m2l2-implementation.md` — treść jednorazowa, nie kontrakt projektu. Wymieniony tam `docs/reference/contract-surfaces.md` nie istnieje w tym repozytorium.
 
+## Moduł 2, Lekcja 3 — przegląd wdrożonego kodu
+
+Pełny łańcuch zmiany z lekcją 3: `/10x-roadmap` → `/10x-new` → `/10x-plan` → `/10x-plan-review` → `/10x-implement` → **`/10x-impl-review`** → (po merge'u) `/10x-archive`.
+
+- `/10x-impl-review <change-id>` — bramka po implementacji, przed merge'em. Zestawia wdrożony diff z planem i wystawia scorecard w sześciu wymiarach: zgodność z planem, dyscyplina zakresu, bezpieczeństwo i jakość, architektura, spójność wzorców, kryteria sukcesu. Potem triage finding po findingu.
+- Zakres: pojedyncza faza (`phase <n>`) albo cały plan. Bez argumentu bierze najnowszą zmianę o statusie `implementing` lub `implemented`.
+- Raport ląduje w `context/changes/<change-id>/reviews/impl-review.md`, a `change.md` dostaje `status: impl_reviewed`. Dzieje się to niezależnie od tego, czy triage odbędzie się od razu — dlatego `/10x-archive` i `/10x-status` widzą przegląd.
+- Triage wznawia się podaniem ścieżki raportu: `/10x-impl-review context/changes/<change-id>/reviews/impl-review.md`. Findingi z `Decision: PENDING` czekają.
+
+Granice:
+- Świadome pominięcie findingu jest pełnoprawnym wynikiem przeglądu, nie porażką. Waga (jak źle, jeśli zignorować) i wpływ (ile uwagi wymaga decyzja) to dwie różne osie.
+- „Zapisz jako regułę projektu" jest trzecim wyjściem obok naprawy i pominięcia — trafia do `context/foundation/lessons.md` przez `/10x-lesson`.
+- Przegląd sam z siebie nie zmienia kodu. Edycje powstają wyłącznie w triage'u, na wyraźny wybór naprawy.
+- Wyniki podagentów i raportu są hipotezami do sprawdzenia, nie faktami. Przy F-01 jeden finding okazał się przeceniony (usuwanie leku jest w zakresie FR-005, brakowało tylko ograniczenia oknem korekty), a proponowana naprawa drugiego wywróciłaby bramkę — pomiar pokazał, że RLS w PostgREST nie zwraca błędu, tylko pusty wynik.
+
+Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji — w katalogu są tylko m1l5, m2l1 i m2l2.
+
 <!-- END @przeprogramowani/10x-cli -->
