@@ -64,3 +64,17 @@
 - **Problem**: Zbiory wgrywane są w zakresie zawężonym względem źródła i zakres ten będzie się z czasem rozszerzał. Zapisanie przynależności do zakresu jako właściwości wiersza sprawia, że rozszerzenie wymaga przeliczenia wszystkich istniejących wierszy zamiast doładowania nowych. Objaw nie wychodzi przy pierwszym wgraniu — wychodzi dopiero przy pierwszym rozszerzeniu, gdy migracja okazuje się przeróbką.
 - **Rule**: Zawężenie stosuj jako filtr w momencie wczytywania danych. Nie zapisuj w bazie flagi „poza zakresem" ani niczego, co trzeba by przeliczyć po rozszerzeniu. Przy wierszu zapisuj pełną treść ze źródła, także pola nieużywane przez bieżące reguły.
 - **Applies to**: plan, implement, impl-review
+
+## Zatrzymaj stary podgląd, zanim uznasz, że build wszedł w życie
+
+- **Context**: Uruchamianie bramek lokalnych przeciw `npm run preview` — smoke, sprawdzenia ręczne, każda weryfikacja idąca po HTTP do zbudowanej aplikacji.
+- **Problem**: Przy działającym już serwerze `npm run preview` wypisuje „Preview server already running" i kończy się kodem zero. Kolejne `npm run build` trafiają na dysk, ale ruch dalej obsługuje stary proces ze zmiennymi środowiskowymi z chwili swojego startu. Objaw jest mylący: bramka pada na błędach, które wyglądają na błędy kodu, a pochodzą z innego środowiska. Przy pierwszym wdrożeniu F-01 kosztowało to cztery biegi smoke i dwie błędne hipotezy, zanim pomiar pokazał, że konta z trasy rejestracji nie powstają w lokalnej bazie.
+- **Rule**: Przed biegiem bramek przeciw podglądowi zawsze zatrzymaj poprzedni proces (`npx astro preview stop`) i potwierdź, że nowy wstał. Zerowy kod wyjścia z `npm run preview` nie jest dowodem, że działa twój build.
+- **Applies to**: implement, impl-review
+
+## Lokalne bramki sprawdź pod kątem tego, do której bazy faktycznie idą
+
+- **Context**: Uruchamianie `npm run smoke` i innych bramek wymagających działającej bazy na maszynie deweloperskiej.
+- **Problem**: `.env` w tym repozytorium wskazuje produkcyjne Supabase i niesie konto testowe, a wrangler czyta `.env` i przykrywa nim `.dev.vars` z wartościami lokalnymi. Bieg bramki idzie wtedy do produkcji, wygląda na poprawny i zużywa jej limity — przy F-01 kilka prób rejestracji zużyło produkcyjny limit maili. Dane zdrowotne trafiłyby tam równie cicho, gdyby krok izolacji nie był ograniczony do trybu kont jednorazowych.
+- **Rule**: Przed uruchomieniem bramki przeciw lokalnej bazie zmierz, gdzie ona faktycznie pisze — najprościej zapytaniem o świeże wiersze w lokalnym `auth.users`. Na czas biegu odsuń `.env` i zostaw wyłącznie `.dev.vars` z wartościami z `npx supabase status`. Obecność `.dev.vars` nie jest dowodem, że aplikacja ich używa.
+- **Applies to**: implement, impl-review
