@@ -369,10 +369,10 @@ Skala z PRD jest mała (jedna użytkowniczka, mały wolumen), więc indeksy na `
 
 #### Automated
 
-- [x] 3.1 `npm run smoke` przechodzi lokalnie przeciw `npx supabase start` i podglądowi produkcyjnemu
-- [x] 3.2 Wszystkie kroki izolacji raportują wynik pozytywny, a ich liczba zgadza się z listą z kontraktu
-- [ ] 3.3 Job `smoke` w CI jest zielony na pull requeście z tą zmianą
+- [x] 3.1 `npm run smoke` przechodzi lokalnie przeciw `npx supabase start` i podglądowi produkcyjnemu — a518c06
+- [x] 3.2 Wszystkie kroki izolacji raportują wynik pozytywny, a ich liczba zgadza się z listą z kontraktu — a518c06
+- [x] 3.3 Job `smoke` w CI jest zielony na pull requeście z tą zmianą — a518c06
 
 #### Manual
 
-- [x] 3.4 Tymczasowe wyłączenie RLS na jednej tabeli powoduje, że `npm run smoke` pada (przywrócić przed commitem)
+- [x] 3.4 Tymczasowe wyłączenie RLS na jednej tabeli powoduje, że `npm run smoke` pada (przywrócić przed commitem) — a518c06
