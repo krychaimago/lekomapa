@@ -133,4 +133,20 @@ Granice roadmapy:
 
 Materiał lekcyjny (router zadań, pełna lista ścieżek): `docs/10xdevs/m2l1-roadmap.md` — treść jednorazowa, nie kontrakt projektu.
 
+## Moduł 2, Lekcja 2 — od roadmapy do pierwszego strumienia
+
+Łańcuch zmiany: `/10x-roadmap` → `/10x-new` → `/10x-plan` → `/10x-plan-review` → `/10x-implement` → (po merge'u) `/10x-archive`.
+
+- `/10x-new <change-id>` — po wybraniu pozycji z roadmapy, przed planowaniem. Tworzy `context/changes/<change-id>/change.md`: jedna tożsamość dla planu, implementacji, commitów i późniejszego review.
+- `/10x-plan <change-id>` — czyta roadmapę, dokumenty z `context/foundation/` i kod; pisze `plan.md` (fazy, kontrakty plików, kryteria sukcesu, `## Progress`) oraz `plan-brief.md`.
+- `/10x-plan-review <change-id>` — bramka przed dotknięciem kodu: brak stanu końcowego, słabe kontrakty, zepsuty `## Progress`, dryf zakresu.
+- `/10x-implement <change-id> phase <n>` — jedna faza naraz: weryfikacja, bramka manualna, commit, wpis SHA do `## Progress`.
+
+Granice:
+- `/10x-plan` jest domyślnym startem po wyborze pozycji z roadmapy. `/10x-frame` i `/10x-research` to ścieżki eskalacji przy niejasnym problemie albo blokującym braku wiedzy — nie rytuał na każdą zmianę.
+- Ta lekcja nie jest budową całego produktu. Wystarczy jeden strumień zaplanowany i częściowo wdrożony.
+- Review wdrożonego diffa należy do lekcji 3 (`/10x-impl-review`).
+
+Materiał lekcyjny (router zadań, pełna lista ścieżek): `docs/10xdevs/m2l2-implementation.md` — treść jednorazowa, nie kontrakt projektu. Wymieniony tam `docs/reference/contract-surfaces.md` nie istnieje w tym repozytorium.
+
 <!-- END @przeprogramowani/10x-cli -->
