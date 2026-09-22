@@ -3,7 +3,7 @@ project: lekomapa
 version: 1
 status: draft
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -40,20 +40,20 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                  | Prerequisites | PRD refs                              | Status   |
-| ---- | ------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------------------------------------- | -------- |
-| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji      | —             | FR-003, FR-004, NFR izolacji          | ready    |
-| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem | —             | FR-003, FR-006                        | ready    |
-| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania          | —             | FR-008                                | ready    |
-| S-01 | terms-acceptance-on-signup           | założyć konto, świadomie akceptując warunki korzystania                         | —             | FR-001, FR-002                        | ready    |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji              | F-01, F-02    | US-01, FR-003, FR-006, FR-007, FR-012 | proposed |
-| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera               | S-02          | US-04, FR-004                         | proposed |
-| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                  | S-02          | FR-005                                | proposed |
-| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                  | F-01, F-03    | US-02, FR-008                         | proposed |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                          | S-03, S-05    | US-02, FR-010, FR-012                 | proposed |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                       | S-05          | FR-009                                | blocked  |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                          | S-02, S-06    | US-03, FR-011, FR-012                 | proposed |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie              | S-02, S-05    | FR-001, NFR usunięcia konta           | proposed |
+| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                  | Prerequisites | PRD refs                              | Status      |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------------- | ------------- | ------------------------------------- | ----------- |
+| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji      | —             | FR-003, FR-004, NFR izolacji          | in-progress |
+| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem | —             | FR-003, FR-006                        | ready       |
+| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania          | —             | FR-008                                | ready       |
+| S-01 | terms-acceptance-on-signup           | założyć konto, świadomie akceptując warunki korzystania                         | —             | FR-001, FR-002                        | ready       |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji              | F-01, F-02    | US-01, FR-003, FR-006, FR-007, FR-012 | proposed    |
+| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera               | S-02          | US-04, FR-004                         | proposed    |
+| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                  | S-02          | FR-005                                | proposed    |
+| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                  | F-01, F-03    | US-02, FR-008                         | proposed    |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                          | S-03, S-05    | US-02, FR-010, FR-012                 | proposed    |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                       | S-05          | FR-009                                | blocked     |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                          | S-02, S-06    | US-03, FR-011, FR-012                 | proposed    |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie              | S-02, S-05    | FR-001, NFR usunięcia konta           | proposed    |
 
 ## Streams
 
@@ -91,7 +91,7 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Główne ryzyko kamienia milowego to `skills`, a migracje i RLS są warstwą jeszcze niepisaną samodzielnie — stąd fundament jawny, a nie migracja przemycona w plasterku. Zakres zamknięty na leki i okresy dawkowania: tabele dzienniczka powstają dopiero w S-05, razem z pierwszym ekranem, który ich potrzebuje. Realne zagrożenie: RLS odłożone „na później" — wtedy przy jednym koncie testowym nic nie ujawni wycieku.
-- **Status:** ready
+- **Status:** in-progress
 
 ### F-02: Pary kolizji na grupach ATC i rejestr leków
 

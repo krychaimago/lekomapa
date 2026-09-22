@@ -78,9 +78,17 @@ Te same dwie zmienne, wartości z panelu Supabase → Settings → API (`Project
 
 Pliki w `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_krotki_opis.sql`. **Każda nowa tabela wymaga włączonego RLS z politykami per-operacja i per-rola** — to mechanizm izolacji danych zdrowotnych per-konto z wymagań niefunkcjonalnych PRD, nie opcja do odłożenia na później.
 
+**Każda nowa tabela dokłada też swój zestaw sprawdzeń izolacji do `scripts/smoke.mjs`** — cztery kroki na tabelę: konto widzi wyłącznie własne wiersze, nie odczyta cudzego wiersza po identyfikatorze, nie zmieni go ani nie usunie, a sam klucz publiczny bez sesji nie zwraca nic. Polityka opisana w migracji jest deklaracją; dopiero te kroki robią z niej fakt sprawdzany w CI.
+
+Sprawdzenia SQL z `supabase/tests/rls_checks.sql` uruchamiasz przeciw lokalnemu Supabase:
+
+```bash
+docker exec -i $(docker ps -qf name=supabase_db) psql -U postgres -d postgres -f - < supabase/tests/rls_checks.sql
+```
+
 ## Testy
 
-Na razie jedynym testem jest `scripts/smoke.mjs` — bezzależnościowy skrypt przechodzący ścieżkę auth (rejestracja, logowanie, strona chroniona, wylogowanie) po HTTP. Wymaga osiągalnego Supabase.
+Na razie jedynym testem jest `scripts/smoke.mjs` — skrypt przechodzący po HTTP ścieżkę auth (rejestracja, logowanie, strona chroniona, wylogowanie), a następnie sprawdzający izolację danych między kontami bezpośrednio przez `@supabase/supabase-js`. Wymaga osiągalnego Supabase oraz zmiennych `SUPABASE_URL` i `SUPABASE_KEY` (pusta wartość liczy się jak brak — skrypt kończy się błędem z nazwą zmiennej zamiast po cichu pominąć sprawdzenia).
 
 ```bash
 npm run dev                             # albo: npm run build && npm run preview
@@ -99,6 +107,8 @@ Skrypt ma dwa tryby, wybierane przez zmienne środowiskowe:
   `npm run smoke` ładuje `.env`, jeśli istnieje (`node --env-file-if-exists`), więc te zmienne można trzymać tam zamiast podawać w wierszu poleceń. `.env` jest gitignorowany — hasło konta testowego nigdy nie trafia do repozytorium. Szablon bez wartości: `.env.example`.
 
 - **Istniejące konto** — `SMOKE_EMAIL` i `SMOKE_PASSWORD` wskazują konto już potwierdzone, więc krok rejestracji odpada. To tryb do uruchomienia przeciw produkcji: przechodzi mimo włączonego potwierdzania e-maila i nie zostawia nowych kont w bazie. Konto testowe zakładasz raz, ręcznie. Ustawienie tylko jednej z tych zmiennych kończy się błędem — skrypt nie zgaduje, którego trybu chcesz.
+
+Sprawdzenia izolacji działają **wyłącznie w trybie konta jednorazowego**; w trybie istniejącego konta wypisywany jest wiersz `SKIP` z powodem. Potrzebują dwóch świeżych kont i zapisania przy każdym zmyślonego leku — na produkcji drugiego konta nie da się założyć, a zmyślone dane zdrowotne nie mają czego szukać w prawdziwym koncie. CI chodzi w trybie jednorazowym, więc bramka pozostaje w mocy. Nowa tabela z danymi konta dokłada tu swoje cztery kroki (opis w sekcji [Migracje](#migracje)).
 
 To sanity check po aktualizacji zależności, nie zestaw testów. Logika okresów dawkowania i zestawiania objawów w czasie wymaga własnych testów jednostkowych — do dopisania razem z pierwszym serwisem w `src/lib/services/`.
 
