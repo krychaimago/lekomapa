@@ -345,25 +345,25 @@ Skala z PRD jest mała (jedna użytkowniczka, mały wolumen), więc indeksy na `
 
 #### Automated
 
-- [x] 1.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset`
-- [x] 1.2 Wszystkie trzy tabele mają włączone RLS (zapytanie o `pg_tables.rowsecurity` zwraca `true` dla każdej)
-- [x] 1.3 Liczba polityk to dwanaście — po cztery na tabelę (zapytanie o `pg_policies`)
-- [x] 1.4 Próba zapisu dwóch nakładających się okresów dla jednego leku kończy się błędem bazy
-- [x] 1.5 Próba zmiany dawki i daty rozpoczęcia zamkniętego okresu przechodzi, gdy funkcja okna zwraca `true`, i pada po tymczasowej podmianie funkcji na `false`
-- [x] 1.8 Przy funkcji okna zwracającej `false` usunięcie wiersza składu i wiersza okresu pada, a usunięcie całego leku wraz z kaskadą przechodzi
+- [x] 1.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset` — 2e7b2bc
+- [x] 1.2 Wszystkie trzy tabele mają włączone RLS (zapytanie o `pg_tables.rowsecurity` zwraca `true` dla każdej) — 2e7b2bc
+- [x] 1.3 Liczba polityk to dwanaście — po cztery na tabelę (zapytanie o `pg_policies`) — 2e7b2bc
+- [x] 1.4 Próba zapisu dwóch nakładających się okresów dla jednego leku kończy się błędem bazy — 2e7b2bc
+- [x] 1.5 Próba zmiany dawki i daty rozpoczęcia zamkniętego okresu przechodzi, gdy funkcja okna zwraca `true`, i pada po tymczasowej podmianie funkcji na `false` — 2e7b2bc
+- [x] 1.8 Przy funkcji okna zwracającej `false` usunięcie wiersza składu i wiersza okresu pada, a usunięcie całego leku wraz z kaskadą przechodzi — 2e7b2bc
 
 #### Manual
 
-- [x] 1.6 W Studio widać trzy tabele z oznaczeniem włączonego RLS
-- [x] 1.7 Odczyt tabeli kluczem `anon` bez sesji nie zwraca żadnych wierszy
+- [x] 1.6 W Studio widać trzy tabele z oznaczeniem włączonego RLS — 2e7b2bc
+- [x] 1.7 Odczyt tabeli kluczem `anon` bez sesji nie zwraca żadnych wierszy — 2e7b2bc
 
 ### Phase 2: Typy encji
 
 #### Automated
 
-- [ ] 2.1 Sprawdzenie typów przechodzi: `npm run typecheck`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
-- [ ] 2.3 Build przechodzi: `npm run build`
+- [x] 2.1 Sprawdzenie typów przechodzi: `npm run typecheck`
+- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.3 Build przechodzi: `npm run build`
 
 ### Phase 3: Ścieżka weryfikacji izolacji
 
