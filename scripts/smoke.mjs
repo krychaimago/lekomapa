@@ -8,7 +8,8 @@
 //
 // Two modes, picked by the environment:
 //   - throwaway account (default): signs up a fresh address, then signs in. Needs a Supabase with e-mail
-//     confirmation disabled, so this is the local and CI mode. Only this mode runs the isolation checks.
+//     confirmation disabled, so this is the local and CI mode. Only this mode runs the isolation checks, and
+//     only when SUPABASE_URL points at a local Supabase — SMOKE_ALLOW_REMOTE_WRITES=1 overrides that.
 //   - existing account: set SMOKE_EMAIL and SMOKE_PASSWORD to a confirmed account. Signup is skipped, so the
 //     run works against an environment that confirms e-mail and leaves no new rows behind.
 // SMOKE_EMAIL_DOMAIN overrides the throwaway address domain when example.com is rejected.
@@ -28,6 +29,22 @@ if (Boolean(EXISTING_EMAIL) !== Boolean(EXISTING_PASSWORD)) {
 
 const usesExistingAccount = Boolean(EXISTING_EMAIL);
 const emailDomain = process.env.SMOKE_EMAIL_DOMAIN ?? "example.com";
+
+// The isolation checks create accounts and write invented medications. What decides whether that is safe is
+// the address they write to, not SMOKE_EMAIL — that variable says nothing about the target database. A local
+// Supabase is fair game; anything else needs the operator to say so out loud.
+function isLocalSupabase(url) {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
+const allowsRemoteWrites = process.env.SMOKE_ALLOW_REMOTE_WRITES === "1";
+const writesAreSafe = isLocalSupabase(SUPABASE_URL) || allowsRemoteWrites;
 const email = EXISTING_EMAIL ?? `smoke-${Date.now()}@${emailDomain}`;
 const password = EXISTING_PASSWORD ?? "Smoke-Test-Passw0rd!";
 const jar = new Map();
@@ -35,15 +52,13 @@ const jar = new Map();
 // The isolation checks need a Supabase address and public key of their own. An empty value counts as
 // missing: an empty secret looks exactly like an absent one downstream, and a silently skipped isolation
 // check would turn a data leak into a green run.
-if (!usesExistingAccount) {
-  for (const [name, value] of [
-    ["SUPABASE_URL", SUPABASE_URL],
-    ["SUPABASE_KEY", SUPABASE_KEY],
-  ]) {
-    if (!value) {
-      console.error(`${name} is missing or empty — the isolation checks cannot run without it.`);
-      process.exit(1);
-    }
+for (const [name, value] of [
+  ["SUPABASE_URL", SUPABASE_URL],
+  ["SUPABASE_KEY", SUPABASE_KEY],
+]) {
+  if (!value) {
+    console.error(`${name} is missing or empty — the isolation checks cannot run without it.`);
+    process.exit(1);
   }
 }
 
@@ -209,15 +224,20 @@ function isolationChecks({ table, rowOf, change, guardedColumn }) {
           .maybeSingle();
         if (error) return { ok: false, detail: `owner read-back failed: ${error.message}` };
 
+        // As above: a blocked write comes back with zero rows and no error. An error here means the write
+        // failed for some other reason — a renamed column, a trigger, a broken connection — and the check
+        // proved nothing, so it fails instead of passing on an empty result.
+        const notes = [updated.error?.message, deleted.error?.message].filter(Boolean);
+        if (notes.length) return { ok: false, detail: `check did not run: ${notes.join("; ")}` };
+
         const changedRows = (updated.data ?? []).length;
         const deletedRows = (deleted.data ?? []).length;
         const intact = after !== null && after[guardedColumn] === foreign[guardedColumn];
-        const notes = [updated.error?.message, deleted.error?.message].filter(Boolean);
         return {
           ok: changedRows === 0 && deletedRows === 0 && intact,
           detail: `${changedRows} row(s) changed, ${deletedRows} row(s) deleted, owner's row ${
             intact ? "intact" : "altered"
-          }${notes.length ? ` (${notes.join("; ")})` : ""}`,
+          }`,
         };
       },
       EXPECT_OK,
@@ -226,7 +246,10 @@ function isolationChecks({ table, rowOf, change, guardedColumn }) {
       `${table}: public key without a session reads no rows`,
       async () => {
         const { data, error } = await fixtures.anon.from(table).select("id");
-        if (error) return { ok: data === null, detail: `blocked with: ${error.message}` };
+        // Row level security does not surface as an error here: PostgREST answers a blocked read with an
+        // empty result and no error at all (measured against the local Supabase). So an error means the
+        // check never ran — wrong address, missing table, timeout — and must fail rather than pass.
+        if (error) return { ok: false, detail: `check did not run: ${error.message}` };
         return { ok: data.length === 0, detail: `${data.length} row(s) returned` };
       },
       EXPECT_OK,
@@ -234,17 +257,18 @@ function isolationChecks({ table, rowOf, change, guardedColumn }) {
   ];
 }
 
-// Existing-account mode runs against an environment that confirms e-mail addresses — production. A second
-// account cannot be created there, and seeding invented medications into a real account would write made-up
-// health data. CI runs in throwaway mode, so the gate stays in force where it matters.
-const isolationSteps = usesExistingAccount
-  ? [
-      [
-        "medication isolation checks",
-        null,
-        { skip: "existing-account mode cannot create a second account or write fixture data" },
-      ],
-    ]
+// Two independent reasons to skip. Existing-account mode runs against an environment that confirms e-mail
+// addresses — production — where a second account cannot be created anyway. The address gate is the one that
+// protects the data: writing invented medications into a remote Supabase would put made-up health data into a
+// real database. CI runs in throwaway mode against a local Supabase, so both gates stay open where it matters.
+const isolationSkipReason = usesExistingAccount
+  ? "existing-account mode cannot create a second account or write fixture data"
+  : !writesAreSafe
+    ? `SUPABASE_URL is not a local Supabase — refusing to write invented health data to it. Set SMOKE_ALLOW_REMOTE_WRITES=1 to override.`
+    : null;
+
+const isolationSteps = isolationSkipReason
+  ? [["medication isolation checks", null, { skip: isolationSkipReason }]]
   : [fixtureStep, ...isolationTargets.flatMap(isolationChecks)];
 
 // --- Steps -----------------------------------------------------------------

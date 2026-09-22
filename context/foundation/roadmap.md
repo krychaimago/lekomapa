@@ -190,6 +190,7 @@ Co jest już w repozytorium na dzień `2026-09-21` (sprawdzone w kodzie, potwier
 - **Unknowns:** —
 - **Risk:** Wpisy powstają głównie na telefonie i często wieczorem o porannym objawie — zła godzina fałszowałaby zbieżność z okresem dawkowania w S-06, więc możliwość cofnięcia czasu jest wymogiem, nie udogodnieniem. Notatka własnymi słowami nie uczestniczy w regule; wciągnięcie jej do reguły byłoby zmianą zakresu.
 - **Wymogi projektowe:** katalog z F-03 liczy 34 pozycje, więc lista jest grupowana po ośmiu kategoriach układów, a wyszukiwanie po słowach potocznych jest główną drogą wyboru, nie udogodnieniem. Płaski scroll całego katalogu jest niedopuszczalny. Objaw nieujęty w katalogu użytkowniczka zapisuje w notatce — pozycji „inny objaw" na liście nie ma (Q-2, issue #3).
+- **Dług przejęty z F-01:** migracja tego plasterka musi podmienić treść `public.medication_correction_window_open()` na sprawdzenie, czy dla danego leku istnieje wpis objawu po dacie rozpoczęcia. W F-01 funkcja jest zaślepką zwracającą `true`, więc wszystkie wyzwalacze niemodyfikowalności historii — na `medications`, `medication_substances` i `dosage_periods` — są do tego czasu bezczynne. Dopóki podmiana nie nastąpi, gwarancja „rdzeń wpisu niemodyfikowalny poza oknem korekty" nie obowiązuje, mimo że sprawdzenia w `supabase/tests/rls_checks.sql` przechodzą (podmieniają funkcję u siebie).
 - **Status:** proposed
 
 ### S-06: Złożone pytanie do lekarza po zapisaniu objawu

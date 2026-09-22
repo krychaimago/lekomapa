@@ -86,17 +86,20 @@ begin
     raise exception 'SPRAWDZENIE 2 NIEUDANE: polityk jest %, a ma być 12', v_total;
   end if;
 
+  -- Nie wystarczy sprawdzić, czy któraś polityka wymienia rolę anon: polityka
+  -- założona dla roli public obejmuje anon, nie nazywając jej. Dlatego warunek
+  -- jest odwrotny — każda z dwunastu polityk musi być dokładnie dla authenticated.
   select count(*) into v_anon
   from pg_policies p
   where p.schemaname = 'public'
     and p.tablename in ('medications', 'medication_substances', 'dosage_periods')
-    and 'anon' = any (p.roles);
+    and p.roles is distinct from array['authenticated']::name[];
 
   if v_anon <> 0 then
-    raise exception 'SPRAWDZENIE 2 NIEUDANE: istnieje % polityk dla roli anon, a nie ma być żadnej', v_anon;
+    raise exception 'SPRAWDZENIE 2 NIEUDANE: % polityk ma role inne niż dokładnie {authenticated} — polityka dla public albo anon otwiera dane bez sesji', v_anon;
   end if;
 
-  raise notice 'SPRAWDZENIE 2 OK: 12 polityk, po 4 na tabelę, żadnej dla roli anon';
+  raise notice 'SPRAWDZENIE 2 OK: 12 polityk, po 4 na tabelę, każda dokładnie dla roli authenticated';
 end;
 $$;
 
@@ -126,6 +129,14 @@ begin
     'leaflet'
   );
 
+  insert into public.medications (id, user_id, product_name, composition_source)
+  values (
+    '00000000-0000-4000-8000-000000000005',
+    '00000000-0000-4000-8000-000000000001',
+    'Drugi preparat testowy',
+    'leaflet'
+  );
+
   insert into public.medication_substances (id, medication_id, substance_name, atc_code)
   values (
     '00000000-0000-4000-8000-000000000003',
@@ -143,7 +154,7 @@ begin
     null
   );
 
-  raise notice 'DANE TESTOWE OK: konto, lek, jedna substancja i jeden okres dawkowania';
+  raise notice 'DANE TESTOWE OK: konto, dwa leki, jedna substancja i jeden okres dawkowania';
 end;
 $$;
 
@@ -164,7 +175,9 @@ begin
       date '2026-01-15',
       date '2026-02-01'
     );
-  exception when others then
+  -- Konkretny błąd, nie dowolny: gdyby wpis padł z innego powodu (literówka w
+  -- nazwie kolumny, zła wartość), sprawdzenie wyglądałoby na działającą ochronę.
+  exception when exclusion_violation then
     v_rejected := true;
     v_message := sqlerrm;
   end;
@@ -173,7 +186,27 @@ begin
     raise exception 'SPRAWDZENIE 3 NIEUDANE: baza przyjęła okres nakładający się na istniejący';
   end if;
 
-  raise notice 'SPRAWDZENIE 3 OK: nakładający się okres odrzucony (%)', v_message;
+  -- 3b: okres zerowej długości. daterange(d, d, '[)') jest pusty, a pusty zakres
+  -- nie przecina się z niczym operatorem &&, więc gdyby kontrola dat go wpuściła,
+  -- ograniczenie wykluczające by go nie zauważyło.
+  v_rejected := false;
+  begin
+    insert into public.dosage_periods (medication_id, dose_text, started_on, ended_on)
+    values (
+      '00000000-0000-4000-8000-000000000002',
+      '3 tabletki rano',
+      date '2026-03-01',
+      date '2026-03-01'
+    );
+  exception when check_violation then
+    v_rejected := true;
+  end;
+
+  if not v_rejected then
+    raise exception 'SPRAWDZENIE 3 NIEUDANE: baza przyjęła okres zerowej długości, którego ograniczenie wykluczające nie widzi';
+  end if;
+
+  raise notice 'SPRAWDZENIE 3 OK: nakładający się okres odrzucony (%), okres zerowej długości też', v_message;
 end;
 $$;
 
@@ -248,7 +281,7 @@ begin
     update public.medication_substances
        set substance_name = 'Podmieniona substancja'
      where id = '00000000-0000-4000-8000-000000000003';
-  exception when others then v_blocked := true;
+  exception when sqlstate 'P0001' then v_blocked := true;
   end;
   if not v_blocked then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zmiana substance_name przeszła przy zamkniętym oknie korekty';
@@ -260,7 +293,7 @@ begin
     update public.dosage_periods
        set dose_text = 'inna dawka'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when others then v_blocked := true;
+  exception when sqlstate 'P0001' then v_blocked := true;
   end;
   if not v_blocked then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zmiana dose_text przeszła przy zamkniętym oknie korekty';
@@ -272,7 +305,7 @@ begin
     update public.dosage_periods
        set started_on = date '2026-03-01'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when others then v_blocked := true;
+  exception when sqlstate 'P0001' then v_blocked := true;
   end;
   if not v_blocked then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zmiana started_on przeszła przy zamkniętym oknie korekty';
@@ -294,13 +327,37 @@ begin
     update public.dosage_periods
        set ended_on = date '2026-07-01'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when others then v_blocked := true;
+  exception when sqlstate 'P0001' then v_blocked := true;
   end;
   if not v_blocked then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: podmiana ustawionej daty ended_on przeszła przy zamkniętym oknie korekty';
   end if;
 
-  raise notice 'SPRAWDZENIE 5 OK: rdzeń wpisu niemodyfikowalny, zamknięcie trwającego okresu przechodzi';
+  -- 5f: przepięcie wiersza podrzędnego pod inny własny lek. Żadne z chronionych
+  -- pól się nie zmienia, a historia obu leków owszem.
+  v_blocked := false;
+  begin
+    update public.dosage_periods
+       set medication_id = '00000000-0000-4000-8000-000000000005'
+     where id = '00000000-0000-4000-8000-000000000004';
+  exception when sqlstate 'P0001' then v_blocked := true;
+  end;
+  if not v_blocked then
+    raise exception 'SPRAWDZENIE 5 NIEUDANE: przepięcie okresu pod inny lek przeszło przy zamkniętym oknie korekty';
+  end if;
+
+  v_blocked := false;
+  begin
+    update public.medication_substances
+       set medication_id = '00000000-0000-4000-8000-000000000005'
+     where id = '00000000-0000-4000-8000-000000000003';
+  exception when sqlstate 'P0001' then v_blocked := true;
+  end;
+  if not v_blocked then
+    raise exception 'SPRAWDZENIE 5 NIEUDANE: przepięcie składu pod inny lek przeszło przy zamkniętym oknie korekty';
+  end if;
+
+  raise notice 'SPRAWDZENIE 5 OK: rdzeń wpisu niemodyfikowalny wraz z medication_id, zamknięcie trwającego okresu przechodzi';
 end;
 $$;
 
@@ -316,7 +373,7 @@ begin
   begin
     delete from public.medication_substances
      where id = '00000000-0000-4000-8000-000000000003';
-  exception when others then v_blocked := true;
+  exception when sqlstate 'P0001' then v_blocked := true;
   end;
   if not v_blocked then
     raise exception 'SPRAWDZENIE 6 NIEUDANE: usunięcie wiersza składu przeszło przy zamkniętym oknie korekty';
@@ -326,7 +383,7 @@ begin
   begin
     delete from public.dosage_periods
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when others then v_blocked := true;
+  exception when sqlstate 'P0001' then v_blocked := true;
   end;
   if not v_blocked then
     raise exception 'SPRAWDZENIE 6 NIEUDANE: usunięcie okresu dawkowania przeszło przy zamkniętym oknie korekty';
@@ -337,20 +394,25 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Sprawdzenie 7: kasowanie kaskadowe całego leku przechodzi mimo zamkniętego okna
+-- Sprawdzenie 7: przy zamkniętym oknie korekty usunięcie leku pada
 -- ---------------------------------------------------------------------------
 
 do $$
+declare
+  v_blocked boolean := false;
 begin
-  delete from public.medications where id = '00000000-0000-4000-8000-000000000002';
+  begin
+    delete from public.medications where id = '00000000-0000-4000-8000-000000000002';
+  exception
+    when sqlstate 'P0001' then
+      v_blocked := true;
+  end;
 
-  if exists (select 1 from public.medications where id = '00000000-0000-4000-8000-000000000002')
-     or exists (select 1 from public.medication_substances where medication_id = '00000000-0000-4000-8000-000000000002')
-     or exists (select 1 from public.dosage_periods where medication_id = '00000000-0000-4000-8000-000000000002') then
-    raise exception 'SPRAWDZENIE 7 NIEUDANE: kaskadowe usunięcie leku nie usunęło wszystkich wierszy podrzędnych';
+  if not v_blocked then
+    raise exception 'SPRAWDZENIE 7 NIEUDANE: usunięcie leku przy zamkniętym oknie korekty przeszło — historia dawkowania da się wymazać';
   end if;
 
-  raise notice 'SPRAWDZENIE 7 OK: usunięcie leku wraz z kaskadą przechodzi przy zamkniętym oknie korekty';
+  raise notice 'SPRAWDZENIE 7 OK: przy zamkniętym oknie korekty leku nie da się usunąć';
 end;
 $$;
 
@@ -367,6 +429,24 @@ set search_path = ''
 as $$
 begin
   return true;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Sprawdzenie 8: przy otwartym oknie korekty usunięcie leku przechodzi wraz z kaskadą
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  delete from public.medications where id = '00000000-0000-4000-8000-000000000002';
+
+  if exists (select 1 from public.medications where id = '00000000-0000-4000-8000-000000000002')
+     or exists (select 1 from public.medication_substances where medication_id = '00000000-0000-4000-8000-000000000002')
+     or exists (select 1 from public.dosage_periods where medication_id = '00000000-0000-4000-8000-000000000002') then
+    raise exception 'SPRAWDZENIE 8 NIEUDANE: kaskadowe usunięcie leku nie usunęło wszystkich wierszy podrzędnych';
+  end if;
+
+  raise notice 'SPRAWDZENIE 8 OK: przy otwartym oknie korekty usunięcie pomyłki przechodzi wraz z kaskadą';
 end;
 $$;
 
