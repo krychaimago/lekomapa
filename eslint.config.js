@@ -79,6 +79,8 @@ const scriptsConfig = defineConfig({
 
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
+  // Skille agenta wożą własne skrypty .mjs spoza tsconfig; typed lint nie ma ich jak sparsować.
+  { ignores: [".claude/**"] },
   baseConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],
