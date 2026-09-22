@@ -361,18 +361,18 @@ Skala z PRD jest mała (jedna użytkowniczka, mały wolumen), więc indeksy na `
 
 #### Automated
 
-- [x] 2.1 Sprawdzenie typów przechodzi: `npm run typecheck`
-- [x] 2.2 Lint przechodzi: `npm run lint`
-- [x] 2.3 Build przechodzi: `npm run build`
+- [x] 2.1 Sprawdzenie typów przechodzi: `npm run typecheck` — 0dfd7fc
+- [x] 2.2 Lint przechodzi: `npm run lint` — 0dfd7fc
+- [x] 2.3 Build przechodzi: `npm run build` — 0dfd7fc
 
 ### Phase 3: Ścieżka weryfikacji izolacji
 
 #### Automated
 
-- [ ] 3.1 `npm run smoke` przechodzi lokalnie przeciw `npx supabase start` i podglądowi produkcyjnemu
-- [ ] 3.2 Wszystkie kroki izolacji raportują wynik pozytywny, a ich liczba zgadza się z listą z kontraktu
+- [x] 3.1 `npm run smoke` przechodzi lokalnie przeciw `npx supabase start` i podglądowi produkcyjnemu
+- [x] 3.2 Wszystkie kroki izolacji raportują wynik pozytywny, a ich liczba zgadza się z listą z kontraktu
 - [ ] 3.3 Job `smoke` w CI jest zielony na pull requeście z tą zmianą
 
 #### Manual
 
-- [ ] 3.4 Tymczasowe wyłączenie RLS na jednej tabeli powoduje, że `npm run smoke` pada (przywrócić przed commitem)
+- [x] 3.4 Tymczasowe wyłączenie RLS na jednej tabeli powoduje, że `npm run smoke` pada (przywrócić przed commitem)
