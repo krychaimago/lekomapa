@@ -1,5 +1,6 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together,
 // and that row level security really isolates one account's medications from another's.
+// It also proves that the shared registry and interaction pairs are readable after sign-in and read-only.
 // Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 //
 // The auth path speaks plain HTTP and needs nothing but fetch. The isolation path talks to Supabase
@@ -257,6 +258,133 @@ function isolationChecks({ table, rowOf, change, guardedColumn }) {
   ];
 }
 
+// --- Shared read-only tables ----------------------------------------------
+//
+// The registry and the interaction pairs are shared by every account and loaded only by migrations. A signed-in
+// account reads them and cannot write them; without a session nothing is visible.
+//
+// Unlike the account tables above, a blocked write here does raise: the migration revokes INSERT, UPDATE and
+// DELETE from anon and authenticated, and the privilege check runs before RLS. Measured against the local
+// Supabase for all three tables and all three writes: HTTP 403, code 42501, message "permission denied for table
+// <name>". The steps require exactly that. Any other error — a row level security refusal after privileges were
+// granted back, a constraint, a renamed table — means a layer changed or the step never ran, so it fails.
+
+const PERMISSION_DENIED = "42501";
+
+// Rows read by the first step of each table and compared after the write attempts.
+const sharedRows = {};
+
+// Obviously synthetic rows: no real product, substance or pair. They never land, but if a regression let them in,
+// nothing in them would pass for real data.
+const sharedTargets = [
+  {
+    table: "registry_products",
+    newRow: () => ({
+      rpl_id: `smoke-${Date.now()}`,
+      product_name: "Smoke Test Preparat",
+      source_payload: {},
+      snapshot_date: "2026-01-01",
+    }),
+    change: { product_name: "Wpis z konta użytkowniczki" },
+    guardedColumn: "product_name",
+  },
+  {
+    table: "registry_substances",
+    newRow: () => ({
+      registry_product_id: sharedRows.registry_products?.id,
+      position: 99,
+      substance_name: "Smoketestum",
+      normalized_name: "smoketestum",
+      atc_code: null,
+      atc_source: "unmatched",
+      composition_source: "source",
+    }),
+    change: { substance_name: "Wpis z konta użytkowniczki" },
+    guardedColumn: "substance_name",
+  },
+  {
+    table: "interaction_pairs",
+    newRow: () => ({
+      group_a: "Z98AA",
+      group_b: "Z99AA",
+      description: "Smoke test",
+      source: "Smoke test",
+      verified_on: "2026-01-01",
+    }),
+    change: { description: "Wpis z konta użytkowniczki" },
+    guardedColumn: "description",
+  },
+];
+
+function isPermissionDenied(table, error) {
+  return error?.code === PERMISSION_DENIED && error.message === `permission denied for table ${table}`;
+}
+
+function describeError(error) {
+  return error ? `${error.code ?? "no code"} ${error.message}` : "no error";
+}
+
+function sharedTableChecks({ table, newRow, change, guardedColumn }) {
+  return [
+    [
+      `${table}: signed-in account reads shared rows`,
+      async () => {
+        const { data, error } = await fixtures.a.client.from(table).select(`id, ${guardedColumn}`).limit(1);
+        if (error) return { ok: false, detail: `select failed: ${error.message}` };
+        sharedRows[table] = data[0] ?? null;
+        return { ok: data.length === 1, detail: `${data.length} row(s) read` };
+      },
+      EXPECT_OK,
+    ],
+    [
+      `${table}: signed-in account cannot insert`,
+      async () => {
+        const { data, error } = await fixtures.a.client.from(table).insert(newRow()).select("id");
+        const inserted = (data ?? []).length;
+        return {
+          ok: isPermissionDenied(table, error) && inserted === 0,
+          detail: `${describeError(error)}, ${inserted} row(s) inserted`,
+        };
+      },
+      EXPECT_OK,
+    ],
+    [
+      `${table}: signed-in account cannot change or delete a row`,
+      async () => {
+        const row = sharedRows[table];
+        if (!row) return { ok: false, detail: "check did not run: no row was read in the first step" };
+        const updated = await fixtures.a.client.from(table).update(change).eq("id", row.id).select("id");
+        const deleted = await fixtures.a.client.from(table).delete().eq("id", row.id).select("id");
+        const { data: after, error } = await fixtures.a.client
+          .from(table)
+          .select(`id, ${guardedColumn}`)
+          .eq("id", row.id)
+          .maybeSingle();
+        if (error) return { ok: false, detail: `read-back failed: ${error.message}` };
+
+        const intact = after !== null && after[guardedColumn] === row[guardedColumn];
+        return {
+          ok: isPermissionDenied(table, updated.error) && isPermissionDenied(table, deleted.error) && intact,
+          detail: `update: ${describeError(updated.error)}; delete: ${describeError(deleted.error)}; row ${
+            intact ? "intact" : "altered or gone"
+          }`,
+        };
+      },
+      EXPECT_OK,
+    ],
+    [
+      `${table}: public key without a session reads no rows`,
+      async () => {
+        const { data, error } = await fixtures.anon.from(table).select("id");
+        // Measured: no error and an empty result, as for the account tables. An error means the step never ran.
+        if (error) return { ok: false, detail: `check did not run: ${error.message}` };
+        return { ok: data.length === 0, detail: `${data.length} row(s) returned` };
+      },
+      EXPECT_OK,
+    ],
+  ];
+}
+
 // Two independent reasons to skip. Existing-account mode runs against an environment that confirms e-mail
 // addresses — production — where a second account cannot be created anyway. The address gate is the one that
 // protects the data: writing invented medications into a remote Supabase would put made-up health data into a
@@ -267,9 +395,13 @@ const isolationSkipReason = usesExistingAccount
     ? `SUPABASE_URL is not a local Supabase — refusing to write invented health data to it. Set SMOKE_ALLOW_REMOTE_WRITES=1 to override.`
     : null;
 
+// The shared-table checks use the same fixture account, so they run in the same mode and skip for the same reason.
 const isolationSteps = isolationSkipReason
-  ? [["medication isolation checks", null, { skip: isolationSkipReason }]]
-  : [fixtureStep, ...isolationTargets.flatMap(isolationChecks)];
+  ? [
+      ["medication isolation checks", null, { skip: isolationSkipReason }],
+      ["shared read-only table checks", null, { skip: isolationSkipReason }],
+    ]
+  : [fixtureStep, ...isolationTargets.flatMap(isolationChecks), ...sharedTargets.flatMap(sharedTableChecks)];
 
 // --- Steps -----------------------------------------------------------------
 

@@ -6,6 +6,9 @@
 //
 // Numbers are shown twice: "before" is bare RPL derivation, "after" adds the composition fill (point 7) and the
 // verified rows of the corrections file (point 8), so the author sees what each step closes and what is left.
+//
+// loadPinnedRpl() and renderMeasurementReport() are shared with generate.mjs, which refreshes the same report on
+// the groups of the verified pairs every time it writes the data migrations.
 
 import { Buffer } from "node:buffer";
 import { readFile, writeFile } from "node:fs/promises";
@@ -17,8 +20,14 @@ import { normalizeSubstanceName, resolveSubstanceName } from "./normalize.mjs";
 import { ATC_SHAPE, parseRpl } from "./parse.mjs";
 import { REPO_ROOT, loadVerifiedSnapshot } from "./snapshot.mjs";
 
-const DEFAULT_OUT = path.join(REPO_ROOT, "context", "changes", "interaction-rules-seed", "registry-measurement.md");
-const DEFAULT_CORRECTIONS = path.join(REPO_ROOT, "supabase", "seed-data", "substance-corrections.csv");
+export const DEFAULT_OUT = path.join(
+  REPO_ROOT,
+  "context",
+  "changes",
+  "interaction-rules-seed",
+  "registry-measurement.md",
+);
+export const DEFAULT_CORRECTIONS = path.join(REPO_ROOT, "supabase", "seed-data", "substance-corrections.csv");
 const CONTROL_SAMPLE = ["Exforge HCT", "Diovan", "Ibuprom"];
 
 function flag(name) {
@@ -194,109 +203,121 @@ function correctionRows(rows) {
 }
 const CORRECTION_HEADERS = ["Wiersz", "Rodzaj", "RPL id", "Substancja", "Cel", "Źródło", "Uwagi", "Sprawdzone"];
 
-let snapshot;
-try {
-  snapshot = await loadVerifiedSnapshot(flag("--file"));
-} catch (error) {
-  console.error(error.message);
-  process.exit(1);
-}
-const groups = parseGroups(flag("--groups"));
-const outPath = path.resolve(flag("--out") ?? DEFAULT_OUT);
-const correctionsPath = path.resolve(flag("--corrections") ?? DEFAULT_CORRECTIONS);
-const { manifest, filePath } = snapshot;
-
-const { stanNaDzien, products, rejectedAtcCodes, veterinary } = parseRpl(await readFile(filePath, "utf8"));
-if (stanNaDzien !== manifest.stanNaDzien) {
-  console.error(`File says stanNaDzien=${stanNaDzien}, manifest says ${manifest.stanNaDzien}.`);
-  process.exit(1);
+// The pinned snapshot, parsed: the hash gate first, then the file's own stanNaDzien against the manifest.
+// Shared with generate.mjs, so the migration and the report always read the same data the same way.
+export async function loadPinnedRpl(fileOverride) {
+  const snapshot = await loadVerifiedSnapshot(fileOverride);
+  const { manifest, filePath } = snapshot;
+  const parsed = parseRpl(await readFile(filePath, "utf8"));
+  if (parsed.stanNaDzien !== manifest.stanNaDzien) {
+    throw new Error(`File says stanNaDzien=${parsed.stanNaDzien}, manifest says ${manifest.stanNaDzien}.`);
+  }
+  return { manifest, filePath, parsed };
 }
 
-let corrections;
-try {
-  corrections = await loadCorrections(correctionsPath, products);
-} catch (error) {
-  console.error(error.message);
-  process.exit(1);
-}
+const WORKING_GROUPS = {
+  heading: "Robocza lista grup",
+  intro: "Grupy kandydujące przygotowane przez agenta, do przeglądu przez autorkę w fazie 3:",
+};
 
-// Before: bare RPL, no fill, no corrections.
-const noCorrections = buildCorrectionMaps([]);
-const beforeIndex = buildSubstanceIndex(products);
-const beforeProducts = products.map((product) => ({
-  ...product,
-  substanceCodes: deriveSubstanceCodes(product, beforeIndex),
-}));
-const before = analyze(beforeProducts, beforeIndex, groups, noCorrections);
+// → { report, summary }. Pure: the caller loads the snapshot and corrections and writes the file. `groupsLabel`
+// names where the groups come from (the working list here, the verified pairs in generate.mjs); `generatedBy`
+// is the command the report tells the reader to re-run.
+export function renderMeasurementReport({
+  manifest,
+  filePath,
+  correctionsPath,
+  groups,
+  parsed,
+  corrections,
+  groupsLabel = WORKING_GROUPS,
+  generatedBy = "node scripts/rpl/measure.mjs",
+}) {
+  const { products, rejectedAtcCodes, veterinary } = parsed;
 
-// After: fill (point 7) and verified corrections (point 8).
-const register = prepareRegister(products, corrections.applied);
-const { maps } = register;
-const after = analyze(register.products, register.index, groups, maps);
+  // Before: bare RPL, no fill, no corrections.
+  const noCorrections = buildCorrectionMaps([]);
+  const beforeIndex = buildSubstanceIndex(products);
+  const beforeProducts = products.map((product) => ({
+    ...product,
+    substanceCodes: deriveSubstanceCodes(product, beforeIndex),
+  }));
+  const before = analyze(beforeProducts, beforeIndex, groups, noCorrections);
 
-// Coverage: any correction row, verified or pending, counts as "this gap has a source". Rows rejected by
-// validation do not.
-const cover = buildCorrectionMaps([...corrections.applied, ...corrections.pending]);
-const coverRows = [...corrections.applied, ...corrections.pending];
-const coveredNames = new Set([
-  ...coverRows.filter((row) => row.substance !== "").map((row) => normalizeSubstanceName(row.substance)),
-  ...coverRows.filter((row) => row.kind === "alias").map((row) => normalizeSubstanceName(row.target)),
-  ...products
-    .filter((product) => cover.excluded.has(product.rplId) && product.substances.length === 1)
-    .map((product) => resolveSubstanceName(product.substances[0].name, maps.aliases)),
-]);
-const productNameCovered = (rplId, name) => cover.productSubstanceCodes.get(rplId)?.has(name) ?? false;
+  // After: fill (point 7) and verified corrections (point 8).
+  const register = prepareRegister(products, corrections.applied);
+  const { maps } = register;
+  const after = analyze(register.products, register.index, groups, maps);
 
-const confirmedUnmatched = after.unmatched.filter((entry) => maps.confirmedUnmatched.has(entry.normalizedName));
-const unexplainedUnmatched = after.unmatched.filter((entry) => !maps.confirmedUnmatched.has(entry.normalizedName));
-const isConfirmedAmbiguous = (entry) =>
-  maps.confirmedAmbiguous.get(entry.product.rplId)?.has(entry.normalizedName) ?? false;
-const confirmedAmbiguous = after.ambiguous.filter(isConfirmedAmbiguous);
-const unresolvedAmbiguous = after.ambiguous.filter((entry) => !isConfirmedAmbiguous(entry));
+  // Coverage: any correction row, verified or pending, counts as "this gap has a source". Rows rejected by
+  // validation do not.
+  const cover = buildCorrectionMaps([...corrections.applied, ...corrections.pending]);
+  const coverRows = [...corrections.applied, ...corrections.pending];
+  const coveredNames = new Set([
+    ...coverRows.filter((row) => row.substance !== "").map((row) => normalizeSubstanceName(row.substance)),
+    ...coverRows.filter((row) => row.kind === "alias").map((row) => normalizeSubstanceName(row.target)),
+    ...products
+      .filter((product) => cover.excluded.has(product.rplId) && product.substances.length === 1)
+      .map((product) => resolveSubstanceName(product.substances[0].name, maps.aliases)),
+  ]);
+  const productNameCovered = (rplId, name) => cover.productSubstanceCodes.get(rplId)?.has(name) ?? false;
 
-const gaps = [
-  ...after.withoutComposition
-    .filter((product) => !cover.productCompositions.has(product.rplId))
-    .map((product) => ["produkt bez składu", product.productName, product.rplId, "—", product.atcCodes.join(", ")]),
-  ...after.unmatched
-    .filter(
-      (entry) =>
-        !cover.confirmedUnmatched.has(entry.normalizedName) &&
-        !cover.substanceCodes.has(entry.normalizedName) &&
-        !cover.aliases.has(normalizeSubstanceName(entry.name)) &&
-        !productNameCovered(entry.product.rplId, entry.normalizedName),
+  const confirmedUnmatched = after.unmatched.filter((entry) => maps.confirmedUnmatched.has(entry.normalizedName));
+  const unexplainedUnmatched = after.unmatched.filter((entry) => !maps.confirmedUnmatched.has(entry.normalizedName));
+  const isConfirmedAmbiguous = (entry) =>
+    maps.confirmedAmbiguous.get(entry.product.rplId)?.has(entry.normalizedName) ?? false;
+  const confirmedAmbiguous = after.ambiguous.filter(isConfirmedAmbiguous);
+  const unresolvedAmbiguous = after.ambiguous.filter((entry) => !isConfirmedAmbiguous(entry));
+
+  const gaps = [
+    ...after.withoutComposition
+      .filter((product) => !cover.productCompositions.has(product.rplId))
+      .map((product) => ["produkt bez składu", product.productName, product.rplId, "—", product.atcCodes.join(", ")]),
+    ...after.unmatched
+      .filter(
+        (entry) =>
+          !cover.confirmedUnmatched.has(entry.normalizedName) &&
+          !cover.substanceCodes.has(entry.normalizedName) &&
+          !cover.aliases.has(normalizeSubstanceName(entry.name)) &&
+          !productNameCovered(entry.product.rplId, entry.normalizedName),
+      )
+      .map((entry) => ["`unmatched`", entry.product.productName, entry.product.rplId, entry.name, "brak kandydatów"]),
+    ...after.ambiguous
+      .filter(
+        (entry) =>
+          !productNameCovered(entry.product.rplId, entry.normalizedName) &&
+          !(cover.confirmedAmbiguous.get(entry.product.rplId)?.has(entry.normalizedName) ?? false),
+      )
+      .map((entry) => [
+        "remis",
+        entry.product.productName,
+        entry.product.rplId,
+        entry.name,
+        entry.candidates.join(", "),
+      ]),
+    ...after.crossGroup
+      .filter((entry) => entry.usedInScope && !coveredNames.has(entry.name))
+      .map((entry) => ["kody z różnych grup anatomicznych", "—", "—", entry.name, entry.codes.join(", ")]),
+  ];
+
+  const scopedFilled = register.filled.filter((entry) => after.scopedIds.has(entry.product.rplId));
+  const scopedCorrected = register.correctedComposition.filter((entry) => after.scopedIds.has(entry.product.rplId));
+  const unfilledById = new Map(register.unfilled.map((entry) => [entry.product.rplId, entry]));
+  const filledCount = (source) => scopedFilled.filter((entry) => entry.compositionSource === source).length;
+
+  const control = register.products
+    .filter((product) =>
+      CONTROL_SAMPLE.some((name) => product.productName === name || product.productName.startsWith(`${name} `)),
     )
-    .map((entry) => ["`unmatched`", entry.product.productName, entry.product.rplId, entry.name, "brak kandydatów"]),
-  ...after.ambiguous
-    .filter(
-      (entry) =>
-        !productNameCovered(entry.product.rplId, entry.normalizedName) &&
-        !(cover.confirmedAmbiguous.get(entry.product.rplId)?.has(entry.normalizedName) ?? false),
-    )
-    .map((entry) => ["remis", entry.product.productName, entry.product.rplId, entry.name, entry.candidates.join(", ")]),
-  ...after.crossGroup
-    .filter((entry) => entry.usedInScope && !coveredNames.has(entry.name))
-    .map((entry) => ["kody z różnych grup anatomicznych", "—", "—", entry.name, entry.codes.join(", ")]),
-];
+    .sort((a, b) => a.productName.localeCompare(b.productName) || a.rplId.localeCompare(b.rplId));
 
-const scopedFilled = register.filled.filter((entry) => after.scopedIds.has(entry.product.rplId));
-const scopedCorrected = register.correctedComposition.filter((entry) => after.scopedIds.has(entry.product.rplId));
-const unfilledById = new Map(register.unfilled.map((entry) => [entry.product.rplId, entry]));
-const filledCount = (source) => scopedFilled.filter((entry) => entry.compositionSource === source).length;
+  const scopedRejected = rejectedAtcCodes.filter((entry) => after.scopedIds.has(entry.rplId));
+  const relative = (target) => path.relative(REPO_ROOT, target);
+  const both = (pick) => [pick(before), pick(after)];
 
-const control = register.products
-  .filter((product) =>
-    CONTROL_SAMPLE.some((name) => product.productName === name || product.productName.startsWith(`${name} `)),
-  )
-  .sort((a, b) => a.productName.localeCompare(b.productName) || a.rplId.localeCompare(b.rplId));
+  const report = `# Pomiar rejestru RPL dla zakresu par
 
-const scopedRejected = rejectedAtcCodes.filter((entry) => after.scopedIds.has(entry.rplId));
-const relative = (target) => path.relative(REPO_ROOT, target);
-const both = (pick) => [pick(before), pick(after)];
-
-const report = `# Pomiar rejestru RPL dla zakresu par
-
-> Wygenerowane przez \`node scripts/rpl/measure.mjs\`. Nie edytuj ręcznie — uruchom skrypt ponownie.
+> Wygenerowane przez \`${generatedBy}\`. Nie edytuj ręcznie — uruchom skrypt ponownie.
 > Źródło: Rejestr Produktów Leczniczych, licencja CC BY 4.0.
 
 ## Plik źródłowy
@@ -308,9 +329,9 @@ const report = `# Pomiar rejestru RPL dla zakresu par
 - Plik: \`${relative(filePath)}\`
 - Plik poprawek: \`${relative(correctionsPath)}\`
 
-## Robocza lista grup
+## ${groupsLabel.heading}
 
-Grupy kandydujące przygotowane przez agenta, do przeglądu przez autorkę w fazie 3:
+${groupsLabel.intro}
 
 ${groups.map((group) => `\`${group}\``).join(", ")}
 
@@ -529,18 +550,46 @@ ${table(
   ]),
 )}`;
 
-await writeFile(outPath, report);
-console.log(`Report written to ${relative(outPath)}`);
-const summary = (variant) =>
-  `inScope=${variant.scoped.length} withoutComposition=${variant.withoutComposition.length} ` +
-  `derived=${variant.countBy("derived")} ambiguous=${variant.countBy("derived_ambiguous")} ` +
-  `corrected=${variant.countBy("corrected")} unmatched=${variant.countBy("unmatched")} ` +
-  `crossGroup=${variant.crossGroup.length} estimated=${variant.megabytes}MB`;
-console.log(`human=${products.length} rejected=${rejectedAtcCodes.length}`);
-console.log(`before: ${summary(before)}`);
-console.log(`after:  ${summary(after)}`);
-console.log(
-  `filled: sibling=${filledCount("sibling")} atc_reverse=${filledCount("atc_reverse")} correction=${scopedCorrected.length} ` +
-    `corrections: applied=${corrections.applied.length} pending=${corrections.pending.length} ` +
-    `errors=${corrections.errors.length} gapsWithoutSource=${gaps.length}`,
-);
+  const summarize = (variant) =>
+    `inScope=${variant.scoped.length} withoutComposition=${variant.withoutComposition.length} ` +
+    `derived=${variant.countBy("derived")} ambiguous=${variant.countBy("derived_ambiguous")} ` +
+    `corrected=${variant.countBy("corrected")} unmatched=${variant.countBy("unmatched")} ` +
+    `crossGroup=${variant.crossGroup.length} estimated=${variant.megabytes}MB`;
+  const summary = [
+    `human=${products.length} rejected=${rejectedAtcCodes.length}`,
+    `before: ${summarize(before)}`,
+    `after:  ${summarize(after)}`,
+    `filled: sibling=${filledCount("sibling")} atc_reverse=${filledCount("atc_reverse")} correction=${scopedCorrected.length} ` +
+      `corrections: applied=${corrections.applied.length} pending=${corrections.pending.length} ` +
+      `errors=${corrections.errors.length} gapsWithoutSource=${gaps.length}`,
+  ];
+  return { report, summary };
+}
+
+async function main() {
+  let pinned;
+  try {
+    pinned = await loadPinnedRpl(flag("--file"));
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+  const groups = parseGroups(flag("--groups"));
+  const outPath = path.resolve(flag("--out") ?? DEFAULT_OUT);
+  const correctionsPath = path.resolve(flag("--corrections") ?? DEFAULT_CORRECTIONS);
+
+  let corrections;
+  try {
+    corrections = await loadCorrections(correctionsPath, pinned.parsed.products);
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+
+  const { report, summary } = renderMeasurementReport({ ...pinned, correctionsPath, groups, corrections });
+  await writeFile(outPath, report);
+  console.log(`Report written to ${path.relative(REPO_ROOT, outPath)}`);
+  for (const line of summary) console.log(line);
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) await main();

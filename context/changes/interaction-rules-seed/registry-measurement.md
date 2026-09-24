@@ -1,6 +1,6 @@
 # Pomiar rejestru RPL dla zakresu par
 
-> Wygenerowane przez `node scripts/rpl/measure.mjs`. Nie edytuj ręcznie — uruchom skrypt ponownie.
+> Wygenerowane przez `node scripts/rpl/generate.mjs`. Nie edytuj ręcznie — uruchom skrypt ponownie.
 > Źródło: Rejestr Produktów Leczniczych, licencja CC BY 4.0.
 
 ## Plik źródłowy
@@ -12,9 +12,9 @@
 - Plik: `.cache/rpl/overall-6.0.0-2026-09-23.xml`
 - Plik poprawek: `supabase/seed-data/substance-corrections.csv`
 
-## Robocza lista grup
+## Grupy ze sprawdzonych par
 
-Grupy kandydujące przygotowane przez agenta, do przeglądu przez autorkę w fazie 3:
+Suma `group_a` i `group_b` par zaakceptowanych przez `loadPairs` (z `verified_on`) — ta sama lista, którą filtruje generator migracji:
 
 `B01AA`, `B01AC`, `B01AF`, `C03AA`, `C03CA`, `C07AB`, `C08CA`, `C09AA`, `C09CA`, `C10AA`, `M01AB`, `M01AE`, `N05AN`, `N06AB`
 

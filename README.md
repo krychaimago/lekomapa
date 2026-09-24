@@ -45,6 +45,7 @@ npm run dev           # http://localhost:4321
 | `npm run typecheck`         | `astro check` — bramka typów, ta sama co w CI          |
 | `npm run format`            | Prettier                                               |
 | `npm run smoke`             | test dymny ścieżki auth przeciw działającemu serwerowi |
+| `npm test`                  | testy jednostkowe skryptów RPL (`node --test`)         |
 
 Pre-commit (husky + lint-staged) uruchamia `eslint --fix` na `*.{ts,tsx,astro}` i `prettier --write` na `*.{json,css,md}`.
 
@@ -86,9 +87,73 @@ Sprawdzenia SQL z `supabase/tests/rls_checks.sql` uruchamiasz przeciw lokalnemu 
 docker exec -i $(docker ps -qf name=supabase_db) psql -U postgres -d postgres -f - < supabase/tests/rls_checks.sql
 ```
 
+Plik sprawdza też dane z migracji rejestru i par: tabele nie są puste, każdy produkt mieści się w zakresie którejś pary, a żaden produkt nie ma zdublowanego wiersza substancji.
+
+### Dane rejestru leków i par kolizji
+
+Rejestr leków (`registry_products`, `registry_substances`) i pary kolizji (`interaction_pairs`) to dane wspólne, tylko do odczytu. Trafiają do bazy wyłącznie migracjami wygenerowanymi skryptem, nigdy importem — lokalnie, w CI i na produkcji jest ten sam stan, a stan bazy wynika z repozytorium.
+
+Skąd biorą się dane:
+
+- **RPL** — Rejestr Produktów Leczniczych, plik XML v6.0.0. Surowy plik (~74 MB) leży w `.cache/rpl/` i nie trafia do repozytorium. W repozytorium jest manifest `supabase/seed-data/rpl-snapshot.json` z datą `stanNaDzien` i skrótem `sha256`. Każdy skrypt odmawia pracy na pliku o innym skrócie, bo RPL zmienia się codziennie.
+- **Pary** — `supabase/seed-data/interaction_pairs.csv`. Do migracji trafia tylko para z datą sprawdzenia (`verified_on`) wpisaną przez autorkę.
+- **Poprawki substancji** — `supabase/seed-data/substance-corrections.csv` (opis niżej).
+
+Kolejność pracy:
+
+```bash
+node scripts/rpl/download.mjs                                   # pobiera RPL i zapisuje manifest (--refresh nadpisuje istniejący)
+node scripts/rpl/measure.mjs --groups C09CA,M01AE               # raport liczb dla roboczej listy grup
+node scripts/rpl/pairs.mjs supabase/seed-data/interaction_pairs.csv   # walidacja par
+node scripts/rpl/generate.mjs --timestamp YYYYMMDDHHmmss        # dwie migracje danych + odświeżony raport
+npx supabase db reset                                           # lokalnie: stosuje migracje od zera
+```
+
+Generator:
+
+- bierze grupy z par sprawdzonych przez autorkę (`group_a` i `group_b`) i wczytuje z RPL tylko produkty z tych grup. Zakres to filtr przy generowaniu — w bazie nie ma flagi „w zakresie”,
+- pisze `<timestamp>_registry_seed.sql` i `<timestamp + 1 min>_interaction_pairs_seed.sql`. Nagłówek każdej migracji podaje źródło, `stanNaDzien`, skrót, grupy, liczby i odrzucone kody ATC,
+- odświeża raport `context/changes/interaction-rules-seed/registry-measurement.md`,
+- odmawia pracy, gdy plik par albo poprawek ma błędy, gdy w pliku poprawek jest wiersz bez `verified_on` albo gdy znacznik czasu nie jest późniejszy od ostatniej migracji.
+
+**Nowa grupa = nowa migracja dogrywająca, bez edycji istniejącej.** Po dodaniu pary z nową grupą uruchom generator z nowym znacznikiem czasu. Nowa migracja dogrywa brakujące produkty (`on conflict (rpl_id) do nothing`) i nie rusza produktów wgranych wcześniej — substancje wstawia tylko dla produktów wstawionych w tej samej migracji. Istniejącej migracji danych nie edytuj ani nie generuj ponownie: na produkcji już się nie wykona.
+
+Z tego samego powodu poprawka substancji dla produktu, który już jest w bazie, nie przejdzie przez generator. Taka poprawka to osobna, ręcznie pisana migracja, a źródłem pozostaje ten sam wiersz w pliku poprawek.
+
+#### Plik poprawek substancji
+
+`supabase/seed-data/substance-corrections.csv` domyka luki, których RPL sam nie domyka. Format: UTF-8, separator `;`, pola w cudzysłowach, kolumny `kind;rpl_id;substance;target;source;note;verified_on`.
+
+| `kind`                   | Do czego służy                                                                                             |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `alias`                  | nazwa substancji normalizuje się do innej nazwy (literówki, nazwy polskie, zapisy soli spoza listy)        |
+| `substance_code`         | kod ATC dla substancji, która nie ma w RPL leku jednoskładnikowego                                         |
+| `product_substance_code` | kod tej substancji w tym jednym produkcie (remis kodów, błąd źródła)                                       |
+| `index_exclude`          | produkt nie zasila słownika kodów (błędny kod w źródle)                                                    |
+| `product_composition`    | substancja dla produktu bez składu, gdy automatyczne uzupełnienie nie wystarczyło                          |
+| `confirmed_unmatched`    | potwierdzenie, że substancja nie ma własnego kodu — zmienia tylko raport                                   |
+| `confirmed_ambiguous`    | potwierdzenie, że remis kodów w produkcie zostaje świadomie (uzasadnienie w `note`) — zmienia tylko raport |
+
+Zasady:
+
+- **Każdy wiersz ma źródło i datę sprawdzenia.** `source` wskazuje konkretny dokument (ChPL lub ulotka w RPL z punktem, wyszukiwarka ATC WHO z datą dostępu). `verified_on` wpisuje autorka po sprawdzeniu — nigdy agent. Wiersz bez daty nie działa, a generator odmawia pracy, dopóki taki wiersz jest w pliku.
+- **Poprawka nie zmienia surowych danych RPL.** Działa na wczytanych produktach. Treść źródłowa zostaje w `source_payload` bez zmian, a pochodzenie kodu i składu opisują kolumny `atc_source` i `composition_source`.
+
+#### Licencja danych RPL
+
+Dane rejestru pochodzą z [Rejestru Produktów Leczniczych](https://dane.gov.pl/pl/dataset/397,rejestr-produktow-leczniczych) udostępnianego na licencji [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.pl). Źródło: Rejestr Produktów Leczniczych, `https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/public-pl-report/6.0.0/overall.xml`, stan na dzień z manifestu `supabase/seed-data/rpl-snapshot.json`. Licencja wymaga podania źródła przy każdym wykorzystaniu danych. Wzmianka w interfejsie należy do S-02.
+
 ## Testy
 
-Na razie jedynym testem jest `scripts/smoke.mjs` — skrypt przechodzący po HTTP ścieżkę auth (rejestracja, logowanie, strona chroniona, wylogowanie), a następnie sprawdzający izolację danych między kontami bezpośrednio przez `@supabase/supabase-js`. Wymaga osiągalnego Supabase oraz zmiennych `SUPABASE_URL` i `SUPABASE_KEY` (pusta wartość liczy się jak brak — skrypt kończy się błędem z nazwą zmiennej zamiast po cichu pominąć sprawdzenia).
+Testy jednostkowe skryptów RPL (`scripts/**/*.test.mjs`, wbudowany `node --test`, bez bazy i bez sieci):
+
+```bash
+npm test
+```
+
+Obejmują normalizację nazw substancji, wyprowadzanie kodów ATC, filtr zakresu, plik poprawek, walidację par i budowanie SQL migracji. W CI chodzą w jobie `ci`.
+
+Test dymny to `scripts/smoke.mjs` — skrypt przechodzący po HTTP ścieżkę auth (rejestracja, logowanie, strona chroniona, wylogowanie), a następnie sprawdzający izolację danych między kontami bezpośrednio przez `@supabase/supabase-js`. Wymaga osiągalnego Supabase oraz zmiennych `SUPABASE_URL` i `SUPABASE_KEY` (pusta wartość liczy się jak brak — skrypt kończy się błędem z nazwą zmiennej zamiast po cichu pominąć sprawdzenia).
 
 ```bash
 npm run dev                             # albo: npm run build && npm run preview
@@ -111,13 +176,15 @@ Skrypt ma dwa tryby, wybierane przez zmienne środowiskowe:
 
 Sprawdzenia izolacji działają **wyłącznie w trybie konta jednorazowego i wyłącznie przeciw lokalnemu Supabase** (`SUPABASE_URL` na `localhost` albo `127.0.0.1`); w każdym innym wypadku wypisywany jest wiersz `SKIP` z powodem. Świadome uruchomienie ich przeciw zdalnej bazie wymaga jawnego `SMOKE_ALLOW_REMOTE_WRITES=1` — o adresie decyduje `SUPABASE_URL`, nie obecność `SMOKE_EMAIL`, bo ta zmienna nic o docelowej bazie nie mówi. Potrzebują dwóch świeżych kont i zapisania przy każdym zmyślonego leku — na produkcji drugiego konta nie da się założyć, a zmyślone dane zdrowotne nie mają czego szukać w prawdziwym koncie. CI chodzi w trybie jednorazowym, więc bramka pozostaje w mocy. Nowa tabela z danymi konta dokłada tu swoje cztery kroki (opis w sekcji [Migracje](#migracje)).
 
+W tym samym trybie chodzą kroki dla tabel wspólnych (`registry_products`, `registry_substances`, `interaction_pairs`). Zalogowane konto czyta co najmniej jeden wiersz. Próba wstawienia, zmiany i usunięcia kończy się zmierzonym błędem `42501` („permission denied for table …”), a ponowny odczyt pokazuje wiersz bez zmian. Sam klucz publiczny bez sesji nie zwraca nic.
+
 To sanity check po aktualizacji zależności, nie zestaw testów. Logika okresów dawkowania i zestawiania objawów w czasie wymaga własnych testów jednostkowych — do dopisania razem z pierwszym serwisem w `src/lib/services/`.
 
 ## CI
 
 `.github/workflows/ci.yml`, push i PR do `main`:
 
-- **ci** — `npm ci`, `astro sync`, lint, `astro check`, build. Build wymaga sekretów repozytorium `SUPABASE_URL` i `SUPABASE_KEY`.
+- **ci** — `npm ci`, `astro sync`, lint, testy jednostkowe (`npm test`), `astro check`, build. Build wymaga sekretów repozytorium `SUPABASE_URL` i `SUPABASE_KEY`.
 - **smoke** — podnosi lokalne Supabase przez CLI, buduje, serwuje podgląd produkcyjny i uruchamia `npm run smoke`. Bez sekretów.
 
 ## Deploy

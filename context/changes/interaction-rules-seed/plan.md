@@ -770,29 +770,29 @@ W sekcji `## Testy`: `npm test`.
 
 #### Automated
 
-- [x] 3.1 Walidacja par przechodzi bez błędów na pliku z repozytorium
-- [x] 3.2 Testy przechodzą: `npm test`
-- [x] 3.5 Walidacja poprawek bez błędów, każda luka w zakresie ma wiersz poprawki albo jest wypisana autorce
+- [x] 3.1 Walidacja par przechodzi bez błędów na pliku z repozytorium — 8a52fd4
+- [x] 3.2 Testy przechodzą: `npm test` — 8a52fd4
+- [x] 3.5 Walidacja poprawek bez błędów, każda luka w zakresie ma wiersz poprawki albo jest wypisana autorce — 8a52fd4
 
 #### Manual
 
-- [x] 3.3 Autorka sprawdziła każdą parę przy ulotce albo ChPL i wpisała `verified_on`
-- [x] 3.4 Autorka potwierdza, że żaden `description` nie stwierdza przyczyny, zakazu ani nie sugeruje zmiany leczenia
-- [x] 3.6 Autorka sprawdziła każdą poprawkę substancji przy wskazanym źródle i wpisała `verified_on`
+- [x] 3.3 Autorka sprawdziła każdą parę przy ulotce albo ChPL i wpisała `verified_on` — 8a52fd4
+- [x] 3.4 Autorka potwierdza, że żaden `description` nie stwierdza przyczyny, zakazu ani nie sugeruje zmiany leczenia — 8a52fd4
+- [x] 3.6 Autorka sprawdziła każdą poprawkę substancji przy wskazanym źródle i wpisała `verified_on` — 8a52fd4
 
 ### Phase 4: Migracje danych i bramki
 
 #### Automated
 
-- [ ] 4.1 Migracje stosują się czysto: `npx supabase db reset`
-- [ ] 4.2 Sprawdzenia SQL, w tym sprawdzenia danych, przechodzą
-- [ ] 4.3 Ponowne wykonanie migracji danych nie zmienia liczby wierszy
-- [ ] 4.4 Testy przechodzą: `npm test`
-- [ ] 4.5 `npm run smoke` przechodzi przeciw lokalnemu Supabase, nowe kroki raportują `PASS`
+- [x] 4.1 Migracje stosują się czysto: `npx supabase db reset`
+- [x] 4.2 Sprawdzenia SQL, w tym sprawdzenia danych, przechodzą
+- [x] 4.3 Ponowne wykonanie migracji danych nie zmienia liczby wierszy
+- [x] 4.4 Testy przechodzą: `npm test`
+- [x] 4.5 `npm run smoke` przechodzi przeciw lokalnemu Supabase, nowe kroki raportują `PASS`
 - [ ] 4.6 Jobs `ci` i `smoke` w CI są zielone na pull requeście
 
 #### Manual
 
-- [ ] 4.7 Tymczasowa polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem)
-- [ ] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego
-- [ ] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych
+- [x] 4.7 Tymczasowa polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem)
+- [x] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego
+- [x] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych
