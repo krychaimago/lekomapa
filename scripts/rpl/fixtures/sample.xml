@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Selected entries from the Polish Medicinal Products Register (rejestry.ezdrowie.gov.pl), licence CC BY 4.0,
+     stanNaDzien 2026-09-23. Every element except the one marked SYNTHETIC is copied unchanged. -->
+<produktyLecznicze stanNaDzien="2026-09-23" xmlns="http://rejestry.ezdrowie.gov.pl/rpl/eksport-danych-v6.0.0">
+    <!-- Diovan — single-substance valsartan (C09CA03) -->
+    <produktLeczniczy nazwaProduktu="Diovan" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Valsartanum" nazwaPoprzedniaProduktu="brak" moc="80 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="Novartis Poland Sp. z o.o." typProcedury="MRP" numerPozwolenia="09291" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 10 ust. 1 i 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/10719/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/10719/characteristic" id="100107195">
+        <kodyATC>
+            <kodATC>C09CA03</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Valsartanum" iloscSubstancji="80" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990929115" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="18690">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="28" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990929122" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="18691">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="56" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Novartis Farma S.p.A." krajWytworcyImportera="Włochy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Farma S.p.A." krajWytworcyImportera="Włochy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Farmaceutica S.A." krajWytworcyImportera="Hiszpania"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Farma-Productos Famaceuticos S.A." krajWytworcyImportera="Portugalia"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Hellas S.A.C.I" krajWytworcyImportera="Grecja"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Hungaria Kft." krajWytworcyImportera="Węgry"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma B.V." krajWytworcyImportera="Kolumbia"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma GmbH" krajWytworcyImportera="Niemcy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma GmbH" krajWytworcyImportera="Austria"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma S.A.S" krajWytworcyImportera="Francja"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Sverige AG" krajWytworcyImportera="Szwecja"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Exforge HCT — combination code C09DX01, substances with salts -->
+    <produktLeczniczy nazwaProduktu="Exforge HCT" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Amlodipinum + Valsartanum + Hydrochlorothiazidum " nazwaPoprzedniaProduktu="brak" moc="5 mg +160 mg +12,5 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="Novartis Europharm Limited" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100094647">
+        <kodyATC>
+            <kodATC>C09DX01</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Amlodipini besilas" iloscSubstancji="5" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+            <substancjaCzynna nazwaSubstancji="Valsartanum" iloscSubstancji="160" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+            <substancjaCzynna nazwaSubstancji="Hydrochlorothiazidum" iloscSubstancji="12,5" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990771646" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/001" dystrybutorRownolegly="" id="57077">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="14" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990771653" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/002" dystrybutorRownolegly="" id="57078">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="28" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990771660" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/003" dystrybutorRownolegly="" id="57079">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="30" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990771677" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/004" dystrybutorRownolegly="" id="57080">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="56" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990771691" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/005" dystrybutorRownolegly="" id="57081">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="90" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990771707" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/006" dystrybutorRownolegly="" id="57082">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="98" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990771684" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/008" dystrybutorRownolegly="" id="57083">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="56" jednostkaPojemnosci="tabl." informacjeDodatkowe="(56 x 1)"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/007" dystrybutorRownolegly="" id="90691">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="280" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/009" dystrybutorRownolegly="" id="90692">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="98" jednostkaPojemnosci="tabl." informacjeDodatkowe="(98 x 1)"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/010" dystrybutorRownolegly="" id="90693">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="280" jednostkaPojemnosci="tabl." informacjeDodatkowe="(280 x 1)"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/011" dystrybutorRownolegly="" id="90694">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="280" jednostkaPojemnosci="tabl." informacjeDodatkowe="(4 x 70)"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/09/569/012" dystrybutorRownolegly="" id="90695">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="280" jednostkaPojemnosci="tabl." informacjeDodatkowe="(20 x 14)"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Novartis Farma S.p.A." krajWytworcyImportera="Włochy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Farmaceutica S.A." krajWytworcyImportera="Hiszpania"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma GmbH" krajWytworcyImportera="Niemcy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma GmbH" krajWytworcyImportera="Niemcy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Vilpin — single-substance "Amlodipini besilas" -->
+    <produktLeczniczy nazwaProduktu="Vilpin" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Amlodipinum" nazwaPoprzedniaProduktu="brak" moc="5 mg" nazwaPostaciFarmaceutycznej="Tabletki" podmiotOdpowiedzialny="Teva Pharmaceuticals Polska Sp. z o.o." typProcedury="NAR" numerPozwolenia="12431" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 15 ust. 1 pkt 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/16400/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/16400/characteristic" id="100164000">
+        <kodyATC>
+            <kodATC>C08CA01</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Amlodipini besilas" iloscSubstancji="6,934" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990621217" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="33899">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="30" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Teva Operations Polska Sp. z o.o." krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Norvasc — single-substance "Amlodipinum" -->
+    <produktLeczniczy nazwaProduktu="Norvasc" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Amlodipinum" nazwaPoprzedniaProduktu="brak" moc="10 mg" nazwaPostaciFarmaceutycznej="Tabletki" podmiotOdpowiedzialny="InPharm Sp. z o.o." typProcedury="IR" numerPozwolenia="7/20" waznoscPozwolenia="2025-01-21" zakazStosowaniaUZwierzat="" id="100430312">
+        <kodyATC>
+            <kodATC>C08CA01</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Amlodipinum" iloscSubstancji="10" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909991422219" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="135186">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="28" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy podmiotOdpowiedzialnywKrajuEksportu="Pfizer Limited" krajEksportu="Wielka Brytania"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Ibuprom — ibuprofen tablets (M01AE01) -->
+    <produktLeczniczy nazwaProduktu="Ibuprom" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Ibuprofenum" nazwaPoprzedniaProduktu="brak" moc="200 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="US Pharmacia Sp. z o.o." typProcedury="NAR" numerPozwolenia="00879" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 15 ust. 1 pkt 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/19798/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/19798/characteristic" id="100197985">
+        <kodyATC>
+            <kodATC>M01AE01</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Ibuprofenum" iloscSubstancji="200" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990087938" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="4801">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="50" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990087945" kategoriaDostepnosci="Rp" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="4802">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="500" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05904569251451" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="4803">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="12" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05904569251475" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="4804">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="24" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990220106" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="26988">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="30" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990786091" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="34527">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="4" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990087914" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="45267">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="2" jednostkaPojemnosci="tabl." informacjeDodatkowe="w saszetce"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990087952" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="45268">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="6" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990087921" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="45269">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="10" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990674176" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="47179">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="96" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05907377130475" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="80786">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="20" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05907377139300" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="116657">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="2" jednostkaPojemnosci="tabl." informacjeDodatkowe="w blistrze"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="US Pharmacia Sp. z o.o." krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Ibuprom Effect gel — ibuprofen gel (M02AA13) -->
+    <produktLeczniczy nazwaProduktu="Ibuprom Effect żel" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Ibuprofenum" nazwaPoprzedniaProduktu="Ibuprom Sport żel" moc="50 mg/g" nazwaPostaciFarmaceutycznej="Żel" podmiotOdpowiedzialny="US Pharmacia Sp. z o.o." typProcedury="NAR" numerPozwolenia="23940" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 15 ust. 12" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/38366/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/38366/characteristic" id="100383660">
+        <kodyATC>
+            <kodATC>M02AA13</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="podanie na skórę"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Ibuprofenum" iloscSubstancji="50" jednostkaMiaryIlosciSubstancji="mg/g" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909991327156" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="119917">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="tuba" pojemnosc="60" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05907377139829" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="128654">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="tuba" pojemnosc="100" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05903031289107" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="129410">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="tuba" pojemnosc="20" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Farmasierra Manufacturing, S.L." krajWytworcyImportera="Hiszpania"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Ibuprom Zatoki — ibuprofen combination (M01AE51) -->
+    <produktLeczniczy nazwaProduktu="Ibuprom Zatoki" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Ibuprofenum + Pseudoephedrini hydrochloridum" nazwaPoprzedniaProduktu="brak" moc="200 mg + 30 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="US Pharmacia Sp. z o.o." typProcedury="NAR" numerPozwolenia="09650" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 15 ust. 1 pkt 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/19478/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/19478/characteristic" id="100194780">
+        <kodyATC>
+            <kodATC>M01AE51</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Ibuprofenum" iloscSubstancji="200" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+            <substancjaCzynna nazwaSubstancji="Pseudoephedrini hydrochloridum" iloscSubstancji="30" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990615476" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="15276">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="24" jednostkaPojemnosci="tabl." informacjeDodatkowe="w butelce"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990965014" kategoriaDostepnosci="OTC" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="19783">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="2" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990965021" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="19784">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="12" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990965038" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="19785">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="24" jednostkaPojemnosci="tabl." informacjeDodatkowe="w blistrze"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990965045" kategoriaDostepnosci="OTC" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="20874">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="6" jednostkaPojemnosci="tabl." informacjeDodatkowe="w saszetkach"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990965052" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="20875">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="6" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05907377139546" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="119242">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="10" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05907377139553" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="119243">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="20" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="US Pharmacia Sp. z o.o." krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Entresto — sacubitril, no single-substance product -->
+    <produktLeczniczy nazwaProduktu="Entresto" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Sacubitrilum + Valsartanum" nazwaPoprzedniaProduktu="brak" moc="24 mg + 26 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="Novartis Europharm Limited" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100309013">
+        <kodyATC>
+            <kodATC>C09DX04</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Sacubitrilum" iloscSubstancji="24" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+            <substancjaCzynna nazwaSubstancji="Valsartanum" iloscSubstancji="26" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909991245443" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/001" dystrybutorRownolegly="" id="88464">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="28" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991267827" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/008" dystrybutorRownolegly="" id="114808">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="14" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991267834" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/009" dystrybutorRownolegly="" id="114809">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="20" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991267841" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/010" dystrybutorRownolegly="" id="114810">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="56" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/017" dystrybutorRownolegly="" id="131612">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="196" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/018" dystrybutorRownolegly="" id="138033">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="196" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991444198" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/1058/001" dystrybutorRownolegly="Medezin Sp. z o.o." id="138567">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="28" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="LEK farmacevtska družba d. d., Poslovna enota PROIZVODNJA LENDAVA" krajWytworcyImportera="Słowenia"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Farma S.p.A." krajWytworcyImportera="Włochy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharma GmbH" krajWytworcyImportera="Niemcy"/>
+            <wytworcy nazwaWytworcyImportera="Novartis Pharmaceutical Manufacturing LLC" krajWytworcyImportera="Słowenia"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- Kygevvi — product without substances -->
+    <produktLeczniczy nazwaProduktu="Kygevvi" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="" nazwaPoprzedniaProduktu="brak" nazwaPostaciFarmaceutycznej="Proszek do sporządzania roztworu doustnego" podmiotOdpowiedzialny="UCB Pharma S.A." typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100536394">
+        <kodyATC>
+            <kodATC>A16AX29</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne/>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="EU/1/25/2013/001" dystrybutorRownolegly="" id="166734">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="30" rodzajOpakowania="sasz." pojemnosc="" jednostkaPojemnosci="" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy/>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- veterinary product -->
+    <produktLeczniczy nazwaProduktu="Parvoerysin" rodzajPreparatu="weterynaryjny" nazwaPowszechnieStosowana="Szczepionka przeciw parwowirozie i różycy świń, inaktywowana" nazwaPoprzedniaProduktu="brak" moc="Każda dawka szczepionki (2 ml) zawiera: Inaktywowany parwowirus świński CAPM V198, szczep S-27 nie mniej niż 4 log2 HI *) Inaktywowany szczep 2-64 Erysipelothrix rhusiopathiae, serotyp 2a nie mniej niż 1 RP**) Inaktywowany szczep 2-5 Erysipelothrix rhusiopathiae, serotyp 2a nie mniej niż 1 RP**) Inaktywowany szczep 1-203 Erysipelothrix rhusiopathiae, serotyp 1a nie mniej niż 1 RP**) Inaktywowany szczep 2-II Erysipelothrix rhusiopathiae, serotyp 2a nie mniej niż 1 RP**) *) Miano przeciwciał HI w surowicy krwi kawii domowej po zastosowaniu 1/4 dawki szczepionki **) RP miano względem standardu stosowanego w badaniach skuteczności szczepionki na docelowych gatunkach zwierząt zgodnie z wymaganiami określonymi w monografii Farmakopei Europejskiej" nazwaPostaciFarmaceutycznej="Emulsja do wstrzykiwań" podmiotOdpowiedzialny="Grabikowski-Grabikowska Przedsiębiorstwo Produkcyjno-Handlowo-Usługowe „INEX” Spółka Jawna" typProcedury="NAR" numerPozwolenia="2237" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 10 ust. 2a" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/570/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/570/characteristic" id="100005709">
+        <kodyATC>
+            <kodATC>QI09AL01</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="Podanie domięśniowe">
+                <gatunki>
+                    <gatunek nazwaGatunku="świnia">
+                        <okresyKarencji>
+                            <okresKarencji nazwaTkanki="tkanki jadalne" wartoscMiary="0.0" jednostkaMiary="dni"/>
+                        </okresyKarencji>
+                    </gatunek>
+                </gatunki>
+            </drogaPodania>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Inaktywowany szczep 1-203 Erysipelothrix rhusiopathiae, serotyp 1a" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="nie mniej niż 1 RP** **) RP miano względem standardu stosowanego w badaniach skuteczności szczepionki na docelowych gatunkach zwierząt zgodnie z wymaganiami określonymi w monografii Farmakopei Europejskiej"/>
+            <substancjaCzynna nazwaSubstancji="Inaktywowany szczep 2-II Erysipelothrix rhusiopathiae, serotyp 2a" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="Każda dawka szczepionki (2 ml) zawiera: nie mniej niż 1 RP**) **) RP miano względem standardu stosowanego w badaniach skuteczności szczepionki na docelowych gatunkach zwierząt zgodnie z wymaganiami określonymi w monografii Farmakopei Europejskiej"/>
+            <substancjaCzynna nazwaSubstancji="Inaktywowany szczep 2-64 Erysipelothrix rhusiopathiae, serotyp 2a" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="Każda dawka szczepionki (2 ml) zawiera: nie mniej niż 1 RP**) **) RP miano względem standardu stosowanego w badaniach skuteczności szczepionki na docelowych gatunkach zwierząt zgodnie z wymaganiami określonymi w monografii Farmakopei Europejskiej"/>
+            <substancjaCzynna nazwaSubstancji="Inaktywowany parwowirus świński CAPM V198, szczep S-27" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="Każda dawka szczepionki (2 ml) zawiera: nie mniej niż 4 log2 HI *) *) Miano przeciwciał HI w surowicy krwi kawii domowej po zastosowaniu 1/4 dawki szczepionki"/>
+            <substancjaCzynna nazwaSubstancji="Inaktywowany szczep 2-5 Erysipelothrix rhusiopathiae, serotyp 2a" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="Każda dawka szczepionki (2 ml) zawiera: nie mniej niż 1 RP**) **) RP miano względem standardu stosowanego w badaniach skuteczności szczepionki na docelowych gatunkach zwierząt zgodnie z wymaganiami określonymi w monografii Farmakopei Europejskiej"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="5909991029876" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="52184">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fiol." pojemnosc="10" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="5909991029883" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="52861">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fiol." pojemnosc="50" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="5909991029890" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="53454">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fiol." pojemnosc="100" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="5909991029906" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="57500">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="5" rodzajOpakowania="fiol." pojemnosc="20" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="5909991029937" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="57583">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="10" rodzajOpakowania="fiol." pojemnosc="10" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Bioveta, a.s." krajWytworcyImportera="Czechy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <!-- SYNTHETIC, not from RPL: checks ATC code cleaning ("c09ca03 " → C09CA03), acceptance of a group-level code (C09X) and rejection of a malformed value (BRAK, a value found in RPL). -->
+    <produktLeczniczy nazwaProduktu="Synthetic code test" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Substantia synthetica" id="SYNTHETIC-1">
+        <kodyATC>
+            <kodATC>c09ca03 </kodATC>
+            <kodATC>C09X</kodATC>
+            <kodATC>BRAK</kodATC>
+        </kodyATC>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Substantia synthetica"/>
+        </substancjeCzynne>
+        <opakowania/>
+    </produktLeczniczy>
+</produktyLecznicze>
