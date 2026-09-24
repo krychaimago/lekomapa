@@ -784,15 +784,15 @@ W sekcji `## Testy`: `npm test`.
 
 #### Automated
 
-- [x] 4.1 Migracje stosują się czysto: `npx supabase db reset`
-- [x] 4.2 Sprawdzenia SQL, w tym sprawdzenia danych, przechodzą
-- [x] 4.3 Ponowne wykonanie migracji danych nie zmienia liczby wierszy
-- [x] 4.4 Testy przechodzą: `npm test`
-- [x] 4.5 `npm run smoke` przechodzi przeciw lokalnemu Supabase, nowe kroki raportują `PASS`
-- [ ] 4.6 Jobs `ci` i `smoke` w CI są zielone na pull requeście
+- [x] 4.1 Migracje stosują się czysto: `npx supabase db reset` — 7876683
+- [x] 4.2 Sprawdzenia SQL, w tym sprawdzenia danych, przechodzą — 7876683
+- [x] 4.3 Ponowne wykonanie migracji danych nie zmienia liczby wierszy — 7876683
+- [x] 4.4 Testy przechodzą: `npm test` — 7876683
+- [x] 4.5 `npm run smoke` przechodzi przeciw lokalnemu Supabase, nowe kroki raportują `PASS` — 7876683
+- [x] 4.6 Jobs `ci` i `smoke` w CI są zielone na pull requeście — 7876683
 
 #### Manual
 
-- [x] 4.7 Tymczasowa polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem)
-- [x] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego
-- [x] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych
+- [x] 4.7 Tymczasowa polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem) — 7876683
+- [x] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego — 7876683
+- [x] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych — 7876683
