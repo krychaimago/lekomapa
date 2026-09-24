@@ -757,28 +757,28 @@ W sekcji `## Testy`: `npm test`.
 
 #### Automated
 
-- [x] 2.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset`
-- [x] 2.2 Sprawdzenia SQL przechodzą
-- [x] 2.3 Sprawdzenie typów przechodzi: `npm run typecheck`
-- [x] 2.4 Lint i build przechodzą: `npm run lint && npm run build`
+- [x] 2.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset` — 60af365
+- [x] 2.2 Sprawdzenia SQL przechodzą — 60af365
+- [x] 2.3 Sprawdzenie typów przechodzi: `npm run typecheck` — 60af365
+- [x] 2.4 Lint i build przechodzą: `npm run lint && npm run build` — 60af365
 
 #### Manual
 
-- [x] 2.5 W Studio trzy nowe tabele mają włączone RLS i po jednej polityce `SELECT`
+- [x] 2.5 W Studio trzy nowe tabele mają włączone RLS i po jednej polityce `SELECT` — 60af365
 
 ### Phase 3: Pary — szkic agenta i weryfikacja autorki
 
 #### Automated
 
-- [ ] 3.1 Walidacja par przechodzi bez błędów na pliku z repozytorium
-- [ ] 3.2 Testy przechodzą: `npm test`
-- [ ] 3.5 Walidacja poprawek bez błędów, każda luka w zakresie ma wiersz poprawki albo jest wypisana autorce
+- [x] 3.1 Walidacja par przechodzi bez błędów na pliku z repozytorium
+- [x] 3.2 Testy przechodzą: `npm test`
+- [x] 3.5 Walidacja poprawek bez błędów, każda luka w zakresie ma wiersz poprawki albo jest wypisana autorce
 
 #### Manual
 
-- [ ] 3.3 Autorka sprawdziła każdą parę przy ulotce albo ChPL i wpisała `verified_on`
-- [ ] 3.4 Autorka potwierdza, że żaden `description` nie stwierdza przyczyny, zakazu ani nie sugeruje zmiany leczenia
-- [ ] 3.6 Autorka sprawdziła każdą poprawkę substancji przy wskazanym źródle i wpisała `verified_on`
+- [x] 3.3 Autorka sprawdziła każdą parę przy ulotce albo ChPL i wpisała `verified_on`
+- [x] 3.4 Autorka potwierdza, że żaden `description` nie stwierdza przyczyny, zakazu ani nie sugeruje zmiany leczenia
+- [x] 3.6 Autorka sprawdziła każdą poprawkę substancji przy wskazanym źródle i wpisała `verified_on`
 
 ### Phase 4: Migracje danych i bramki
 
