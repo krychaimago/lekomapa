@@ -1,4 +1,6 @@
--- Sprawdzenia schematu leków: RLS, polityki, ograniczenia i wyzwalacze.
+-- Schema checks: RLS, policies, constraints and triggers.
+--   Checks 1–8:  user medications schema (F-01).
+--   Checks 9–13: shared registry and interaction pairs (F-02), plus the F-01 changes it makes.
 --
 -- Uruchomienie (Supabase CLI nie wykonuje SQL, psql nie jest zależnością repozytorium,
 -- więc plik idzie do kontenera bazy podniesionego przez `npx supabase start`):
@@ -447,6 +449,258 @@ begin
   end if;
 
   raise notice 'SPRAWDZENIE 8 OK: przy otwartym oknie korekty usunięcie pomyłki przechodzi wraz z kaskadą';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 9: shared tables have RLS and exactly one SELECT policy for authenticated
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  r record;
+begin
+  if (
+    select count(*) from pg_tables t
+    where t.schemaname = 'public'
+      and t.tablename in ('registry_products', 'registry_substances', 'interaction_pairs')
+      and t.rowsecurity is true
+  ) <> 3 then
+    raise exception 'CHECK 9 FAILED: RLS is not enabled on all three shared tables (or a table is missing)';
+  end if;
+
+  for r in
+    select unnest(array['registry_products', 'registry_substances', 'interaction_pairs']) as tablename
+  loop
+    -- Roles compared exactly: a policy for public covers anon without naming it.
+    if (
+      select count(*) from pg_policies p
+      where p.schemaname = 'public' and p.tablename = r.tablename
+    ) <> 1 or not exists (
+      select 1 from pg_policies p
+      where p.schemaname = 'public' and p.tablename = r.tablename
+        and p.cmd = 'SELECT'
+        and p.roles = array['authenticated']::name[]
+    ) then
+      raise exception 'CHECK 9 FAILED: table % must have exactly one policy, SELECT, for role {authenticated} only', r.tablename;
+    end if;
+  end loop;
+
+  raise notice 'CHECK 9 OK: RLS on registry_products, registry_substances, interaction_pairs; one SELECT policy each, authenticated only';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 10: write privileges on shared tables are revoked from anon and authenticated
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_table text;
+  v_role text;
+  v_privilege text;
+begin
+  foreach v_table in array array['registry_products', 'registry_substances', 'interaction_pairs'] loop
+    foreach v_role in array array['anon', 'authenticated'] loop
+      foreach v_privilege in array array['INSERT', 'UPDATE', 'DELETE', 'TRUNCATE'] loop
+        if has_table_privilege(v_role, 'public.' || v_table, v_privilege) then
+          raise exception 'CHECK 10 FAILED: role % still has % on %', v_role, v_privilege, v_table;
+        end if;
+      end loop;
+    end loop;
+  end loop;
+
+  raise notice 'CHECK 10 OK: anon and authenticated have no INSERT, UPDATE, DELETE, TRUNCATE on shared tables';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 11: interaction_pairs constraints
+-- ---------------------------------------------------------------------------
+-- Each rejection must come from the named error AND the expected constraint: a check_violation
+-- from a different constraint would otherwise look like working protection.
+-- Measured before asserting: reversed order, bad shape -> 23514 check_violation;
+-- duplicate -> 23505 unique_violation.
+
+do $$
+declare
+  v_constraint text;
+begin
+  insert into public.interaction_pairs (group_a, group_b, description, source, verified_on)
+  values ('C09CA', 'M01AE', 'Test pair description', 'Test source', date '2026-09-24');
+
+  -- 11a: reversed group order
+  v_constraint := null;
+  begin
+    insert into public.interaction_pairs (group_a, group_b, description, source, verified_on)
+    values ('M01AE', 'C09CA', 'Test pair description', 'Test source', date '2026-09-24');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'interaction_pairs_group_order_check' then
+    raise exception 'CHECK 11 FAILED: reversed group order was not rejected by interaction_pairs_group_order_check (got %)', v_constraint;
+  end if;
+
+  -- 11b: duplicate pair
+  v_constraint := null;
+  begin
+    insert into public.interaction_pairs (group_a, group_b, description, source, verified_on)
+    values ('C09CA', 'M01AE', 'Another description', 'Another source', date '2026-09-24');
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'interaction_pairs_group_a_group_b_key' then
+    raise exception 'CHECK 11 FAILED: duplicate pair was not rejected by interaction_pairs_group_a_group_b_key (got %)', v_constraint;
+  end if;
+
+  -- 11c: bad ATC shape (lowercase)
+  v_constraint := null;
+  begin
+    insert into public.interaction_pairs (group_a, group_b, description, source, verified_on)
+    values ('C09CA', 'm01ae', 'Test pair description', 'Test source', date '2026-09-24');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'interaction_pairs_group_b_check' then
+    raise exception 'CHECK 11 FAILED: malformed ATC group was not rejected by interaction_pairs_group_b_check (got %)', v_constraint;
+  end if;
+
+  -- 11d: a group paired with itself is allowed (two drugs of one class from different doctors)
+  insert into public.interaction_pairs (group_a, group_b, description, source, verified_on)
+  values ('M01AE', 'M01AE', 'Test pair description', 'Test source', date '2026-09-24');
+
+  raise notice 'CHECK 11 OK: reversed order, duplicate and malformed group rejected by their constraints; self pair accepted';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 12: registry_substances constraints
+-- ---------------------------------------------------------------------------
+-- Measured before asserting: all four cases -> 23514 check_violation.
+
+do $$
+declare
+  v_constraint text;
+begin
+  insert into public.registry_products (id, rpl_id, product_name, source_payload, snapshot_date)
+  values (
+    '00000000-0000-4000-8000-000000000010',
+    'rls-checks-1',
+    'Registry test product',
+    '{}'::jsonb,
+    date '2026-09-23'
+  );
+
+  -- 12a: 'unmatched' with a code
+  v_constraint := null;
+  begin
+    insert into public.registry_substances
+      (registry_product_id, position, substance_name, normalized_name, atc_code, atc_source, composition_source)
+    values ('00000000-0000-4000-8000-000000000010', 1, 'Substantia', 'substantia', 'A01AB02', 'unmatched', 'source');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'registry_substances_unmatched_check' then
+    raise exception 'CHECK 12 FAILED: unmatched substance with a code was not rejected by registry_substances_unmatched_check (got %)', v_constraint;
+  end if;
+
+  -- 12b: 'product' without a code
+  v_constraint := null;
+  begin
+    insert into public.registry_substances
+      (registry_product_id, position, substance_name, normalized_name, atc_code, atc_source, composition_source)
+    values ('00000000-0000-4000-8000-000000000010', 1, 'Substantia', 'substantia', null, 'product', 'source');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'registry_substances_unmatched_check' then
+    raise exception 'CHECK 12 FAILED: matched substance without a code was not rejected by registry_substances_unmatched_check (got %)', v_constraint;
+  end if;
+
+  -- 12c: 'sibling' without composition_source_rpl_id
+  v_constraint := null;
+  begin
+    insert into public.registry_substances
+      (registry_product_id, position, substance_name, normalized_name, atc_code, atc_source, composition_source)
+    values ('00000000-0000-4000-8000-000000000010', 1, 'Substantia', 'substantia', 'A01AB02', 'product', 'sibling');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'registry_substances_composition_source_rpl_id_check' then
+    raise exception 'CHECK 12 FAILED: sibling composition without source rpl_id was not rejected (got %)', v_constraint;
+  end if;
+
+  -- 12d: 'source' with composition_source_rpl_id
+  v_constraint := null;
+  begin
+    insert into public.registry_substances
+      (registry_product_id, position, substance_name, normalized_name, atc_code, atc_source,
+       composition_source, composition_source_rpl_id)
+    values ('00000000-0000-4000-8000-000000000010', 1, 'Substantia', 'substantia', 'A01AB02', 'product',
+            'source', 'rls-checks-2');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'registry_substances_composition_source_rpl_id_check' then
+    raise exception 'CHECK 12 FAILED: source composition with a source rpl_id was not rejected (got %)', v_constraint;
+  end if;
+
+  -- 12e: valid rows pass, including an unmatched substance without a code
+  insert into public.registry_substances
+    (registry_product_id, position, substance_name, normalized_name, atc_code, atc_source, composition_source)
+  values
+    ('00000000-0000-4000-8000-000000000010', 1, 'Substantia', 'substantia', 'A01AB02', 'product', 'source'),
+    ('00000000-0000-4000-8000-000000000010', 2, 'Altera', 'altera', null, 'unmatched', 'source');
+
+  raise notice 'CHECK 12 OK: atc_source/atc_code and composition_source/rpl_id mismatches rejected; valid rows accepted';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 13: F-01 changes — registry foreign key and nullable substance code
+-- ---------------------------------------------------------------------------
+-- Measured before asserting: missing registry product -> 23503 foreign_key_violation;
+-- duplicate substance without a code -> 23505 unique_violation.
+-- Uses medication ...0005, which survives check 8.
+
+do $$
+declare
+  v_constraint text;
+begin
+  -- 13a: registry_medication_id pointing to a non-existent product
+  v_constraint := null;
+  begin
+    update public.medications
+       set registry_medication_id = '00000000-0000-4000-8000-0000000000ff'
+     where id = '00000000-0000-4000-8000-000000000005';
+  exception when foreign_key_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medications_registry_medication_id_fkey' then
+    raise exception 'CHECK 13 FAILED: registry_medication_id to a missing product was not rejected by medications_registry_medication_id_fkey (got %)', v_constraint;
+  end if;
+
+  -- 13b: a substance without a code is accepted
+  insert into public.medication_substances (medication_id, substance_name, atc_code)
+  values ('00000000-0000-4000-8000-000000000005', 'Extractum X', null);
+
+  -- 13c: the same substance without a code again in the same medication is rejected
+  v_constraint := null;
+  begin
+    insert into public.medication_substances (medication_id, substance_name, atc_code)
+    values ('00000000-0000-4000-8000-000000000005', 'Extractum X', null);
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medication_substances_medication_id_substance_name_atc_code_key' then
+    raise exception 'CHECK 13 FAILED: duplicate substance without a code was not rejected (got %)', v_constraint;
+  end if;
+
+  -- 13d: a different substance without a code in the same medication is accepted
+  insert into public.medication_substances (medication_id, substance_name, atc_code)
+  values ('00000000-0000-4000-8000-000000000005', 'Extractum Y', null);
+
+  raise notice 'CHECK 13 OK: registry foreign key enforced; substances without a code accepted, duplicate rejected';
 end;
 $$;
 

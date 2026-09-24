@@ -742,29 +742,29 @@ W sekcji `## Testy`: `npm test`.
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.2 Lint przechodzi: `npm run lint`
-- [x] 1.3 Pomiar działa na pobranym pliku i zapisuje raport
-- [x] 1.4 Pomiar odmawia pracy przy pliku o skrócie innym niż w manifeście
-- [x] 1.7 Raport po uzupełnieniu składu ma w zakresie co najwyżej 2 produkty bez składu
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 9861dfa
+- [x] 1.2 Lint przechodzi: `npm run lint` — 9861dfa
+- [x] 1.3 Pomiar działa na pobranym pliku i zapisuje raport — 9861dfa
+- [x] 1.4 Pomiar odmawia pracy przy pliku o skrócie innym niż w manifeście — 9861dfa
+- [x] 1.7 Raport po uzupełnieniu składu ma w zakresie co najwyżej 2 produkty bez składu — 9861dfa
 
 #### Manual
 
-- [x] 1.8 Autorka potwierdza, że raport pokazuje każdą lukę danych osobno
-- [x] 1.9 Autorka sprawdza w RPL 5 produktów z uzupełnionym składem oraz Exforge HCT
+- [x] 1.8 Autorka potwierdza, że raport pokazuje każdą lukę danych osobno — 9861dfa
+- [x] 1.9 Autorka sprawdza w RPL 5 produktów z uzupełnionym składem oraz Exforge HCT — 9861dfa
 
 ### Phase 2: Schemat rejestru i par z RLS
 
 #### Automated
 
-- [ ] 2.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset`
-- [ ] 2.2 Sprawdzenia SQL przechodzą
-- [ ] 2.3 Sprawdzenie typów przechodzi: `npm run typecheck`
-- [ ] 2.4 Lint i build przechodzą: `npm run lint && npm run build`
+- [x] 2.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset`
+- [x] 2.2 Sprawdzenia SQL przechodzą
+- [x] 2.3 Sprawdzenie typów przechodzi: `npm run typecheck`
+- [x] 2.4 Lint i build przechodzą: `npm run lint && npm run build`
 
 #### Manual
 
-- [ ] 2.5 W Studio trzy nowe tabele mają włączone RLS i po jednej polityce `SELECT`
+- [x] 2.5 W Studio trzy nowe tabele mają włączone RLS i po jednej polityce `SELECT`
 
 ### Phase 3: Pary — szkic agenta i weryfikacja autorki
 
