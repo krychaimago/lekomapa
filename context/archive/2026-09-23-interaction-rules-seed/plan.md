@@ -742,57 +742,57 @@ W sekcji `## Testy`: `npm test`.
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 9861dfa
-- [x] 1.2 Lint przechodzi: `npm run lint` — 9861dfa
-- [x] 1.3 Pomiar działa na pobranym pliku i zapisuje raport — 9861dfa
-- [x] 1.4 Pomiar odmawia pracy przy pliku o skrócie innym niż w manifeście — 9861dfa
-- [x] 1.7 Raport po uzupełnieniu składu ma w zakresie co najwyżej 2 produkty bez składu — 9861dfa
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — d193d07
+- [x] 1.2 Lint przechodzi: `npm run lint` — d193d07
+- [x] 1.3 Pomiar działa na pobranym pliku i zapisuje raport — d193d07
+- [x] 1.4 Pomiar odmawia pracy przy pliku o skrócie innym niż w manifeście — d193d07
+- [x] 1.7 Raport po uzupełnieniu składu ma w zakresie co najwyżej 2 produkty bez składu — d193d07
 
 #### Manual
 
-- [x] 1.8 Autorka potwierdza, że raport pokazuje każdą lukę danych osobno — 9861dfa
-- [x] 1.9 Autorka sprawdza w RPL 5 produktów z uzupełnionym składem oraz Exforge HCT — 9861dfa
+- [x] 1.8 Autorka potwierdza, że raport pokazuje każdą lukę danych osobno — d193d07
+- [x] 1.9 Autorka sprawdza w RPL 5 produktów z uzupełnionym składem oraz Exforge HCT — d193d07
 
 ### Phase 2: Schemat rejestru i par z RLS
 
 #### Automated
 
-- [x] 2.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset` — 60af365
-- [x] 2.2 Sprawdzenia SQL przechodzą — 60af365
-- [x] 2.3 Sprawdzenie typów przechodzi: `npm run typecheck` — 60af365
-- [x] 2.4 Lint i build przechodzą: `npm run lint && npm run build` — 60af365
+- [x] 2.1 Migracja stosuje się czysto na świeżej bazie: `npx supabase db reset` — d193d07
+- [x] 2.2 Sprawdzenia SQL przechodzą — d193d07
+- [x] 2.3 Sprawdzenie typów przechodzi: `npm run typecheck` — d193d07
+- [x] 2.4 Lint i build przechodzą: `npm run lint && npm run build` — d193d07
 
 #### Manual
 
-- [x] 2.5 W Studio trzy nowe tabele mają włączone RLS i po jednej polityce `SELECT` — 60af365
+- [x] 2.5 W Studio trzy nowe tabele mają włączone RLS i po jednej polityce `SELECT` — d193d07
 
 ### Phase 3: Pary — szkic agenta i weryfikacja autorki
 
 #### Automated
 
-- [x] 3.1 Walidacja par przechodzi bez błędów na pliku z repozytorium — 8a52fd4
-- [x] 3.2 Testy przechodzą: `npm test` — 8a52fd4
-- [x] 3.5 Walidacja poprawek bez błędów, każda luka w zakresie ma wiersz poprawki albo jest wypisana autorce — 8a52fd4
+- [x] 3.1 Walidacja par przechodzi bez błędów na pliku z repozytorium — d193d07
+- [x] 3.2 Testy przechodzą: `npm test` — d193d07
+- [x] 3.5 Walidacja poprawek bez błędów, każda luka w zakresie ma wiersz poprawki albo jest wypisana autorce — d193d07
 
 #### Manual
 
-- [x] 3.3 Autorka sprawdziła każdą parę przy ulotce albo ChPL i wpisała `verified_on` — 8a52fd4
-- [x] 3.4 Autorka potwierdza, że żaden `description` nie stwierdza przyczyny, zakazu ani nie sugeruje zmiany leczenia — 8a52fd4
-- [x] 3.6 Autorka sprawdziła każdą poprawkę substancji przy wskazanym źródle i wpisała `verified_on` — 8a52fd4
+- [x] 3.3 Autorka sprawdziła każdą parę przy ulotce albo ChPL i wpisała `verified_on` — d193d07
+- [x] 3.4 Autorka potwierdza, że żaden `description` nie stwierdza przyczyny, zakazu ani nie sugeruje zmiany leczenia — d193d07
+- [x] 3.6 Autorka sprawdziła każdą poprawkę substancji przy wskazanym źródle i wpisała `verified_on` — d193d07
 
 ### Phase 4: Migracje danych i bramki
 
 #### Automated
 
-- [x] 4.1 Migracje stosują się czysto: `npx supabase db reset` — 7876683
-- [x] 4.2 Sprawdzenia SQL, w tym sprawdzenia danych, przechodzą — 7876683
-- [x] 4.3 Ponowne wykonanie migracji danych nie zmienia liczby wierszy — 7876683
-- [x] 4.4 Testy przechodzą: `npm test` — 7876683
-- [x] 4.5 `npm run smoke` przechodzi przeciw lokalnemu Supabase, nowe kroki raportują `PASS` — 7876683
-- [x] 4.6 Jobs `ci` i `smoke` w CI są zielone na pull requeście — 7876683
+- [x] 4.1 Migracje stosują się czysto: `npx supabase db reset` — d193d07
+- [x] 4.2 Sprawdzenia SQL, w tym sprawdzenia danych, przechodzą — d193d07
+- [x] 4.3 Ponowne wykonanie migracji danych nie zmienia liczby wierszy — d193d07
+- [x] 4.4 Testy przechodzą: `npm test` — d193d07
+- [x] 4.5 `npm run smoke` przechodzi przeciw lokalnemu Supabase, nowe kroki raportują `PASS` — d193d07
+- [x] 4.6 Jobs `ci` i `smoke` w CI są zielone na pull requeście — d193d07
 
 #### Manual
 
 - [x] 4.7 Tymczasowy `grant insert` + polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem) — 7876683; brzmienie poprawione i sprawdzenie powtórzone lokalnie przy impl-review 2026-09-26: z `grant` + polityką krok insert daje FAIL, z samą polityką PASS, bieg kontrolny PASS
-- [x] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego — 7876683
-- [x] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych — 7876683
+- [x] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego — d193d07
+- [x] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych — d193d07
