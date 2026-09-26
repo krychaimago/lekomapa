@@ -134,11 +134,39 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Readability floor from the mockup: no Tailwind text size renders below 15px on a phone
+   and below 17px from the lg breakpoint (64rem). The floor lives on html (not :root, which holds
+   only color tokens checked by the contrast test) and the text scale below reads it, so text-xs,
+   text-sm and text-base all resolve to at least the floor. Larger sizes are already above it. */
+html {
+  --text-floor: 0.9375rem; /* 15px */
+}
+
+@media (min-width: 64rem) {
+  html {
+    --text-floor: 1.0625rem; /* 17px */
+  }
+}
+
+@theme {
+  --text-xs: var(--text-floor);
+  --text-xs--line-height: 1.5;
+  --text-sm: var(--text-floor);
+  --text-sm--line-height: 1.5;
+  --text-base: max(1rem, var(--text-floor));
+  --text-base--line-height: 1.5;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-base;
+  }
+  /* Visible focus indicator in the ring color on every interactive element. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 }

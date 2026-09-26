@@ -413,31 +413,31 @@ Brak zmian w bazie. Po merge'u produkcja pokazuje przekierowanie zamiast strony 
 
 #### Automated
 
-- [x] 1.1 Test kontrastu przechodzi w obu trybach
-- [x] 1.2 Przypadek kontrolny #5A6259 na bieli odrzucony w teście
-- [x] 1.3 Lint przechodzi
-- [x] 1.4 Typy przechodzą
-- [x] 1.5 Build przechodzi
+- [x] 1.1 Test kontrastu przechodzi w obu trybach — e6af4e8
+- [x] 1.2 Przypadek kontrolny #5A6259 na bieli odrzucony w teście — e6af4e8
+- [x] 1.3 Lint przechodzi — e6af4e8
+- [x] 1.4 Typy przechodzą — e6af4e8
+- [x] 1.5 Build przechodzi — e6af4e8
 
 #### Manual
 
-- [x] 1.6 Autorka zaakceptowała makietę ciemnej palety przed zapisaniem wartości ciemnych
-- [x] 1.7 Tymczasowa zamiana muted-foreground na #5A6259 wywraca npm test z nazwą pary
+- [x] 1.6 Autorka zaakceptowała makietę ciemnej palety przed zapisaniem wartości ciemnych — e6af4e8
+- [x] 1.7 Tymczasowa zamiana muted-foreground na #5A6259 wywraca npm test z nazwą pary — e6af4e8
 
 ### Phase 2: Wspólny dokument
 
 #### Automated
 
-- [ ] 2.1 Wszystkie testy przechodzą
-- [ ] 2.2 Lint przechodzi
-- [ ] 2.3 Typy przechodzą
-- [ ] 2.4 Build przechodzi
-- [ ] 2.5 Zbudowana strona logowania ma lang="pl" i tekst paska
+- [x] 2.1 Wszystkie testy przechodzą
+- [x] 2.2 Lint przechodzi
+- [x] 2.3 Typy przechodzą
+- [x] 2.4 Build przechodzi
+- [x] 2.5 Zbudowana strona logowania ma lang="pl" i tekst paska
 
 #### Manual
 
-- [ ] 2.6 Pasek widoczny na ekranach wejściowych na telefonie i dużym ekranie
-- [ ] 2.7 Najmniejszy tekst co najmniej 15 px na telefonie i 17 px na dużym ekranie
+- [x] 2.6 Pasek widoczny na ekranach wejściowych na telefonie i dużym ekranie
+- [x] 2.7 Najmniejszy tekst co najmniej 15 px na telefonie i 17 px na dużym ekranie
 
 ### Phase 3: Szkielet wnętrza
 
