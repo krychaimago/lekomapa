@@ -1,6 +1,7 @@
 -- Schema checks: RLS, policies, constraints and triggers.
 --   Checks 1–8:  user medications schema (F-01).
 --   Checks 9–14: shared registry and interaction pairs (F-02), plus the F-01 changes it makes.
+--   Checks 15–17: shared symptom catalog and search terms (F-03).
 --   Check 11 runs on the data loaded by the generated migrations, before any test row is added to the shared tables.
 --
 -- Uruchomienie (Supabase CLI nie wykonuje SQL, psql nie jest zależnością repozytorium,
@@ -803,6 +804,216 @@ begin
   end if;
 
   raise notice 'CHECK 14 OK: registry foreign key enforced on insert and delete; substances without a code accepted, duplicate rejected';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 15: symptom catalog tables have RLS and exactly one SELECT policy for authenticated
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  r record;
+begin
+  if (
+    select count(*) from pg_tables t
+    where t.schemaname = 'public'
+      and t.tablename in ('symptoms', 'symptom_search_terms')
+      and t.rowsecurity is true
+  ) <> 2 then
+    raise exception 'CHECK 15 FAILED: RLS is not enabled on both symptom catalog tables (or a table is missing)';
+  end if;
+
+  for r in
+    select unnest(array['symptoms', 'symptom_search_terms']) as tablename
+  loop
+    -- Roles compared exactly: a policy for public covers anon without naming it.
+    if (
+      select count(*) from pg_policies p
+      where p.schemaname = 'public' and p.tablename = r.tablename
+    ) <> 1 or not exists (
+      select 1 from pg_policies p
+      where p.schemaname = 'public' and p.tablename = r.tablename
+        and p.cmd = 'SELECT'
+        and p.roles = array['authenticated']::name[]
+    ) then
+      raise exception 'CHECK 15 FAILED: table % must have exactly one policy, SELECT, for role {authenticated} only', r.tablename;
+    end if;
+  end loop;
+
+  raise notice 'CHECK 15 OK: RLS on symptoms, symptom_search_terms; one SELECT policy each, authenticated only';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 16: write privileges on symptom catalog tables are revoked from anon and authenticated
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_table text;
+  v_role text;
+  v_privilege text;
+begin
+  foreach v_table in array array['symptoms', 'symptom_search_terms'] loop
+    foreach v_role in array array['anon', 'authenticated'] loop
+      foreach v_privilege in array array['INSERT', 'UPDATE', 'DELETE', 'TRUNCATE'] loop
+        if has_table_privilege(v_role, 'public.' || v_table, v_privilege) then
+          raise exception 'CHECK 16 FAILED: role % still has % on %', v_role, v_privilege, v_table;
+        end if;
+      end loop;
+    end loop;
+  end loop;
+
+  raise notice 'CHECK 16 OK: anon and authenticated have no INSERT, UPDATE, DELETE, TRUNCATE on symptoms, symptom_search_terms';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 17: symptoms and symptom_search_terms constraints
+-- ---------------------------------------------------------------------------
+-- Each rejection must come from the named error AND the expected constraint.
+-- Measured before asserting: category, key shape, half-filled source code, term shape -> 23514 check_violation;
+-- duplicate key, duplicate term, duplicate (category, sort_order) -> 23505 unique_violation.
+-- symptoms_category_sort_order_key is deferred to commit and this script ends in rollback, so the duplicate
+-- position is forced with "set constraints ... immediate" and the mode is set back to deferred right after.
+-- Synthetic keys check_17_*; sort_order 901+ stays clear of the real list.
+
+do $$
+declare
+  v_constraint text;
+  v_symptom_a uuid;
+  v_symptom_b uuid;
+begin
+  insert into public.symptoms (key, name, category, sort_order)
+  values ('check_17_a', 'Check 17 symptom A', 'other', 901)
+  returning id into v_symptom_a;
+
+  insert into public.symptoms (key, name, category, sort_order)
+  values ('check_17_b', 'Check 17 symptom B', 'other', 902)
+  returning id into v_symptom_b;
+
+  -- 17a: unknown category
+  v_constraint := null;
+  begin
+    insert into public.symptoms (key, name, category, sort_order)
+    values ('check_17_c', 'Check 17 symptom C', 'cardiac', 901);
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptoms_category_check' then
+    raise exception 'CHECK 17 FAILED: unknown category was not rejected by symptoms_category_check (got %)', v_constraint;
+  end if;
+
+  -- 17b: key with an upper case letter
+  v_constraint := null;
+  begin
+    insert into public.symptoms (key, name, category, sort_order)
+    values ('Check_17_c', 'Check 17 symptom C', 'other', 903);
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptoms_key_check' then
+    raise exception 'CHECK 17 FAILED: key with an upper case letter was not rejected by symptoms_key_check (got %)', v_constraint;
+  end if;
+
+  -- 17c: vocabulary without a code
+  v_constraint := null;
+  begin
+    insert into public.symptoms (key, name, category, sort_order, source_vocabulary, source_code)
+    values ('check_17_c', 'Check 17 symptom C', 'other', 903, 'MedDRA', null);
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptoms_source_pair_check' then
+    raise exception 'CHECK 17 FAILED: half-filled source code was not rejected by symptoms_source_pair_check (got %)', v_constraint;
+  end if;
+
+  -- 17d: duplicate key
+  v_constraint := null;
+  begin
+    insert into public.symptoms (key, name, category, sort_order)
+    values ('check_17_a', 'Check 17 symptom C', 'other', 903);
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptoms_key_key' then
+    raise exception 'CHECK 17 FAILED: duplicate key was not rejected by symptoms_key_key (got %)', v_constraint;
+  end if;
+
+  -- 17e: duplicate (category, sort_order), checked when the deferred constraint is forced
+  v_constraint := null;
+  begin
+    insert into public.symptoms (key, name, category, sort_order)
+    values ('check_17_c', 'Check 17 symptom C', 'other', 901);
+    set constraints public.symptoms_category_sort_order_key immediate;
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  set constraints public.symptoms_category_sort_order_key deferred;
+  if v_constraint is distinct from 'symptoms_category_sort_order_key' then
+    raise exception 'CHECK 17 FAILED: duplicate position in a category was not rejected by symptoms_category_sort_order_key (got %)', v_constraint;
+  end if;
+
+  -- 17f: swapping the positions of two symptoms in one update passes the forced check
+  update public.symptoms
+     set sort_order = case key when 'check_17_a' then 902 else 901 end
+   where key in ('check_17_a', 'check_17_b');
+  set constraints public.symptoms_category_sort_order_key immediate;
+  set constraints public.symptoms_category_sort_order_key deferred;
+  if (select sort_order from public.symptoms where key = 'check_17_a') is distinct from 902::smallint then
+    raise exception 'CHECK 17 FAILED: swapped position of check_17_a was not saved';
+  end if;
+
+  -- 17g: a valid symptom takes two terms
+  insert into public.symptom_search_terms (symptom_id, term)
+  values (v_symptom_a, 'check term one'), (v_symptom_a, 'check term two');
+
+  -- 17h: term with an upper case letter
+  v_constraint := null;
+  begin
+    insert into public.symptom_search_terms (symptom_id, term)
+    values (v_symptom_a, 'Check term three');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptom_search_terms_term_check' then
+    raise exception 'CHECK 17 FAILED: term with an upper case letter was not rejected by symptom_search_terms_term_check (got %)', v_constraint;
+  end if;
+
+  -- 17i: term with a leading space
+  v_constraint := null;
+  begin
+    insert into public.symptom_search_terms (symptom_id, term)
+    values (v_symptom_a, ' check term three');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptom_search_terms_term_check' then
+    raise exception 'CHECK 17 FAILED: term with a leading space was not rejected by symptom_search_terms_term_check (got %)', v_constraint;
+  end if;
+
+  -- 17j: the same term twice for one symptom
+  v_constraint := null;
+  begin
+    insert into public.symptom_search_terms (symptom_id, term)
+    values (v_symptom_a, 'check term one');
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptom_search_terms_symptom_id_term_key' then
+    raise exception 'CHECK 17 FAILED: duplicate term for one symptom was not rejected by symptom_search_terms_symptom_id_term_key (got %)', v_constraint;
+  end if;
+
+  -- 17k: the same term for a different symptom is allowed
+  insert into public.symptom_search_terms (symptom_id, term)
+  values (v_symptom_b, 'check term one');
+
+  if (select count(*) from public.symptom_search_terms where symptom_id in (v_symptom_a, v_symptom_b)) <> 3 then
+    raise exception 'CHECK 17 FAILED: expected 3 test terms, the valid inserts did not all land';
+  end if;
+
+  raise notice 'CHECK 17 OK: bad category, key, half source code, term shape and duplicates (key, position, term) rejected by their constraints; valid symptom with two terms, shared term and position swap accepted';
 end;
 $$;
 
