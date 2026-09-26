@@ -97,6 +97,8 @@ Sekcje puste w roadmapie („—") są pomijane, nie zostawiane jako nagłówek 
 
 Od migracji zamknięte: **#2 (Q-1)** i **#3 (Q-2)**, oba 2026-09-21 — pierwsze rozstrzygnięcie przestawiło #10 (F-02) na `status:ready`, drugie #11 (F-03).
 
+Roadmapa w wersji 2 (2026-09-26) dołożyła: **#35 (F-04)**, **#36 (S-10)**, **#37 (S-11)**, **#33 (Q-8)**, **#34 (Q-9)**. #12 (S-01) poszerzony i przestawiony z `status:ready` na `status:proposed`, bo wymaga F-04. Strumień `stream:D-konto` obejmuje teraz wejście, konto i wygląd.
+
 ## Jak z tego korzystać
 
 - **Co robić teraz:** `gh issue list --label status:ready`
