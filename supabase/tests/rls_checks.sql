@@ -534,9 +534,9 @@ $$;
 --   11a: the registry and the pairs are not empty (the data migrations ran);
 --   11b: every product has a substance code or a product code starting with a group of some pair — the scope
 --        filter worked and nothing outside it was loaded;
---   11c: no product has two rows of the same substance (same source position) with the same code — a
---        duplicated composition would mean a top-up migration inserted substances for an already loaded
---        product. A substance RPL lists twice under two positions (Dexak, Coroswera) is source data and stays.
+--   11c: every product's substances come from one composition origin (one composition_source and, for
+--        sibling, one composition_source_rpl_id) — mixed origins would mean a top-up migration inserted
+--        substances for an already loaded product.
 
 do $$
 declare
