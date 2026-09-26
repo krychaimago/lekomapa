@@ -27,6 +27,8 @@ Persona główna: osoba dorosła przyjmująca przewlekle kilka leków przepisany
 
 Pierwsza wersja obsługuje jedną konkretną osobę — autorkę produktu. Bez profili dla bliskich, bez roli opiekuna.
 
+Publiczność pierwszej wersji (rewizja 2026-09-26): produkt jest prototypem certyfikacyjnym dostępnym pod publicznym adresem, z otwartą rejestracją — konto może założyć każdy, nie tylko autorka i bliscy, którym prototyp jest pokazywany. Dlatego pierwsza wersja niesie warstwę „prototyp” opisaną w `## Access Control`: produkt mówi wprost, że nie należy wpisywać prawdziwych danych. Pełna warstwa prawna przetwarzania danych jest poza zakresem, patrz `## Non-Goals`. Nierozstrzygnięte pozostaje, gdzie leżą prawdziwe dane autorki — patrz `## Open Questions`.
+
 Kierunek rozwoju poza pierwszą wersją: osoby starsze przyjmujące kilka leków. Decyzje projektowe pierwszej wersji świadomie nie zamykają tej drogi — stąd m.in. wybór loginu i hasła jako formy najprostszej dla tej grupy. Wymagania o czytelności i prostocie ekranów nie są jednak wymogiem pierwszej wersji.
 
 ## Success Criteria
@@ -153,6 +155,7 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 - Usunięcie konta powoduje bezpowrotne skasowanie wszystkich powiązanych danych: leków, okresów dawkowania, wpisów o samopoczuciu i złożonych pytań. Nie pozostaje kopia zachowana „na wszelki wypadek".
 - Produkt pozostaje czytelny i w pełni używalny na ekranie telefonu — tam powstaje większość wpisów o samopoczuciu.
 - Dostęp do zapisanych danych przeżywa wymianę urządzenia i jest możliwy z więcej niż jednego urządzenia tej samej osoby.
+- Interfejs jest w języku polskim i ma wspólny wygląd na wszystkich ekranach, w trybie jasnym i ciemnym. Tryb ciemny zachowuje czytelność trybu jasnego i znaczenie kolorów funkcjonalnych — możliwa kolizja nie wygląda w nim jak alarm. (Rewizja 2026-09-26; ustalenia wizualne: `context/changes/auth-login-design/design-draft.md`, który jest prototypem wizualnym, nie ostatecznym wyglądem.)
 
 # TODO: mierzalne progi czasu odpowiedzi i dostępności — see Open Questions
 
@@ -182,6 +185,14 @@ Płaski model uprawnień: jeden rodzaj użytkownika. Każde konto widzi i zmieni
 
 Akceptacja warunków korzystania jest jednorazowym, świadomym krokiem przy zakładaniu konta, z zapisem daty i wersji dokumentu. Treść warunków mówi wprost: narzędzie informacyjne wspierające rozmowę z lekarzem, nie diagnoza, nie podstawa do zmiany dawkowania. Nota informacyjna nie jest powtarzana jako osobny ekran przy każdym wejściu — jej drugą warstwą jest stała linijka przy każdej informacji o kolizji (FR-007).
 
+Warstwa „prototyp” (rewizja 2026-09-26, wynika z publicznej rejestracji — patrz `## User & Persona`):
+
+- Warunki korzystania w wersji 1 mówią dodatkowo, że produkt jest prototypem certyfikacyjnym, że nie należy wpisywać prawdziwych danych, że dane mogą zostać usunięte bez uprzedzenia, oraz podają kontakt.
+- Przed założeniem konta dostępna jest krótka strona prywatności: kto prowadzi serwis, jakie dane zbiera, gdzie leżą, jak usunąć konto.
+- Na każdym ekranie, także przed zalogowaniem, widoczny jest stały pasek „wersja demonstracyjna” z odnośnikiem do strony prywatności.
+
+Warstwa ta zmniejsza ryzyko, że ktoś wpisze prawdziwe dane o zdrowiu, ale go nie wyklucza. Adres e-mail konta jest daną osobową przetwarzaną niezależnie od komunikatu.
+
 ## Non-Goals
 
 Funkcjonalne:
@@ -200,6 +211,8 @@ Niefunkcjonalne:
 - Produkt nie jest kompletnym zbiorem interakcji; obejmuje około dwudziestu par grup substancji, a brak ostrzeżenia niczego nie dowodzi. Nie dowodzi tym bardziej przy leku spoza rejestru, dodanym przez wskazanie substancji z ulotki.
 - Brak formalnej zgodności ze standardami dostępności — czytelność na telefonie tak, certyfikowana dostępność nie w tej wersji.
 - Brak wielu profilów w jednym koncie — jedno konto to jedna osoba; prowadzenie leków podopiecznego poza zakresem.
+- Brak pełnej warstwy prawnej przetwarzania danych (rewizja 2026-09-26): podstawy przetwarzania i osobnej zgody na dane o zdrowiu (art. 9 RODO), listy podmiotów przetwarzających, zasad retencji i pełnej polityki prywatności. Warunek powrotu: wyjście z fazy prototypu — bez tej warstwy produkt nie może zapraszać do wpisywania prawdziwych danych o zdrowiu. Granice, które zostają w pierwszej wersji nienaruszone: izolacja danych per-konto i bezpowrotne usunięcie konta (`## Non-Functional Requirements`), akceptacja warunków z zapisem daty i wersji (FR-001) oraz warstwa „prototyp” (`## Access Control`).
+- Brak technicznych ograniczeń prototypu — automatycznego czyszczenia kont i rejestracji z zaproszeniem. Koszt ponad potrzebę prototypu; automatyczne czyszczenie kont kolidowałoby z nienaruszalnością historii.
 
 ## Open Questions
 
@@ -210,4 +223,6 @@ Niefunkcjonalne:
 5. **Jak długo trwa okno korekty wpisu dzienniczka (FR-009)?** — zasada jest przesądzona i wspólna z lekami; nieustalona pozostaje sama miara. Przy leku warunek jest zdarzeniowy („dopóki nie istnieje wpis objawu po dacie rozpoczęcia"), przy wpisie dzienniczka musi być czasowy, bo wpis zasila złożone pytanie natychmiast. Właściciel: użytkowniczka.
 6. **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności produktu?** — nie były przedmiotem sesji planistycznej. Właściciel: użytkowniczka. Konsekwencja: `## Non-Functional Requirements` nie zawiera progów liczbowych.
 7. **Czy kryteria akceptacji historii użytkownika zostały zaakceptowane?** — historie US-01…US-04 powstały jako sformatowanie przepływu pierwszej sesji z `shape-notes.md`; sesja planistyczna nie przechodziła osobnej fazy pisania historii i kryteriów. Właściciel: użytkowniczka. Konsekwencja: kryteria wymagają przeglądu przed użyciem jako podstawy testów.
-8. **Jak brzmi treść warunków korzystania?** — ustalono rolę i moment akceptacji oraz sens komunikatu, nie samą treść dokumentu. Właściciel: użytkowniczka.
+8. **Jak brzmi treść warunków korzystania?** — ustalono rolę i moment akceptacji oraz sens komunikatu, nie samą treść dokumentu. 2026-09-26 ustalono zakres wersji 1 „prototyp” (`## Access Control`); otwarte zostaje brzmienie. Właściciel: użytkowniczka.
+9. **Gdzie leżą prawdziwe dane autorki?** — produktu używa autorka, a warunki „prototyp” proszą innych, żeby nie wpisywali prawdziwych danych. Warianty: osobne środowisko na własne dane albo dane przykładowe także u autorki w fazie prototypu. Do rozstrzygnięcia, zanim autorka wpisze własne leki na publiczną instancję. Właściciel: użytkowniczka.
+10. **Czy komunikaty ekranów wejściowych zdradzają, że konto o danym adresie istnieje?** — wariant bezpieczniejszy mówi zawsze to samo („jeśli konto istnieje, wysłaliśmy wiadomość”); wygodniejszy mówi wprost, że konta nie ma, co pozwala postronnej osobie sprawdzić, czy ktoś prowadzi dzienniczek leków. Do czasu rozstrzygnięcia obowiązuje wariant bezpieczniejszy. Właściciel: użytkowniczka.
