@@ -20,6 +20,13 @@ Nazwa produktu: **lekomapa**. Docelowy adres: `lekomapa.pl` (ustawiony jako `sit
 
 Ustalenia, dokumenty i rozmowa po polsku. Jedno źródło dokumentu — bez równoległych wersji językowych do pilnowania.
 
+Kod wyłącznie po angielsku: nazwy zmiennych, funkcji, plików, komentarze, nazwy testów, komunikaty w konsoli skryptów. Po polsku zostaje tylko:
+- tekst widoczny dla użytkowniczki (UI, komunikaty błędów, które mogą do niej trafić),
+- dokumenty generowane dla autorki (np. raport `registry-measurement.md`),
+- dane przepisane ze źródła bez zmian — nazwy pól i wartości z RPL (`produktLeczniczy`, `BRAK`). Nie tłumacz ich i nie zamieniaj na „ładniejsze” odpowiedniki: test ma pilnować tego, co naprawdę przychodzi ze źródła.
+
+Kod F-01 sprzed tej reguły ma polskie komentarze (`src/types.ts`, migracja schematu leków) — do przetłumaczenia osobną decyzją, nie przy okazji.
+
 ### Zasady komunikatów (FR-012, nienegocjowalne)
 
 Produkt informuje, nie diagnozuje:

@@ -99,3 +99,10 @@
 - **Problem**: `daterange(d, d, '[)')` jest pusty, a pusty zakres nie przecina się z niczym operatorem `&&`. Kontrola dat dopuszczająca `ended_on = started_on` wpuszczała więc dowolną liczbę okresów zerowej długości, także w środek okresu trwającego — ograniczenie wykluczające ich nie widziało. Objaw nie wychodzi przy żadnym zwykłym zapisie.
 - **Rule**: Przy kolumnie zakresu wymuś niepustość: `ended_on > started_on` albo `check (not isempty(period))`. Zapisz przy okazji, jak wygląda okres jednodniowy przy granicy `'[)'` — `started_on = d, ended_on = d + 1` — inaczej ktoś przywróci `>=`, żeby dało się go zapisać.
 - **Applies to**: plan, implement, impl-review
+
+## Filtr języka wymaga formuły, nie tylko zakazuje słów
+
+- **Context**: `scripts/rpl/pairs.mjs:21-34` — filtr języka opisów par kolizji (FR-012), każdy przyszły zbiór opisów przyjmowany przez walidator.
+- **Problem**: Lista zakazanych rdzeni łapie „powoduj”, „odstaw”, „zmień daw”, ale przepuszcza „prowadzi do krwawień”, „jest przyczyną”, „skutkuje”, „dostosuj dawkę”, „unikaj”. Walidator nie sprawdza też pozytywnie, że opis zawiera „może mieć związek”. Obecne 24 opisy są poprawne tylko dlatego, że autorka przeczytała każdy — filtr sam tego nie gwarantuje przy kolejnych parach.
+- **Rule**: Walidator tekstu o zdrowiu zawsze wymaga obecności formuły „może mieć związek”. Lista zakazanych słów jest uzupełnieniem, nigdy jedyną bramką — zawsze będzie niepełna.
+- **Applies to**: plan, implement, impl-review

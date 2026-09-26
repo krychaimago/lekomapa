@@ -23,7 +23,7 @@ export interface Medication {
   composition_source: CompositionSource;
   /**
    * Pusta wartość, gdy skład pochodzi z ulotki, a nie z rejestru leków.
-   * Bez klucza obcego — tabela rejestru powstaje dopiero w F-02.
+   * Foreign key to `registry_products.id` (on delete restrict), added in F-02.
    */
   registry_medication_id: string | null;
   /** Wypełniona data oznacza lek zakończony, nie usunięty — historia zostaje. */
@@ -41,8 +41,11 @@ export interface MedicationSubstance {
    * Pełny kod ATC ze źródła, nigdy obcinany do grupy objętej regułami:
    * dopasowanie reguł idzie po przedrostku, a obcięcie przy zapisie
    * wyrzuciłoby dane, które produkt miał w ręku.
+   *
+   * Null = the substance is stored, but not matched to any rule (the
+   * dictionary had no code for it). Never invent a code to fill it.
    */
-  atc_code: string;
+  atc_code: string | null;
 }
 
 /** Wiersz `public.dosage_periods` — jeden okres dawkowania leku. */
@@ -80,7 +83,8 @@ export interface NewMedicationCommand {
 export interface NewMedicationSubstanceCommand {
   medication_id: string;
   substance_name: string;
-  atc_code: string;
+  /** Null when the substance has no matched ATC code; see `MedicationSubstance.atc_code`. */
+  atc_code: string | null;
 }
 
 /**
@@ -95,4 +99,84 @@ export interface NewDosagePeriodCommand {
   dose_text: string;
   started_on: string;
   ended_on?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Shared, read-only data (F-02): medicinal products registry and interaction pairs.
+// Source of truth: supabase/migrations/20260924120000_registry_schema.sql.
+// No write commands: the application never writes these tables (RLS has no
+// write policy and write privileges are revoked).
+// ---------------------------------------------------------------------------
+
+/** Origin of `registry_substances.atc_code`. Matches `registry_substances_atc_source_check`. */
+export type AtcSource = "product" | "derived" | "derived_ambiguous" | "corrected" | "unmatched";
+
+/**
+ * Origin of a registry product's composition. Matches `registry_substances_composition_source_check`.
+ * Named apart from `CompositionSource`, which is the origin of a user medication's composition.
+ */
+export type RegistryCompositionSource = "source" | "sibling" | "atc_reverse" | "correction";
+
+/**
+ * Row of `public.registry_products` — a product from the Polish register (RPL, CC BY 4.0).
+ * Text fields are raw source values, not interpreted.
+ */
+export interface RegistryProduct {
+  id: string;
+  /** Product identifier in RPL. */
+  rpl_id: string;
+  product_name: string;
+  common_name: string | null;
+  strength: string | null;
+  pharmaceutical_form: string | null;
+  /** NAR, DCP, MRP, CEN, IR — raw, not checked. */
+  procedure_type: string | null;
+  authorization_number: string | null;
+  /** A date, "Bezterminowe", "Pozwolenie zawieszone" or empty — raw, never interpreted. */
+  authorization_validity: string | null;
+  marketing_authorization_holder: string | null;
+  /** Product-level ATC codes exactly as in the source (may include invalid values). */
+  atc_codes: string[];
+  /** The whole source element, packages included. */
+  source_payload: unknown;
+  /** `stanNaDzien` of the RPL file the row comes from. */
+  snapshot_date: string;
+  created_at: string;
+}
+
+/**
+ * Row of `public.registry_substances` — one substance of a registry product with one ATC code.
+ * A substance with a tie (`derived_ambiguous`) has several rows with the same `position`.
+ */
+export interface RegistrySubstance {
+  id: string;
+  registry_product_id: string;
+  /** Order of the substance in the source composition. */
+  position: number;
+  /** Name exactly as in the source. */
+  substance_name: string;
+  normalized_name: string;
+  /** Null exactly when `atc_source` is `"unmatched"`. */
+  atc_code: string | null;
+  atc_source: AtcSource;
+  composition_source: RegistryCompositionSource;
+  /** `rpl_id` of the product the composition was copied from; set only for `"sibling"`. */
+  composition_source_rpl_id: string | null;
+}
+
+/**
+ * Row of `public.interaction_pairs` — a pair of ATC groups, matched by code prefix.
+ * Canonical order: `group_a <= group_b`; a group may be paired with itself.
+ * The set is incomplete by design: no flag does not mean safe.
+ */
+export interface InteractionPair {
+  id: string;
+  group_a: string;
+  group_b: string;
+  /** User-facing text: "may be related", never a cause (FR-012). */
+  description: string;
+  /** Where the pair was checked, e.g. "ChPL Diovan pkt 4.5". */
+  source: string;
+  verified_on: string;
+  created_at: string;
 }
