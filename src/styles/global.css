@@ -1,75 +1,94 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./starter-auth.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* Mech palette. All product colors live here as hex tokens; :root and .dark declare the same color names.
+   Every text/background pair is held at >= 7:1 by scripts/tokens/contrast.test.mjs.
+   Dark values accepted on the mockup: https://claude.ai/artifact/Ha6A6SV4aPjtwMsreZLu3n */
+
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f7f8f4;
+  --foreground: #1e241f;
+  --card: #ffffff;
+  --card-foreground: #1e241f;
+  --popover: #ffffff;
+  --popover-foreground: #1e241f;
+  --primary: #2c4a33;
+  --primary-foreground: #ffffff;
+  --secondary: #e3e5dc;
+  --secondary-foreground: #1e241f;
+  --muted: #f7f8f4;
+  /* Muted text is used on background, card and muted only. On the sidebar use sidebar-foreground:
+     reaching 7:1 on the chrome would make muted text almost the same as the main text. */
+  --muted-foreground: #4c534c;
+  --accent: #dce9df;
+  --accent-foreground: #1e241f;
+  --accent-border: #b9d0c0;
+  /* destructive*: form and technical errors only, never health content.
+     A possible interaction has its own amber interaction* role. */
+  --destructive: #7f2a22;
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #fbe9e4;
+  --destructive-border: #e3b5ab;
+  --interaction: #fbebc8;
+  --interaction-foreground: #5a3f08;
+  --interaction-border: #e6ce96;
+  --demo-bar: #dce9df;
+  --demo-bar-foreground: #1e241f;
+  --demo-bar-border: #b9d0c0;
+  --border: #e3e5dc;
+  --input: #cbd2c7;
+  --ring: #2c4a33;
+  --sidebar: #cfc9b4;
+  --sidebar-foreground: #1e241f;
+  --sidebar-primary: #2c4a33;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dce9df;
+  --sidebar-accent-foreground: #1e241f;
+  --sidebar-border: #b3ac93;
+  --sidebar-ring: #2c4a33;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #141915;
+  --foreground: #e8ebe4;
+  --card: #1c221d;
+  --card-foreground: #e8ebe4;
+  --popover: #1c221d;
+  --popover-foreground: #e8ebe4;
+  --primary: #b4d6bc;
+  --primary-foreground: #13201a;
+  --secondary: #262d27;
+  --secondary-foreground: #e8ebe4;
+  --muted: #1c221d;
+  --muted-foreground: #b4bcb1;
+  --accent: #263a2c;
+  --accent-foreground: #e8ebe4;
+  --accent-border: #3d5a45;
+  --destructive: #f2b8ad;
+  --destructive-foreground: #2a0f0b;
+  --destructive-surface: #3a1a15;
+  --destructive-border: #7a3a30;
+  --interaction: #3a2e14;
+  --interaction-foreground: #f2d9a0;
+  --interaction-border: #6b5424;
+  --demo-bar: #263a2c;
+  --demo-bar-foreground: #e8ebe4;
+  --demo-bar-border: #3d5a45;
+  --border: #2e352f;
+  --input: #4a534a;
+  --ring: #b4d6bc;
+  --sidebar: #38342a;
+  --sidebar-foreground: #ede8d8;
+  --sidebar-primary: #b4d6bc;
+  --sidebar-primary-foreground: #13201a;
+  --sidebar-accent: #2e4535;
+  --sidebar-accent-foreground: #e8ebe4;
+  --sidebar-border: #554f3e;
+  --sidebar-ring: #b4d6bc;
 }
 
 @theme inline {
@@ -91,15 +110,20 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-border: var(--accent-border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-surface: var(--destructive-surface);
+  --color-destructive-border: var(--destructive-border);
+  --color-interaction: var(--interaction);
+  --color-interaction-foreground: var(--interaction-foreground);
+  --color-interaction-border: var(--interaction-border);
+  --color-demo-bar: var(--demo-bar);
+  --color-demo-bar-foreground: var(--demo-bar-foreground);
+  --color-demo-bar-border: var(--demo-bar-border);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -108,10 +132,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-}
-
-@utility bg-cosmic {
-  background-image: linear-gradient(to bottom, #0a0e1a, #0f1529, #0a0e1a);
 }
 
 @layer base {
