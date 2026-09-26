@@ -873,8 +873,9 @@ $$;
 -- Check 17: symptoms and symptom_search_terms constraints
 -- ---------------------------------------------------------------------------
 -- Each rejection must come from the named error AND the expected constraint.
--- Measured before asserting: category, key shape, half-filled source code, term shape -> 23514 check_violation;
--- duplicate key, duplicate term, duplicate (category, sort_order) -> 23505 unique_violation.
+-- Measured before asserting: category, key shape, name shape, sort_order, source code shape, half-filled source code,
+-- term shape -> 23514 check_violation; duplicate key, duplicate name in any letter case, duplicate term,
+-- duplicate (category, sort_order) -> 23505 unique_violation; key change -> P0001 from symptoms_guard_key.
 -- symptoms_category_sort_order_key is deferred to commit and this script ends in rollback, so the duplicate
 -- position is forced with "set constraints ... immediate" and the mode is set back to deferred right after.
 -- Synthetic keys check_17_*; sort_order 901+ stays clear of the real list.
@@ -884,7 +885,20 @@ declare
   v_constraint text;
   v_symptom_a uuid;
   v_symptom_b uuid;
+  v_message text;
+  v_case record;
 begin
+  -- 17-0: the position constraint is deferred to commit, not only deferrable. 17e and 17f pass under
+  -- "deferrable initially immediate" too, so the mode is read from the catalog.
+  if not exists (
+    select 1 from pg_constraint
+     where conname = 'symptoms_category_sort_order_key'
+       and conrelid = 'public.symptoms'::regclass
+       and condeferrable and condeferred
+  ) then
+    raise exception 'CHECK 17 FAILED: symptoms_category_sort_order_key is not deferrable initially deferred';
+  end if;
+
   insert into public.symptoms (key, name, category, sort_order)
   values ('check_17_a', 'Check 17 symptom A', 'other', 901)
   returning id into v_symptom_a;
@@ -1013,7 +1027,88 @@ begin
     raise exception 'CHECK 17 FAILED: expected 3 test terms, the valid inserts did not all land';
   end if;
 
-  raise notice 'CHECK 17 OK: bad category, key, half source code, term shape and duplicates (key, position, term) rejected by their constraints; valid symptom with two terms, shared term and position swap accepted';
+  -- 17l: shapes rejected by a check constraint; each case names the constraint that must fire
+  for v_case in
+    select * from (values
+      ('empty name',
+       $q$insert into public.symptoms (key, name, category, sort_order) values ('check_17_c', '', 'other', 903)$q$,
+       'symptoms_name_check'),
+      ('name with a trailing space',
+       $q$insert into public.symptoms (key, name, category, sort_order) values ('check_17_c', 'Check 17 symptom C ', 'other', 903)$q$,
+       'symptoms_name_check'),
+      ('sort_order 0',
+       $q$insert into public.symptoms (key, name, category, sort_order) values ('check_17_c', 'Check 17 symptom C', 'other', 0)$q$,
+       'symptoms_sort_order_check'),
+      ('blank source_vocabulary',
+       $q$insert into public.symptoms (key, name, category, sort_order, source_vocabulary, source_code) values ('check_17_c', 'Check 17 symptom C', 'other', 903, '  ', '10019211')$q$,
+       'symptoms_source_vocabulary_check'),
+      ('blank source_code',
+       $q$insert into public.symptoms (key, name, category, sort_order, source_vocabulary, source_code) values ('check_17_c', 'Check 17 symptom C', 'other', 903, 'MedDRA', '  ')$q$,
+       'symptoms_source_code_check'),
+      ('code without a vocabulary',
+       $q$insert into public.symptoms (key, name, category, sort_order, source_vocabulary, source_code) values ('check_17_c', 'Check 17 symptom C', 'other', 903, null, '10019211')$q$,
+       'symptoms_source_pair_check'),
+      ('empty term',
+       format($q$insert into public.symptom_search_terms (symptom_id, term) values (%L, '')$q$, v_symptom_a),
+       'symptom_search_terms_term_check'),
+      ('term with a trailing space',
+       format($q$insert into public.symptom_search_terms (symptom_id, term) values (%L, 'check term three ')$q$, v_symptom_a),
+       'symptom_search_terms_term_check'),
+      ('term with a double space',
+       format($q$insert into public.symptom_search_terms (symptom_id, term) values (%L, 'check  term three')$q$, v_symptom_a),
+       'symptom_search_terms_term_check'),
+      ('term with a tab',
+       format($q$insert into public.symptom_search_terms (symptom_id, term) values (%L, E'check\tterm three')$q$, v_symptom_a),
+       'symptom_search_terms_term_check'),
+      ('term with a non-breaking space',
+       format($q$insert into public.symptom_search_terms (symptom_id, term) values (%L, E'check\u00a0term three')$q$, v_symptom_a),
+       'symptom_search_terms_term_check'),
+      ('term in decomposed Unicode (NFD)',
+       format($q$insert into public.symptom_search_terms (symptom_id, term) values (%L, normalize('ból', NFD))$q$, v_symptom_a),
+       'symptom_search_terms_term_check')
+    ) as t(label, statement, expected)
+  loop
+    v_constraint := null;
+    begin
+      execute v_case.statement;
+    exception when check_violation then
+      get stacked diagnostics v_constraint = constraint_name;
+    end;
+    if v_constraint is distinct from v_case.expected then
+      raise exception 'CHECK 17 FAILED: % was not rejected by % (got %)', v_case.label, v_case.expected, v_constraint;
+    end if;
+  end loop;
+
+  -- 17m: the same name in a different letter case
+  v_constraint := null;
+  begin
+    insert into public.symptoms (key, name, category, sort_order)
+    values ('check_17_c', 'check 17 SYMPTOM a', 'other', 903);
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'symptoms_name_lower_key' then
+    raise exception 'CHECK 17 FAILED: name differing only in letter case was not rejected by symptoms_name_lower_key (got %)', v_constraint;
+  end if;
+
+  -- 17n: a key is never changed after load
+  v_message := null;
+  begin
+    update public.symptoms set key = 'check_17_renamed' where id = v_symptom_a;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_message is null or v_message not like 'Cannot change symptoms.key%' then
+    raise exception 'CHECK 17 FAILED: key change was not rejected by symptoms_guard_key (got %)', v_message;
+  end if;
+
+  -- 17o: deleting a symptom removes its terms (cascade on shared data only)
+  delete from public.symptoms where id = v_symptom_b;
+  if exists (select 1 from public.symptom_search_terms where symptom_id = v_symptom_b) then
+    raise exception 'CHECK 17 FAILED: terms of a deleted symptom were left behind';
+  end if;
+
+  raise notice 'CHECK 17 OK: position constraint deferred at commit; bad category, key, name, sort_order, source code and term shapes (edge spaces, tab, non-breaking space, double space, NFD) and duplicates (key, name in any case, position, term) rejected by their constraints; key change blocked; terms cascade with their symptom; valid symptom with two terms, shared term and position swap accepted';
 end;
 $$;
 

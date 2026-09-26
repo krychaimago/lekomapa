@@ -158,6 +158,8 @@ Roboczy plik listy do przeglądu, bramka ręczna, potem migracja z danymi z prze
 
 **Contract**: **CHECK 18**: dokładnie 34 objawy; rozkład kategorii 8/7/3/3/3/3/2/5 (albo zmieniony w przeglądzie — wtedy liczby z zatwierdzonego pliku); każdy objaw ma co najmniej jedno słowo; liczba słów równa liczbie w zatwierdzonym pliku; `sort_order` w każdej kategorii to ciąg 1..n bez luk; kolumny kodu źródłowego puste we wszystkich wierszach.
 
+**Pozycja w pliku**: CHECK 18 stoi w `rls_checks.sql` **przed** CHECK 17 (numeracja bez zmian, zmienia się tylko miejsce). Skrypt to jedna transakcja zakończona rollbackiem, więc syntetyczne wiersze `check_17_*` żyją do końca biegu — CHECK 18 dopisany na końcu policzyłby więcej niż 34 objawy i padł fałszywie. Tak samo w F-02 CHECK 11 stoi przed danymi testowymi.
+
 #### 4. Smoke
 
 **File**: `scripts/smoke.mjs`
@@ -225,14 +227,14 @@ Roboczy plik listy do przeglądu, bramka ręczna, potem migracja z danymi z prze
 
 #### Automated
 
-- [x] 1.1 Migracje stosują się od zera: `npx supabase db reset`
-- [x] 1.2 Sprawdzenia SQL przechodzą, w tym CHECK 15–17
-- [x] 1.3 Typy przechodzą: `npm run typecheck`
-- [x] 1.4 Lint przechodzi: `npm run lint`
+- [x] 1.1 Migracje stosują się od zera: `npx supabase db reset` — 83b5036
+- [x] 1.2 Sprawdzenia SQL przechodzą, w tym CHECK 15–17 — 83b5036
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — 83b5036
+- [x] 1.4 Lint przechodzi: `npm run lint` — 83b5036
 
 #### Manual
 
-- [x] 1.5 Autorka czyta komunikaty CHECK 15–17 i potwierdza, że opisują to, co ma być zablokowane
+- [x] 1.5 Autorka czyta komunikaty CHECK 15–17 i potwierdza, że opisują to, co ma być zablokowane — 83b5036
 
 ### Phase 2: Przegląd listy i dane katalogu
 

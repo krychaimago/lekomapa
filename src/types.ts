@@ -192,17 +192,25 @@ export interface InteractionPair {
 export type SymptomCategory =
   "digestive" | "nervous" | "mental" | "skin" | "circulatory" | "general" | "muscular" | "other";
 
+/**
+ * User-facing Polish labels, written in display order (object key order is insertion order).
+ * A Record, so a category added to the type without a label fails to compile.
+ */
+const SYMPTOM_CATEGORY_LABELS: Record<SymptomCategory, string> = {
+  digestive: "pokarmowy",
+  nervous: "nerwowy",
+  mental: "psychika",
+  skin: "skóra",
+  circulatory: "krążenie",
+  general: "ogólne",
+  muscular: "mięśnie",
+  other: "pozostałe",
+};
+
 /** Categories in display order, with user-facing Polish labels. The one place S-05 takes them from. */
-export const SYMPTOM_CATEGORIES: readonly { value: SymptomCategory; label: string }[] = [
-  { value: "digestive", label: "pokarmowy" },
-  { value: "nervous", label: "nerwowy" },
-  { value: "mental", label: "psychika" },
-  { value: "skin", label: "skóra" },
-  { value: "circulatory", label: "krążenie" },
-  { value: "general", label: "ogólne" },
-  { value: "muscular", label: "mięśnie" },
-  { value: "other", label: "pozostałe" },
-];
+export const SYMPTOM_CATEGORIES: readonly { value: SymptomCategory; label: string }[] = (
+  Object.keys(SYMPTOM_CATEGORY_LABELS) as SymptomCategory[]
+).map((value) => ({ value, label: SYMPTOM_CATEGORY_LABELS[value] }));
 
 /**
  * Row of `public.symptoms` — one symptom of the closed list.

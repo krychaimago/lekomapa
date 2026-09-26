@@ -15,16 +15,16 @@
 create table public.symptoms (
   id uuid primary key default gen_random_uuid(),
   -- stable identifier; later migrations find a symptom by key, never by name, and a key is
-  -- never changed after it is loaded
+  -- never changed after it is loaded (enforced by symptoms_guard_key below)
   key text not null
     constraint symptoms_key_key unique
     constraint symptoms_key_check
     check (key ~ '^[a-z][a-z0-9_]*$'),
-  -- user-facing Polish name; may be refined by later migrations, so it is not an identifier
+  -- user-facing Polish name; may be refined by later migrations, so it is not an identifier.
+  -- Unique regardless of letter case: see symptoms_name_lower_key below.
   name text not null
-    constraint symptoms_name_key unique
     constraint symptoms_name_check
-    check (btrim(name) <> ''),
+    check (name <> '' and name = btrim(name)),
   -- no separate category table (roadmap, F-03); labels and order live in src/types.ts
   category text not null
     constraint symptoms_category_check
@@ -51,6 +51,10 @@ create table public.symptoms (
     deferrable initially deferred
 );
 
+-- "Ból głowy" next to "ból głowy" would be two entries for one symptom
+create unique index symptoms_name_lower_key
+  on public.symptoms (lower(name));
+
 comment on table public.symptoms is
   'Closed list of symptoms, a shared set shipped with the product and loaded by migrations only. The scope (which symptoms are on the list) is a filter applied when the list is loaded, not a property of the row: there is no "in scope" flag, and widening the list means a migration that adds rows. key is the stable identifier and is never changed after load; name may be refined. Choosing a symptom states nothing about its cause: the product only ever says a symptom may be related to a medication (FR-012).';
 comment on column public.symptoms.key is
@@ -63,6 +67,30 @@ comment on column public.symptoms.sort_order is
   'Position within the category, unique per category. The uniqueness check is deferred to commit so positions can be swapped.';
 comment on column public.symptoms.source_vocabulary is
   'Name of the external terminology source_code comes from. Set together with source_code or not at all; empty until version 2.';
+comment on column public.symptoms.source_code is
+  'Code of the symptom in source_vocabulary. Set together with source_vocabulary or not at all; empty until version 2. The parked adverse-event set will join on this column, never on the Polish name.';
+
+-- A key is the join point for every later migration; changing it would silently break them.
+-- Only migrations write this table, so the guard catches a mistake in a later migration.
+-- A deliberate key change must drop this trigger in the same migration.
+create or replace function public.symptoms_guard_key()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.key is distinct from old.key then
+    raise exception
+      'Cannot change symptoms.key (% -> %): later migrations refer to a symptom by key. Change name instead.',
+      old.key, new.key;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger symptoms_guard_key
+  before update of key on public.symptoms
+  for each row execute function public.symptoms_guard_key();
 
 -- ---------------------------------------------------------------------------
 -- 2. Symptom search terms
@@ -73,20 +101,24 @@ create table public.symptom_search_terms (
   symptom_id uuid not null
     constraint symptom_search_terms_symptom_id_fkey
     references public.symptoms (id) on delete cascade,
-  -- stored lower case and without surrounding spaces, so search compares one spelling
+  -- stored in one spelling so search compares like with like: lower case, composed Unicode (NFC),
+  -- words separated by single plain spaces (no tabs, no non-breaking spaces, nothing at the edges)
   term text not null
     constraint symptom_search_terms_term_check
-    check (term <> '' and term = lower(btrim(term))),
+    check (
+      term = lower(term)
+      and term = normalize(term, NFC)
+      and term ~ '^[^[:space:]]+( [^[:space:]]+)*$'
+    ),
   -- the same word may point to two different symptoms, but not twice to one
   constraint symptom_search_terms_symptom_id_term_key
     unique (symptom_id, term)
 );
 
-create index symptom_search_terms_symptom_id_idx
-  on public.symptom_search_terms (symptom_id);
-
 comment on table public.symptom_search_terms is
   'Colloquial words that find a symptom in the search box. Shared and read-only: the author adds words through migrations, users never write them. A word maps to a symptom on the list only; a free-text note is never mapped to a symptom (FR-008).';
+comment on column public.symptom_search_terms.term is
+  'Search word in one spelling: lower case, NFC, single spaces between words, no spaces at the edges. The search in S-05 must bring the typed text to the same form before comparing.';
 
 -- ---------------------------------------------------------------------------
 -- 3. RLS and privileges
