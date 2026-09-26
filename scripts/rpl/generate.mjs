@@ -35,11 +35,34 @@ const TIMESTAMP = /^\d{14}$/;
 
 // --- SQL building (pure, tested in generate.test.mjs) ----------------------
 
+// Postgres text and jsonb reject U+0000 and a lone surrogate cannot be encoded as UTF-8. Either would pass the
+// generator and fail only when the migration is applied, so the generator refuses first.
+function assertPostgresText(text) {
+  if (text.includes("\u0000") || !text.isWellFormed()) {
+    throw new Error(
+      `Value cannot be stored by Postgres (U+0000 or a lone surrogate): ${JSON.stringify(text.slice(0, 80))}`,
+    );
+  }
+}
+
+function assertPostgresJson(value) {
+  if (typeof value === "string") assertPostgresText(value);
+  else if (Array.isArray(value)) value.forEach(assertPostgresJson);
+  else if (value !== null && typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) {
+      assertPostgresText(key);
+      assertPostgresJson(item);
+    }
+  }
+}
+
 // Standard SQL string literal. standard_conforming_strings is on in every supported Postgres, so a backslash is
 // an ordinary character and only the quote needs doubling.
 export function sqlString(value) {
   if (value === null || value === undefined) return "null";
-  return `'${String(value).replace(/'/g, "''")}'`;
+  const text = String(value);
+  assertPostgresText(text);
+  return `'${text.replace(/'/g, "''")}'`;
 }
 
 export function sqlTextArray(values) {
@@ -49,6 +72,7 @@ export function sqlTextArray(values) {
 
 // JSON text inside a string literal: JSON.stringify escapes what JSON needs, sqlString what SQL needs.
 export function sqlJsonb(value) {
+  assertPostgresJson(value);
   return `${sqlString(JSON.stringify(value))}::jsonb`;
 }
 

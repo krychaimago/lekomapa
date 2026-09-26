@@ -69,6 +69,14 @@ test("jsonb literal escapes the apostrophe inside JSON text", () => {
   assert.equal(sqlJsonb({ name: "d'Or", quote: 'say "hi"' }), `'{"name":"d''Or","quote":"say \\"hi\\""}'::jsonb`);
 });
 
+test("a value Postgres cannot store stops the generator instead of the migration", () => {
+  assert.throws(() => sqlString("Diovan\u0000"), /U\+0000 or a lone surrogate/);
+  assert.throws(() => sqlString("Diovan \ud800"), /U\+0000 or a lone surrogate/);
+  assert.throws(() => sqlJsonb({ packages: [{ name: "a\u0000" }] }), /U\+0000 or a lone surrogate/);
+  assert.throws(() => sqlJsonb({ ["key\udc00"]: "value" }), /U\+0000 or a lone surrogate/);
+  assert.equal(sqlString("Ząb 😀"), "'Ząb 😀'");
+});
+
 test("text arrays are typed, empty arrays too", () => {
   assert.equal(sqlTextArray([]), "'{}'::text[]");
   assert.equal(sqlTextArray(["C09CA03", "BRAK"]), "array['C09CA03', 'BRAK']::text[]");

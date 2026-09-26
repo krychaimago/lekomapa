@@ -26,6 +26,9 @@ import {
 
 const refresh = process.argv.includes("--refresh");
 
+// The file is ~75 MB; a stalled connection would otherwise hang the script forever.
+const DOWNLOAD_TIMEOUT_MS = 10 * 60 * 1000;
+
 async function exists(filePath) {
   try {
     await stat(filePath);
@@ -50,8 +53,9 @@ async function readStanNaDzien(filePath) {
 }
 
 async function download(target) {
-  const response = await fetch(RPL_URL);
+  const response = await fetch(RPL_URL, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) });
   if (!response.ok || !response.body) throw new Error(`GET ${RPL_URL} → HTTP ${response.status}`);
+  const expectedBytes = Number(response.headers.get("content-length") ?? NaN);
   const hash = createHash("sha256");
   let bytes = 0;
   const counter = new Transform({
@@ -62,6 +66,10 @@ async function download(target) {
     },
   });
   await pipeline(Readable.fromWeb(response.body), counter, createWriteStream(target));
+  // A connection cut mid-body can end the stream without an error; a short file must not be pinned.
+  if (Number.isFinite(expectedBytes) && bytes !== expectedBytes) {
+    throw new Error(`Downloaded ${bytes} bytes, Content-Length announced ${expectedBytes}.`);
+  }
   return { sha256: hash.digest("hex"), bytes };
 }
 
@@ -79,8 +87,14 @@ if (existing && !refresh) {
 
 const temp = path.join(CACHE_DIR, `download-${Date.now()}.tmp`);
 console.log(`Downloading ${RPL_URL} …`);
-const { sha256, bytes } = await download(temp);
-const stanNaDzien = await readStanNaDzien(temp);
+let sha256, bytes, stanNaDzien;
+try {
+  ({ sha256, bytes } = await download(temp));
+  stanNaDzien = await readStanNaDzien(temp);
+} catch (error) {
+  await rm(temp, { force: true });
+  throw error;
+}
 
 if (existing && !refresh && sha256 !== existing.sha256) {
   await rm(temp);

@@ -58,9 +58,11 @@ function textOf(node) {
   return String(node);
 }
 
+// Scalar fields go through textOf: an element carrying an attribute arrives as an object and would otherwise be
+// written as "[object Object]".
 function emptyToNull(value) {
   if (value == null) return null;
-  const trimmed = String(value).trim();
+  const trimmed = textOf(value).trim();
   return trimmed === "" ? null : trimmed;
 }
 
@@ -80,7 +82,7 @@ export function toProduct(element) {
 
   const substances = list(element.substancjeCzynne, "substancjaCzynna").map((node, index) => ({
     position: index + 1,
-    name: String(node.nazwaSubstancji ?? "").trim(),
+    name: textOf(node.nazwaSubstancji).trim(),
   }));
 
   const species = list(element.gatunki, "gatunek")
@@ -89,8 +91,8 @@ export function toProduct(element) {
 
   return {
     product: {
-      rplId: String(element.id),
-      productName: String(element.nazwaProduktu ?? "").trim(),
+      rplId: textOf(element.id).trim(),
+      productName: textOf(element.nazwaProduktu).trim(),
       commonName: emptyToNull(element.nazwaPowszechnieStosowana),
       strength: emptyToNull(element.moc),
       form: emptyToNull(element.nazwaPostaciFarmaceutycznej),
@@ -118,12 +120,22 @@ export function parseRpl(xml) {
   const products = [];
   const rejectedAtcCodes = [];
   let veterinary = 0;
+  const seenIds = new Set();
   for (const element of list(root, "produktLeczniczy")) {
     if (element.rodzajPreparatu !== HUMAN) {
       veterinary += 1;
       continue;
     }
     const { product, rejectedAtcCodes: rejected } = toProduct(element);
+    // rplId is the key every migration upserts on: a missing one would be written as a shared empty key, and a
+    // repeated one would silently merge two compositions into one product.
+    if (product.rplId === "") {
+      throw new Error(`Human product "${product.productName}" has no id; refusing to generate data without a key.`);
+    }
+    if (seenIds.has(product.rplId)) {
+      throw new Error(`Product id ${product.rplId} appears twice in the export; refusing to merge two products.`);
+    }
+    seenIds.add(product.rplId);
     products.push(product);
     for (const value of rejected) {
       rejectedAtcCodes.push({ rplId: product.rplId, productName: product.productName, value });

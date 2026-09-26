@@ -31,7 +31,17 @@ export const FORBIDDEN_WORDS = [
   "nie wolno",
   "niebezpieczn",
   "groźn",
+  "prowadz",
+  "przyczyn",
+  "skutk",
+  "dawk",
+  "przesta",
+  "unika",
 ];
+
+// FR-012: the only wording a description may use for the link between a pair and a symptom. Required, because
+// the stem list above will always be incomplete.
+export const REQUIRED_WORDING = "może mieć związek";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -97,6 +107,9 @@ function rowReason(row) {
       reason: "forbidden_word",
       message: `description contains forbidden wording (FR-012): ${forbidden.join(", ")}`,
     };
+  }
+  if (!foldText(row.description).includes(foldText(REQUIRED_WORDING))) {
+    return { reason: "missing_required_wording", message: `description must contain "${REQUIRED_WORDING}" (FR-012)` };
   }
   if (row.verifiedOn !== "" && !isCalendarDate(row.verifiedOn)) {
     return { reason: "invalid_verified_on", message: `verified_on "${row.verifiedOn}" is not a YYYY-MM-DD date` };

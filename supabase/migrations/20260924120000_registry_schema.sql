@@ -34,7 +34,8 @@ create table public.registry_products (
   -- date is unconfirmed, so it is stored raw and never interpreted here
   authorization_validity text,
   marketing_authorization_holder text,
-  -- product-level ATC codes exactly as in the source, including invalid ones ("BRAK")
+  -- product-level ATC codes: valid codes after cleaning (upper case, no spaces, no repeats), then the rejected
+  -- source values untouched ("BRAK"); the original spelling and order stay in source_payload
   atc_codes text[] not null default '{}',
   -- the whole source element, packages included, so later rules need no re-import
   source_payload jsonb not null,

@@ -52,3 +52,29 @@ test('code "c09ca03 " is cleaned to C09CA03, a malformed value is rejected and r
     { rplId: "SYNTHETIC-1", productName: "Synthetic code test", value: "BRAK" },
   ]);
 });
+
+function exportWith(...products) {
+  const elements = products.map((attributes) => `<produktLeczniczy rodzajPreparatu="ludzki" ${attributes}/>`);
+  return `<produktyLecznicze stanNaDzien="2026-09-23">${elements.join("")}</produktyLecznicze>`;
+}
+
+test("a human product without an id stops the parser", () => {
+  assert.throws(() => parseRpl(exportWith('nazwaProduktu="Bez id"')), /has no id/);
+  assert.throws(() => parseRpl(exportWith('nazwaProduktu="Puste id" id=" "')), /has no id/);
+});
+
+test("a repeated product id stops the parser instead of merging two products", () => {
+  assert.throws(
+    () => parseRpl(exportWith('nazwaProduktu="A" id="1"', 'nazwaProduktu="B" id="1"')),
+    /id 1 appears twice/,
+  );
+});
+
+test("a scalar field sent as an element with an attribute keeps its text", () => {
+  const xml =
+    '<produktyLecznicze stanNaDzien="2026-09-23"><produktLeczniczy rodzajPreparatu="ludzki" id="7">' +
+    '<nazwaProduktu jezyk="pl">Diovan</nazwaProduktu><moc jednostka="mg">80 mg</moc></produktLeczniczy></produktyLecznicze>';
+  const [product] = parseRpl(xml).products;
+  assert.equal(product.productName, "Diovan");
+  assert.equal(product.strength, "80 mg");
+});

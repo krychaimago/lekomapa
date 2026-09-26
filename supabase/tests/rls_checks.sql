@@ -360,6 +360,18 @@ begin
     raise exception 'SPRAWDZENIE 5 NIEUDANE: przepięcie składu pod inny lek przeszło przy zamkniętym oknie korekty';
   end if;
 
+  -- 5g (F-02): atc_code became nullable, so clearing a code must still count as changing the core of the entry.
+  v_blocked := false;
+  begin
+    update public.medication_substances
+       set atc_code = null
+     where id = '00000000-0000-4000-8000-000000000003';
+  exception when sqlstate 'P0001' then v_blocked := true;
+  end;
+  if not v_blocked then
+    raise exception 'CHECK 5 FAILED: clearing atc_code passed with the correction window closed';
+  end if;
+
   raise notice 'SPRAWDZENIE 5 OK: rdzeń wpisu niemodyfikowalny wraz z medication_id, zamknięcie trwającego okresu przechodzi';
 end;
 $$;
@@ -532,7 +544,7 @@ declare
   v_substances integer;
   v_pairs integer;
   v_outside text;
-  v_duplicates text;
+  v_mixed text;
 begin
   select count(*) into v_products from public.registry_products;
   select count(*) into v_substances from public.registry_substances;
@@ -566,17 +578,24 @@ begin
     raise exception 'CHECK 11 FAILED: products outside the scope of every pair were loaded: %', v_outside;
   end if;
 
-  select string_agg(distinct p.rpl_id, ', ')
-    into v_duplicates
-  from public.registry_substances s
-  join public.registry_products p on p.id = s.registry_product_id
-  group by s.registry_product_id, s.position, s.atc_code
-  having count(*) > 1;
-  if v_duplicates is not null then
-    raise exception 'CHECK 11 FAILED: products with a substance written twice with the same code: %', v_duplicates;
+  -- The generator decides where a composition comes from per product, not per substance. No constraint spans
+  -- rows, so a product mixing origins would load silently. (Duplicate substance rows need no check here: the
+  -- unique constraint on registry_substances rejects them during the migration.)
+  select string_agg(rpl_id, ', ' order by rpl_id)
+    into v_mixed
+  from (
+    select p.rpl_id
+    from public.registry_substances s
+    join public.registry_products p on p.id = s.registry_product_id
+    group by p.rpl_id
+    having count(distinct s.composition_source) > 1
+        or count(distinct s.composition_source_rpl_id) > 1
+  ) mixed;
+  if v_mixed is not null then
+    raise exception 'CHECK 11 FAILED: products whose substances mix composition origins: %', v_mixed;
   end if;
 
-  raise notice 'CHECK 11 OK: % products, % substance rows, % pairs; every product in the scope of a pair; no duplicated substance rows',
+  raise notice 'CHECK 11 OK: % products, % substance rows, % pairs; every product in the scope of a pair; one composition origin per product',
     v_products, v_substances, v_pairs;
 end;
 $$;
@@ -728,8 +747,9 @@ $$;
 -- Check 14: F-01 changes — registry foreign key and nullable substance code
 -- ---------------------------------------------------------------------------
 -- Measured before asserting: missing registry product -> 23503 foreign_key_violation;
--- duplicate substance without a code -> 23505 unique_violation.
--- Uses medication ...0005, which survives check 8.
+-- duplicate substance without a code -> 23505 unique_violation;
+-- deleting a product a medication points to -> 23503 foreign_key_violation.
+-- Uses medication ...0005, which survives check 8, and registry product ...0010 from check 13.
 
 do $$
 declare
@@ -768,7 +788,21 @@ begin
   insert into public.medication_substances (medication_id, substance_name, atc_code)
   values ('00000000-0000-4000-8000-000000000005', 'Extractum Y', null);
 
-  raise notice 'CHECK 14 OK: registry foreign key enforced; substances without a code accepted, duplicate rejected';
+  -- 14e: a registry product a medication points to cannot be deleted (on delete restrict)
+  update public.medications
+     set registry_medication_id = '00000000-0000-4000-8000-000000000010'
+   where id = '00000000-0000-4000-8000-000000000005';
+  v_constraint := null;
+  begin
+    delete from public.registry_products where id = '00000000-0000-4000-8000-000000000010';
+  exception when foreign_key_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medications_registry_medication_id_fkey' then
+    raise exception 'CHECK 14 FAILED: deleting a product a medication points to was not rejected by medications_registry_medication_id_fkey (got %)', v_constraint;
+  end if;
+
+  raise notice 'CHECK 14 OK: registry foreign key enforced on insert and delete; substances without a code accepted, duplicate rejected';
 end;
 $$;
 

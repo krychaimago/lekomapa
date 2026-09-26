@@ -673,7 +673,7 @@ W sekcji `## Testy`: `npm test`.
 
 #### Manual Verification:
 
-- Tymczasowe dodanie polityki `insert` dla `authenticated` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem)
+- Tymczasowe nadanie `grant insert` roli `authenticated` razem z polityką `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem). Sama polityka nie wystarczy: migracja odbiera `insert`, więc bez `grant` smoke dalej daje `PASS` i sprawdzenie nie dotyka warstwy RLS
 - Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego (Exforge HCT pilnują testy jednostkowe, bo jego obecność w danych zależy od wybranych grup)
 - Autorka przegląda odświeżony `registry-measurement.md` (puste kody, remisy, kody odrzucone) na ostatecznych grupach i akceptuje go przed commitem migracji danych
 
@@ -793,6 +793,6 @@ W sekcji `## Testy`: `npm test`.
 
 #### Manual
 
-- [x] 4.7 Tymczasowa polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem) — 7876683
+- [x] 4.7 Tymczasowy `grant insert` + polityka `insert` na `interaction_pairs` sprawia, że `npm run smoke` pada (przywrócić przed commitem) — 7876683; brzmienie poprawione i sprawdzenie powtórzone lokalnie przy impl-review 2026-09-26: z `grant` + polityką krok insert daje FAIL, z samą polityką PASS, bieg kontrolny PASS
 - [x] 4.8 Autorka wybiera w Studio dowolny lek złożony z próbki raportu i potwierdza, że każda jego substancja ma kod swojego leku jednoskładnikowego — 7876683
 - [x] 4.9 Autorka przegląda odświeżony `registry-measurement.md` na ostatecznych grupach i akceptuje go przed commitem migracji danych — 7876683

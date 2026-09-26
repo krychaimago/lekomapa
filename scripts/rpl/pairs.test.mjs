@@ -4,11 +4,11 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { FORBIDDEN_WORDS, PAIR_COLUMNS, loadPairs, parsePairs, validatePairs } from "./pairs.mjs";
+import { FORBIDDEN_WORDS, PAIR_COLUMNS, REQUIRED_WORDING, loadPairs, parsePairs, validatePairs } from "./pairs.mjs";
 import { REPO_ROOT } from "./snapshot.mjs";
 
 const HEADER = PAIR_COLUMNS.map((column) => `"${column}"`).join(";");
-const DESCRIPTION = "Sartany i leki z grupy ibuprofenu mogą wchodzić w interakcję; może to mieć związek z objawami.";
+const DESCRIPTION = "Sartany i leki z grupy ibuprofenu mogą wchodzić w interakcję; może mieć związek z objawami.";
 const SOURCE = "ChPL Diovan pkt 4.5";
 
 // rows: [group_a, group_b, verified_on, description, source]
@@ -181,7 +181,53 @@ test("the forbidden-word list is the one the plan names", () => {
     "nie wolno",
     "niebezpieczn",
     "groźn",
+    "prowadz",
+    "przyczyn",
+    "skutk",
+    "dawk",
+    "przesta",
+    "unika",
   ]);
+});
+
+test("wording the first stem list let through is caught", () => {
+  const cases = [
+    "Połączenie prowadzi do krwawień.",
+    "Połączenie jest przyczyną objawów.",
+    "Połączenie skutkuje objawami.",
+    "Dostosuj dawkę leku.",
+    "Unikaj tego połączenia.",
+    "Przestań przyjmować jeden z leków.",
+  ];
+  const result = validate(
+    cases.map((description, index) => [
+      "C09CA",
+      `M01AE0${index + 1}`,
+      "2026-10-02",
+      `${description} ${REQUIRED_WORDING}`,
+    ]),
+  );
+  assert.deepEqual(
+    reasons(result),
+    cases.map((_, index) => [index + 2, "forbidden_word"]),
+  );
+});
+
+test("a description without the required wording is an error, also on an unverified row", () => {
+  const result = validate([
+    ["C09CA", "M01AE", "2026-10-02", "Sartany i leki z grupy ibuprofenu mogą wchodzić w interakcję."],
+    ["C09AA", "M01AE", "", "Może to mieć związek z objawami."],
+  ]);
+  assert.deepEqual(reasons(result), [
+    [2, "missing_required_wording"],
+    [3, "missing_required_wording"],
+  ]);
+  assert.deepEqual(result.skipped, []);
+});
+
+test("the required wording is matched regardless of case and diacritic encoding", () => {
+  const result = validate([["C09CA", "M01AE", "2026-10-02", "MOŻE MIEĆ ZWIĄZEK z objawami.".normalize("NFD")]]);
+  assert.deepEqual(result.errors, []);
 });
 
 test("forbidden wording is caught regardless of case, diacritic encoding and spacing", () => {
