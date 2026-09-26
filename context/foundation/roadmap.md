@@ -59,19 +59,19 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | blocked  |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-02, S-05                         | FR-001, NFR usunięcia konta                | proposed |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed |
 
 ## Streams
 
 Pomoc nawigacyjna — grupuje pozycje dzielące łańcuch wymagań wstępnych. Kolejność obowiązująca nadal żyje w grafie zależności poniżej; ta tabela to proponowana kolejność czytania między równoległymi ścieżkami.
 
-| Stream | Theme                   | Chain                                      | Note                                                                                                                                                                                                    |
-| ------ | ----------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A      | Leki i kolizje          | `F-01` → `F-02` → `S-02` → `S-03` → `S-04` | Ścieżka gwiazdy przewodniej; przy celu `speed` ma pierwszeństwo. `S-02` dołącza do D przy `F-04`.                                                                                                       |
-| B      | Dzienniczek objawów     | `F-03` → `S-05` → `S-07`                   | Startuje równolegle do A; `S-05` dołącza do D przy `F-04`.                                                                                                                                              |
-| C      | Materiał na wizytę      | `S-06` → `S-08`                            | Dołącza do A przy `S-03` i do B przy `S-05`; niczego nie liczy od nowa, składa gotowe treści.                                                                                                           |
-| D      | Wejście, konto i wygląd | `F-04` → `S-01` → `S-10` → `S-09` → `S-11` | `F-04` jest wspólnym podłożem także dla A i B. `S-01` i `S-10` są wzajemnie niezależne; `S-09` dołącza do A przy `S-02` i do B przy `S-05`; `S-11` zamyka kamień milowy, gdy istnieją wszystkie ekrany. |
+| Stream | Theme                   | Chain                                        | Note                                                                                                                                                                                                                                                                                 |
+| ------ | ----------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A      | Leki i kolizje          | `F-01` → `F-02` → `S-02` → `S-03` → `S-04`   | Ścieżka gwiazdy przewodniej; przy celu `speed` ma pierwszeństwo. `S-02` dołącza do D przy `F-04`.                                                                                                                                                                                    |
+| B      | Dzienniczek objawów     | `F-03` → `S-05` → `S-07`                     | Startuje równolegle do A; `S-05` dołącza do D przy `F-04`.                                                                                                                                                                                                                           |
+| C      | Materiał na wizytę      | `S-06` → `S-08`                              | Dołącza do A przy `S-03` i do B przy `S-05`; niczego nie liczy od nowa, składa gotowe treści.                                                                                                                                                                                        |
+| D      | Wejście, konto i wygląd | `F-04` → (`S-01` ∥ `S-10`) → `S-09` → `S-11` | `F-04` jest wspólnym podłożem także dla A i B. `S-01` i `S-10` są wzajemnie niezależne (∥ = równolegle); `S-09` czeka na `S-01` i dołącza do A przy `S-02`, do B przy `S-05` i do C przy `S-06`, a od `S-10` nie zależy; `S-11` zamyka kamień milowy, gdy istnieją wszystkie ekrany. |
 
 ## Baseline
 
@@ -94,7 +94,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **PRD refs:** FR-003, FR-004, `## Non-Functional Requirements` (izolacja danych per-konto), `## Access Control` (płaski model, jedno konto = jedna osoba)
 - **Unlocks:** S-02 (gwiazda przewodnia), S-05 — a także konwencję migracji i RLS, z której korzysta każda późniejsza tabela; ścieżka weryfikacji izolacji jest tu ustalana raz dla całego produktu.
 - **Prerequisites:** —
-- **Parallel with:** F-02, F-03, S-01
+- **Parallel with:** F-02, F-03, F-04
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Główne ryzyko kamienia milowego to `skills`, a migracje i RLS są warstwą jeszcze niepisaną samodzielnie — stąd fundament jawny, a nie migracja przemycona w plasterku. Zakres zamknięty na leki i okresy dawkowania: tabele dzienniczka powstają dopiero w S-05, razem z pierwszym ekranem, który ich potrzebuje. Realne zagrożenie: RLS odłożone „na później" — wtedy przy jednym koncie testowym nic nie ujawni wycieku.
@@ -108,7 +108,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **PRD refs:** FR-003, FR-006, `## Business Logic` (zbiór reguł plus rejestr leków), `## Access Control` (brak roli administratora reguł)
 - **Unlocks:** S-02 — bez rejestru leków nie ma czego wpisać przy dodawaniu leku, a bez par kolizji nie ma czego oznaczyć.
 - **Prerequisites:** —
-- **Parallel with:** F-01, F-03, S-01
+- **Parallel with:** F-01, F-03, F-04
 - **Blockers:** —
 - **Unknowns:** — (Q-1 rozstrzygnięte 2026-09-21, issue #2)
 - **Risk:** Zbieranie par to praca poza kodem, wliczona w budżet czasu, nieusuwalna i niezlecalna agentowi — to dane zdrowotne, każda para wymaga sprawdzenia przy ulotce albo charakterystyce produktu leczniczego. Drugie ryzyko to jakość danych rejestru: nazwa leku bywa zlepiona z dawką i opakowaniem, substancje zapisywane niejednolicie. Dlatego pierwszym krokiem jest pobranie próbki i zmierzenie, jak te dane wyglądają, zanim powstanie migracja. Zbiór reguł jest z założenia niepełny — konsekwencją jest bariera z PRD mówiąca wprost, że brak ostrzeżenia nie oznacza bezpieczeństwa; ta bariera jest częścią S-02, nie tego fundamentu.
@@ -123,7 +123,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **PRD refs:** FR-008, `## Business Logic` (katalog objawów jako trzeci zbiór dostarczony z produktem), `## Access Control` (brak roli edytującej zbiory wspólne)
 - **Unlocks:** S-05 — bez listy nie ma z czego zaznaczyć objawu we wpisie dzienniczka.
 - **Prerequisites:** —
-- **Parallel with:** F-04, S-01, S-10
+- **Parallel with:** F-04, S-01, S-02, S-10
 - **Blockers:** —
 - **Unknowns:** — (Q-2 rozstrzygnięte 2026-09-21, issue #3)
 - **Risk:** Lista za wąska sprawi, że użytkowniczka nie znajdzie tego, co faktycznie czuje. PRD łagodzi to notatką własnymi słowami, która nie uczestniczy w regule — ale notatka jest częścią S-05, więc sama lista musi trafić w typowe objawy przyjmowanych leków. Osiem kategorii i 34 pozycje to ryzyko zmniejszają, ale otwierają drugie: przy tej długości płaska lista na telefonie jest nie do przewinięcia, więc grupowanie i wyszukiwanie po słowach potocznych przestają być udogodnieniem i stają się warunkiem użyteczności — to wymóg dla S-05, nie dla tego fundamentu. Trzecie ryzyko: nazwy pozycji powstają bez źródła referencyjnego i będą dopracowywane w użyciu, więc niczego nie wolno wiązać z polską nazwą jako identyfikatorem.
@@ -280,11 +280,11 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Change ID:** `account-deletion-cascade`
 - **Issue:** #20
 - **PRD refs:** FR-001, `## Non-Functional Requirements` (bezpowrotne skasowanie danych po usunięciu konta)
-- **Prerequisites:** S-02, S-05
-- **Parallel with:** S-06, S-07, S-08
+- **Prerequisites:** S-01, S-02, S-05, S-06
+- **Parallel with:** S-07, S-08
 - **Blockers:** —
 - **Unknowns:** —
-- **Risk:** Operacja nieodwracalna, a zakres kasowania rośnie z każdą nową tabelą — dlatego sekwencjonowana po tym, jak powstały wszystkie tabele rdzenia (S-02 dla leków i okresów, S-05 dla dzienniczka). Zaplanowana wcześniej przeoczyłaby dane dodane później i zostawiła sieroty, czego samo przejście ścieżki nie ujawni. Przy publicznej rejestracji to także jedyna droga, którą strona prywatności z S-01 może wskazać jako „jak usunąć konto” — do czasu S-09 strona musi mówić, jak zrobić to inaczej.
+- **Risk:** Operacja nieodwracalna, a zakres kasowania rośnie z każdą nową tabelą — dlatego sekwencjonowana po tym, jak powstały wszystkie tabele z danymi konta (S-01 dla zapisu akceptacji warunków, S-02 dla leków i okresów, S-05 dla dzienniczka, S-06 dla złożonych pytań). S-01 i S-06 dopisane 2026-09-26: wcześniej brakowało ich w wymaganiach wstępnych, choć obie tworzą dane przypisane do konta. Zaplanowana wcześniej przeoczyłaby dane dodane później i zostawiła sieroty, czego samo przejście ścieżki nie ujawni. Przy publicznej rejestracji to także jedyna droga, którą strona prywatności z S-01 może wskazać jako „jak usunąć konto” — do czasu S-09 strona musi mówić, jak zrobić to inaczej.
 - **Status:** proposed
 
 ### S-11: Tryb ciemny
@@ -319,7 +319,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 | S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | no                    | Wymaga S-03 i S-05                              | #17   |
 | S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | no                    | Czeka na miarę okna korekty                     | #18   |
 | S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                          | no                    | Wymaga S-02 i S-06                              | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-02 i S-05                              | #20   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                  | #20   |
 | S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                            | #37   |
 
 ## Open Roadmap Questions
