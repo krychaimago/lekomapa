@@ -428,36 +428,36 @@ Brak zmian w bazie. Po merge'u produkcja pokazuje przekierowanie zamiast strony 
 
 #### Automated
 
-- [x] 2.1 Wszystkie testy przechodzą
-- [x] 2.2 Lint przechodzi
-- [x] 2.3 Typy przechodzą
-- [x] 2.4 Build przechodzi
-- [x] 2.5 Zbudowana strona logowania ma lang="pl" i tekst paska
+- [x] 2.1 Wszystkie testy przechodzą — 5c65404
+- [x] 2.2 Lint przechodzi — 5c65404
+- [x] 2.3 Typy przechodzą — 5c65404
+- [x] 2.4 Build przechodzi — 5c65404
+- [x] 2.5 Zbudowana strona logowania ma lang="pl" i tekst paska — 5c65404
 
 #### Manual
 
-- [x] 2.6 Pasek widoczny na ekranach wejściowych na telefonie i dużym ekranie
-- [x] 2.7 Najmniejszy tekst co najmniej 15 px na telefonie i 17 px na dużym ekranie
+- [x] 2.6 Pasek widoczny na ekranach wejściowych na telefonie i dużym ekranie — 5c65404
+- [x] 2.7 Najmniejszy tekst co najmniej 15 px na telefonie i 17 px na dużym ekranie — 5c65404
 
 ### Phase 3: Szkielet wnętrza
 
 #### Automated
 
-- [ ] 3.1 Wszystkie testy przechodzą
-- [ ] 3.2 Lint przechodzi
-- [ ] 3.3 Typy przechodzą
-- [ ] 3.4 Build przechodzi
-- [ ] 3.5 Smoke przechodzi przeciw lokalnemu Supabase
-- [ ] 3.6 Niezalogowane żądanie / zwraca 302 na /auth/signin
+- [x] 3.1 Wszystkie testy przechodzą
+- [x] 3.2 Lint przechodzi
+- [x] 3.3 Typy przechodzą
+- [x] 3.4 Build przechodzi
+- [x] 3.5 Smoke przechodzi przeciw lokalnemu Supabase
+- [x] 3.6 Niezalogowane żądanie / zwraca 302 na /auth/signin
 
 #### Manual
 
-- [ ] 3.7 Po zalogowaniu / prowadzi do szkieletu wnętrza
-- [ ] 3.8 Duży ekran: pas boczny, pusta karta, wylogowanie działa
-- [ ] 3.9 Telefon: nagłówek z wylogowaniem, brak zakładek, bez poziomego przewijania
-- [ ] 3.10 Tymczasowa pozycja menu pokazuje zakładki i aktywną pozycję
-- [ ] 3.11 Szkielet w trybie ciemnym czytelny
-- [ ] 3.12 Trasa z NAV_ITEMS przekierowuje niezalogowaną osobę
+- [x] 3.7 Po zalogowaniu / prowadzi do szkieletu wnętrza
+- [x] 3.8 Duży ekran: pas boczny, pusta karta, wylogowanie działa
+- [x] 3.9 Telefon: nagłówek z wylogowaniem, brak zakładek, bez poziomego przewijania
+- [x] 3.10 Tymczasowa pozycja menu pokazuje zakładki i aktywną pozycję
+- [x] 3.11 Szkielet w trybie ciemnym czytelny
+- [x] 3.12 Trasa z NAV_ITEMS przekierowuje niezalogowaną osobę
 
 ### Phase 4: Bramka i dokumenty
 

@@ -1,7 +1,9 @@
 import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
+import { NAV_ITEMS, matchesNavHref } from "@/lib/navigation";
 
-const PROTECTED_ROUTES = ["/dashboard"];
+// Every menu screen is protected automatically; interior routes outside the menu must be listed here.
+const PROTECTED_ROUTES = ["/dashboard", ...NAV_ITEMS.map((item) => item.href)];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
@@ -15,7 +17,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.user = null;
   }
 
-  if (PROTECTED_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
+  if (PROTECTED_ROUTES.some((route) => matchesNavHref(context.url.pathname, route))) {
     if (!context.locals.user) {
       return context.redirect("/auth/signin");
     }
