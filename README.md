@@ -87,7 +87,7 @@ Sprawdzenia SQL z `supabase/tests/rls_checks.sql` uruchamiasz przeciw lokalnemu 
 docker exec -i $(docker ps -qf name=supabase_db) psql -U postgres -d postgres -f - < supabase/tests/rls_checks.sql
 ```
 
-Plik sprawdza też dane z migracji rejestru i par: tabele nie są puste, każdy produkt mieści się w zakresie którejś pary, a żaden produkt nie ma zdublowanego wiersza substancji.
+Plik sprawdza też dane z migracji rejestru i par: tabele nie są puste, każdy produkt mieści się w zakresie którejś pary, a skład każdego produktu pochodzi z jednego źródła (`composition_source`, a przy składzie przepisanym z innego produktu — z jednego produktu źródłowego).
 
 ### Dane rejestru leków i par kolizji
 
