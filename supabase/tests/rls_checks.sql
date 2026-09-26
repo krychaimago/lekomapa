@@ -1,8 +1,9 @@
 -- Schema checks: RLS, policies, constraints and triggers.
 --   Checks 1–8:  user medications schema (F-01).
 --   Checks 9–14: shared registry and interaction pairs (F-02), plus the F-01 changes it makes.
---   Checks 15–17: shared symptom catalog and search terms (F-03).
+--   Checks 15–18: shared symptom catalog and search terms (F-03).
 --   Check 11 runs on the data loaded by the generated migrations, before any test row is added to the shared tables.
+--   Check 18 runs on the loaded symptom list, so it stands before check 17 adds its test rows.
 --
 -- Uruchomienie (Supabase CLI nie wykonuje SQL, psql nie jest zależnością repozytorium,
 -- więc plik idzie do kontenera bazy podniesionego przez `npx supabase start`):
@@ -866,6 +867,87 @@ begin
   end loop;
 
   raise notice 'CHECK 16 OK: anon and authenticated have no INSERT, UPDATE, DELETE, TRUNCATE on symptoms, symptom_search_terms';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 18: symptom catalog loaded by the data migration
+-- ---------------------------------------------------------------------------
+-- Proves the whole approved list reached the database in its approved shape
+-- (context/changes/symptom-catalog-seed/symptom-list.md, approved 2026-09-26). A change to the list in a later
+-- migration changes the numbers below in the same commit.
+-- Placed before check 17 on purpose: the script is one transaction ending in rollback, so the synthetic
+-- check_17_* rows would live until the end and a check placed after them would count more than 34 symptoms.
+--   18a: exactly 34 symptoms;
+--   18b: per category: digestive 8, nervous 7, mental 3, skin 3, circulatory 3, general 3, muscular 2, other 5;
+--   18c: every symptom has at least one search term;
+--   18d: exactly 82 search terms;
+--   18e: sort_order in every category is 1..n without gaps;
+--   18f: source_vocabulary and source_code are empty in every row (set only from version 2).
+
+do $$
+declare
+  v_symptoms integer;
+  v_terms integer;
+  v_bad text;
+begin
+  select count(*) into v_symptoms from public.symptoms;
+  if v_symptoms <> 34 then
+    raise exception 'CHECK 18 FAILED: expected 34 symptoms, found %', v_symptoms;
+  end if;
+
+  -- Full outer join: a category missing from the database and a category missing from the expected list both show.
+  select string_agg(coalesce(e.category, a.category) || ' expected ' || coalesce(e.expected, 0)
+                    || ', found ' || coalesce(a.found, 0), '; ' order by coalesce(e.category, a.category))
+    into v_bad
+  from (
+    values ('digestive', 8), ('nervous', 7), ('mental', 3), ('skin', 3),
+           ('circulatory', 3), ('general', 3), ('muscular', 2), ('other', 5)
+  ) as e (category, expected)
+  full join (
+    select category, count(*)::integer as found from public.symptoms group by category
+  ) a on a.category = e.category
+  where e.expected is distinct from a.found;
+  if v_bad is not null then
+    raise exception 'CHECK 18 FAILED: category counts differ from the approved list: %', v_bad;
+  end if;
+
+  select string_agg(s.key, ', ' order by s.key)
+    into v_bad
+  from public.symptoms s
+  where not exists (select 1 from public.symptom_search_terms t where t.symptom_id = s.id);
+  if v_bad is not null then
+    raise exception 'CHECK 18 FAILED: symptoms without a search term: %', v_bad;
+  end if;
+
+  select count(*) into v_terms from public.symptom_search_terms;
+  if v_terms <> 82 then
+    raise exception 'CHECK 18 FAILED: expected 82 search terms, found %', v_terms;
+  end if;
+
+  -- 1..n without gaps: positions are unique per category (constraint), so max = count and min = 1 is enough.
+  select string_agg(category || ' (min ' || lo || ', max ' || hi || ', count ' || n || ')', '; ' order by category)
+    into v_bad
+  from (
+    select category, min(sort_order) as lo, max(sort_order) as hi, count(*) as n
+    from public.symptoms
+    group by category
+  ) c
+  where lo <> 1 or hi <> n;
+  if v_bad is not null then
+    raise exception 'CHECK 18 FAILED: sort_order is not 1..n in: %', v_bad;
+  end if;
+
+  select string_agg(key, ', ' order by key)
+    into v_bad
+  from public.symptoms
+  where source_vocabulary is not null or source_code is not null;
+  if v_bad is not null then
+    raise exception 'CHECK 18 FAILED: source code columns are set in: %', v_bad;
+  end if;
+
+  raise notice 'CHECK 18 OK: % symptoms in the approved category split 8/7/3/3/3/3/2/5, % search terms, every symptom has a term, sort_order 1..n per category, source code columns empty',
+    v_symptoms, v_terms;
 end;
 $$;
 

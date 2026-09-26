@@ -240,13 +240,13 @@ Roboczy plik listy do przeglądu, bramka ręczna, potem migracja z danymi z prze
 
 #### Automated
 
-- [ ] 2.1 Migracje stosują się od zera: `npx supabase db reset`
-- [ ] 2.2 Sprawdzenia SQL przechodzą, w tym CHECK 18
-- [ ] 2.3 Ponowne uruchomienie migracji z danymi nie dodaje wierszy
-- [ ] 2.4 Smoke przechodzi przeciw lokalnemu Supabase, z krokami dla `symptoms` i `symptom_search_terms`
-- [ ] 2.5 Typy i lint przechodzą
+- [x] 2.1 Migracje stosują się od zera: `npx supabase db reset`
+- [x] 2.2 Sprawdzenia SQL przechodzą, w tym CHECK 18
+- [x] 2.3 Ponowne uruchomienie migracji z danymi nie dodaje wierszy
+- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase, z krokami dla `symptoms` i `symptom_search_terms`
+- [x] 2.5 Typy i lint przechodzą
 
 #### Manual
 
-- [ ] 2.6 Autorka zatwierdziła `symptom-list.md` przed napisaniem migracji z danymi
-- [ ] 2.7 Autorka porównuje kilka pozycji z bazy z zatwierdzonym plikiem
+- [x] 2.6 Autorka zatwierdziła `symptom-list.md` przed napisaniem migracji z danymi
+- [x] 2.7 Autorka porównuje kilka pozycji z bazy z zatwierdzonym plikiem

@@ -1,6 +1,7 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together,
 // and that row level security really isolates one account's medications from another's.
-// It also proves that the shared registry and interaction pairs are readable after sign-in and read-only.
+// It also proves that the shared registry, interaction pairs and symptom catalog are readable after sign-in and
+// read-only.
 // Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 //
 // The auth path speaks plain HTTP and needs nothing but fetch. The isolation path talks to Supabase
@@ -260,13 +261,14 @@ function isolationChecks({ table, rowOf, change, guardedColumn }) {
 
 // --- Shared read-only tables ----------------------------------------------
 //
-// The registry and the interaction pairs are shared by every account and loaded only by migrations. A signed-in
+// The registry (registry_products, registry_substances), the interaction pairs (interaction_pairs) and the symptom
+// catalog (symptoms, symptom_search_terms) are shared by every account and loaded only by migrations. A signed-in
 // account reads them and cannot write them; without a session nothing is visible.
 //
 // Unlike the account tables above, a blocked write here does raise: the migration revokes INSERT, UPDATE and
 // DELETE from anon and authenticated, and the privilege check runs before RLS. Measured against the local
-// Supabase for all three tables and all three writes: HTTP 403, code 42501, message "permission denied for table
-// <name>". The steps require exactly that. Any other error — a row level security refusal after privileges were
+// Supabase for the registry, pair and symptom catalog tables and all three writes: HTTP 403, code 42501, message
+// "permission denied for table <name>". The steps require exactly that. Any other error — a row level security refusal after privileges were
 // granted back, a constraint, a renamed table — means a layer changed or the step never ran, so it fails.
 
 const PERMISSION_DENIED = "42501";
@@ -274,7 +276,7 @@ const PERMISSION_DENIED = "42501";
 // Rows read by the first step of each table and compared after the write attempts.
 const sharedRows = {};
 
-// Obviously synthetic rows: no real product, substance or pair. They never land, but if a regression let them in,
+// Obviously synthetic rows: no real product, substance, pair or symptom. They never land, but if a regression let them in,
 // nothing in them would pass for real data.
 const sharedTargets = [
   {
@@ -313,6 +315,27 @@ const sharedTargets = [
     }),
     change: { description: "Wpis z konta użytkowniczki" },
     guardedColumn: "description",
+  },
+  {
+    table: "symptoms",
+    newRow: () => ({
+      key: `smoke_${Date.now()}`,
+      name: `Smoke test objaw ${Date.now()}`,
+      category: "other",
+      sort_order: 999,
+    }),
+    change: { name: "Wpis z konta użytkowniczki" },
+    guardedColumn: "name",
+  },
+  {
+    // Must stay after symptoms: the foreign key comes from the symptom row read in that table's first step.
+    table: "symptom_search_terms",
+    newRow: () => ({
+      symptom_id: sharedRows.symptoms?.id,
+      term: "smoke test",
+    }),
+    change: { term: "wpis z konta użytkowniczki" },
+    guardedColumn: "term",
   },
 ];
 
