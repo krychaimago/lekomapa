@@ -1,7 +1,7 @@
 ---
 change_id: symptom-catalog-seed
 title: Symptom catalog seed
-status: impl_reviewed
+status: implemented
 created: 2026-09-26
 updated: 2026-09-26
 archived_at: null
