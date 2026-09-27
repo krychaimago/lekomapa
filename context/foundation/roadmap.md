@@ -132,17 +132,17 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ### F-04: Wspólna warstwa wizualna i szkielet wnętrza
 
-- **Outcome:** (fundament) istnieje wspólne podłoże, na którym stają ekrany plasterków: nazwane kolory jasnej palety Mech zapisane w jednym miejscu, polski język dokumentu, stały pasek „wersja demonstracyjna” widoczny na każdym ekranie — także przed zalogowaniem — oraz pusty szkielet wnętrza z pasem bocznym na dużym ekranie i zakładkami u dołu na telefonie. Żadnego ekranu domenowego.
+- **Outcome:** (fundament) istnieje wspólne podłoże, na którym stają ekrany plasterków: nazwane kolory palety Mech zapisane w jednym miejscu, każdy z wartością jasną i ciemną (ciemne wartości zaakceptowane na makiecie, bez przełącznika — ten należy do S-11), rola czerwieni dla błędów formularzy i techniki, polski język dokumentu, stały pasek „wersja demonstracyjna” widoczny na każdym ekranie — także przed zalogowaniem — oraz pusty szkielet wnętrza z pasem bocznym na dużym ekranie i zakładkami u dołu na telefonie. Żadnego ekranu domenowego.
 - **Change ID:** `app-shell-visual-foundation`
 - **Issue:** #35
 - **PRD refs:** MS-01, MS-02 (pasek), `## Non-Functional Requirements` (czytelność i pełna używalność na telefonie)
-- **Unlocks:** S-01 i S-10 (ekrany wejściowe w palecie), S-02 (gwiazda przewodnia — pierwszy ekran wnętrza), S-05 (drugi ekran wnętrza), S-11 (tryb ciemny jako drugi zestaw wartości tych samych nazwanych kolorów).
+- **Unlocks:** S-01 i S-10 (ekrany wejściowe w palecie), S-02 (gwiazda przewodnia — pierwszy ekran wnętrza), S-05 (drugi ekran wnętrza), S-11 (tryb ciemny: ciemne wartości nazwanych kolorów już są, zostaje przełącznik i przegląd ekranów).
 - **Prerequisites:** —
 - **Parallel with:** F-03
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Stoi przed gwiazdą przewodnią, choć sam nie daje nic widocznego, z dwóch powodów. Produkcja jest publiczna z otwartą rejestracją, więc pasek „wersja demonstracyjna” musi być na miejscu przed pierwszym ekranem, na którym ktoś obcy może wpisać dane. Ekran, który powstanie z kolorami wpisanymi na sztywno, trzeba potem przerabiać przy każdej zmianie palety i przy trybie ciemnym. Zagrożenie odwrotne: fundament rozrasta się w „cały UI”. Zakres jest zamknięty: żadnych ekranów domenowych i żadnego przerabiania ekranów wejściowych (to S-01 i S-10). Pozycje menu dopina plasterek, który tworzy dany ekran.
-- **Wymogi projektowe:** paleta Mech z `design-draft.md` jest prototypem wizualnym — liczy się nazwana rola koloru (płótno, karta, akcent, akcent jasny, możliwa interakcja), nie konkretna wartość. Kolory funkcjonalne z makiety wchodzą jako role od początku, łącznie z bursztynem dla możliwej interakcji; czerwień nie ma roli. Reguły czytelności z makiety przyjęte jako baza: najmniejszy tekst 15 px na telefonie i 17 px na dużym ekranie, kontrast tekstu co najmniej 7 : 1, pola i przyciski wyższe niż 44 px. Pasek w tym fundamencie bez odnośnika — strona prywatności powstaje w S-01, który go dopina.
+- **Wymogi projektowe:** paleta Mech z `design-draft.md` jest prototypem wizualnym — liczy się nazwana rola koloru (płótno, karta, akcent, akcent jasny, możliwa interakcja), nie konkretna wartość. Kolory funkcjonalne z makiety wchodzą jako role od początku, łącznie z bursztynem dla możliwej interakcji. Czerwień (decyzja 2026-09-26) ma rolę wyłącznie dla błędów formularzy i techniki, nigdy dla możliwej interakcji ani treści o zdrowiu. Ciemne wartości tych samych nazwanych kolorów powstają tutaj, każda para tekstu z pomiarem ≥ 7 : 1 w obu trybach; przełącznik trybu nie. Kolor wpisany na sztywno w `src/` odrzuca skaner w `npm test`, z listą wyjątków dla ekranów wejściowych startera. Reguły czytelności z makiety przyjęte jako baza: najmniejszy tekst 15 px na telefonie i 17 px na dużym ekranie, kontrast tekstu co najmniej 7 : 1, pola i przyciski wyższe niż 44 px. Pasek w tym fundamencie bez odnośnika — strona prywatności powstaje w S-01, który go dopina.
 - **Status:** in-progress
 
 ## Slices
@@ -159,7 +159,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - Jak brzmi treść warunków korzystania? Zakres wersji 1 jest ustalony (frame `mvp-scope-ui-and-data-processing`, 2026-09-26): prototyp certyfikacyjny, nie wpisuj prawdziwych danych, dane mogą zostać usunięte bez uprzedzenia, kontakt — obok ustaleń PRD (narzędzie informacyjne, nie diagnoza, nie podstawa do zmiany dawkowania). Otwarte zostaje samo brzmienie. — Owner: użytkowniczka. Block: no — mechanizm i wersjonowanie dają się zaplanować przy treści zastępczej. Issue: #8.
   - Czy komunikaty zdradzają, że konto o danym adresie istnieje (np. „adres już zajęty”)? Wspólne z S-10 — patrz `## Open Roadmap Questions`. — Owner: użytkowniczka. Block: no. Issue: #34.
-- **Risk:** Rejestracja i logowanie są w baseline'ie obecne, więc plasterek dokłada treść i ekrany, nie mechanizm logowania: akceptację warunków z zapisem daty i wersji dokumentu, stronę prywatności, odnośnik do niej na pasku z F-04 oraz ekrany logowania, rejestracji i potwierdzenia adresu w układzie Rozkładówki. Strona prywatności mówi prawdę o tym, co jest, także to, że e-mail konta jest daną osobową przetwarzaną niezależnie od komunikatu o prototypie. Zagrożenie odwrotne do zwykłego: pisanie warstwy auth od zera zamiast oparcia się na tym, co starter już niesie. Napisy z makiety są robocze i nie trafiają do kodu bez osobnej decyzji.
+- **Risk:** Rejestracja i logowanie są w baseline'ie obecne, więc plasterek dokłada treść i ekrany, nie mechanizm logowania: akceptację warunków z zapisem daty i wersji dokumentu, stronę prywatności, odnośnik do niej na pasku z F-04 oraz ekrany logowania, rejestracji i potwierdzenia adresu w układzie Rozkładówki. Strona prywatności mówi prawdę o tym, co jest, także to, że e-mail konta jest daną osobową przetwarzaną niezależnie od komunikatu o prototypie. Zagrożenie odwrotne do zwykłego: pisanie warstwy auth od zera zamiast oparcia się na tym, co starter już niesie. Napisy z makiety są robocze i nie trafiają do kodu bez osobnej decyzji. Plasterek zdejmuje swoje pliki z listy wyjątków skanera kolorów (`EXCEPTIONS` w `scripts/tokens/hardcoded-colors.mjs`) — test wywraca się, gdy plik na liście nie ma już koloru na sztywno.
 - **Status:** proposed
 
 ### S-10: Odzyskiwanie dostępu przez ustawienie nowego hasła
@@ -173,7 +173,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:**
   - Czy ekran potwierdzenia wysłania zdradza, że konto o danym adresie istnieje? Wspólne z S-01 — patrz `## Open Roadmap Questions`, issue #34. — Owner: użytkowniczka. Block: no — do planowania wystarcza wariant bezpieczniejszy („jeśli konto istnieje, wysłaliśmy wiadomość”) jako roboczy.
-- **Risk:** Wersja 1 roadmapy uznała odzyskiwanie dostępu za obecne w starterze, a w kodzie go nie ma — FR-002 (konieczne) był niepokryty. Wydzielony z S-01, bo to osobna czynność użytkowniczki z własnym ryzykiem: odnośnik resetujący, który nie wygasa albo działa wielokrotnie, jest drogą do cudzych danych o zdrowiu. Trzy ekrany (prośba o adres, potwierdzenie wysłania, nowe hasło) w palecie z F-04.
+- **Risk:** Wersja 1 roadmapy uznała odzyskiwanie dostępu za obecne w starterze, a w kodzie go nie ma — FR-002 (konieczne) był niepokryty. Wydzielony z S-01, bo to osobna czynność użytkowniczki z własnym ryzykiem: odnośnik resetujący, który nie wygasa albo działa wielokrotnie, jest drogą do cudzych danych o zdrowiu. Trzy ekrany (prośba o adres, potwierdzenie wysłania, nowe hasło) w palecie z F-04. Nowe ekrany nie trafiają na listę wyjątków skanera kolorów (`EXCEPTIONS` w `scripts/tokens/hardcoded-colors.mjs`). Jeśli plasterek przepina na tokeny wspólne komponenty formularza z tej listy (np. `FormField`, `SubmitButton`), zdejmuje je z niej — test wywraca się, gdy plik na liście nie ma już koloru na sztywno.
 - **Status:** proposed
 
 ### S-02: Dodanie leku po nazwie handlowej ze znacznikiem możliwej kolizji
@@ -297,7 +297,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:**
-  - Jak wygląda ciemna paleta? Makieta ma wyłącznie jasną Mech. — Owner: użytkowniczka. Block: no — zaprojektowanie palety jest pierwszym krokiem plasterka, a plasterek stoi na końcu grafu.
+  - ~~Jak wygląda ciemna paleta?~~ — rozstrzygnięte w F-04 (2026-09-26): ciemne wartości tokenów zaakceptowane na makiecie i zapisane w bloku `.dark` w `src/styles/global.css`, opis w `design-draft.md` `## Paleta ciemna`. W S-11 zostaje przełącznik, decyzja „ręcznie czy za systemem” i przegląd ekranów w trybie ciemnym.
   - Czy tryb wybiera się ręcznie, idzie za ustawieniem systemu, czy jedno i drugie? — Owner: użytkowniczka. Block: no.
 - **Risk:** Ostatni, bo nie wnosi nic do głównego przepływu, a przegląd ma sens dopiero na ekranach, które istnieją — to praca w trybie poprawiania istniejących widoków, nie budowania nowych. Tani tylko wtedy, gdy plasterki trzymały się nazwanych kolorów z F-04; każdy kolor wpisany na sztywno wychodzi tutaj jako ekran do przeróbki. Kolory funkcjonalne muszą zachować znaczenie: bursztyn możliwej interakcji w ciemnej wersji nadal nie może wyglądać jak alarm ani jak czerwień.
 - **Status:** proposed

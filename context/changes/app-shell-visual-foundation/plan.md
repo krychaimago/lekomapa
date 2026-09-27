@@ -443,33 +443,33 @@ Brak zmian w bazie. Po merge'u produkcja pokazuje przekierowanie zamiast strony 
 
 #### Automated
 
-- [x] 3.1 Wszystkie testy przechodzą
-- [x] 3.2 Lint przechodzi
-- [x] 3.3 Typy przechodzą
-- [x] 3.4 Build przechodzi
-- [x] 3.5 Smoke przechodzi przeciw lokalnemu Supabase
-- [x] 3.6 Niezalogowane żądanie / zwraca 302 na /auth/signin
+- [x] 3.1 Wszystkie testy przechodzą — aad73e8
+- [x] 3.2 Lint przechodzi — aad73e8
+- [x] 3.3 Typy przechodzą — aad73e8
+- [x] 3.4 Build przechodzi — aad73e8
+- [x] 3.5 Smoke przechodzi przeciw lokalnemu Supabase — aad73e8
+- [x] 3.6 Niezalogowane żądanie / zwraca 302 na /auth/signin — aad73e8
 
 #### Manual
 
-- [x] 3.7 Po zalogowaniu / prowadzi do szkieletu wnętrza
-- [x] 3.8 Duży ekran: pas boczny, pusta karta, wylogowanie działa
-- [x] 3.9 Telefon: nagłówek z wylogowaniem, brak zakładek, bez poziomego przewijania
-- [x] 3.10 Tymczasowa pozycja menu pokazuje zakładki i aktywną pozycję
-- [x] 3.11 Szkielet w trybie ciemnym czytelny
-- [x] 3.12 Trasa z NAV_ITEMS przekierowuje niezalogowaną osobę
+- [x] 3.7 Po zalogowaniu / prowadzi do szkieletu wnętrza — aad73e8
+- [x] 3.8 Duży ekran: pas boczny, pusta karta, wylogowanie działa — aad73e8
+- [x] 3.9 Telefon: nagłówek z wylogowaniem, brak zakładek, bez poziomego przewijania — aad73e8
+- [x] 3.10 Tymczasowa pozycja menu pokazuje zakładki i aktywną pozycję — aad73e8
+- [x] 3.11 Szkielet w trybie ciemnym czytelny — aad73e8
+- [x] 3.12 Trasa z NAV_ITEMS przekierowuje niezalogowaną osobę — aad73e8
 
 ### Phase 4: Bramka i dokumenty
 
 #### Automated
 
-- [ ] 4.1 Wszystkie testy przechodzą, w tym skaner kolorów
-- [ ] 4.2 Lint przechodzi
-- [ ] 4.3 Typy przechodzą
-- [ ] 4.4 Build przechodzi
+- [x] 4.1 Wszystkie testy przechodzą, w tym skaner kolorów
+- [x] 4.2 Lint przechodzi
+- [x] 4.3 Typy przechodzą
+- [x] 4.4 Build przechodzi
 
 #### Manual
 
-- [ ] 4.5 Tymczasowe bg-purple-600 w AppLayout wywraca npm test
-- [ ] 4.6 Usunięcie wyjątku i dopisanie wyjątku dla czystego pliku wywracają npm test
-- [ ] 4.7 Autorka przeczytała reguły w CLAUDE.md i zapis w design-draft.md
+- [x] 4.5 Tymczasowe bg-purple-600 w AppLayout wywraca npm test
+- [x] 4.6 Usunięcie wyjątku i dopisanie wyjątku dla czystego pliku wywracają npm test
+- [x] 4.7 Autorka przeczytała reguły w CLAUDE.md i zapis w design-draft.md

@@ -1,7 +1,7 @@
 # Język wizualny lekomapy — ustalenia
 
 **Status:** paleta barw ustalona; treści ekranów nieustalone
-**Data:** 2026-09-20
+**Data:** 2026-09-20; uzupełnienie 2026-09-26 (F-04: tekst przygaszony, paleta ciemna, czerwień błędu, nazwy tokenów)
 **Zakres:** warstwa wizualna ekranów wejściowych oraz wnętrza aplikacji; nie dotyczy logiki auth, którą pokrywa starter (FR-001, FR-002)
 
 ## Czego dotyczy ustalenie
@@ -38,9 +38,50 @@ Makiety są zewnętrzne i nie stanowią części repozytorium:
 | Akcent jasny                      | `#DCE9DF` |
 | Kreska akcentu jasnego            | `#B9D0C0` |
 | Tekst                             | `#1E241F` |
-| Tekst przygaszony                 | `#5A6259` |
+| Tekst przygaszony                 | `#4C534C` |
 
 Ciepła szarość z domieszką beżu i głęboka leśna zieleń.
+
+**Tekst przygaszony przyciemniony z `#5A6259` na `#4C534C`** (decyzja 2026-09-26, F-04). To nie pomyłka — nie cofać.
+
+- Pomiar WCAG 2 dla `#5A6259`: 6,31 : 1 na bieli, 5,92 na płótnie, 3,81 na pasie bocznym — poniżej progu 7 : 1 z `## Reguły czytelności`.
+- `#4C534C`: 7,93 : 1 na bieli, 7,43 na płótnie. Próg trzymany na karcie i płótnie.
+- Na pasie bocznym tekst przygaszony nie występuje wcale: 7 : 1 na chromie wymagałoby koloru praktycznie równego tekstowi głównemu. Na pasie stoi wyłącznie tekst główny (`sidebar-foreground`).
+- Pilnuje tego test `scripts/tokens/contrast.test.mjs`.
+
+Porównanie jasnej wersji przed i po zmianie: https://claude.ai/artifact/FLPkn5HvqMUHPjr5zg6apn
+
+## Paleta ciemna
+
+Zaakceptowana przez autorkę na makiecie „Mech po zmroku” przed wpisaniem do kodu: https://claude.ai/artifact/Ha6A6SV4aPjtwMsreZLu3n
+
+Źródłem prawdy są wartości w bloku `.dark` w `src/styles/global.css` — przy rozbieżności obowiązuje tamten plik. Stan na 2026-09-26:
+
+| Rola                    | Jasna     | Ciemna    |
+| ----------------------- | --------- | --------- |
+| Płótno treści           | `#F7F8F4` | `#141915` |
+| Karty, listy, pola      | `#FFFFFF` | `#1C221D` |
+| Kreska i ramki kart     | `#E3E5DC` | `#2E352F` |
+| Ramka pól formularza    | `#CBD2C7` | `#4A534A` |
+| Pas boczny              | `#CFC9B4` | `#38342A` |
+| Kreska pasa bocznego    | `#B3AC93` | `#554F3E` |
+| Tekst na pasie bocznym  | `#1E241F` | `#EDE8D8` |
+| Akcent                  | `#2C4A33` | `#B4D6BC` |
+| Tekst na akcencie       | `#FFFFFF` | `#13201A` |
+| Akcent jasny            | `#DCE9DF` | `#263A2C` |
+| Kreska akcentu jasnego  | `#B9D0C0` | `#3D5A45` |
+| Tekst                   | `#1E241F` | `#E8EBE4` |
+| Tekst przygaszony       | `#4C534C` | `#B4BCB1` |
+| Możliwa interakcja: tło | `#FBEBC8` | `#3A2E14` |
+| — tekst                 | `#5A3F08` | `#F2D9A0` |
+| — ramka                 | `#E6CE96` | `#6B5424` |
+| Błąd: tekst             | `#7F2A22` | `#F2B8AD` |
+| — tło                   | `#FBE9E4` | `#3A1A15` |
+| — ramka                 | `#E3B5AB` | `#7A3A30` |
+
+W trybie ciemnym akcent odwraca się: jasna zieleń na ciemnym tle, ciemny napis na przycisku. Każda para tekstu trzyma co najmniej 7 : 1 w obu trybach (np. tekst przygaszony 9,13 : 1 na płótnie, napis na bursztynie 9,62 : 1, błąd na swoim tle 9,14 : 1). Ciemny bursztyn nie wygląda jak alarm ani jak czerwień.
+
+Przełącznika trybu i decyzji „ręcznie czy za systemem” jeszcze nie ma — to S-11.
 
 **Len odrzucony** mimo wcześniejszej rekomendacji. Powód konkretny: na pasie bocznym beżowe płótno `#D5C9AC` zestawione z granatem `#2E3A5C` dawało zestawienie, które nie siada — ciepły beż i chłodny granat ciągną w przeciwne strony, a na wąskim pasie te dwa kolory stykają się na całej wysokości ekranu. Na samym logowaniu problem nie był widoczny, bo granat pojawiał się tylko punktowo.
 
@@ -96,11 +137,35 @@ Znaczenie przypisane do roli, nie do barwy.
 | Okres trwający             | akcent `#2C4A33`                                | kropka przy leku, przyciski                    |
 | Zaznaczenie i podsumowania | akcent jasny `#DCE9DF`                          | aktywna pozycja menu, liczniki, wybrane objawy |
 | Okres zakończony           | kreska `#E3E5DC`                                | kropka przy leku odstawionym                   |
-| Czerwień                   | nieużywana                                      | zarezerwowana                                  |
+| Błąd formularza i techniki | tekst `#7F2A22`, tło `#FBE9E4`, ramka `#E3B5AB` | błędy formularzy, brak konfiguracji, awarie    |
 
 Bursztyn zamiast czerwieni wynika z `shape-notes.md:137`: informacja o możliwej kolizji ma być podana bez czerwieni i bez okna przerywającego pracę. Kontrast tekstu na bursztynie wynosi 7,7 : 1.
 
-Czerwień nie występuje nigdzie — ani w marce, ani w oznaczeniach. Zostaje wolna na wypadek, gdyby produkt kiedyś potrzebował sygnału mocniejszego. Dziś takiego sygnału nie ma i nie przewidujemy go w pierwszej wersji.
+**Czerwień — decyzja 2026-09-26 (F-04):** ceglasta czerwień służy wyłącznie błędom formularzy i techniki (np. błędne hasło, brak konfiguracji). Nigdy dla możliwej interakcji ani żadnej treści o zdrowiu — lekach, objawach, pytaniach do lekarza. Wcześniejszy zapis „czerwień nieużywana, zarezerwowana” przestał obowiązywać, bo komunikat o błędzie potrzebuje koloru innego niż bursztyn: inaczej błąd formularza wyglądałby jak informacja o możliwej kolizji. Kontrast: 9,31 : 1 na bieli, 8,72 na płótnie, 7,92 na własnym tle. Błąd jest rozpoznawalny także bez koloru — słowo w treści (np. „Uwaga:”).
+
+### Role z makiety a nazwy tokenów
+
+W kodzie kolory istnieją wyłącznie jako tokeny w `src/styles/global.css`, używane klasami typu `bg-primary`, `text-muted-foreground`. Skaner `scripts/tokens/hardcoded-colors.mjs` odrzuca kolor wpisany na sztywno.
+
+| Rola z makiety                | Token                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| Płótno treści                 | `background`, `muted`                                                                |
+| Karty, listy, pola            | `card`, `popover`                                                                    |
+| Tekst                         | `foreground`, `card-foreground`, `popover-foreground`                                |
+| Tekst przygaszony             | `muted-foreground` (nigdy na pasie bocznym)                                          |
+| Kreska i ramki kart           | `border`, `secondary`                                                                |
+| Ramka pól formularza          | `input`                                                                              |
+| Akcent                        | `primary`, `ring`                                                                    |
+| Tekst na akcencie             | `primary-foreground`                                                                 |
+| Akcent jasny                  | `accent`                                                                             |
+| Kreska akcentu jasnego        | `accent-border`                                                                      |
+| Pas boczny                    | `sidebar`                                                                            |
+| Kreska pasa bocznego          | `sidebar-border`                                                                     |
+| Tekst na pasie bocznym        | `sidebar-foreground`                                                                 |
+| Aktywna pozycja menu          | `sidebar-accent`, `sidebar-accent-foreground`, `sidebar-primary`                     |
+| Możliwa interakcja            | `interaction`, `interaction-foreground`, `interaction-border`                        |
+| Błąd formularza i techniki    | `destructive`, `destructive-surface`, `destructive-border`, `destructive-foreground` |
+| Pasek „wersja demonstracyjna” | `demo-bar`, `demo-bar-foreground`, `demo-bar-border`                                 |
 
 ## Zasady treści
 

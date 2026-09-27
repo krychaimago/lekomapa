@@ -93,7 +93,13 @@ Starter pokrywa FR-001 i FR-002 (rejestracja, logowanie, odzyskiwanie dostępu) 
 - **Alias ścieżek**: `@/*` na `./src/*` (tsconfig paths).
 - **Astro vs React**: `.astro` domyślnie. React tylko dla komponentu, który trzyma stan, obsługuje zdarzenia albo woła API z przeglądarki — wzorzec: `src/components/auth/SignInForm.tsx`. React wstawiany z `.astro` zawsze z dyrektywą `client:*` (`client:load` dla formularzy auth, `client:visible` dla treści poniżej pierwszego ekranu). Komponent `.tsx` bez dyrektywy i bez rodzica-React to błąd: albo nie potrzebuje React, albo brakuje dyrektywy.
 - **Klasy Tailwind**: łącz helperem `cn()` z `@/lib/utils` (clsx + tailwind-merge). Nie sklejaj stringów z klasami ręcznie.
-- **shadcn/ui**: komponenty w `src/components/ui/`, wariant "new-york". Nowe przez `npx shadcn@latest add [name]`.
+- **shadcn/ui**: komponenty w `src/components/ui/`, wariant "new-york". Nowe przez `npx shadcn@latest add [name]`. Nowy komponent oczyść z kolorowych klas `dark:` (np. `dark:bg-input/30`) — tryb ciemny należy wyłącznie do tokenów.
+- **Kolory**: wyłącznie tokeny z `src/styles/global.css`, przez klasy typu `bg-primary`, `text-muted-foreground`. Żadnego hexa, `rgb(`, `oklch(` ani klasy palety Tailwinda (`bg-purple-600`, `text-white`).
+  - Nowy kolor = nowy token w obu blokach (`:root` i `.dark`), zarejestrowany w `@theme inline`. Jeśli to tekst, dopisz jego parę tekst–tło do `EXPLICIT_PAIRS` w `scripts/tokens/contrast.mjs` (próg 7 : 1); `X-foreground` z `X` łączy się sam.
+  - Na pasie bocznym tekst wyłącznie `sidebar-foreground` — `muted-foreground` nie trzyma tam 7 : 1, a test tego nie wyłapie.
+  - `destructive*` wyłącznie dla błędów formularzy i techniki, nigdy dla treści o lekach i objawach. Możliwa interakcja ma bursztynowe `interaction*`.
+  - Bramka: `scripts/tokens/hardcoded-colors.mjs` w `npm test` odrzuca kolor wpisany na sztywno w `src/`. Lista `EXCEPTIONS` obejmuje wyłącznie ekrany wejściowe startera; S-01 i S-10 zdejmują z niej swoje pliki. Nie dopisuj tam nowych plików.
+- **Ekrany wnętrza**: przez `src/layouts/AppLayout.astro`. Pozycja menu przez `NAV_ITEMS` w `src/lib/navigation.ts` — trasa z menu jest chroniona automatycznie. Trasa wnętrza spoza menu wymaga ręcznego wpisu w `PROTECTED_ROUTES` w `src/middleware.ts`.
 - **API routes**: eksporty wielkimi literami (`GET`, `POST`), `export const prerender = false`; walidacja wejścia przez zod — zod nie jest jeszcze zainstalowany, pierwsza route go dociąga (`npm i zod`).
 - **Migracje Supabase**: `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_short_description.sql`. Na każdej nowej tabeli włączaj RLS z politykami per-operacja i per-rola — to jest mechanizm izolacji danych zdrowotnych per-konto z wymagań niefunkcjonalnych, nie opcja do odłożenia.
 - **React**: bez dyrektyw Next.js (`"use client"` itp.). Hooki wydzielaj do `src/components/hooks/`.
