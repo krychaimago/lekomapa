@@ -413,63 +413,63 @@ Brak zmian w bazie. Po merge'u produkcja pokazuje przekierowanie zamiast strony 
 
 #### Automated
 
-- [x] 1.1 Test kontrastu przechodzi w obu trybach — e6af4e8
-- [x] 1.2 Przypadek kontrolny #5A6259 na bieli odrzucony w teście — e6af4e8
-- [x] 1.3 Lint przechodzi — e6af4e8
-- [x] 1.4 Typy przechodzą — e6af4e8
-- [x] 1.5 Build przechodzi — e6af4e8
+- [x] 1.1 Test kontrastu przechodzi w obu trybach — d3e564f
+- [x] 1.2 Przypadek kontrolny #5A6259 na bieli odrzucony w teście — d3e564f
+- [x] 1.3 Lint przechodzi — d3e564f
+- [x] 1.4 Typy przechodzą — d3e564f
+- [x] 1.5 Build przechodzi — d3e564f
 
 #### Manual
 
-- [x] 1.6 Autorka zaakceptowała makietę ciemnej palety przed zapisaniem wartości ciemnych — e6af4e8
-- [x] 1.7 Tymczasowa zamiana muted-foreground na #5A6259 wywraca npm test z nazwą pary — e6af4e8
+- [x] 1.6 Autorka zaakceptowała makietę ciemnej palety przed zapisaniem wartości ciemnych — d3e564f
+- [x] 1.7 Tymczasowa zamiana muted-foreground na #5A6259 wywraca npm test z nazwą pary — d3e564f
 
 ### Phase 2: Wspólny dokument
 
 #### Automated
 
-- [x] 2.1 Wszystkie testy przechodzą — 5c65404
-- [x] 2.2 Lint przechodzi — 5c65404
-- [x] 2.3 Typy przechodzą — 5c65404
-- [x] 2.4 Build przechodzi — 5c65404
-- [x] 2.5 Zbudowana strona logowania ma lang="pl" i tekst paska — 5c65404
+- [x] 2.1 Wszystkie testy przechodzą — d3e564f
+- [x] 2.2 Lint przechodzi — d3e564f
+- [x] 2.3 Typy przechodzą — d3e564f
+- [x] 2.4 Build przechodzi — d3e564f
+- [x] 2.5 Zbudowana strona logowania ma lang="pl" i tekst paska — d3e564f
 
 #### Manual
 
-- [x] 2.6 Pasek widoczny na ekranach wejściowych na telefonie i dużym ekranie — 5c65404
-- [x] 2.7 Najmniejszy tekst co najmniej 15 px na telefonie i 17 px na dużym ekranie — 5c65404
+- [x] 2.6 Pasek widoczny na ekranach wejściowych na telefonie i dużym ekranie — d3e564f
+- [x] 2.7 Najmniejszy tekst co najmniej 15 px na telefonie i 17 px na dużym ekranie — d3e564f
 
 ### Phase 3: Szkielet wnętrza
 
 #### Automated
 
-- [x] 3.1 Wszystkie testy przechodzą — aad73e8
-- [x] 3.2 Lint przechodzi — aad73e8
-- [x] 3.3 Typy przechodzą — aad73e8
-- [x] 3.4 Build przechodzi — aad73e8
-- [x] 3.5 Smoke przechodzi przeciw lokalnemu Supabase — aad73e8
-- [x] 3.6 Niezalogowane żądanie / zwraca 302 na /auth/signin — aad73e8
+- [x] 3.1 Wszystkie testy przechodzą — d3e564f
+- [x] 3.2 Lint przechodzi — d3e564f
+- [x] 3.3 Typy przechodzą — d3e564f
+- [x] 3.4 Build przechodzi — d3e564f
+- [x] 3.5 Smoke przechodzi przeciw lokalnemu Supabase — d3e564f
+- [x] 3.6 Niezalogowane żądanie / zwraca 302 na /auth/signin — d3e564f
 
 #### Manual
 
-- [x] 3.7 Po zalogowaniu / prowadzi do szkieletu wnętrza — aad73e8
-- [x] 3.8 Duży ekran: pas boczny, pusta karta, wylogowanie działa — aad73e8
-- [x] 3.9 Telefon: nagłówek z wylogowaniem, brak zakładek, bez poziomego przewijania — aad73e8
-- [x] 3.10 Tymczasowa pozycja menu pokazuje zakładki i aktywną pozycję — aad73e8
-- [x] 3.11 Szkielet w trybie ciemnym czytelny — aad73e8
-- [x] 3.12 Trasa z NAV_ITEMS przekierowuje niezalogowaną osobę — aad73e8
+- [x] 3.7 Po zalogowaniu / prowadzi do szkieletu wnętrza — d3e564f
+- [x] 3.8 Duży ekran: pas boczny, pusta karta, wylogowanie działa — d3e564f
+- [x] 3.9 Telefon: nagłówek z wylogowaniem, brak zakładek, bez poziomego przewijania — d3e564f
+- [x] 3.10 Tymczasowa pozycja menu pokazuje zakładki i aktywną pozycję — d3e564f
+- [x] 3.11 Szkielet w trybie ciemnym czytelny — d3e564f
+- [x] 3.12 Trasa z NAV_ITEMS przekierowuje niezalogowaną osobę — d3e564f
 
 ### Phase 4: Bramka i dokumenty
 
 #### Automated
 
-- [x] 4.1 Wszystkie testy przechodzą, w tym skaner kolorów — c4baa89
-- [x] 4.2 Lint przechodzi — c4baa89
-- [x] 4.3 Typy przechodzą — c4baa89
-- [x] 4.4 Build przechodzi — c4baa89
+- [x] 4.1 Wszystkie testy przechodzą, w tym skaner kolorów — d3e564f
+- [x] 4.2 Lint przechodzi — d3e564f
+- [x] 4.3 Typy przechodzą — d3e564f
+- [x] 4.4 Build przechodzi — d3e564f
 
 #### Manual
 
-- [x] 4.5 Tymczasowe bg-purple-600 w AppLayout wywraca npm test — c4baa89
-- [x] 4.6 Usunięcie wyjątku i dopisanie wyjątku dla czystego pliku wywracają npm test — c4baa89
-- [x] 4.7 Autorka przeczytała reguły w CLAUDE.md i zapis w design-draft.md — c4baa89
+- [x] 4.5 Tymczasowe bg-purple-600 w AppLayout wywraca npm test — d3e564f
+- [x] 4.6 Usunięcie wyjątku i dopisanie wyjątku dla czystego pliku wywracają npm test — d3e564f
+- [x] 4.7 Autorka przeczytała reguły w CLAUDE.md i zapis w design-draft.md — d3e564f
