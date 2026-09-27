@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-09-26
+updated: 2026-09-27
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -44,23 +44,23 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                       | Prerequisites                      | PRD refs                                   | Status      |
-| ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | ----------- |
-| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done        |
-| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done        |
-| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | in-progress |
-| F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | ready       |
-| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | proposed    |
-| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | proposed    |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | proposed    |
-| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | proposed    |
-| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | proposed    |
-| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | proposed    |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed    |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | blocked     |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed    |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
-| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
+| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                       | Prerequisites                      | PRD refs                                   | Status   |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | -------- |
+| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done     |
+| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done     |
+| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done     |
+| F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | ready    |
+| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | proposed |
+| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | proposed |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | proposed |
+| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | proposed |
+| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | proposed |
+| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | proposed |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | blocked  |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed |
+| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed |
 
 ## Streams
 
@@ -128,7 +128,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:** — (Q-2 rozstrzygnięte 2026-09-21, issue #3)
 - **Risk:** Lista za wąska sprawi, że użytkowniczka nie znajdzie tego, co faktycznie czuje. PRD łagodzi to notatką własnymi słowami, która nie uczestniczy w regule — ale notatka jest częścią S-05, więc sama lista musi trafić w typowe objawy przyjmowanych leków. Osiem kategorii i 34 pozycje to ryzyko zmniejszają, ale otwierają drugie: przy tej długości płaska lista na telefonie jest nie do przewinięcia, więc grupowanie i wyszukiwanie po słowach potocznych przestają być udogodnieniem i stają się warunkiem użyteczności — to wymóg dla S-05, nie dla tego fundamentu. Trzecie ryzyko: nazwy pozycji powstają bez źródła referencyjnego i będą dopracowywane w użyciu, więc niczego nie wolno wiązać z polską nazwą jako identyfikatorem.
 - **Wymogi projektowe:** nazwa polska, kategoria układu (osiem stałych wartości zapisanych przy wierszu, bez osobnej tabeli słownikowej), pole porządkujące do wyświetlania w kolejności od najczęstszych, kolumna na kod źródłowy dopuszczająca pustą wartość. Słowa wyszukiwania w osobnej tabeli powiązanej, nie jako tekst z przecinkami — po nich idzie główna droga wyboru w S-05. Kod źródłowy zostaje pusty w tej wersji, ale kolumna powstaje od pierwszej migracji: zaparkowany zbiór działań niepożądanych będzie się łączył po niej, nie po polskiej nazwie. Zawężenie zbioru stosowane jako filtr przy wczytywaniu, nigdy jako flaga w bazie — rozszerzenie listy to doładowanie wierszy. RLS w tej samej migracji: polityka `SELECT` dla roli zalogowanej, brak polityk zapisu. Typy encji w `src/types.ts`.
-- **Status:** in-progress
+- **Status:** done
 
 ### F-04: Wspólna warstwa wizualna i szkielet wnętrza
 
@@ -367,3 +367,4 @@ Rozstrzygnięte:
 
 - **F-01: (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji** — Archived 2026-09-22 → `context/archive/2026-09-22-medication-schema-rls/`. Lesson: —.
 - **F-02: (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem** — Archived 2026-09-26 → `context/archive/2026-09-23-interaction-rules-seed/`. Lesson: —.
+- **F-03: (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania** — Archived 2026-09-27 → `context/archive/2026-09-26-symptom-catalog-seed/`. Lesson: —.

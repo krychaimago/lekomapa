@@ -227,26 +227,26 @@ Roboczy plik listy do przeglądu, bramka ręczna, potem migracja z danymi z prze
 
 #### Automated
 
-- [x] 1.1 Migracje stosują się od zera: `npx supabase db reset` — 83b5036
-- [x] 1.2 Sprawdzenia SQL przechodzą, w tym CHECK 15–17 — 83b5036
-- [x] 1.3 Typy przechodzą: `npm run typecheck` — 83b5036
-- [x] 1.4 Lint przechodzi: `npm run lint` — 83b5036
+- [x] 1.1 Migracje stosują się od zera: `npx supabase db reset` — 62ecf7b
+- [x] 1.2 Sprawdzenia SQL przechodzą, w tym CHECK 15–17 — 62ecf7b
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — 62ecf7b
+- [x] 1.4 Lint przechodzi: `npm run lint` — 62ecf7b
 
 #### Manual
 
-- [x] 1.5 Autorka czyta komunikaty CHECK 15–17 i potwierdza, że opisują to, co ma być zablokowane — 83b5036
+- [x] 1.5 Autorka czyta komunikaty CHECK 15–17 i potwierdza, że opisują to, co ma być zablokowane — 62ecf7b
 
 ### Phase 2: Przegląd listy i dane katalogu
 
 #### Automated
 
-- [x] 2.1 Migracje stosują się od zera: `npx supabase db reset` — 39a247d
-- [x] 2.2 Sprawdzenia SQL przechodzą, w tym CHECK 18 — 39a247d
-- [x] 2.3 Ponowne uruchomienie migracji z danymi nie dodaje wierszy — 39a247d
-- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase, z krokami dla `symptoms` i `symptom_search_terms` — 39a247d
-- [x] 2.5 Typy i lint przechodzą — 39a247d
+- [x] 2.1 Migracje stosują się od zera: `npx supabase db reset` — 62ecf7b
+- [x] 2.2 Sprawdzenia SQL przechodzą, w tym CHECK 18 — 62ecf7b
+- [x] 2.3 Ponowne uruchomienie migracji z danymi nie dodaje wierszy — 62ecf7b
+- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase, z krokami dla `symptoms` i `symptom_search_terms` — 62ecf7b
+- [x] 2.5 Typy i lint przechodzą — 62ecf7b
 
 #### Manual
 
-- [x] 2.6 Autorka zatwierdziła `symptom-list.md` przed napisaniem migracji z danymi — 39a247d
-- [x] 2.7 Autorka porównuje kilka pozycji z bazy z zatwierdzonym plikiem — 39a247d
+- [x] 2.6 Autorka zatwierdziła `symptom-list.md` przed napisaniem migracji z danymi — 62ecf7b
+- [x] 2.7 Autorka porównuje kilka pozycji z bazy z zatwierdzonym plikiem — 62ecf7b
