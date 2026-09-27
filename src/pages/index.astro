@@ -1,8 +1,7 @@
 ---
-import Welcome from "@/components/Welcome.astro";
-import Layout from "@/layouts/Layout.astro";
+// The public address has no screen of its own: signed-in users go to the app interior, others to sign-in.
+// Set on Astro.response instead of `return Astro.redirect(...)`: a top-level return in frontmatter
+// crashes @typescript-eslint/no-misused-promises in astro-eslint-parser.
+Astro.response.status = 302;
+Astro.response.headers.set("Location", Astro.locals.user ? "/dashboard" : "/auth/signin");
 ---
-
-<Layout>
-  <Welcome />
-</Layout>

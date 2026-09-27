@@ -1,0 +1,95 @@
+---
+// Shared frame of the signed-in screens: sidebar on large screens, header and bottom tabs on phones.
+// No React: the frame holds no state and handles no events; sign-out is a plain form POST.
+import Layout from "@/layouts/Layout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { NAV_ITEMS, findActiveNavItem } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+const activeItem = findActiveNavItem(Astro.url.pathname, NAV_ITEMS);
+const hasTabs = NAV_ITEMS.length > 0;
+
+const signOutClass = cn(
+  buttonVariants({ variant: "outline" }),
+  "border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+);
+---
+
+<Layout title={title}>
+  <div class="flex min-h-dvh flex-col lg:flex-row">
+    <aside class="hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex lg:w-[22%] lg:min-w-60 lg:shrink-0 lg:flex-col lg:gap-8 lg:p-6">
+      <p class="text-2xl font-bold">lekomapa</p>
+      <nav aria-label="Menu główne" class="flex-1">
+        <ul class="flex flex-col gap-1">
+          {NAV_ITEMS.map((item) => {
+            const isActive = item === activeItem;
+            return (
+              <li>
+                <a
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  class:list={cn(
+                    "flex min-h-12 items-center rounded-md border-l-4 border-transparent px-4 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    isActive && "border-primary bg-sidebar-accent font-semibold text-sidebar-accent-foreground",
+                  )}
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+      <form method="POST" action="/api/auth/signout">
+        <button type="submit" class:list={cn(signOutClass, "w-full")}>
+          Wyloguj się
+        </button>
+      </form>
+    </aside>
+
+    <header class="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4 py-2 text-sidebar-foreground lg:hidden">
+      <p class="text-xl font-bold">lekomapa</p>
+      <form method="POST" action="/api/auth/signout">
+        <button type="submit" class:list={signOutClass}>
+          Wyloguj się
+        </button>
+      </form>
+    </header>
+
+    <main class:list={cn("min-w-0 flex-1 bg-background p-4 lg:p-10", hasTabs && "pb-24 lg:pb-10")}>
+      <slot />
+    </main>
+
+    {hasTabs && (
+      <nav
+        aria-label="Menu główne"
+        class="fixed inset-x-0 bottom-0 z-40 border-t border-sidebar-border bg-sidebar text-sidebar-foreground lg:hidden"
+      >
+        <ul class="flex">
+          {NAV_ITEMS.map((item) => {
+            const isActive = item === activeItem;
+            return (
+              <li class="min-w-0 flex-1">
+                <a
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  class:list={cn(
+                    "flex min-h-14 items-center justify-center border-t-4 border-transparent px-2 text-center",
+                    isActive && "border-primary bg-sidebar-accent font-semibold text-sidebar-accent-foreground",
+                  )}
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    )}
+  </div>
+</Layout>

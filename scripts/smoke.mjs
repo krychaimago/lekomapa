@@ -439,8 +439,13 @@ const signupStep = [
 ];
 
 const steps = [
-  ["home renders", () => request("/"), { status: 200 }],
+  ["home redirects anonymous user", () => request("/"), { status: 302, location: "/auth/signin" }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "dashboard.html redirects anonymous user",
+    () => request("/dashboard.html"),
+    { status: 302, location: "/auth/signin" },
+  ],
   ...(usesExistingAccount ? [] : [signupStep]),
   [
     "signin rejects wrong password",
