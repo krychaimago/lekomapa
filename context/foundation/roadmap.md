@@ -50,12 +50,12 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done     |
 | F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done     |
 | F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done     |
-| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | proposed |
-| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | proposed |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | proposed |
+| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | ready    |
+| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | ready    |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | ready    |
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | proposed |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | proposed |
-| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | proposed |
+| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | ready    |
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | blocked  |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed |
@@ -160,7 +160,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - Jak brzmi treść warunków korzystania? Zakres wersji 1 jest ustalony (frame `mvp-scope-ui-and-data-processing`, 2026-09-26): prototyp certyfikacyjny, nie wpisuj prawdziwych danych, dane mogą zostać usunięte bez uprzedzenia, kontakt — obok ustaleń PRD (narzędzie informacyjne, nie diagnoza, nie podstawa do zmiany dawkowania). Otwarte zostaje samo brzmienie. — Owner: użytkowniczka. Block: no — mechanizm i wersjonowanie dają się zaplanować przy treści zastępczej. Issue: #8.
   - Czy komunikaty zdradzają, że konto o danym adresie istnieje (np. „adres już zajęty”)? Wspólne z S-10 — patrz `## Open Roadmap Questions`. — Owner: użytkowniczka. Block: no. Issue: #34.
 - **Risk:** Rejestracja i logowanie są w baseline'ie obecne, więc plasterek dokłada treść i ekrany, nie mechanizm logowania: akceptację warunków z zapisem daty i wersji dokumentu, stronę prywatności, odnośnik do niej na pasku z F-04 oraz ekrany logowania, rejestracji i potwierdzenia adresu w układzie Rozkładówki. Strona prywatności mówi prawdę o tym, co jest, także to, że e-mail konta jest daną osobową przetwarzaną niezależnie od komunikatu o prototypie. Zagrożenie odwrotne do zwykłego: pisanie warstwy auth od zera zamiast oparcia się na tym, co starter już niesie. Napisy z makiety są robocze i nie trafiają do kodu bez osobnej decyzji. Plasterek zdejmuje swoje pliki z listy wyjątków skanera kolorów (`EXCEPTIONS` w `scripts/tokens/hardcoded-colors.mjs`) — test wywraca się, gdy plik na liście nie ma już koloru na sztywno.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-10: Odzyskiwanie dostępu przez ustawienie nowego hasła
 
@@ -174,7 +174,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - Czy ekran potwierdzenia wysłania zdradza, że konto o danym adresie istnieje? Wspólne z S-01 — patrz `## Open Roadmap Questions`, issue #34. — Owner: użytkowniczka. Block: no — do planowania wystarcza wariant bezpieczniejszy („jeśli konto istnieje, wysłaliśmy wiadomość”) jako roboczy.
 - **Risk:** Wersja 1 roadmapy uznała odzyskiwanie dostępu za obecne w starterze, a w kodzie go nie ma — FR-002 (konieczne) był niepokryty. Wydzielony z S-01, bo to osobna czynność użytkowniczki z własnym ryzykiem: odnośnik resetujący, który nie wygasa albo działa wielokrotnie, jest drogą do cudzych danych o zdrowiu. Trzy ekrany (prośba o adres, potwierdzenie wysłania, nowe hasło) w palecie z F-04. Nowe ekrany nie trafiają na listę wyjątków skanera kolorów (`EXCEPTIONS` w `scripts/tokens/hardcoded-colors.mjs`). Jeśli plasterek przepina na tokeny wspólne komponenty formularza z tej listy (np. `FormField`, `SubmitButton`), zdejmuje je z niej — test wywraca się, gdy plik na liście nie ma już koloru na sztywno.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-02: Dodanie leku po nazwie handlowej ze znacznikiem możliwej kolizji
 
@@ -190,7 +190,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Dług przejęty z F-02:** migracja tego plasterka musi dodać na `medications` wyzwalacz na UPDATE, który po zamknięciu okna korekty blokuje zmianę `registry_medication_id` i `composition_source`, oraz kontrolę spójności `composition_source = 'registry'` ⇔ `registry_medication_id is not null`, ze sprawdzeniem w `supabase/tests/rls_checks.sql`. Powód: reguła z S-03 — zmiana substancji czynnej to zakończenie leku i dodanie nowego — jest dziś pilnowana tylko na `medication_substances`; przepięcie samego leku pod inny produkt rejestru ją omija. Do rozstrzygnięcia w planie: czy `product_name` należy do rdzenia wpisu. Źródło: `context/archive/2026-09-23-interaction-rules-seed/reviews/impl-review.md`, F2.
 - **Decyzja przejęta z F-02:** klucz unikalny `medication_substances (medication_id, substance_name, atc_code)` przepuszcza ten sam kod pod różną pisownią nazwy („Ibuprofenum” / „ibuprofenum”), więc jedna substancja może zostać policzona podwójnie. Plan S-02 wybiera: normalizacja nazwy przy zapisie albo częściowy indeks `(medication_id, atc_code) where atc_code is not null`. Zmierzone 2026-09-26: w rejestrze nie ma produktu z dwiema różnymi substancjami o tym samym kodzie; ścieżki z ulotki nie zmierzono. Źródło: impl-review F7.
 - **Uwaga do makiety:** ekran dodawania leku w `design-draft.md` jest sprzed rewizji FR-003 — zakłada wybór substancji czynnej ze słownika. Obowiązuje wejście po nazwie handlowej z rejestru, a substancja z ulotki tylko dla leku spoza rejestru. Z makiety zostają paleta, kolor możliwej interakcji i dwa objaśnienia („Dawka ma historię”, „Substancji nie podmienisz”). Ekran jest pierwszym ekranem wnętrza: używa nazwanych kolorów z F-04 i dopina swoją pozycję menu.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-03: Zmiana dawkowania zamyka okres i otwiera nowy
 
@@ -231,7 +231,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Risk:** Wpisy powstają głównie na telefonie i często wieczorem o porannym objawie — zła godzina fałszowałaby zbieżność z okresem dawkowania w S-06, więc możliwość cofnięcia czasu jest wymogiem, nie udogodnieniem. Notatka własnymi słowami nie uczestniczy w regule; wciągnięcie jej do reguły byłoby zmianą zakresu.
 - **Wymogi projektowe:** katalog z F-03 liczy 34 pozycje, więc lista jest grupowana po ośmiu kategoriach układów, a wyszukiwanie po słowach potocznych jest główną drogą wyboru, nie udogodnieniem. Płaski scroll całego katalogu jest niedopuszczalny. Wyszukiwanie ignoruje wielkość liter i polskie znaki — „nudnosci” znajduje „nudności”, bo na telefonie często pisze się bez ogonków; słowa w bazie są zapisane małymi literami (F-03), więc przy wielkości liter wystarczy zmienić wpisany tekst, a polskie znaki trzeba pominąć po obu stronach porównania. Objaw nieujęty w katalogu użytkowniczka zapisuje w notatce — pozycji „inny objaw" na liście nie ma (Q-2, issue #3). Klucz obcy wpisu dzienniczka do `symptoms` musi być `on delete restrict` (jak `medications_registry_medication_id_fkey`), nie kaskadą: kaskada objaw → słowa wyszukiwania z F-03 dotyczy wyłącznie danych wspólnych, a usunięcie objawu z katalogu nie może skasować historii wpisów. Do rozstrzygnięcia przy planie: czy dawny wpis pokazuje bieżącą nazwę objawu (nazwy w F-03 mogą być dopracowywane), czy nazwę z chwili zapisu. Wyszukiwanie sprowadza wpisany tekst do postaci słów w bazie (małe litery, NFC, pojedyncze spacje) przed porównaniem. Lista kategorii istnieje dwa razy — `SymptomCategory` i `SYMPTOM_CATEGORIES` w `src/types.ts` oraz `symptoms_category_check` w bazie — i nic ich nie wiąże: kategoria spoza `SYMPTOM_CATEGORIES` odczytana z bazy ma dać widoczny błąd, nie objaw bez nagłówka kategorii.
 - **Dług przejęty z F-01:** migracja tego plasterka musi podmienić treść `public.medication_correction_window_open()` na sprawdzenie, czy dla danego leku istnieje wpis objawu po dacie rozpoczęcia. W F-01 funkcja jest zaślepką zwracającą `true`, więc wszystkie wyzwalacze niemodyfikowalności historii — na `medications`, `medication_substances` i `dosage_periods` — są do tego czasu bezczynne. Dopóki podmiana nie nastąpi, gwarancja „rdzeń wpisu niemodyfikowalny poza oknem korekty" nie obowiązuje, mimo że sprawdzenia w `supabase/tests/rls_checks.sql` przechodzą (podmieniają funkcję u siebie).
-- **Status:** proposed
+- **Status:** ready
 
 ### S-06: Złożone pytanie do lekarza po zapisaniu objawu
 
@@ -304,23 +304,23 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                           | Issue |
-| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | ----------------------------------------------- | ----- |
-| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                            | #9    |
-| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                            | #10   |
-| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | yes                   | Uruchom `/10x-plan symptom-catalog-seed`        | #11   |
-| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | yes                   | Uruchom `/10x-plan app-shell-visual-foundation` | #35   |
-| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | no                    | Wymaga F-04 (w wersji 1 było `ready`)           | #12   |
-| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | no                    | Wymaga F-04                                     | #36   |
-| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | no                    | Wymaga F-04 (F-01 i F-02 done)                  | #13   |
-| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | no                    | Wymaga S-02                                     | #14   |
-| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | no                    | Wymaga S-02                                     | #15   |
-| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | no                    | Wymaga F-03 i F-04                              | #16   |
-| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | no                    | Wymaga S-03 i S-05                              | #17   |
-| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | no                    | Czeka na miarę okna korekty                     | #18   |
-| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                          | no                    | Wymaga S-02 i S-06                              | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                  | #20   |
-| S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                            | #37   |
+| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                                    | Issue |
+| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | -------------------------------------------------------- | ----- |
+| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                                     | #9    |
+| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                                     | #10   |
+| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                                     | #11   |
+| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                                     | #35   |
+| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup`           | #12   |
+| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | yes                   | Uruchom `/10x-plan password-recovery`                    | #36   |
+| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | yes                   | Uruchom `/10x-plan add-medication-with-interaction-flag` | #13   |
+| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | no                    | Wymaga S-02                                              | #14   |
+| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | no                    | Wymaga S-02                                              | #15   |
+| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | yes                   | Uruchom `/10x-plan symptom-journal-entry`                | #16   |
+| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | no                    | Wymaga S-03 i S-05                                       | #17   |
+| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | no                    | Czeka na miarę okna korekty                              | #18   |
+| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                          | no                    | Wymaga S-02 i S-06                                       | #19   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                           | #20   |
+| S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                     | #37   |
 
 ## Open Roadmap Questions
 
@@ -368,4 +368,5 @@ Rozstrzygnięte:
 - **F-01: (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji** — Archived 2026-09-22 → `context/archive/2026-09-22-medication-schema-rls/`. Lesson: —.
 - **F-02: (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem** — Archived 2026-09-26 → `context/archive/2026-09-23-interaction-rules-seed/`. Lesson: —.
 - **F-03: (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania** — Archived 2026-09-27 → `context/archive/2026-09-26-symptom-catalog-seed/`. Lesson: —.
+- **F-04: (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza** — Archived 2026-09-27 → `context/archive/2026-09-26-app-shell-visual-foundation/`. Lesson: —.
 - **F-04: (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza** — Archived 2026-09-27 → `context/archive/2026-09-26-app-shell-visual-foundation/`. Lesson: —.
