@@ -43,8 +43,9 @@ function stripComments(css) {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
-// Returns the body of the first top-level rule whose selector is exactly `selector`, or null.
-function findRuleBody(css, selector) {
+// Returns the bodies of every top-level rule whose selector is exactly `selector`, in file order.
+function findRuleBodies(css, selector) {
+  const bodies = [];
   let depth = 0;
   let ruleStart = 0;
   let bodyStart = -1;
@@ -59,27 +60,32 @@ function findRuleBody(css, selector) {
     } else if (char === "}") {
       depth--;
       if (depth === 0) {
-        if (bodyStart !== -1) return css.slice(bodyStart, i);
+        if (bodyStart !== -1) bodies.push(css.slice(bodyStart, i));
         ruleStart = i + 1;
       }
     } else if (char === ";" && depth === 0) {
       ruleStart = i + 1;
     }
   }
-  return null;
+  return bodies;
 }
 
-// Parses `--<name>: <value>;` declarations of :root and .dark into { light: Map, dark: Map }.
+// Parses `--<name>: <value>` declarations of :root and .dark into { light: Map, dark: Map }.
 // A missing block is an error, not an empty map — an unparsed file must never look like a passing palette.
+// A repeated block is an error too: a later :root would override measured values in the browser unmeasured.
 export function parseTokenBlocks(css) {
   const clean = stripComments(css);
   const blocks = {};
   for (const { name, selector } of MODES) {
-    const body = findRuleBody(clean, selector);
-    if (body === null) throw new Error(`No "${selector}" block (${name} mode) found in the stylesheet.`);
+    const bodies = findRuleBodies(clean, selector);
+    if (bodies.length === 0) throw new Error(`No "${selector}" block (${name} mode) found in the stylesheet.`);
+    if (bodies.length > 1)
+      throw new Error(`"${selector}" block (${name} mode) declared ${bodies.length} times; keep one.`);
     const tokens = new Map();
-    for (const match of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) {
-      tokens.set(match[1], match[2].trim());
+    // Split on ";" so the last declaration counts even without a trailing semicolon.
+    for (const declaration of bodies[0].split(";")) {
+      const match = /^\s*--([\w-]+)\s*:\s*([\s\S]+?)\s*$/.exec(declaration);
+      if (match) tokens.set(match[1], match[2]);
     }
     blocks[name] = tokens;
   }

@@ -9,8 +9,9 @@ export const NAV_ITEMS: readonly NavItem[] = [];
 
 // A path matches an href when it is equal to it or lies below it:
 // "/leki" matches "/leki" and "/leki/nowe", but not "/leki-archiwum".
+// "/leki.html" matches too: astro dev (and build.format "file") serves the same page under it.
 export function matchesNavHref(path: string, href: string): boolean {
-  return path === href || path.startsWith(`${href}/`);
+  return path === href || path === `${href}.html` || path.startsWith(`${href}/`);
 }
 
 // At most one item is active: among matching items, the one with the longest href wins.

@@ -132,3 +132,16 @@ test("global.css: both modes declare the same hex color tokens and every pair ho
   const errors = checkPalette(blocks);
   assert.deepEqual(errors, [], `palette failures:\n${errors.join("\n")}`);
 });
+
+test("a repeated mode block is an error, not an unmeasured override", () => {
+  assert.throws(
+    () => parseTokenBlocks(`${css()}\n:root { --primary: #d0d0d0; }\n`),
+    /":root" block \(light mode\) declared 2 times/,
+  );
+});
+
+test("the last declaration of a block is read without a trailing semicolon", () => {
+  const blocks = parseTokenBlocks(":root { --radius: 1rem; --primary: #123456 }\n.dark { --primary: #654321 }\n");
+  assert.equal(blocks.light.get("primary"), "#123456");
+  assert.equal(blocks.dark.get("primary"), "#654321");
+});

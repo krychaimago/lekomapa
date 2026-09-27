@@ -58,6 +58,36 @@ test("every hardcoded color pattern is detected", () => {
   assert.deepEqual(matches('className="hover:bg-red-500 border-t-white"'), ["bg-red-500", "border-t-white"]);
 });
 
+test("color forms that look like valid Tailwind or CSS are detected", () => {
+  const samples = [
+    ["color: RGB(0 0 0);", "RGB(", "color function"],
+    ["color: Oklch(0.5 0.1 120);", "Oklch(", "color function"],
+    ["color: color-mix(in srgb, var(--primary), white);", "color-mix(", "color function"],
+    ["color: color(display-p3 1 0 0);", "color(", "color function"],
+    ["color: var(--color-red-500);", "--color-red-500", "Tailwind palette variable"],
+    ['class="bg-(--color-slate-950)"', "--color-slate-950", "Tailwind palette variable"],
+    ["fill: var(--color-white);", "--color-white", "Tailwind palette variable"],
+    ['<p style="color: red">', "color: red", "named color"],
+    ['style={{ backgroundColor: x, color: "Tomato" }}', 'color: "Tomato', "named color"],
+    ["border-left-color:navy;", "border-left-color:navy", "named color"],
+    ['<path fill="black" />', 'fill="black', "named color"],
+    ['<stop stop-color="white" />', 'stop-color="white', "named color"],
+    ['class="bg-[red]"', "-[red]", "named color"],
+    ['class="text-muted-foreground/70"', "text-muted-foreground/70", "opacity on text token"],
+    ['class="hover:text-primary/[0.4]"', "text-primary/[0.4]", "opacity on text token"],
+  ];
+  for (const [content, match, rule] of samples) {
+    const violations = findViolations(content, { tokenNames: TOKEN_NAMES });
+    assert.deepEqual(
+      violations.map((v) => [v.match, v.rule]),
+      [[match, rule]],
+      content,
+    );
+  }
+  // Text opacity under dark: is reported once, as a dark: color class.
+  assert.deepEqual(matches('class="dark:text-primary/50"'), ["dark:text-primary/50"]);
+});
+
 test("token classes, anchors and HTML entities are not violations", () => {
   const clean = [
     'class="bg-primary text-muted-foreground border-accent"',
@@ -69,6 +99,11 @@ test("token classes, anchors and HTML entities are not violations", () => {
     'class="text-sm text-center border-2 shadow-sm to-transparent"',
     'class="bg-whitesmoke-ish text-white-label"',
     "const total = items.length; // see #12 in the tracker",
+    'class="text-sm/6 text-lg/[1.2] bg-primary/90 border-accent/50"',
+    "--color-primary: var(--primary);",
+    '<svg fill="currentColor" stroke="none" stroke-width="2">',
+    "A red flag in prose; const color = variant;",
+    'const colorScheme = "dark"; getColor(x);',
   ];
   for (const content of clean) {
     assert.deepEqual(matches(content), [], content);
@@ -119,7 +154,7 @@ test("token file: colors are allowed only as --name values inside :root and .dar
   const violations = findViolations(css, { tokenNames: TOKEN_NAMES, isTokenFile: true });
   assert.deepEqual(
     violations.map((v) => `${v.line}:${v.match}`),
-    ["11:#123456", "13:#000000"],
+    ["11:#123456", "13:#000000", "14:#abcdef"],
   );
   assert.equal(maskTokenDeclarations(css).split("\n").length, css.split("\n").length);
   // Outside the token file the same declarations are violations.
@@ -151,7 +186,7 @@ test("src/: no hardcoded color outside the exception list", async () => {
   );
 });
 
-test("exception list: every entry exists, still has a violation and names its slice", async () => {
+test("exception list: every entry exists, keeps its pinned violation count and names its slice", async () => {
   const { violations } = await scanSource();
   const paths = EXCEPTIONS.map((exception) => exception.path);
   assert.equal(new Set(paths).size, paths.length, "duplicate path in EXCEPTIONS");
@@ -162,9 +197,15 @@ test("exception list: every entry exists, still has a violation and names its sl
       access(path.join(REPO_ROOT, exception.path)),
       `${exception.path}: listed in EXCEPTIONS but does not exist — remove it from the list`,
     );
+    const count = violations.filter((violation) => violation.file === exception.path).length;
     assert.ok(
-      violations.some((violation) => violation.file === exception.path),
+      count > 0,
       `${exception.path}: listed in EXCEPTIONS but has no hardcoded color left — remove it from the list`,
+    );
+    assert.equal(
+      count,
+      exception.violations,
+      `${exception.path}: ${count} hardcoded colors, EXCEPTIONS pins ${exception.violations} — a new color is not covered by the exception; after removing one, lower the count`,
     );
   }
 });
