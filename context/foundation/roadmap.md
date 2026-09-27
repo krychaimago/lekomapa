@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-09-26
+updated: 2026-09-27
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -48,7 +48,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | ----------- |
 | F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done        |
 | F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done        |
-| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | ready       |
+| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done        |
 | F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | in-progress |
 | S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | proposed    |
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | proposed    |
@@ -128,7 +128,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:** — (Q-2 rozstrzygnięte 2026-09-21, issue #3)
 - **Risk:** Lista za wąska sprawi, że użytkowniczka nie znajdzie tego, co faktycznie czuje. PRD łagodzi to notatką własnymi słowami, która nie uczestniczy w regule — ale notatka jest częścią S-05, więc sama lista musi trafić w typowe objawy przyjmowanych leków. Osiem kategorii i 34 pozycje to ryzyko zmniejszają, ale otwierają drugie: przy tej długości płaska lista na telefonie jest nie do przewinięcia, więc grupowanie i wyszukiwanie po słowach potocznych przestają być udogodnieniem i stają się warunkiem użyteczności — to wymóg dla S-05, nie dla tego fundamentu. Trzecie ryzyko: nazwy pozycji powstają bez źródła referencyjnego i będą dopracowywane w użyciu, więc niczego nie wolno wiązać z polską nazwą jako identyfikatorem.
 - **Wymogi projektowe:** nazwa polska, kategoria układu (osiem stałych wartości zapisanych przy wierszu, bez osobnej tabeli słownikowej), pole porządkujące do wyświetlania w kolejności od najczęstszych, kolumna na kod źródłowy dopuszczająca pustą wartość. Słowa wyszukiwania w osobnej tabeli powiązanej, nie jako tekst z przecinkami — po nich idzie główna droga wyboru w S-05. Kod źródłowy zostaje pusty w tej wersji, ale kolumna powstaje od pierwszej migracji: zaparkowany zbiór działań niepożądanych będzie się łączył po niej, nie po polskiej nazwie. Zawężenie zbioru stosowane jako filtr przy wczytywaniu, nigdy jako flaga w bazie — rozszerzenie listy to doładowanie wierszy. RLS w tej samej migracji: polityka `SELECT` dla roli zalogowanej, brak polityk zapisu. Typy encji w `src/types.ts`.
-- **Status:** ready
+- **Status:** done
 
 ### F-04: Wspólna warstwa wizualna i szkielet wnętrza
 
@@ -229,7 +229,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Wpisy powstają głównie na telefonie i często wieczorem o porannym objawie — zła godzina fałszowałaby zbieżność z okresem dawkowania w S-06, więc możliwość cofnięcia czasu jest wymogiem, nie udogodnieniem. Notatka własnymi słowami nie uczestniczy w regule; wciągnięcie jej do reguły byłoby zmianą zakresu.
-- **Wymogi projektowe:** katalog z F-03 liczy 34 pozycje, więc lista jest grupowana po ośmiu kategoriach układów, a wyszukiwanie po słowach potocznych jest główną drogą wyboru, nie udogodnieniem. Płaski scroll całego katalogu jest niedopuszczalny. Objaw nieujęty w katalogu użytkowniczka zapisuje w notatce — pozycji „inny objaw" na liście nie ma (Q-2, issue #3).
+- **Wymogi projektowe:** katalog z F-03 liczy 34 pozycje, więc lista jest grupowana po ośmiu kategoriach układów, a wyszukiwanie po słowach potocznych jest główną drogą wyboru, nie udogodnieniem. Płaski scroll całego katalogu jest niedopuszczalny. Wyszukiwanie ignoruje wielkość liter i polskie znaki — „nudnosci” znajduje „nudności”, bo na telefonie często pisze się bez ogonków; słowa w bazie są zapisane małymi literami (F-03), więc przy wielkości liter wystarczy zmienić wpisany tekst, a polskie znaki trzeba pominąć po obu stronach porównania. Objaw nieujęty w katalogu użytkowniczka zapisuje w notatce — pozycji „inny objaw" na liście nie ma (Q-2, issue #3). Klucz obcy wpisu dzienniczka do `symptoms` musi być `on delete restrict` (jak `medications_registry_medication_id_fkey`), nie kaskadą: kaskada objaw → słowa wyszukiwania z F-03 dotyczy wyłącznie danych wspólnych, a usunięcie objawu z katalogu nie może skasować historii wpisów. Do rozstrzygnięcia przy planie: czy dawny wpis pokazuje bieżącą nazwę objawu (nazwy w F-03 mogą być dopracowywane), czy nazwę z chwili zapisu. Wyszukiwanie sprowadza wpisany tekst do postaci słów w bazie (małe litery, NFC, pojedyncze spacje) przed porównaniem. Lista kategorii istnieje dwa razy — `SymptomCategory` i `SYMPTOM_CATEGORIES` w `src/types.ts` oraz `symptoms_category_check` w bazie — i nic ich nie wiąże: kategoria spoza `SYMPTOM_CATEGORIES` odczytana z bazy ma dać widoczny błąd, nie objaw bez nagłówka kategorii.
 - **Dług przejęty z F-01:** migracja tego plasterka musi podmienić treść `public.medication_correction_window_open()` na sprawdzenie, czy dla danego leku istnieje wpis objawu po dacie rozpoczęcia. W F-01 funkcja jest zaślepką zwracającą `true`, więc wszystkie wyzwalacze niemodyfikowalności historii — na `medications`, `medication_substances` i `dosage_periods` — są do tego czasu bezczynne. Dopóki podmiana nie nastąpi, gwarancja „rdzeń wpisu niemodyfikowalny poza oknem korekty" nie obowiązuje, mimo że sprawdzenia w `supabase/tests/rls_checks.sql` przechodzą (podmieniają funkcję u siebie).
 - **Status:** proposed
 
@@ -367,3 +367,4 @@ Rozstrzygnięte:
 
 - **F-01: (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji** — Archived 2026-09-22 → `context/archive/2026-09-22-medication-schema-rls/`. Lesson: —.
 - **F-02: (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem** — Archived 2026-09-26 → `context/archive/2026-09-23-interaction-rules-seed/`. Lesson: —.
+- **F-03: (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania** — Archived 2026-09-27 → `context/archive/2026-09-26-symptom-catalog-seed/`. Lesson: —.

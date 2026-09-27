@@ -180,3 +180,60 @@ export interface InteractionPair {
   verified_on: string;
   created_at: string;
 }
+
+// ---------------------------------------------------------------------------
+// Shared, read-only data (F-03): symptom catalog and search terms.
+// Source of truth: supabase/migrations/20260926120000_symptom_catalog_schema.sql.
+// No write commands: the application never writes these tables (RLS has no
+// write policy and write privileges are revoked).
+// ---------------------------------------------------------------------------
+
+/** Body system group of a symptom. Matches `symptoms_category_check`. */
+export type SymptomCategory =
+  "digestive" | "nervous" | "mental" | "skin" | "circulatory" | "general" | "muscular" | "other";
+
+/**
+ * User-facing Polish labels, written in display order (object key order is insertion order).
+ * A Record, so a category added to the type without a label fails to compile.
+ */
+const SYMPTOM_CATEGORY_LABELS: Record<SymptomCategory, string> = {
+  digestive: "pokarmowy",
+  nervous: "nerwowy",
+  mental: "psychika",
+  skin: "skóra",
+  circulatory: "krążenie",
+  general: "ogólne",
+  muscular: "mięśnie",
+  other: "pozostałe",
+};
+
+/** Categories in display order, with user-facing Polish labels. The one place S-05 takes them from. */
+export const SYMPTOM_CATEGORIES: readonly { value: SymptomCategory; label: string }[] = (
+  Object.keys(SYMPTOM_CATEGORY_LABELS) as SymptomCategory[]
+).map((value) => ({ value, label: SYMPTOM_CATEGORY_LABELS[value] }));
+
+/**
+ * Row of `public.symptoms` — one symptom of the closed list.
+ * Choosing a symptom states nothing about its cause (FR-012).
+ */
+export interface Symptom {
+  id: string;
+  /** Stable identifier, never changed after load. Refer to a symptom by key, not by name. */
+  key: string;
+  /** User-facing Polish name; may be refined later. */
+  name: string;
+  category: SymptomCategory;
+  /** Position within the category, unique per category. */
+  sort_order: number;
+  /** External terminology name; set together with `source_code` or not at all. */
+  source_vocabulary: string | null;
+  source_code: string | null;
+  created_at: string;
+}
+
+/** Row of `public.symptom_search_terms` — a colloquial word, lower case, that finds a symptom. */
+export interface SymptomSearchTerm {
+  id: string;
+  symptom_id: string;
+  term: string;
+}
