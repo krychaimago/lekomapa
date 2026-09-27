@@ -463,13 +463,13 @@ Brak zmian w bazie. Po merge'u produkcja pokazuje przekierowanie zamiast strony 
 
 #### Automated
 
-- [x] 4.1 Wszystkie testy przechodzą, w tym skaner kolorów
-- [x] 4.2 Lint przechodzi
-- [x] 4.3 Typy przechodzą
-- [x] 4.4 Build przechodzi
+- [x] 4.1 Wszystkie testy przechodzą, w tym skaner kolorów — c4baa89
+- [x] 4.2 Lint przechodzi — c4baa89
+- [x] 4.3 Typy przechodzą — c4baa89
+- [x] 4.4 Build przechodzi — c4baa89
 
 #### Manual
 
-- [x] 4.5 Tymczasowe bg-purple-600 w AppLayout wywraca npm test
-- [x] 4.6 Usunięcie wyjątku i dopisanie wyjątku dla czystego pliku wywracają npm test
-- [x] 4.7 Autorka przeczytała reguły w CLAUDE.md i zapis w design-draft.md
+- [x] 4.5 Tymczasowe bg-purple-600 w AppLayout wywraca npm test — c4baa89
+- [x] 4.6 Usunięcie wyjątku i dopisanie wyjątku dla czystego pliku wywracają npm test — c4baa89
+- [x] 4.7 Autorka przeczytała reguły w CLAUDE.md i zapis w design-draft.md — c4baa89
