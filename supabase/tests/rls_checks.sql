@@ -884,12 +884,15 @@ $$;
 --   18d: exactly 82 search terms;
 --   18e: sort_order in every category is 1..n without gaps;
 --   18f: source_vocabulary and source_code are empty in every row (set only from version 2).
+--   18g: content fingerprint — md5 of every (key, name, category, sort_order) and every (key, term), compared with
+--        literals; a change to any name, term, category or position must update the literal in the same commit.
 
 do $$
 declare
   v_symptoms integer;
   v_terms integer;
   v_bad text;
+  v_hash text;
 begin
   select count(*) into v_symptoms from public.symptoms;
   if v_symptoms <> 34 then
@@ -946,7 +949,23 @@ begin
     raise exception 'CHECK 18 FAILED: source code columns are set in: %', v_bad;
   end if;
 
-  raise notice 'CHECK 18 OK: % symptoms in the approved category split 8/7/3/3/3/3/2/5, % search terms, every symptom has a term, sort_order 1..n per category, source code columns empty',
+  -- collate "C": byte order, independent of the database locale, so the fingerprint is the same locally and in CI.
+  select md5(string_agg(key || '|' || name || '|' || category || '|' || sort_order, ',' order by key collate "C"))
+    into v_hash
+  from public.symptoms;
+  if v_hash <> '35ab98f0081e6a6ec777b51cbc7537ce' then
+    raise exception 'CHECK 18 FAILED: symptom content differs from the approved list (fingerprint %)', v_hash;
+  end if;
+
+  select md5(string_agg(s.key || '|' || t.term, ',' order by s.key collate "C", t.term collate "C"))
+    into v_hash
+  from public.symptom_search_terms t
+  join public.symptoms s on s.id = t.symptom_id;
+  if v_hash <> 'a5f672cb87a97e4578eb812cca6883bd' then
+    raise exception 'CHECK 18 FAILED: search terms differ from the approved list (fingerprint %)', v_hash;
+  end if;
+
+  raise notice 'CHECK 18 OK: % symptoms in the approved category split 8/7/3/3/3/3/2/5, % search terms, every symptom has a term, sort_order 1..n per category, source code columns empty, content fingerprints match',
     v_symptoms, v_terms;
 end;
 $$;

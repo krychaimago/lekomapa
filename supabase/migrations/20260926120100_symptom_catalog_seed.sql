@@ -10,6 +10,11 @@
 -- An applied migration is never edited. Any later change to the list (a new symptom, a renamed symptom, a new
 -- search term, a new position) is a new migration. Such a migration finds a symptom by key, never by name;
 -- keys are never changed (symptoms_guard_key).
+-- symptoms_guard_key covers only a key change: an update or delete by a mistyped key changes 0 rows without an
+-- error, and nothing blocks a delete until diary entries reference symptoms (S-05). So after every update or
+-- delete by key, check the row count and stop the migration when it is not the expected one:
+--   get diagnostics v_rows = row_count;
+--   if v_rows <> 1 then raise exception 'symptom % not found', '<key>'; end if;
 --
 -- source_vocabulary and source_code are not set: they stay empty until version 2.
 --

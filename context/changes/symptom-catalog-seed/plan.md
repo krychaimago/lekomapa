@@ -69,14 +69,14 @@ Dwie puste tabele z ograniczeniami, RLS i odebranymi prawami zapisu, typy w `src
 - `public.symptoms`:
   - `id uuid` PK, `default gen_random_uuid()`.
   - `key text not null unique`, `check (key ~ '^[a-z][a-z0-9_]*$')`; stały identyfikator, nigdy nie zmieniany po wgraniu.
-  - `name text not null unique`, `check (btrim(name) <> '')`; polska nazwa widoczna dla użytkowniczki.
+  - `name text not null`, `check (btrim(name) <> '')`, unikalna bez względu na wielkość liter (`create unique index symptoms_name_lower_key on public.symptoms (lower(name))`, poprawka F3 z przeglądu fazy 1); polska nazwa widoczna dla użytkowniczki.
   - `category text not null`, `check (category in ('digestive', 'nervous', 'mental', 'skin', 'circulatory', 'general', 'muscular', 'other'))`.
   - `sort_order smallint not null`, `check (sort_order > 0)`; `unique (category, sort_order) deferrable initially deferred`.
   - `source_vocabulary text`, `source_code text`, oba puste; `check ((source_vocabulary is null) = (source_code is null))` oraz niepustość po `btrim`, gdy wypełnione.
   - `created_at timestamptz not null default now()`.
 - `public.symptom_search_terms`:
   - `id uuid` PK.
-  - `symptom_id uuid not null references public.symptoms (id) on delete cascade`, z indeksem.
+  - `symptom_id uuid not null references public.symptoms (id) on delete cascade`, bez osobnego indeksu — pokrywa go `unique (symptom_id, term)` (poprawka F6 z przeglądu fazy 1).
   - `term text not null`, `check (term <> '' and term = lower(btrim(term)))`; słowa zapisywane małymi literami, bez spacji na brzegach.
   - `unique (symptom_id, term)`. To samo słowo przy dwóch różnych objawach jest dozwolone.
 - Każde ograniczenie ma jawną nazwę (sprawdzenia łapią je po nazwie).

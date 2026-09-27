@@ -6,7 +6,7 @@ Status: **zatwierdzona przez autorkę 2026-09-26** — źródło migracji `20260
 
 ## Jak czytać
 
-- **Kolejność** — pozycja w obrębie kategorii (1 = na górze listy w S-05). Na razie wg numerów z issue #3; do ustawienia „od najczęstszych”.
+- **Kolejność** — pozycja w obrębie kategorii (1 = na górze listy w S-05). Wg numerów z issue #3, zatwierdzona przez autorkę 2026-09-26. Zmiana kolejności to nowa migracja.
 - **Klucz** — stały identyfikator po angielsku. Nie zmienia się nigdy po wgraniu; kolejne migracje odwołują się do objawu po kluczu, nie po nazwie. Poprawiać tylko teraz, przed pierwszym wgraniem.
 - **Nazwa** — to, co widzi użytkowniczka. Można ją zmieniać także później (nowa migracja).
 - **Słowa wyszukiwania** — małe litery, rozdzielone średnikiem. Co najmniej jedno przy każdym objawie. To samo słowo przy dwóch objawach jest dozwolone.

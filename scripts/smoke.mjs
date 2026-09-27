@@ -292,6 +292,7 @@ const sharedTargets = [
   },
   {
     table: "registry_substances",
+    parent: "registry_products",
     newRow: () => ({
       registry_product_id: sharedRows.registry_products?.id,
       position: 99,
@@ -330,6 +331,7 @@ const sharedTargets = [
   {
     // Must stay after symptoms: the foreign key comes from the symptom row read in that table's first step.
     table: "symptom_search_terms",
+    parent: "symptoms",
     newRow: () => ({
       symptom_id: sharedRows.symptoms?.id,
       term: "smoke test",
@@ -347,7 +349,7 @@ function describeError(error) {
   return error ? `${error.code ?? "no code"} ${error.message}` : "no error";
 }
 
-function sharedTableChecks({ table, newRow, change, guardedColumn }) {
+function sharedTableChecks({ table, parent, newRow, change, guardedColumn }) {
   return [
     [
       `${table}: signed-in account reads shared rows`,
@@ -362,6 +364,8 @@ function sharedTableChecks({ table, newRow, change, guardedColumn }) {
     [
       `${table}: signed-in account cannot insert`,
       async () => {
+        // Without the parent row the foreign key would be dropped and the attempt would not be the one described.
+        if (parent && !sharedRows[parent]) return { ok: false, detail: `check did not run: no ${parent} row was read` };
         const { data, error } = await fixtures.a.client.from(table).insert(newRow()).select("id");
         const inserted = (data ?? []).length;
         return {
