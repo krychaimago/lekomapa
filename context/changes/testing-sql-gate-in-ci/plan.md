@@ -347,30 +347,30 @@ Zmiana nie dodaje migracji i nie wymaga `supabase db push`. Ręczny próbny PR z
 
 #### Automated
 
-- [x] 1.1 `npm test` przechodzi, w tym `scripts/db-checks.test.mjs`
-- [x] 1.2 `npm run lint` przechodzi
-- [x] 1.3 `npm run db:check` lokalnie kończy się kodem 0 i wypisuje `GATE_COMPLETE rls_checks`
-- [x] 1.4 Próbka `failing-check.sql` kończy runner kodem różnym od zera
-- [x] 1.5 Próbka `missing-marker.sql` kończy runner kodem różnym od zera z komunikatem o braku znacznika
-- [ ] 1.6 Job `smoke` na PR zielony, obie próbki czerwone w logu kroku „SQL checks”
+- [x] 1.1 `npm test` przechodzi, w tym `scripts/db-checks.test.mjs` — 6d10a56
+- [x] 1.2 `npm run lint` przechodzi — 6d10a56
+- [x] 1.3 `npm run db:check` lokalnie kończy się kodem 0 i wypisuje `GATE_COMPLETE rls_checks` — 6d10a56
+- [x] 1.4 Próbka `failing-check.sql` kończy runner kodem różnym od zera — 6d10a56
+- [x] 1.5 Próbka `missing-marker.sql` kończy runner kodem różnym od zera z komunikatem o braku znacznika — 6d10a56
+- [x] 1.6 Job `smoke` na PR zielony, obie próbki czerwone w logu kroku „SQL checks” — 6d10a56
 
 #### Manual
 
-- [x] 1.7 Przy zatrzymanym Supabase `npm run db:check` pada z nazwą kontenera
-- [x] 1.8 README czytelnie mówi, co robić przy czerwonym `smoke` i przed `db push`
+- [x] 1.7 Przy zatrzymanym Supabase `npm run db:check` pada z nazwą kontenera — 6d10a56
+- [x] 1.8 README czytelnie mówi, co robić przy czerwonym `smoke` i przed `db push` — 6d10a56
 
 ### Phase 2: Nienaruszalność historii (#3) w rls_checks.sql
 
 #### Automated
 
-- [ ] 2.1 `npm run db:check` lokalnie przechodzi i wypisuje `CHECK 19 OK`
-- [ ] 2.2 Brak wpisanego `return true` i `when others` w `rls_checks.sql`
+- [x] 2.1 `npm run db:check` lokalnie przechodzi i wypisuje `CHECK 19 OK`
+- [x] 2.2 Brak wpisanego `return true` i `when others` w `rls_checks.sql`
 - [ ] 2.3 Job `smoke` na PR zielony
 
 #### Manual
 
-- [ ] 2.4 Lokalnie zepsuty wyzwalacz `dose_text` daje czerwone sprawdzenie 5 albo 19
-- [ ] 2.5 Zmieniona oczekiwana fraza daje czerwone sprawdzenie z otrzymaną treścią w logu
+- [x] 2.4 Lokalnie zepsuty wyzwalacz `dose_text` daje czerwone sprawdzenie 5 albo 19
+- [x] 2.5 Zmieniona oczekiwana fraza daje czerwone sprawdzenie z otrzymaną treścią w logu
 
 ### Phase 3: Izolacja kont per operacja (#1)
 

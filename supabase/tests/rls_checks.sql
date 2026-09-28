@@ -2,6 +2,8 @@
 --   Checks 1–8:  user medications schema (F-01).
 --   Checks 9–14: shared registry and interaction pairs (F-02), plus the F-01 changes it makes.
 --   Checks 15–18: shared symptom catalog and search terms (F-03).
+--   Check 19: dosage change closes a period and opens a new one (the positive half of the history rule).
+--   Check 19 runs with the correction window closed, so it stands between check 7 and check 8.
 --   Check 11 runs on the data loaded by the generated migrations, before any test row is added to the shared tables.
 --   Check 18 runs on the loaded symptom list, so it stands before check 17 adds its test rows.
 --
@@ -256,9 +258,35 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Okno korekty zamknięte — podmiana treści funkcji na czas kolejnych sprawdzeń.
--- Oryginalna treść wraca niżej, a rollback na końcu skryptu domyka sprawę.
+-- Correction window closed for checks 5–7 and 19.
+-- The function is not restored by rewriting its body: its migration state is
+-- fingerprinted here, the savepoint below is rolled back after check 19, and the
+-- final check compares the fingerprint. This keeps working after S-05 replaces
+-- the body of the function.
 -- ---------------------------------------------------------------------------
+
+create temporary table rls_checks_window_fingerprint as
+select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint;
+
+-- Content check for a history guard block. SQLSTATE P0001 comes from every
+-- `raise exception` without ERRCODE, so a typo in a check could look like a
+-- working trigger. The message must name the closed window and the protected
+-- field or object from the trigger text (Polish, quoted from the migration).
+-- The pattern allows words between "okno korekty" and "jest już zamknięte":
+-- the substance guard says "okno korekty dla tego leku jest już zamknięte".
+create function pg_temp.assert_history_guard_message(p_check text, p_case text, p_message text, p_subject text)
+returns void
+language plpgsql
+as $$
+begin
+  if p_message not like '%okno korekty%jest już zamknięte%' or p_message not like '%' || p_subject || '%' then
+    raise exception 'CHECK % FAILED: % was blocked by an unexpected P0001 error, expected the correction window guard naming "%" (got %)',
+      p_check, p_case, p_subject, p_message;
+  end if;
+end;
+$$;
+
+savepoint before_window_closed;
 
 create or replace function public.medication_correction_window_open(p_medication_id uuid)
 returns boolean
@@ -279,43 +307,49 @@ $$;
 
 do $$
 declare
-  v_blocked boolean;
+  v_message text;
 begin
   -- 5a: zmiana substancji czynnej
-  v_blocked := false;
+  v_message := null;
   begin
     update public.medication_substances
        set substance_name = 'Podmieniona substancja'
      where id = '00000000-0000-4000-8000-000000000003';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zmiana substance_name przeszła przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5a substance_name change', v_message, 'substance_name');
 
   -- 5b: zmiana dawki
-  v_blocked := false;
+  v_message := null;
   begin
     update public.dosage_periods
        set dose_text = 'inna dawka'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zmiana dose_text przeszła przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5b dose_text change', v_message, 'dose_text');
 
   -- 5c: zmiana daty rozpoczęcia
-  v_blocked := false;
+  v_message := null;
   begin
     update public.dosage_periods
        set started_on = date '2026-03-01'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zmiana started_on przeszła przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5c started_on change', v_message, 'started_on');
 
   -- 5d: zamknięcie trwającego okresu musi przejść zawsze
   update public.dosage_periods
@@ -328,52 +362,60 @@ begin
   end if;
 
   -- 5e: podmiana już ustawionej daty końca jest blokowana
-  v_blocked := false;
+  v_message := null;
   begin
     update public.dosage_periods
        set ended_on = date '2026-07-01'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: podmiana ustawionej daty ended_on przeszła przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5e ended_on change', v_message, 'ended_on');
 
   -- 5f: przepięcie wiersza podrzędnego pod inny własny lek. Żadne z chronionych
   -- pól się nie zmienia, a historia obu leków owszem.
-  v_blocked := false;
+  v_message := null;
   begin
     update public.dosage_periods
        set medication_id = '00000000-0000-4000-8000-000000000005'
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: przepięcie okresu pod inny lek przeszło przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5f dosage period re-parenting', v_message, 'medication_id');
 
-  v_blocked := false;
+  v_message := null;
   begin
     update public.medication_substances
        set medication_id = '00000000-0000-4000-8000-000000000005'
      where id = '00000000-0000-4000-8000-000000000003';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: przepięcie składu pod inny lek przeszło przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5f substance re-parenting', v_message, 'medication_id');
 
   -- 5g (F-02): atc_code became nullable, so clearing a code must still count as changing the core of the entry.
-  v_blocked := false;
+  v_message := null;
   begin
     update public.medication_substances
        set atc_code = null
      where id = '00000000-0000-4000-8000-000000000003';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'CHECK 5 FAILED: clearing atc_code passed with the correction window closed';
   end if;
+  perform pg_temp.assert_history_guard_message('5', '5g clearing atc_code', v_message, 'atc_code');
 
   raise notice 'SPRAWDZENIE 5 OK: rdzeń wpisu niemodyfikowalny wraz z medication_id, zamknięcie trwającego okresu przechodzi';
 end;
@@ -385,27 +427,31 @@ $$;
 
 do $$
 declare
-  v_blocked boolean;
+  v_message text;
 begin
-  v_blocked := false;
+  v_message := null;
   begin
     delete from public.medication_substances
      where id = '00000000-0000-4000-8000-000000000003';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 6 NIEUDANE: usunięcie wiersza składu przeszło przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('6', 'substance row delete', v_message, 'usunąć wpisu składu leku');
 
-  v_blocked := false;
+  v_message := null;
   begin
     delete from public.dosage_periods
      where id = '00000000-0000-4000-8000-000000000004';
-  exception when sqlstate 'P0001' then v_blocked := true;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
   end;
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 6 NIEUDANE: usunięcie okresu dawkowania przeszło przy zamkniętym oknie korekty';
   end if;
+  perform pg_temp.assert_history_guard_message('6', 'dosage period delete', v_message, 'usunąć okresu dawkowania');
 
   raise notice 'SPRAWDZENIE 6 OK: przy zamkniętym oknie korekty wierszy podrzędnych nie da się usunąć';
 end;
@@ -417,45 +463,144 @@ $$;
 
 do $$
 declare
-  v_blocked boolean := false;
+  v_message text := null;
 begin
   begin
     delete from public.medications where id = '00000000-0000-4000-8000-000000000002';
   exception
     when sqlstate 'P0001' then
-      v_blocked := true;
+      get stacked diagnostics v_message = message_text;
   end;
 
-  if not v_blocked then
+  if v_message is null then
     raise exception 'SPRAWDZENIE 7 NIEUDANE: usunięcie leku przy zamkniętym oknie korekty przeszło — historia dawkowania da się wymazać';
   end if;
+  perform pg_temp.assert_history_guard_message('7', 'medication delete', v_message, 'usunąć leku');
 
   raise notice 'SPRAWDZENIE 7 OK: przy zamkniętym oknie korekty leku nie da się usunąć';
 end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Przywrócenie oryginalnej treści funkcji okna korekty
+-- Check 19: with the correction window closed, a dosage change is saved as
+-- closing the current period and opening a new one; the old dose stays in history
 -- ---------------------------------------------------------------------------
+-- Uses its own medication (...0006) so its periods cannot collide with the
+-- periods of checks 3–7. Its rows are created after the savepoint and disappear
+-- with it. Inserts are allowed with the window closed: the guards cover only
+-- update and delete. A one-day period at the '[)' bound would be
+-- started_on = d, ended_on = d + 1; here P2 starts on the day P1 ends.
 
-create or replace function public.medication_correction_window_open(p_medication_id uuid)
-returns boolean
-language plpgsql
-stable
-security definer
-set search_path = ''
-as $$
+do $$
+declare
+  v_rows integer;
+  v_message text;
+  v_p1 record;
+  v_p2 record;
 begin
-  return true;
+  if public.medication_correction_window_open('00000000-0000-4000-8000-000000000006') then
+    raise exception 'CHECK 19 FAILED: the correction window is open, so the check would not measure the closed-window rule';
+  end if;
+
+  insert into public.medications (id, user_id, product_name, composition_source)
+  values (
+    '00000000-0000-4000-8000-000000000006',
+    '00000000-0000-4000-8000-000000000001',
+    'Check 19 medication',
+    'leaflet'
+  );
+
+  -- 19a: P1 with dose A and no end date exists
+  insert into public.dosage_periods (id, medication_id, dose_text, started_on, ended_on)
+  values (
+    '00000000-0000-4000-8000-000000000007',
+    '00000000-0000-4000-8000-000000000006',
+    'check 19 dose A',
+    date '2026-01-01',
+    null
+  );
+
+  -- 19b: closing P1 passes
+  update public.dosage_periods
+     set ended_on = date '2026-04-01'
+   where id = '00000000-0000-4000-8000-000000000007';
+  get diagnostics v_rows = row_count;
+  if v_rows <> 1 then
+    raise exception 'CHECK 19 FAILED: closing period P1 updated % rows, expected 1', v_rows;
+  end if;
+
+  -- 19c: P2 with dose B starting on the day P1 ends passes (adjacent at the '[)' bound, no overlap)
+  insert into public.dosage_periods (id, medication_id, dose_text, started_on, ended_on)
+  values (
+    '00000000-0000-4000-8000-000000000008',
+    '00000000-0000-4000-8000-000000000006',
+    'check 19 dose B',
+    date '2026-04-01',
+    null
+  );
+
+  -- 19d: overwriting the dose of P1 is blocked by the named guard error
+  v_message := null;
+  begin
+    update public.dosage_periods
+       set dose_text = 'check 19 dose B'
+     where id = '00000000-0000-4000-8000-000000000007';
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_message is null then
+    raise exception 'CHECK 19 FAILED: overwriting dose_text of the closed period P1 passed with the correction window closed';
+  end if;
+  perform pg_temp.assert_history_guard_message('19', '19d dose_text overwrite of P1', v_message, 'dose_text');
+
+  -- 19e: both periods exist; P1 still has dose A and its end date, P2 has dose B and is ongoing
+  select dose_text, started_on, ended_on into v_p1
+    from public.dosage_periods where id = '00000000-0000-4000-8000-000000000007';
+  select dose_text, started_on, ended_on into v_p2
+    from public.dosage_periods where id = '00000000-0000-4000-8000-000000000008';
+  if v_p1.dose_text is distinct from 'check 19 dose A'
+     or v_p1.started_on is distinct from date '2026-01-01'
+     or v_p1.ended_on is distinct from date '2026-04-01' then
+    raise exception 'CHECK 19 FAILED: period P1 changed (dose %, % – %), expected dose A, 2026-01-01 – 2026-04-01',
+      v_p1.dose_text, v_p1.started_on, v_p1.ended_on;
+  end if;
+  if v_p2.dose_text is distinct from 'check 19 dose B'
+     or v_p2.started_on is distinct from date '2026-04-01'
+     or v_p2.ended_on is not null then
+    raise exception 'CHECK 19 FAILED: period P2 is missing or wrong (dose %, % – %), expected dose B from 2026-04-01, ongoing',
+      v_p2.dose_text, v_p2.started_on, v_p2.ended_on;
+  end if;
+  if (select count(*) from public.dosage_periods where medication_id = '00000000-0000-4000-8000-000000000006') <> 2 then
+    raise exception 'CHECK 19 FAILED: expected exactly 2 periods for the check 19 medication';
+  end if;
+
+  raise notice 'CHECK 19 OK: with the correction window closed, P1 closed and adjacent P2 with a new dose opened; old dose kept in history; overwriting it blocked by the dose_text guard';
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Back to the migration state of the correction window function: undoes the
+-- replacement above together with the rows written by checks 5–7 and 19.
+-- ---------------------------------------------------------------------------
+
+rollback to savepoint before_window_closed;
 
 -- ---------------------------------------------------------------------------
 -- Sprawdzenie 8: przy otwartym oknie korekty usunięcie leku przechodzi wraz z kaskadą
 -- ---------------------------------------------------------------------------
 
+-- Measures the migration state of the window function. Today (F-01) the window is
+-- always open. After S-05 it depends on symptom entries, so this check will need
+-- its own replacement of the function with an open window.
+
 do $$
 begin
+  -- The cascade must have something to delete: without child rows it would pass on an empty set.
+  if not exists (select 1 from public.medication_substances where medication_id = '00000000-0000-4000-8000-000000000002')
+     or not exists (select 1 from public.dosage_periods where medication_id = '00000000-0000-4000-8000-000000000002') then
+    raise exception 'CHECK 8 FAILED: medication ...0002 has no substance or no dosage period before the delete, so the cascade would not be measured';
+  end if;
+
   delete from public.medications where id = '00000000-0000-4000-8000-000000000002';
 
   if exists (select 1 from public.medications where id = '00000000-0000-4000-8000-000000000002')
@@ -1215,9 +1360,15 @@ end;
 $$;
 
 do $$
+declare
+  v_before text;
+  v_now text;
 begin
-  if not public.medication_correction_window_open('00000000-0000-4000-8000-000000000002') then
-    raise exception 'SPRAWDZENIE KOŃCOWE NIEUDANE: funkcja okna korekty nie wróciła do stanu z migracji';
+  select fingerprint into v_before from rls_checks_window_fingerprint;
+  v_now := md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure));
+  if v_before is null or v_now is distinct from v_before then
+    raise exception 'FINAL CHECK FAILED: correction window function differs from migration state (fingerprint before %, now %)',
+      v_before, v_now;
   end if;
   raise notice 'WSZYSTKIE SPRAWDZENIA PRZESZŁY — baza wraca do stanu sprzed skryptu (rollback)';
 end;
