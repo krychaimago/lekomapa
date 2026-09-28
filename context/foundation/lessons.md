@@ -113,3 +113,10 @@
 - **Problem**: Zbiór celowo blokuje każdą metodę, której nie zna (`amr` spoza zbioru = sesja z odnośnika). Nowa metoda logowania bez wpisu w zbiorze zamyka użytkowniczkę na ekranie nowego hasła. Pilnuje tego tylko komentarz w kodzie, a objaw wygląda jak zepsute logowanie, nie jak brakujący wpis.
 - **Rule**: Każda nowa metoda logowania to wpis w `NORMAL_SESSION_METHODS` oraz krok smoke, który loguje się tą metodą i sprawdza, że wnętrze się otwiera.
 - **Applies to**: plan, implement, impl-review
+
+## Smoke wysyła nagłówki tak jak przeglądarka, nie tak jak skrypt
+
+- **Context**: Kroki `scripts/smoke.mjs` wysyłające formularze POST do tras Astro (`checkOrigin`) oraz każda zmiana nagłówków bezpieczeństwa (`Referrer-Policy`, CSP) na stronie z formularzem.
+- **Problem**: Poprawka po przeglądzie fazy 2 w password-recovery ustawiła `Referrer-Policy: no-referrer` na stronach resetu hasła. Przeglądarka wysyłała przez to formularze z `Origin: null`, a Astro odpowiadał 403 — odzyskiwanie hasła nie działało dla nikogo. Smoke przechodził, bo sam dopisywał poprawny `Origin`; błąd wyszedł dopiero w ręcznym teście.
+- **Rule**: Smoke nigdy nie dopisuje nagłówków, których przeglądarka nie wyśle — Origin formularza wyprowadzaj z Referrer-Policy strony z formularzem. Każda zmiana nagłówków bezpieczeństwa strony z formularzem wymaga sprawdzenia formularza w prawdziwej przeglądarce.
+- **Applies to**: plan, implement, impl-review
