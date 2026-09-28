@@ -423,14 +423,14 @@ Brak migracji bazy. Zmiana konfiguracji: lokalnie w `supabase/config.toml`, na p
 
 #### Automated
 
-- [x] 3.1 Smoke przechodzi na lokalnym Supabase z mailpitem, łącznie z 12 krokami odzyskiwania: `npm run smoke` (po odsunięciu `.env` i ze świeżym `npm run preview`, zgodnie z `lessons.md`)
-- [x] 3.2 Lint przechodzi: `npm run lint`
-- [x] 3.3 Typy przechodzą: `npm run typecheck`
-- [x] 3.4 Testy tokenów przechodzą: `npm test`
-- [ ] 3.5 Job `smoke` w CI przechodzi na pull requeście
+- [x] 3.1 Smoke przechodzi na lokalnym Supabase z mailpitem, łącznie z 12 krokami odzyskiwania: `npm run smoke` (po odsunięciu `.env` i ze świeżym `npm run preview`, zgodnie z `lessons.md`) — 8d76504
+- [x] 3.2 Lint przechodzi: `npm run lint` — 8d76504
+- [x] 3.3 Typy przechodzą: `npm run typecheck` — 8d76504
+- [x] 3.4 Testy tokenów przechodzą: `npm test` — 8d76504
+- [x] 3.5 Job `smoke` w CI przechodzi na pull requeście — 8d76504
 
 #### Manual
 
-- [x] 3.6 Wygaśnięcie: lokalnie `otp_expiry = 60`, restart Supabase, odnośnik kliknięty po ponad minucie pokazuje komunikat o wygasłym odnośniku; `otp_expiry` przywrócone do 3600
+- [x] 3.6 Wygaśnięcie: lokalnie `otp_expiry = 60`, restart Supabase, odnośnik kliknięty po ponad minucie pokazuje komunikat o wygasłym odnośniku; `otp_expiry` przywrócone do 3600 — 8d76504
 - [ ] 3.7 Szablon i adres przekierowania ustawione w panelu produkcji i odczytane z powrotem
 - [ ] 3.8 Po wdrożeniu: reset na koncie autorki na produkcji — mail dochodzi, odnośnik prowadzi na adres produkcji, nowe hasło działa

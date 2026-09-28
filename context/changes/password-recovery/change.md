@@ -43,3 +43,18 @@ Faza 1 przekierowuje na `/auth/reset-password`, `/auth/reset-password/confirm` i
 ### Do opisu PR: ekrany startera (impl-review fazy 2, F4)
 
 Wspólne komponenty z fazy 2 (`FormField`, `ServerError`, `PasswordToggle`) zmieniają też logowanie i rejestrację ze startera: błędy zaczynają się od polskiego „Uwaga:” przy angielskiej treści („Uwaga: Email is required”), przełącznik hasła ma polską etykietę obok angielskich pól, a pola mają jasne tło `bg-background` w ciemnej karcie `bg-cosmic`. Kontrast sprawdzony w kryterium 2.8. Tłumaczenie i wygląd tych ekranów należą do S-01.
+
+### Szablon produkcji wymaga własnego SMTP (faza 3, 3.7, 2026-09-28)
+
+Panel produkcji: „Set up custom SMTP to edit templates. Emails will be sent using the default templates.” Na domyślnym nadawcy szablonu „Reset password” nie da się edytować, więc 3.7 (szablon) i 3.8 (reset na produkcji) czekają na F-05. Decyzja autorki: merge bez nich.
+
+Pomiar domyślnego odnośnika (lokalnie, własny szablon wyłączony na czas pomiaru):
+
+- Mail „Reset your password” z odnośnikiem `…/auth/v1/verify?token=…&type=recovery&redirect_to=…/auth/reset-password/confirm`.
+- Otwarcie odnośnika zużywa token po stronie Supabase i przekierowuje na `/auth/reset-password/confirm?code=…`.
+- Ta strona pokazuje „Odnośnik nie działa” — w tej samej przeglądarce (z ciasteczkami weryfikatora PKCE) i w innej. Żadna sesja nie powstaje, `/dashboard` → `/auth/signin`.
+- Wniosek: do czasu F-05 odzyskiwanie na produkcji kończy się komunikatem o wygasłym odnośniku; nic się nie otwiera.
+
+### Smoke musi wysyłać `Origin` tak jak przeglądarka (faza 3, 2026-09-28)
+
+`Referrer-Policy: no-referrer` z poprawki po przeglądzie fazy 2 sprawiał, że przeglądarka wysyłała formularze odzyskiwania z `Origin: null`, a `checkOrigin` Astro odpowiadał 403. Smoke przechodził, bo sam dopisywał poprawny `Origin`. Naprawa: `same-origin` na obu stronach; smoke wyprowadza `Origin` z polityki strony z formularzem (`formOrigin`).
