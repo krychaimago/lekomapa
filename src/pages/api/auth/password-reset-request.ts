@@ -1,17 +1,14 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
 
 export const prerender = false;
 
 const FORGOT_PASSWORD_PATH = "/auth/forgot-password";
 const SENT_PATH = "/auth/forgot-password/sent";
 
-// User-visible messages (Polish). Phase 2 moves them to a shared copy module.
-const MESSAGES = {
-  invalidEmail: "Wpisz poprawny adres e-mail.",
-  notConfigured: "Usługa logowania jest chwilowo niedostępna. Spróbuj ponownie później.",
-} as const;
+const MESSAGES = PASSWORD_RECOVERY_COPY.apiErrors;
 
 const requestSchema = z.object({
   email: z.string().trim().min(1).pipe(z.email()),

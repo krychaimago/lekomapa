@@ -2,20 +2,14 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
 import { RECOVERY_EXPIRED_PATH, RESET_PASSWORD_PATH, isRecoverySession } from "@/lib/auth/recovery-session";
+import { MIN_PASSWORD_LENGTH, PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
 
 export const prerender = false;
 
 const DONE_PATH = "/auth/signin?reset=done";
 
-// User-visible messages (Polish). Phase 2 moves them to a shared copy module.
 // Never show a raw Supabase error.message to the user.
-const MESSAGES = {
-  tooShort: "Hasło musi mieć co najmniej 6 znaków.",
-  mismatch: "Hasła nie są takie same.",
-  samePassword: "Nowe hasło musi się różnić od poprzedniego.",
-  weakPassword: "To hasło jest zbyt słabe. Wybierz inne.",
-  generic: "Nie udało się zapisać nowego hasła. Spróbuj ponownie.",
-} as const;
+const MESSAGES = PASSWORD_RECOVERY_COPY.apiErrors;
 
 const UPDATE_ERROR_MESSAGES: Record<string, string> = {
   same_password: MESSAGES.samePassword,
@@ -24,7 +18,7 @@ const UPDATE_ERROR_MESSAGES: Record<string, string> = {
 
 const updateSchema = z
   .object({
-    password: z.string({ error: MESSAGES.generic }).min(6, MESSAGES.tooShort),
+    password: z.string({ error: MESSAGES.generic }).min(MIN_PASSWORD_LENGTH, MESSAGES.passwordTooShort),
     password_confirm: z.string({ error: MESSAGES.generic }),
   })
   .refine((data) => data.password === data.password_confirm, {

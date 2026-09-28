@@ -1,0 +1,50 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AuthCard from "@/components/auth/AuthCard.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
+import { cn } from "@/lib/utils";
+
+// Landing page of the reset link. Opening it (GET) consumes nothing: mail scanners prefetch links.
+// The one-time token is used only by the explicit POST to /api/auth/password-reset-verify.
+const tokenHash = Astro.url.searchParams.get("token_hash");
+const type = Astro.url.searchParams.get("type");
+const expired = Astro.url.searchParams.get("expired") === "1";
+const hasToken = !expired && Boolean(tokenHash) && type === "recovery";
+
+const confirmCopy = PASSWORD_RECOVERY_COPY.confirm;
+const expiredCopy = PASSWORD_RECOVERY_COPY.expired;
+const title = hasToken ? confirmCopy.title : expiredCopy.title;
+---
+
+<Layout title={title}>
+  <AuthCard title={title}>
+    {hasToken ? (
+      <>
+        <p class="mb-6">{confirmCopy.intro}</p>
+        <form method="POST" action="/api/auth/password-reset-verify">
+          <input type="hidden" name="token_hash" value={tokenHash} />
+          <input type="hidden" name="type" value="recovery" />
+          <button type="submit" class:list={cn(buttonVariants(), "w-full rounded-lg text-base")}>
+            {confirmCopy.submit}
+          </button>
+        </form>
+      </>
+    ) : (
+      <>
+        {/* A state, not a form error: no destructive colors. */}
+        <p class="mb-6" role="status">
+          {expiredCopy.body}
+        </p>
+        <a href="/auth/forgot-password" class:list={cn(buttonVariants(), "w-full rounded-lg text-base")}>
+          {expiredCopy.requestNew}
+        </a>
+        <p class="mt-6 text-center text-sm">
+          <a href="/auth/signin" class="text-primary underline underline-offset-4 hover:no-underline">
+            {expiredCopy.backToSignIn}
+          </a>
+        </p>
+      </>
+    )}
+  </AuthCard>
+</Layout>

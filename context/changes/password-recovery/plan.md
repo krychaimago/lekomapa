@@ -405,19 +405,19 @@ Brak migracji bazy. Zmiana konfiguracji: lokalnie w `supabase/config.toml`, na p
 
 #### Automated
 
-- [ ] 2.1 Skaner i kontrast przechodzą z czterema komponentami zdjętymi z `EXCEPTIONS`: `npm test`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
-- [ ] 2.3 Typy przechodzą: `npm run typecheck`
-- [ ] 2.4 Build przechodzi: `npm run build`
+- [x] 2.1 Skaner i kontrast przechodzą z czterema komponentami zdjętymi z `EXCEPTIONS`: `npm test`
+- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.3 Typy przechodzą: `npm run typecheck`
+- [x] 2.4 Build przechodzi: `npm run build`
 
 #### Manual
 
-- [ ] 2.5 Cała ścieżka w przeglądarce na lokalnym Supabase: logowanie → „Nie pamiętasz hasła?” → adres → „wysłaliśmy” → odnośnik z mailpitu → przycisk → nowe hasło → logowanie z informacją o zmianie → logowanie nowym hasłem
-- [ ] 2.6 Odnośnik z maila otwarty w innej przeglądarce niż prośba działa
-- [ ] 2.7 Ekrany czytelne na szerokości telefonu (375 px): tekst co najmniej 15 px, pola i przyciski wyższe niż 44 px, bez poziomego przewijania
-- [ ] 2.8 Logowanie i rejestracja nadal działają i są czytelne z przepiętymi komponentami na tle `bg-cosmic`
-- [ ] 2.9 Brak angielskich napisów na nowych ekranach
-- [ ] 2.10 W sesji z odnośnika „Anuluj i wyloguj” kończy sesję; potem `/auth/signin` otwiera się normalnie, a logowanie starym hasłem przechodzi
+- [x] 2.5 Cała ścieżka w przeglądarce na lokalnym Supabase: logowanie → „Nie pamiętasz hasła?” → adres → „wysłaliśmy” → odnośnik z mailpitu → przycisk → nowe hasło → logowanie z informacją o zmianie → logowanie nowym hasłem
+- [x] 2.6 Odnośnik z maila otwarty w innej przeglądarce niż prośba działa
+- [x] 2.7 Ekrany czytelne na szerokości telefonu (375 px): tekst co najmniej 15 px, pola i przyciski wyższe niż 44 px, bez poziomego przewijania
+- [x] 2.8 Logowanie i rejestracja nadal działają i są czytelne z przepiętymi komponentami na tle `bg-cosmic`
+- [x] 2.9 Brak angielskich napisów na nowych ekranach
+- [x] 2.10 W sesji z odnośnika „Anuluj i wyloguj” kończy sesję; potem `/auth/signin` otwiera się normalnie, a logowanie starym hasłem przechodzi
 
 ### Phase 3: Bramka smoke, CI i konfiguracja produkcji
 

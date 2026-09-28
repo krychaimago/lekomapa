@@ -19,30 +19,6 @@ export const EXCEPTIONS = [
   { path: "src/pages/auth/signup.astro", reason: "starter auth screen", removedBy: "S-01", violations: 7 },
   { path: "src/pages/auth/confirm-email.astro", reason: "starter auth screen", removedBy: "S-01", violations: 7 },
   {
-    path: "src/components/auth/SubmitButton.tsx",
-    reason: "starter auth form component",
-    removedBy: "S-01",
-    violations: 5,
-  },
-  {
-    path: "src/components/auth/PasswordToggle.tsx",
-    reason: "starter auth form component",
-    removedBy: "S-01",
-    violations: 2,
-  },
-  {
-    path: "src/components/auth/FormField.tsx",
-    reason: "starter auth form component",
-    removedBy: "S-01",
-    violations: 10,
-  },
-  {
-    path: "src/components/auth/ServerError.tsx",
-    reason: "starter auth form component",
-    removedBy: "S-01",
-    violations: 3,
-  },
-  {
     path: "src/components/auth/SignUpForm.tsx",
     reason: "starter auth form component",
     removedBy: "S-01",
