@@ -15,8 +15,12 @@
 //   - existing account: set SMOKE_EMAIL and SMOKE_PASSWORD to a confirmed account. Signup is skipped, so the
 //     run works against an environment that confirms e-mail and leaves no new rows behind.
 // SMOKE_EMAIL_DOMAIN overrides the throwaway address domain when example.com is rejected.
+// The password recovery steps run only in throwaway mode against a local Supabase and read the reset mail from
+// mailpit (MAILPIT_URL, default http://127.0.0.1:54324).
 
-import { createClient } from "@supabase/supabase-js";
+import { setTimeout as sleep } from "node:timers/promises";
+
+import { createClient, isAuthApiError } from "@supabase/supabase-js";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const EXISTING_EMAIL = process.env.SMOKE_EMAIL;
@@ -64,33 +68,50 @@ for (const [name, value] of [
   }
 }
 
-function cookieHeader() {
-  return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
+function cookieHeader(cookieJar) {
+  return [...cookieJar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
 }
 
-function storeCookies(response) {
+function storeCookies(response, cookieJar) {
   for (const raw of response.headers.getSetCookie()) {
     const [pair, ...attrs] = raw.split(";");
     const [name, ...rest] = pair.split("=");
     const expired = attrs.some((a) => /max-age=0/i.test(a.trim()));
-    if (expired) jar.delete(name.trim());
-    else jar.set(name.trim(), rest.join("="));
+    if (expired) cookieJar.delete(name.trim());
+    else cookieJar.set(name.trim(), rest.join("="));
   }
 }
 
-async function request(path, { method = "GET", form } = {}) {
+// `jar` picks the cookie jar the request reads and writes; the main jar unless a step needs a separate browser.
+// `origin` overrides the Origin header for a form POST whose page changes what a browser sends (see formOrigin).
+async function request(path, { method = "GET", form, jar: cookieJar = jar, origin = BASE_URL } = {}) {
   const response = await fetch(BASE_URL + path, {
     method,
     redirect: "manual",
     headers: {
-      Cookie: cookieHeader(),
-      Origin: BASE_URL,
+      Cookie: cookieHeader(cookieJar),
+      Origin: origin,
       ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
     },
     body: form ? new URLSearchParams(form).toString() : undefined,
   });
-  storeCookies(response);
+  storeCookies(response, cookieJar);
   return { status: response.status, location: response.headers.get("location") ?? "" };
+}
+
+// A browser derives the Origin of a form POST from the referrer policy of the page holding the form: under
+// "no-referrer" it sends `Origin: null`, which Astro's checkOrigin rejects with 403. A step posting from such a
+// page reads the page's policy instead of assuming the header this script would send on its own.
+async function formOrigin(pagePath, cookieJar = jar) {
+  const response = await fetch(BASE_URL + pagePath, {
+    redirect: "manual",
+    headers: { Cookie: cookieHeader(cookieJar) },
+  });
+  await response.body?.cancel();
+  storeCookies(response, cookieJar);
+  // The last listed policy the browser supports wins; every policy here is supported.
+  const policy = (response.headers.get("referrer-policy") ?? "").split(",").pop().trim().toLowerCase();
+  return policy === "no-referrer" ? "null" : BASE_URL;
 }
 
 // --- Isolation checks ------------------------------------------------------
@@ -430,6 +451,229 @@ const isolationSteps = isolationSkipReason
     ]
   : [fixtureStep, ...isolationTargets.flatMap(isolationChecks), ...sharedTargets.flatMap(sharedTableChecks)];
 
+// --- Password recovery -----------------------------------------------------
+//
+// Walks the whole reset path of S-10 over HTTP and reads the reset mail from the local mailpit. Every step asserts
+// a concrete outcome: the request route answers the same 302 whether or not the account exists, so the status alone
+// proves nothing — the mail (or its absence) does.
+//
+// Runs only in throwaway mode against a local Supabase: it changes the password of the account it signs in to and
+// reads mail from a local mailpit. No override — the password of a real account is never touched.
+
+const MAILPIT_URL = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
+const MAIL_TIMEOUT_MS = 15000;
+const MAIL_POLL_MS = 250;
+const NEW_PASSWORD = "Smoke-Test-Passw0rd-New!";
+const RESET_PASSWORD_PAGE = "/auth/reset-password";
+const RESET_CONFIRM_PATH = "/auth/reset-password/confirm";
+const RECOVERY_EXPIRED_PATH = "/auth/reset-password/confirm?expired=1";
+
+// Filled by the steps below and read by the later ones.
+const recovery = { unknownAddress: `smoke-nobody-${Date.now()}@${emailDomain}`, link: null, parallel: null };
+
+// Messages addressed exactly to `address`. Throws when mailpit cannot be queried, so an unreachable mailpit
+// never passes for "no mail".
+async function mailpitMessagesTo(address) {
+  const url = `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${address}`)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`mailpit search failed: HTTP ${response.status} from ${MAILPIT_URL}`);
+  const body = await response.json();
+  if (!Array.isArray(body.messages)) throw new Error("mailpit search returned no message list");
+  const wanted = address.toLowerCase();
+  return body.messages.filter((message) => (message.To ?? []).some((to) => to.Address?.toLowerCase() === wanted));
+}
+
+async function waitForMail(address) {
+  const deadline = Date.now() + MAIL_TIMEOUT_MS;
+  for (;;) {
+    const messages = await mailpitMessagesTo(address);
+    if (messages.length) return messages[0];
+    if (Date.now() > deadline) {
+      throw new Error(
+        `no mail in mailpit after ${MAIL_TIMEOUT_MS} ms. The route answers 302 whatever happens, so look for ` +
+          `"Password reset request failed" in the server's console.error (resetPasswordForEmail error, ` +
+          `e.g. the email_sent rate limit or max_frequency) and check that mailpit runs at ${MAILPIT_URL}`,
+      );
+    }
+    await sleep(MAIL_POLL_MS);
+  }
+}
+
+async function readMessage(id) {
+  const response = await fetch(`${MAILPIT_URL}/api/v1/message/${encodeURIComponent(id)}`);
+  if (!response.ok) throw new Error(`mailpit message read failed: HTTP ${response.status}`);
+  return response.json();
+}
+
+function resetLinkFrom(message) {
+  for (const source of [message.HTML ?? "", message.Text ?? ""]) {
+    const match = source.match(/https?:\/\/[^\s"'<>]+\/auth\/reset-password\/confirm[^\s"'<>]*/);
+    if (match) return new URL(match[0].replaceAll("&amp;", "&"));
+  }
+  return null;
+}
+
+// HTTP steps that need the link from step 2 fail on their own line when it is missing, instead of requesting "undefined".
+const NO_LINK = { status: 0, location: "check did not run: no reset link was read from the mail" };
+
+function linkPath() {
+  return recovery.link ? recovery.link.pathname + recovery.link.search : null;
+}
+
+function verifyForm() {
+  return { token_hash: recovery.link.searchParams.get("token_hash"), type: "recovery" };
+}
+
+const recoverySteps = [
+  [
+    "recovery: request for an unknown address ends on the sent screen and sends no mail",
+    async () => {
+      const response = await request("/api/auth/password-reset-request", {
+        method: "POST",
+        form: { email: recovery.unknownAddress },
+      });
+      const redirected = response.status === 302 && response.location === "/auth/forgot-password/sent";
+      const messages = await mailpitMessagesTo(recovery.unknownAddress);
+      return {
+        ok: redirected && messages.length === 0,
+        detail: `${response.status} ${response.location}; ${messages.length} mail(s) in mailpit (re-checked in the next step)`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "recovery: request for the account sends a mail with a token_hash link",
+    async () => {
+      const response = await request("/api/auth/password-reset-request", { method: "POST", form: { email } });
+      if (response.status !== 302 || response.location !== "/auth/forgot-password/sent") {
+        return { ok: false, detail: `${response.status} ${response.location}` };
+      }
+      const message = await readMessage((await waitForMail(email)).ID);
+      const link = resetLinkFrom(message);
+      if (!link) return { ok: false, detail: `mail "${message.Subject}" holds no ${RESET_CONFIRM_PATH} link` };
+      const tokenHash = link.searchParams.get("token_hash");
+      const type = link.searchParams.get("type");
+      if (link.pathname !== RESET_CONFIRM_PATH || !tokenHash || type !== "recovery") {
+        return { ok: false, detail: `unexpected link ${link.origin}${link.pathname} type=${type}` };
+      }
+      recovery.link = link;
+      // Delivery works now, so an empty result for the unknown address from the previous step is a real absence.
+      const unknown = await mailpitMessagesTo(recovery.unknownAddress);
+      return {
+        ok: unknown.length === 0,
+        detail: `link to ${link.origin}${link.pathname}; unknown address has ${unknown.length} mail(s)`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "recovery: parallel session on another device signs in and refreshes",
+    async () => {
+      const client = supabaseClient();
+      const signIn = await client.auth.signInWithPassword({ email, password });
+      if (signIn.error) return { ok: false, detail: `sign-in failed: ${describeError(signIn.error)}` };
+      // Control for the last step: the session refreshes now, so a failed refresh later comes from the reset.
+      const refreshed = await client.auth.refreshSession({ refresh_token: signIn.data.session.refresh_token });
+      if (refreshed.error || !refreshed.data.session) {
+        return { ok: false, detail: `control refresh failed: ${describeError(refreshed.error)}` };
+      }
+      recovery.parallel = { client, refreshToken: refreshed.data.session.refresh_token };
+      return { ok: true, detail: "signed in outside the cookie jar, refresh works" };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "recovery: opening the link shows the confirm page",
+    () => (linkPath() ? request(linkPath()) : NO_LINK),
+    { status: 200 },
+  ],
+  [
+    "recovery: confirming the link opens the new password screen",
+    async () =>
+      recovery.link
+        ? request("/api/auth/password-reset-verify", {
+            method: "POST",
+            form: verifyForm(),
+            origin: await formOrigin(linkPath()),
+          })
+        : NO_LINK,
+    { status: 302, location: "/auth/reset-password", exact: true },
+  ],
+  [
+    "recovery: session from the link cannot reach the interior",
+    () => request("/dashboard"),
+    { status: 302, location: "/auth/reset-password", exact: true },
+  ],
+  [
+    "recovery: the same link used again in another browser is expired",
+    () =>
+      recovery.link
+        ? request("/api/auth/password-reset-verify", { method: "POST", form: verifyForm(), jar: new Map() })
+        : NO_LINK,
+    { status: 302, location: RECOVERY_EXPIRED_PATH, exact: true },
+  ],
+  [
+    "recovery: mismatched passwords are rejected",
+    async () =>
+      request("/api/auth/password-update", {
+        method: "POST",
+        origin: await formOrigin(RESET_PASSWORD_PAGE),
+        form: { password: NEW_PASSWORD, password_confirm: `${NEW_PASSWORD}-other` },
+      }),
+    { status: 302, location: "/auth/reset-password?error=mismatch", exact: true },
+  ],
+  [
+    "recovery: new password is saved",
+    async () =>
+      request("/api/auth/password-update", {
+        method: "POST",
+        origin: await formOrigin(RESET_PASSWORD_PAGE),
+        form: { password: NEW_PASSWORD, password_confirm: NEW_PASSWORD },
+      }),
+    { status: 302, location: "/auth/signin?reset=done", exact: true },
+  ],
+  [
+    "recovery: dashboard redirects after the password change",
+    () => request("/dashboard"),
+    { status: 302, location: "/auth/signin", exact: true },
+  ],
+  [
+    "recovery: old password no longer signs in",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/auth/signin?error=" },
+  ],
+  [
+    "recovery: new password signs in",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password: NEW_PASSWORD } }),
+    { status: 302, location: "/", exact: true },
+  ],
+  [
+    "recovery: parallel session no longer refreshes",
+    async () => {
+      if (!recovery.parallel) return { ok: false, detail: "check did not run: no parallel session from step 3" };
+      const { data, error } = await recovery.parallel.client.auth.refreshSession({
+        refresh_token: recovery.parallel.refreshToken,
+      });
+      // Only the measured answer counts: after a global sign-out the auth server answers 400
+      // refresh_token_not_found (local Supabase CLI v2.117.0). Any other error, network or configuration failure
+      // included, never reached the revoked token and proves nothing about the sign-out.
+      const rejected = isAuthApiError(error) && error.code === "refresh_token_not_found" && !data?.session;
+      return { ok: rejected, detail: `${error ? `${error.status} ` : ""}${describeError(error)}` };
+    },
+    EXPECT_OK,
+  ],
+];
+
+const recoverySkipReason = usesExistingAccount
+  ? "existing-account mode never changes the password of a real account"
+  : !isLocalSupabase(SUPABASE_URL)
+    ? "SUPABASE_URL is not a local Supabase — the reset mail is read from a local mailpit and the password changes"
+    : null;
+
+const passwordRecoverySteps = recoverySkipReason
+  ? [["password recovery checks", null, { skip: recoverySkipReason }]]
+  : recoverySteps;
+
 // --- Steps -----------------------------------------------------------------
 
 const signupStep = [
@@ -461,6 +705,7 @@ const steps = [
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ...isolationSteps,
+  ...passwordRecoverySteps,
 ];
 
 console.log(
@@ -475,6 +720,7 @@ for (const [name, run, expected] of steps) {
   }
 
   // Two expectation shapes: EXPECT_OK steps return { ok, detail }, HTTP steps return { status, location }.
+  // HTTP steps match the location as a prefix, or in full with `exact: true`.
   if (expected === EXPECT_OK) {
     let actual;
     try {
@@ -490,7 +736,8 @@ for (const [name, run, expected] of steps) {
   const actual = await run();
   const ok =
     actual.status === expected.status &&
-    (expected.location === undefined || actual.location.startsWith(expected.location));
+    (expected.location === undefined ||
+      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location)));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;

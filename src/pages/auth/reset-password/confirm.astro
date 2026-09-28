@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
 // The one-time token is used only by the explicit POST to /api/auth/password-reset-verify.
 // The URL carries a one-time token: keep it out of caches and Referer headers.
 Astro.response.headers.set("Cache-Control", "no-store");
-Astro.response.headers.set("Referrer-Policy", "no-referrer");
+// same-origin, not no-referrer: under no-referrer the browser posts the form with `Origin: null`, which
+// Astro's checkOrigin rejects with 403. same-origin still sends nothing to any other site.
+Astro.response.headers.set("Referrer-Policy", "same-origin");
 const tokenHash = Astro.url.searchParams.get("token_hash");
 const type = Astro.url.searchParams.get("type");
 const expired = Astro.url.searchParams.get("expired") === "1";
