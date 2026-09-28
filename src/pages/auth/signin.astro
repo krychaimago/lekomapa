@@ -1,8 +1,10 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import SignInForm from "@/components/auth/SignInForm";
+import { PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
 
 const error = Astro.url.searchParams.get("error");
+const resetDone = Astro.url.searchParams.get("reset") === "done";
 ---
 
 <Layout title="Sign in">
@@ -11,7 +13,17 @@ const error = Astro.url.searchParams.get("error");
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
         Sign in
       </h1>
+      {resetDone && (
+        <p role="status" class="mb-4 rounded-lg border px-3 py-2 text-center text-sm">
+          {PASSWORD_RECOVERY_COPY.signIn.resetDone}
+        </p>
+      )}
       <SignInForm serverError={error} client:load />
+      <p class="mt-4 text-center text-sm">
+        <a href="/auth/forgot-password" class="underline underline-offset-4 hover:no-underline">
+          {PASSWORD_RECOVERY_COPY.signIn.forgotPasswordLink}
+        </a>
+      </p>
       <p class="mt-4 text-center text-sm text-blue-100/60">
         Don't have an account?{" "}
         <a href="/auth/signup" class="text-purple-300 hover:underline">

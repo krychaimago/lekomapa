@@ -1,0 +1,16 @@
+---
+// Shared frame of the password recovery screens, on product tokens (no bg-cosmic).
+// S-01 may adopt it or replace it with the layout from the mockup.
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="flex justify-center bg-background px-4 py-10 sm:py-16">
+  <div class="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
+    <h1 class="mb-4 text-center text-2xl font-bold">{title}</h1>
+    <slot />
+  </div>
+</div>

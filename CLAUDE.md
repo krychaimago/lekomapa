@@ -78,8 +78,10 @@ API routes eksportują `export const prerender = false` mimo że przy `output: "
 
 - `src/lib/supabase.ts` — klient Supabase SSR (`@supabase/ssr`), sesje w ciasteczkach. `SUPABASE_URL` i `SUPABASE_KEY` przez `astro:env/server` (sekrety server-only zadeklarowane w `env.schema` w `astro.config.mjs`).
 - `src/middleware.ts` — działa na każdym żądaniu, ustala użytkownika, wpina go w `context.locals.user`, przekierowuje niezalogowanych z tras z `PROTECTED_ROUTES`.
-- Endpointy: `src/pages/api/auth/{signin,signup,signout}.ts`
-- Strony: `src/pages/auth/{signin,signup,confirm-email}.astro`
+- Endpointy: `src/pages/api/auth/{signin,signup,signout}.ts`; odzyskiwanie dostępu: `src/pages/api/auth/{password-reset-request,password-reset-verify,password-update}.ts`
+- Strony: `src/pages/auth/{signin,signup,confirm-email}.astro`; odzyskiwanie dostępu: `src/pages/auth/forgot-password.astro`, `src/pages/auth/forgot-password/sent.astro`, `src/pages/auth/reset-password/confirm.astro`, `src/pages/auth/reset-password.astro`
+- Sesja z odnośnika do zmiany hasła: reguła w `src/lib/auth/recovery-session.ts`. Rozpoznawana po podpisanym `amr` (metoda spoza `NORMAL_SESSION_METHODS`), nie po ciasteczku. Taka sesja dociera wyłącznie do ekranu nowego hasła i jego endpointów — middleware przekierowuje ją z każdej innej trasy.
+- Szablon maila z odnośnikiem: `supabase/templates/recovery.html` działa tylko lokalnie. Produkcja ma własną kopię w panelu Supabase — przy każdej zmianie pliku przenieś temat i treść ręcznie do panelu (kroki w `README.md`, sekcja Supabase).
 - Przykład strony chronionej: `src/pages/dashboard.astro`
 
 Starter pokrywa FR-001 i FR-002 (rejestracja, logowanie, odzyskiwanie dostępu) — nie pisz warstwy auth od zera.

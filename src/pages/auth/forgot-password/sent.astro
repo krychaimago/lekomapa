@@ -1,0 +1,25 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AuthCard from "@/components/auth/AuthCard.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
+import { cn } from "@/lib/utils";
+
+// Same screen whether or not the account exists: the response never reveals it.
+const copy = PASSWORD_RECOVERY_COPY.sent;
+---
+
+<Layout title={copy.title}>
+  <AuthCard title={copy.title}>
+    <p class="mb-4">{copy.body}</p>
+    <p class="mb-6 text-muted-foreground">{copy.noMail}</p>
+    <a href="/auth/signin" class:list={cn(buttonVariants(), "w-full rounded-lg text-base")}>
+      {copy.backToSignIn}
+    </a>
+    <p class="mt-6 text-center text-sm">
+      <a href="/auth/forgot-password" class="text-primary underline underline-offset-4 hover:no-underline">
+        {copy.requestAgain}
+      </a>
+    </p>
+  </AuthCard>
+</Layout>

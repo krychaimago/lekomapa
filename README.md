@@ -75,6 +75,16 @@ Aby logować się od razu po rejestracji, bez klikania linku potwierdzającego: 
 
 Te same dwie zmienne, wartości z panelu Supabase → Settings → API (`Project URL` oraz klucz `anon`).
 
+#### Odzyskiwanie dostępu (mail z odnośnikiem)
+
+Lokalnie szablon maila i adres przekierowania ustawia `supabase/config.toml`. Na produkcji trzeba je wpisać ręcznie w panelu — i powtórzyć przy każdej zmianie `supabase/templates/recovery.html`. Bez tego produkcja wysyła domyślny odnośnik, który nie pasuje do trasy `/auth/reset-password/confirm`.
+
+1. **Authentication → Email Templates → Reset Password**: temat `Lekomapa: ustaw nowe hasło` (jak `subject` w `[auth.email.template.recovery]` w `config.toml`), treść skopiowana z `supabase/templates/recovery.html`.
+2. **Authentication → URL Configuration → Redirect URLs**: dodaj `https://<adres produkcji>/auth/reset-password/confirm`.
+3. Po zapisie otwórz szablon w panelu jeszcze raz i sprawdź, że odnośnik zawiera `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery`. Sama obecność szablonu nie dowodzi jego treści.
+
+Do czasu własnego nadawcy maili (F-05) mail dochodzi na produkcji tylko na adresy członków zespołu projektu Supabase.
+
 ### Migracje
 
 Pliki w `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_krotki_opis.sql`. **Każda nowa tabela wymaga włączonego RLS z politykami per-operacja i per-rola** — to mechanizm izolacji danych zdrowotnych per-konto z wymagań niefunkcjonalnych PRD, nie opcja do odłożenia na później.
@@ -177,6 +187,8 @@ Skrypt ma dwa tryby, wybierane przez zmienne środowiskowe:
 Sprawdzenia izolacji działają **wyłącznie w trybie konta jednorazowego i wyłącznie przeciw lokalnemu Supabase** (`SUPABASE_URL` na `localhost` albo `127.0.0.1`); w każdym innym wypadku wypisywany jest wiersz `SKIP` z powodem. Świadome uruchomienie ich przeciw zdalnej bazie wymaga jawnego `SMOKE_ALLOW_REMOTE_WRITES=1` — o adresie decyduje `SUPABASE_URL`, nie obecność `SMOKE_EMAIL`, bo ta zmienna nic o docelowej bazie nie mówi. Potrzebują dwóch świeżych kont i zapisania przy każdym zmyślonego leku — na produkcji drugiego konta nie da się założyć, a zmyślone dane zdrowotne nie mają czego szukać w prawdziwym koncie. CI chodzi w trybie jednorazowym, więc bramka pozostaje w mocy. Nowa tabela z danymi konta dokłada tu swoje cztery kroki (opis w sekcji [Migracje](#migracje)).
 
 W tym samym trybie chodzą kroki dla tabel wspólnych (`registry_products`, `registry_substances`, `interaction_pairs`). Zalogowane konto czyta co najmniej jeden wiersz. Próba wstawienia, zmiany i usunięcia kończy się zmierzonym błędem `42501` („permission denied for table …”), a ponowny odczyt pokazuje wiersz bez zmian. Sam klucz publiczny bez sesji nie zwraca nic.
+
+W tym samym trybie, ale **wyłącznie przeciw lokalnemu Supabase** (bez obejścia przez `SMOKE_ALLOW_REMOTE_WRITES`), chodzą kroki odzyskiwania dostępu: prośba o odnośnik, odczyt maila z mailpitu (`MAILPIT_URL`, domyślnie `http://127.0.0.1:54324`), jednorazowość odnośnika, blokada wnętrza w sesji z odnośnika, zapis nowego hasła i zamknięcie sesji na innym urządzeniu. Zmieniają hasło konta, więc nigdy nie dotykają prawdziwego konta. Mailpit musi działać — w CI nie jest wyłączany.
 
 To sanity check po aktualizacji zależności, nie zestaw testów. Logika okresów dawkowania i zestawiania objawów w czasie wymaga własnych testów jednostkowych — do dopisania razem z pierwszym serwisem w `src/lib/services/`.
 
