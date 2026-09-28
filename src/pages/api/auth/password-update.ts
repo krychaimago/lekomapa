@@ -2,32 +2,33 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
 import { RECOVERY_EXPIRED_PATH, RESET_PASSWORD_PATH, isRecoverySession } from "@/lib/auth/recovery-session";
-import { MIN_PASSWORD_LENGTH, PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
+import { MIN_PASSWORD_LENGTH, type ApiErrorCode } from "@/lib/copy/password-recovery";
 
 export const prerender = false;
 
 const DONE_PATH = "/auth/signin?reset=done";
 
-// Never show a raw Supabase error.message to the user.
-const MESSAGES = PASSWORD_RECOVERY_COPY.apiErrors;
-
-const UPDATE_ERROR_MESSAGES: Record<string, string> = {
-  same_password: MESSAGES.samePassword,
-  weak_password: MESSAGES.weakPassword,
+// Errors travel as codes from PASSWORD_RECOVERY_COPY.apiErrors; never a raw Supabase error.message.
+const UPDATE_ERROR_CODES: Record<string, ApiErrorCode> = {
+  same_password: "samePassword",
+  weak_password: "weakPassword",
 };
+
+const GENERIC: ApiErrorCode = "generic";
 
 const updateSchema = z
   .object({
-    password: z.string({ error: MESSAGES.generic }).min(MIN_PASSWORD_LENGTH, MESSAGES.passwordTooShort),
-    password_confirm: z.string({ error: MESSAGES.generic }),
+    password: z.string({ error: GENERIC }).min(MIN_PASSWORD_LENGTH, "passwordTooShort" satisfies ApiErrorCode),
+    password_confirm: z.string({ error: GENERIC }),
   })
   .refine((data) => data.password === data.password_confirm, {
-    message: MESSAGES.mismatch,
+    message: "mismatch" satisfies ApiErrorCode,
     path: ["password_confirm"],
   });
 
-function errorRedirect(message: string): string {
-  return `${RESET_PASSWORD_PATH}?error=${encodeURIComponent(message)}`;
+// Zod issue messages are always ApiErrorCode values set in updateSchema above; the page ignores any other.
+function errorRedirect(code: string): string {
+  return `${RESET_PASSWORD_PATH}?error=${encodeURIComponent(code)}`;
 }
 
 export const POST: APIRoute = async (context) => {
@@ -57,15 +58,15 @@ export const POST: APIRoute = async (context) => {
     password_confirm: form.get("password_confirm"),
   });
   if (!parsed.success) {
-    return context.redirect(errorRedirect(parsed.error.issues[0]?.message ?? MESSAGES.generic));
+    return context.redirect(errorRedirect(parsed.error.issues[0]?.message ?? GENERIC));
   }
 
   // Order matters: update the password first, sign out everywhere only after it succeeded.
   // The reverse would leave the account on the old password with no session to retry from.
   const { error: updateError } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (updateError) {
-    const message = (updateError.code ? UPDATE_ERROR_MESSAGES[updateError.code] : undefined) ?? MESSAGES.generic;
-    return context.redirect(errorRedirect(message));
+    const code = (updateError.code ? UPDATE_ERROR_CODES[updateError.code] : undefined) ?? GENERIC;
+    return context.redirect(errorRedirect(code));
   }
 
   const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });

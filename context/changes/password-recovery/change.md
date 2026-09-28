@@ -39,3 +39,7 @@ Odświeżenie sesji z odnośnika (`refreshSession()` po `verifyOtp` typu recover
 ### Bez merge'a do `main` przed fazą 2 (impl-review F3, 2026-09-28)
 
 Faza 1 przekierowuje na `/auth/reset-password`, `/auth/reset-password/confirm` i `/auth/forgot-password[/sent]`, które powstają dopiero w fazie 2. Merge do `main` wdraża na produkcję bez innej bramki, więc gałąź nie trafia do `main`, dopóki faza 2 nie jest wdrożona na tej gałęzi.
+
+### Do opisu PR: ekrany startera (impl-review fazy 2, F4)
+
+Wspólne komponenty z fazy 2 (`FormField`, `ServerError`, `PasswordToggle`) zmieniają też logowanie i rejestrację ze startera: błędy zaczynają się od polskiego „Uwaga:” przy angielskiej treści („Uwaga: Email is required”), przełącznik hasła ma polską etykietę obok angielskich pól, a pola mają jasne tło `bg-background` w ciemnej karcie `bg-cosmic`. Kontrast sprawdzony w kryterium 2.8. Tłumaczenie i wygląd tych ekranów należą do S-01.

@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 
 // Landing page of the reset link. Opening it (GET) consumes nothing: mail scanners prefetch links.
 // The one-time token is used only by the explicit POST to /api/auth/password-reset-verify.
+// The URL carries a one-time token: keep it out of caches and Referer headers.
+Astro.response.headers.set("Cache-Control", "no-store");
+Astro.response.headers.set("Referrer-Policy", "no-referrer");
 const tokenHash = Astro.url.searchParams.get("token_hash");
 const type = Astro.url.searchParams.get("type");
 const expired = Astro.url.searchParams.get("expired") === "1";

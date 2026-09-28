@@ -17,7 +17,7 @@ export function PasswordToggle({
     <button
       type="button"
       onClick={onToggle}
-      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 flex size-10 -translate-y-1/2 items-center justify-center rounded-md transition-colors"
+      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0 flex size-12 -translate-y-1/2 items-center justify-center rounded-md transition-colors"
       aria-label={visible ? hideLabel : showLabel}
     >
       {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

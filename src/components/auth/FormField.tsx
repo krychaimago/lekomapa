@@ -40,6 +40,7 @@ export function FormField({
   endContent,
 }: FormFieldProps) {
   const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
 
   return (
     <div>
@@ -59,7 +60,7 @@ export function FormField({
           placeholder={placeholder}
           autoComplete={autoComplete}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errorId : undefined}
+          aria-describedby={error ? errorId : hint ? hintId : undefined}
           className={cn(inputBase, endContent && "pr-12", error ? "border-destructive" : "border-input")}
         />
         {endContent}
@@ -67,6 +68,7 @@ export function FormField({
       {error ? (
         <p
           id={errorId}
+          role="alert"
           className="border-destructive-border bg-destructive-surface text-destructive mt-1 flex items-start gap-1 rounded-md border px-2 py-1 text-sm"
         >
           <CircleAlert className="mt-1 size-4 shrink-0" aria-hidden="true" />
@@ -75,7 +77,7 @@ export function FormField({
           </span>
         </p>
       ) : (
-        hint
+        hint && <div id={hintId}>{hint}</div>
       )}
     </div>
   );

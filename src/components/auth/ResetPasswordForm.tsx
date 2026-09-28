@@ -4,6 +4,7 @@ import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { MIN_PASSWORD_LENGTH, PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
 
 const copy = PASSWORD_RECOVERY_COPY.resetPassword;
@@ -19,6 +20,7 @@ export default function ResetPasswordForm({ serverError }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; passwordConfirm?: string }>({});
+  const [submitting, markSubmitting] = useSubmitting();
 
   function validate() {
     const next: typeof errors = {};
@@ -46,7 +48,9 @@ export default function ResetPasswordForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+    markSubmitting();
   }
 
   return (
@@ -98,7 +102,7 @@ export default function ResetPasswordForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText={copy.pending} icon={<KeyRound className="size-4" />}>
+      <SubmitButton pending={submitting} pendingText={copy.pending} icon={<KeyRound className="size-4" />}>
         {copy.submit}
       </SubmitButton>
     </form>

@@ -3,6 +3,7 @@ import { Mail, Send } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
 
 const copy = PASSWORD_RECOVERY_COPY.forgotPassword;
@@ -15,6 +16,7 @@ interface Props {
 export default function ForgotPasswordForm({ serverError }: Props) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | undefined>();
+  const [submitting, markSubmitting] = useSubmitting();
 
   function validate() {
     let next: string | undefined;
@@ -30,7 +32,9 @@ export default function ForgotPasswordForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+    markSubmitting();
   }
 
   return (
@@ -58,7 +62,7 @@ export default function ForgotPasswordForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText={copy.pending} icon={<Send className="size-4" />}>
+      <SubmitButton pending={submitting} pendingText={copy.pending} icon={<Send className="size-4" />}>
         {copy.submit}
       </SubmitButton>
     </form>

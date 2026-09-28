@@ -52,7 +52,8 @@ export const PASSWORD_RECOVERY_COPY = {
     confirmRequired: "Powtórz nowe hasło.",
     mismatch: "Hasła nie są takie same.",
   },
-  // Errors returned by the API routes through `?error=`. Never a raw Supabase error.message.
+  // Errors the API routes send back as `?error=<key>`. The page looks the text up here, so the URL
+  // can never put arbitrary text on screen. Never a raw Supabase error.message.
   apiErrors: {
     invalidEmail: "Wpisz poprawny adres e-mail.",
     notConfigured: "Usługa logowania jest chwilowo niedostępna. Spróbuj ponownie później.",
@@ -68,3 +69,11 @@ export const PASSWORD_RECOVERY_COPY = {
     resetDone: "Hasło zostało zmienione. Zaloguj się nowym hasłem.",
   },
 } as const;
+
+export type ApiErrorCode = keyof typeof PASSWORD_RECOVERY_COPY.apiErrors;
+
+// Unknown or missing codes show nothing: a crafted `?error=` link must not render its own text.
+export function apiErrorMessage(code: string | null): string | null {
+  const messages = PASSWORD_RECOVERY_COPY.apiErrors;
+  return code && Object.hasOwn(messages, code) ? messages[code as ApiErrorCode] : null;
+}
