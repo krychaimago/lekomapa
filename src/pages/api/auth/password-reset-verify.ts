@@ -1,11 +1,9 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
-import { RESET_PASSWORD_PATH } from "@/lib/auth/recovery-session";
+import { RECOVERY_EXPIRED_PATH, RESET_PASSWORD_PATH } from "@/lib/auth/recovery-session";
 
 export const prerender = false;
-
-const EXPIRED_PATH = "/auth/reset-password/confirm?expired=1";
 
 const verifySchema = z.object({
   token_hash: z.string().min(1),
@@ -21,17 +19,17 @@ export const POST: APIRoute = async (context) => {
     type: form.get("type"),
   });
   if (!parsed.success) {
-    return context.redirect(EXPIRED_PATH);
+    return context.redirect(RECOVERY_EXPIRED_PATH);
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(EXPIRED_PATH);
+    return context.redirect(RECOVERY_EXPIRED_PATH);
   }
 
   const { error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: parsed.data.token_hash });
   if (error) {
-    return context.redirect(EXPIRED_PATH);
+    return context.redirect(RECOVERY_EXPIRED_PATH);
   }
 
   return context.redirect(RESET_PASSWORD_PATH);

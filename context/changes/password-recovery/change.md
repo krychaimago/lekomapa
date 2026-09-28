@@ -1,9 +1,9 @@
 ---
 change_id: password-recovery
 title: Odzyskiwanie dostępu przez ustawienie nowego hasła
-status: implementing
+status: impl_reviewed
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 archived_at: null
 ---
 
@@ -35,3 +35,7 @@ Limit maili (`[auth.rate_limit] email_sent = 2`):
 - Działa za to `max_frequency = "1s"` per adres: druga prośba dla tego samego adresu w tej samej sekundzie → `429 over_email_send_rate_limit`. Trasa połyka ten błąd (zdradzałby istnienie konta); smoke musi odczekać ponad sekundę między prośbami dla jednego adresu.
 
 Odświeżenie sesji z odnośnika (`refreshSession()` po `verifyOtp` typu recovery): `amr` nadal `[{ method: "otp" }]`. Blokada wnętrza nie otwiera się po odświeżeniu tokenu.
+
+### Bez merge'a do `main` przed fazą 2 (impl-review F3, 2026-09-28)
+
+Faza 1 przekierowuje na `/auth/reset-password`, `/auth/reset-password/confirm` i `/auth/forgot-password[/sent]`, które powstają dopiero w fazie 2. Merge do `main` wdraża na produkcję bez innej bramki, więc gałąź nie trafia do `main`, dopóki faza 2 nie jest wdrożona na tej gałęzi.

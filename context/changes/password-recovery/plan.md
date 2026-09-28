@@ -389,17 +389,17 @@ Brak migracji bazy. Zmiana konfiguracji: lokalnie w `supabase/config.toml`, na p
 
 #### Automated
 
-- [x] 1.1 Lint przechodzi: `npm run lint`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Build przechodzi: `npm run build`
-- [x] 1.4 Testy tokenów przechodzą bez zmian: `npm test`
+- [x] 1.1 Lint przechodzi: `npm run lint` — f97d255
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — f97d255
+- [x] 1.3 Build przechodzi: `npm run build` — f97d255
+- [x] 1.4 Testy tokenów przechodzą bez zmian: `npm test` — f97d255
 
 #### Manual
 
-- [x] 1.5 Pomiar `amr` dla trzech rodzajów sesji zapisany w `change.md` i pokazuje rozróżnialną sesję z odnośnika
-- [x] 1.6 Na lokalnym Supabase `curl` prośby o odnośnik dla istniejącego i nieistniejącego adresu daje identyczne przekierowanie; mail dla istniejącego konta widać w mailpicie z odnośnikiem `token_hash` na port 4321
-- [x] 1.7 `curl` POST weryfikacji z tokenem z maila daje 302 na `/auth/reset-password`; drugi POST tym samym tokenem daje 302 na `/auth/reset-password/confirm?expired=1`
-- [x] 1.8 W sesji z odnośnika `/dashboard` przekierowuje na `/auth/reset-password`; po zapisie hasła logowanie starym hasłem pada, nowym przechodzi
+- [x] 1.5 Pomiar `amr` dla trzech rodzajów sesji zapisany w `change.md` i pokazuje rozróżnialną sesję z odnośnika — f97d255
+- [x] 1.6 Na lokalnym Supabase `curl` prośby o odnośnik dla istniejącego i nieistniejącego adresu daje identyczne przekierowanie; mail dla istniejącego konta widać w mailpicie z odnośnikiem `token_hash` na port 4321 — f97d255
+- [x] 1.7 `curl` POST weryfikacji z tokenem z maila daje 302 na `/auth/reset-password`; drugi POST tym samym tokenem daje 302 na `/auth/reset-password/confirm?expired=1` — f97d255
+- [x] 1.8 W sesji z odnośnika `/dashboard` przekierowuje na `/auth/reset-password`; po zapisie hasła logowanie starym hasłem pada, nowym przechodzi — f97d255
 
 ### Phase 2: Ekrany odzyskiwania i wspólne komponenty na tokenach
 

@@ -3,6 +3,9 @@ import type { JwtPayload } from "@supabase/supabase-js";
 // Screen where a session opened from a password reset link sets the new password.
 export const RESET_PASSWORD_PATH = "/auth/reset-password";
 
+// Where a missing, used or expired reset link (or a lost recovery session) ends up.
+export const RECOVERY_EXPIRED_PATH = "/auth/reset-password/confirm?expired=1";
+
 // The only paths a session opened from a password reset link may reach.
 // Everything else (the app interior with health data in particular) redirects to RESET_PASSWORD_PATH.
 export const RECOVERY_ALLOWED_PATHS: readonly string[] = [

@@ -1,11 +1,10 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
-import { RESET_PASSWORD_PATH, isRecoverySession } from "@/lib/auth/recovery-session";
+import { RECOVERY_EXPIRED_PATH, RESET_PASSWORD_PATH, isRecoverySession } from "@/lib/auth/recovery-session";
 
 export const prerender = false;
 
-const EXPIRED_PATH = "/auth/reset-password/confirm?expired=1";
 const DONE_PATH = "/auth/signin?reset=done";
 
 // User-visible messages (Polish). Phase 2 moves them to a shared copy module.
@@ -25,8 +24,8 @@ const UPDATE_ERROR_MESSAGES: Record<string, string> = {
 
 const updateSchema = z
   .object({
-    password: z.string().min(6, MESSAGES.tooShort),
-    password_confirm: z.string(),
+    password: z.string({ error: MESSAGES.generic }).min(6, MESSAGES.tooShort),
+    password_confirm: z.string({ error: MESSAGES.generic }),
   })
   .refine((data) => data.password === data.password_confirm, {
     message: MESSAGES.mismatch,
@@ -40,20 +39,22 @@ function errorRedirect(message: string): string {
 export const POST: APIRoute = async (context) => {
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(EXPIRED_PATH);
+    return context.redirect(RECOVERY_EXPIRED_PATH);
   }
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return context.redirect(EXPIRED_PATH);
+    return context.redirect(RECOVERY_EXPIRED_PATH);
   }
 
   // Only a session opened from a reset link may set a password here.
-  const { data: claimsData } = await supabase.auth.getClaims();
-  if (!isRecoverySession(claimsData?.claims)) {
-    return context.redirect(EXPIRED_PATH);
+  // isRecoverySession fails closed to `true` on missing claims; here that would grant the update,
+  // so missing or unreadable claims are rejected before it is asked.
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  if (claimsError || !claimsData?.claims || !isRecoverySession(claimsData.claims)) {
+    return context.redirect(RECOVERY_EXPIRED_PATH);
   }
 
   const form = await context.request.formData();

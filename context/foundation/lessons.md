@@ -106,3 +106,10 @@
 - **Problem**: Lista zakazanych rdzeni łapie „powoduj”, „odstaw”, „zmień daw”, ale przepuszcza „prowadzi do krwawień”, „jest przyczyną”, „skutkuje”, „dostosuj dawkę”, „unikaj”. Walidator nie sprawdza też pozytywnie, że opis zawiera „może mieć związek”. Obecne 24 opisy są poprawne tylko dlatego, że autorka przeczytała każdy — filtr sam tego nie gwarantuje przy kolejnych parach.
 - **Rule**: Walidator tekstu o zdrowiu zawsze wymaga obecności formuły „może mieć związek”. Lista zakazanych słów jest uzupełnieniem, nigdy jedyną bramką — zawsze będzie niepełna.
 - **Applies to**: plan, implement, impl-review
+
+## Nowa metoda logowania wymaga wpisu w NORMAL_SESSION_METHODS
+
+- **Context**: `src/lib/auth/recovery-session.ts:14-19` — zbiór `NORMAL_SESSION_METHODS`, który odróżnia zwykłą sesję od sesji z odnośnika do zmiany hasła; każdy przyszły plasterek dodający metodę logowania (magic link, OAuth, MFA `totp`, sesja z odnośnika potwierdzającego e-mail).
+- **Problem**: Zbiór celowo blokuje każdą metodę, której nie zna (`amr` spoza zbioru = sesja z odnośnika). Nowa metoda logowania bez wpisu w zbiorze zamyka użytkowniczkę na ekranie nowego hasła. Pilnuje tego tylko komentarz w kodzie, a objaw wygląda jak zepsute logowanie, nie jak brakujący wpis.
+- **Rule**: Każda nowa metoda logowania to wpis w `NORMAL_SESSION_METHODS` oraz krok smoke, który loguje się tą metodą i sprawdza, że wnętrze się otwiera.
+- **Applies to**: plan, implement, impl-review
