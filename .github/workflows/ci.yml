@@ -41,6 +41,17 @@ jobs:
         run: |
           supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
           supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' > supabase.env
+      - name: SQL checks (RLS and history invariants)
+        run: |
+          # Probes first: the gate must be able to turn red. Each probe has to make the runner exit non-zero.
+          for probe in scripts/db-checks/probes/failing-check.sql scripts/db-checks/probes/missing-marker.sql; do
+            if node scripts/db-checks.mjs "$probe"; then
+              echo "::error::SQL gate probe $probe passed, but it must fail. The gate cannot turn red."
+              exit 1
+            fi
+            echo "Probe $probe failed as expected."
+          done
+          npm run db:check
       - name: Configure secrets for build and preview
         run: |
           source supabase.env

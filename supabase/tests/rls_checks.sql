@@ -5,10 +5,11 @@
 --   Check 11 runs on the data loaded by the generated migrations, before any test row is added to the shared tables.
 --   Check 18 runs on the loaded symptom list, so it stands before check 17 adds its test rows.
 --
--- Uruchomienie (Supabase CLI nie wykonuje SQL, psql nie jest zależnością repozytorium,
--- więc plik idzie do kontenera bazy podniesionego przez `npx supabase start`):
---
---   docker exec -i $(docker ps -qf name=supabase_db) psql -U postgres -d postgres -f - < supabase/tests/rls_checks.sql
+-- How to run: `npm run db:check` (needs `npx supabase start`). The runner (scripts/db-checks.mjs) pipes this
+-- file into psql inside the local database container supabase_db_<project_id>, forces ON_ERROR_STOP, checks
+-- that every migration is applied, and passes the file only when it prints `GATE_COMPLETE rls_checks` at the end.
+-- The same runner runs in CI in the `smoke` job. `supabase db query -f` cannot run this file: it rejects
+-- multiple commands in one statement and the `\set` meta-command.
 --
 -- Skrypt chodzi jako rola postgres, dla której auth.uid() jest puste, więc same
 -- polityki RLS nie są tu przechodzone — RLS sprawdzany jest zapytaniem do katalogu
@@ -1219,6 +1220,13 @@ begin
     raise exception 'SPRAWDZENIE KOŃCOWE NIEUDANE: funkcja okna korekty nie wróciła do stanu z migracji';
   end if;
   raise notice 'WSZYSTKIE SPRAWDZENIA PRZESZŁY — baza wraca do stanu sprzed skryptu (rollback)';
+end;
+$$;
+
+-- Completion marker for scripts/db-checks.mjs: printed only after the final check above has passed.
+do $$
+begin
+  raise notice 'GATE_COMPLETE rls_checks';
 end;
 $$;
 
