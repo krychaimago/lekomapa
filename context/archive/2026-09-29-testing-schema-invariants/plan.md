@@ -410,45 +410,45 @@ Brak. Zapytania katalogowe na kilkunastu tabelach, cały `npm run db:check` bieg
 
 #### Automated
 
-- [x] 1.1 Migracja stosuje się na świeżej bazie: `npx supabase db reset` kończy się bez błędu — 4a0f7c3
-- [x] 1.2 Po migracji `has_table_privilege` dla `anon` i `authenticated` z `TRUNCATE` na 3 tabelach konta oraz `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` zwracają `false`, a `has_function_privilege('authenticated', …)` zwraca `true` — 4a0f7c3
-- [x] 1.3 `npm run db:check` przechodzi, w wyjściu jest `GATE_COMPLETE schema_invariants_checks` i `INVARIANT 1–8 OK` — 4a0f7c3
-- [x] 1.4 Każda z 3 nowych próbek pada lokalnie z oczekiwanym `INVARIANT <n> FAILED`, a pełny `npm run db:check` po nich dalej przechodzi (brak przecieku DDL) — 4a0f7c3
-- [x] 1.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — 4a0f7c3
-- [ ] 1.6 CI na PR: job `smoke` zielony, w logu kroku „SQL checks” widać 5 próbek padających z oczekiwanego powodu
+- [x] 1.1 Migracja stosuje się na świeżej bazie: `npx supabase db reset` kończy się bez błędu — cf920a9
+- [x] 1.2 Po migracji `has_table_privilege` dla `anon` i `authenticated` z `TRUNCATE` na 3 tabelach konta oraz `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` zwracają `false`, a `has_function_privilege('authenticated', …)` zwraca `true` — cf920a9
+- [x] 1.3 `npm run db:check` przechodzi, w wyjściu jest `GATE_COMPLETE schema_invariants_checks` i `INVARIANT 1–8 OK` — cf920a9
+- [x] 1.4 Każda z 3 nowych próbek pada lokalnie z oczekiwanym `INVARIANT <n> FAILED`, a pełny `npm run db:check` po nich dalej przechodzi (brak przecieku DDL) — cf920a9
+- [x] 1.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — cf920a9
+- [x] 1.6 CI na PR: job `smoke` zielony, w logu kroku „SQL checks” widać 5 próbek padających z oczekiwanego powodu — PR #51, run 36563397446: 11 próbek pada z oczekiwanego powodu (5 z tej fazy + 5 dodanych po impl-review + 1 z fazy 2)
 
 #### Manual
 
-- [x] 1.7 Przegląd listy wspólnych i listy strażników w pliku: 5 + 5 pozycji zgodnych z research — 4a0f7c3
-- [x] 1.8 Ręczny kontrprzykład: w lokalnej bazie usuń w transakcji jedną politykę (np. DELETE na `dosage_periods`) i uruchom plik — pada `INVARIANT 4 FAILED` z nazwą tabeli i komendy — 4a0f7c3
-- [ ] 1.9 Po merge'u i zielonym `smoke` na commicie z migracją: autorka uruchamia `npx supabase migration list` (oczekiwane: tylko `20260929120000` bez odpowiednika zdalnego; inna oczekująca migracja = stop), potem `npx supabase db push` na produkcję, a potem w panelu SQL Supabase sprawdza `has_table_privilege('authenticated', 'public.medications', 'TRUNCATE')` = `false` i `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` = `false`
-- [ ] 1.10 Po `db push` logowanie i lista leków na produkcji działają jak przed zmianą
+- [x] 1.7 Przegląd listy wspólnych i listy strażników w pliku: 5 + 5 pozycji zgodnych z research — cf920a9
+- [x] 1.8 Ręczny kontrprzykład: w lokalnej bazie usuń w transakcji jedną politykę (np. DELETE na `dosage_periods`) i uruchom plik — pada `INVARIANT 4 FAILED` z nazwą tabeli i komendy — cf920a9
+- [x] 1.9 Po merge'u i zielonym `smoke` na commicie z migracją: autorka uruchamia `npx supabase migration list` (oczekiwane: tylko `20260929120000` bez odpowiednika zdalnego; inna oczekująca migracja = stop), potem `npx supabase db push` na produkcję, a potem w panelu SQL Supabase sprawdza `has_table_privilege('authenticated', 'public.medications', 'TRUNCATE')` = `false` i `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` = `false` — 2026-09-29: `migration list` pokazał tylko `20260929120000`, `db push` uruchomiła autorka; `supabase db query --linked`: oba warunki `false`, także `has_function_privilege('authenticated', …)` (po F3) i `TRUNCATE` dla `anon`/`authenticated` na 3 tabelach konta; `proacl = {postgres=X, service_role=X}`
+- [x] 1.10 Po `db push` logowanie i lista leków na produkcji działają jak przed zmianą — 2026-09-29: logowanie na produkcji działa; ekranu listy leków jeszcze nie ma (S-02), więc tej części nie dało się sprawdzić
 
 ### Phase 2: Izolacja i usunięcie konta dla każdej tabeli z domknięcia
 
 #### Automated
 
-- [x] 2.1 `npm run db:check` przechodzi, w wyjściu jest `ISOLATION 0–6 OK` i `GATE_COMPLETE account_isolation_checks` — 880e870
-- [x] 2.2 W pliku nie ma literału nazwy tabeli konta poza mapą danych testowych, komentarzami i jednym nazwanym wyjątkiem: kontrprzykładem ISOLATION 6 (krok 4) na tabeli-korzeniu `medications`, głębokość 1 (grep `'medications'`, `'medication_substances'`, `'dosage_periods'`) — 880e870
-- [x] 2.3 Brak `when others` w plikach `supabase/tests/` — 880e870
-- [x] 2.4 Próbka „tabela bez danych testowych” pada lokalnie z `ISOLATION 0 FAILED` i nazwą swojej tabeli, a pełny `npm run db:check` po niej przechodzi — 880e870
-- [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — 880e870
-- [ ] 2.6 CI na PR: job `smoke` zielony, w logu 6 próbek padających z oczekiwanego powodu
+- [x] 2.1 `npm run db:check` przechodzi, w wyjściu jest `ISOLATION 0–6 OK` i `GATE_COMPLETE account_isolation_checks` — cf920a9
+- [x] 2.2 W pliku nie ma literału nazwy tabeli konta poza mapą danych testowych, komentarzami i jednym nazwanym wyjątkiem: kontrprzykładem ISOLATION 6 (krok 4) na tabeli-korzeniu `medications`, głębokość 1 (grep `'medications'`, `'medication_substances'`, `'dosage_periods'`) — cf920a9
+- [x] 2.3 Brak `when others` w plikach `supabase/tests/` — cf920a9
+- [x] 2.4 Próbka „tabela bez danych testowych” pada lokalnie z `ISOLATION 0 FAILED` i nazwą swojej tabeli, a pełny `npm run db:check` po niej przechodzi — cf920a9
+- [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — cf920a9
+- [x] 2.6 CI na PR: job `smoke` zielony, w logu 6 próbek padających z oczekiwanego powodu — PR #51, run 36563397446 (razem 11 próbek, patrz 1.6)
 
 #### Manual
 
-- [x] 2.7 Ręczne zepsucie kaskady w transakcji (wyzwalacz `before delete` blokujący usunięcie z `dosage_periods` bez warunku) wywraca ISOLATION 6 z nazwą tabeli `dosage_periods` — 880e870
-- [x] 2.8 Ręczne zepsucie polityki (`drop policy` SELECT na `medication_substances` i `create policy … using (medication_id is not null)`) wywraca ISOLATION 1, choć `schema_invariants_checks.sql` przechodzi — potwierdza podział: katalog wyznacza zbiór, zachowanie dowodzi — 880e870
-- [x] 2.9 Przegląd mapy danych testowych: wartości zgodne z dotychczasowymi literałami, komunikat ISOLATION 0 czytelny dla kogoś, kto dodaje tabelę — 880e870
+- [x] 2.7 Ręczne zepsucie kaskady w transakcji (wyzwalacz `before delete` blokujący usunięcie z `dosage_periods` bez warunku) wywraca ISOLATION 6 z nazwą tabeli `dosage_periods` — cf920a9
+- [x] 2.8 Ręczne zepsucie polityki (`drop policy` SELECT na `medication_substances` i `create policy … using (medication_id is not null)`) wywraca ISOLATION 1, choć `schema_invariants_checks.sql` przechodzi — potwierdza podział: katalog wyznacza zbiór, zachowanie dowodzi — cf920a9
+- [x] 2.9 Przegląd mapy danych testowych: wartości zgodne z dotychczasowymi literałami, komunikat ISOLATION 0 czytelny dla kogoś, kto dodaje tabelę — cf920a9
 
 ### Phase 3: Checklista nowej tabeli i odsyłacze
 
 #### Automated
 
-- [x] 3.1 `grep -n "TBD" context/foundation/test-plan.md` nie zwraca linii z §6.4 — 6eb3b5f
-- [x] 3.2 `npx prettier --check context/foundation/test-plan.md README.md CLAUDE.md` przechodzi — 6eb3b5f
+- [x] 3.1 `grep -n "TBD" context/foundation/test-plan.md` nie zwraca linii z §6.4 — cf920a9
+- [x] 3.2 `npx prettier --check context/foundation/test-plan.md README.md CLAUDE.md` przechodzi — cf920a9
 
 #### Manual
 
-- [x] 3.3 Autorka czyta §6.4 i potrafi z niego wypisać, czego potrzebuje tabela wpisów dzienniczka z S-05, bez zaglądania do plików SQL — 6eb3b5f
-- [x] 3.4 README i CLAUDE.md odsyłają do §6.4 i nie powtarzają pełnej listy — 6eb3b5f
+- [x] 3.3 Autorka czyta §6.4 i potrafi z niego wypisać, czego potrzebuje tabela wpisów dzienniczka z S-05, bez zaglądania do plików SQL — cf920a9
+- [x] 3.4 README i CLAUDE.md odsyłają do §6.4 i nie powtarzają pełnej listy — cf920a9
