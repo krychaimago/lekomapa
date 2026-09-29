@@ -81,6 +81,7 @@ jobs:
           expect_invariant_failure scripts/db-checks/probes/account-table-without-rls.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 3 FAILED"
           expect_invariant_failure scripts/db-checks/probes/account-fk-set-null.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 2 FAILED"
           expect_invariant_failure scripts/db-checks/probes/unclassified-table.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 1 FAILED"
+          expect_invariant_failure scripts/db-checks/probes/account-table-without-fixture.sql supabase/tests/account_isolation_checks.sql "ISOLATION 0 FAILED: probe_account_without_fixture has no test data"
           npm run db:check
       - name: Configure secrets for build and preview
         run: |
