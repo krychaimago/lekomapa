@@ -275,36 +275,36 @@ Brak migracji. CSV i `20260924130100_interaction_pairs_seed.sql` się nie zmieni
 
 #### Automated
 
-- [x] 1.1 Test korpusu uruchomiony przed zmianą `FORBIDDEN_WORDS` pada na co najmniej 14 zdaniach z `research.md` §3 — b3eb0e0
-- [x] 1.2 Po zmianie: `npm test` przechodzi w całości — b3eb0e0
-- [x] 1.3 `npm run lint` bez błędów — b3eb0e0
-- [x] 1.4 CSV z repo przechodzi walidator: `errors=0` i `accepted=24` — b3eb0e0
+- [x] 1.1 Test korpusu uruchomiony przed zmianą `FORBIDDEN_WORDS` pada na co najmniej 14 zdaniach z `research.md` §3 — 23fbddb
+- [x] 1.2 Po zmianie: `npm test` przechodzi w całości — 23fbddb
+- [x] 1.3 `npm run lint` bez błędów — 23fbddb
+- [x] 1.4 CSV z repo przechodzi walidator: `errors=0` i `accepted=24` — 23fbddb
 
 #### Manual
 
-- [x] 1.5 Autorka potwierdza klasy korpusu zakazanego i zgodność korpusu poprawnego z FR-012 — b3eb0e0
-- [x] 1.6 Autorka przegląda nowe rdzenie pod kątem neutralnych słów — b3eb0e0
+- [x] 1.5 Autorka potwierdza klasy korpusu zakazanego i zgodność korpusu poprawnego z FR-012 — 23fbddb
+- [x] 1.6 Autorka przegląda nowe rdzenie pod kątem neutralnych słów — 23fbddb
 
 ### Phase 2: Bramka SQL na treści w bazie
 
 #### Automated
 
-- [x] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset` — 6d8768c
-- [x] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED` — 6d8768c
+- [x] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset` — 23fbddb
+- [x] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED` — 23fbddb
 - [x] 2.3 Job `smoke` w CI zielony, w logu próbka failed as expected — run 36608545879 (341298b)
 
 #### Manual
 
-- [x] 2.4 Po biegu próbki opisy w lokalnej bazie są nietknięte — 6d8768c
+- [x] 2.4 Po biegu próbki opisy w lokalnej bazie są nietknięte — 23fbddb
 
 ### Phase 3: Kontrakt dla S-02 i dokumentacja
 
 #### Automated
 
-- [x] 3.1 `prettier --check` na roadmapie, planie testów i lekcjach bez błędów — 341298b
-- [x] 3.2 Kotwica w lekcji wskazuje linie `FORBIDDEN_WORDS` — 341298b
+- [x] 3.1 `prettier --check` na roadmapie, planie testów i lekcjach bez błędów — 23fbddb
+- [x] 3.2 Kotwica w lekcji wskazuje linie `FORBIDDEN_WORDS` — 23fbddb
 
 #### Manual
 
-- [x] 3.3 Autorka potwierdza, że kontrakt S-02 nie rozstrzyga brzmienia noty — 341298b
-- [x] 3.4 Autorka potwierdza, że **Rule** w lekcji się nie zmieniła — 341298b
+- [x] 3.3 Autorka potwierdza, że kontrakt S-02 nie rozstrzyga brzmienia noty — 23fbddb
+- [x] 3.4 Autorka potwierdza, że **Rule** w lekcji się nie zmieniła — 23fbddb
