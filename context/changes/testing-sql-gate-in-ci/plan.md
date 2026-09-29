@@ -363,24 +363,24 @@ Zmiana nie dodaje migracji i nie wymaga `supabase db push`. Ręczny próbny PR z
 
 #### Automated
 
-- [x] 2.1 `npm run db:check` lokalnie przechodzi i wypisuje `CHECK 19 OK`
-- [x] 2.2 Brak wpisanego `return true` i `when others` w `rls_checks.sql`
-- [ ] 2.3 Job `smoke` na PR zielony
+- [x] 2.1 `npm run db:check` lokalnie przechodzi i wypisuje `CHECK 19 OK` — 17fbd98
+- [x] 2.2 Brak wpisanego `return true` i `when others` w `rls_checks.sql` — 17fbd98
+- [x] 2.3 Job `smoke` na PR zielony — 17fbd98
 
 #### Manual
 
-- [x] 2.4 Lokalnie zepsuty wyzwalacz `dose_text` daje czerwone sprawdzenie 5 albo 19
-- [x] 2.5 Zmieniona oczekiwana fraza daje czerwone sprawdzenie z otrzymaną treścią w logu
+- [x] 2.4 Lokalnie zepsuty wyzwalacz `dose_text` daje czerwone sprawdzenie 5 albo 19 — 17fbd98
+- [x] 2.5 Zmieniona oczekiwana fraza daje czerwone sprawdzenie z otrzymaną treścią w logu — 17fbd98
 
 ### Phase 3: Izolacja kont per operacja (#1)
 
 #### Automated
 
-- [ ] 3.1 `npm run db:check` lokalnie przechodzi i wypisuje `GATE_COMPLETE account_isolation_checks`
-- [ ] 3.2 Brak `when others` w `account_isolation_checks.sql`
+- [x] 3.1 `npm run db:check` lokalnie przechodzi i wypisuje `GATE_COMPLETE account_isolation_checks`
+- [x] 3.2 Brak `when others` w `account_isolation_checks.sql`
 - [ ] 3.3 Job `smoke` na PR zielony, log pokazuje oba pliki
 
 #### Manual
 
 - [ ] 3.4 Próbny PR z polityką `using (true)` daje czerwony krok „SQL checks”, bez deployu, zamknięty bez merge'a
-- [ ] 3.5 Blok z rolą `postgres` pada na asercji `current_user`
+- [x] 3.5 Blok z rolą `postgres` pada na asercji `current_user`
