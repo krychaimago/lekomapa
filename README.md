@@ -91,13 +91,22 @@ Pliki w `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_krotki_opis.sql`. **Każda
 
 **Każda nowa tabela dokłada też swój zestaw sprawdzeń izolacji do `scripts/smoke.mjs`** — cztery kroki na tabelę: konto widzi wyłącznie własne wiersze, nie odczyta cudzego wiersza po identyfikatorze, nie zmieni go ani nie usunie, a sam klucz publiczny bez sesji nie zwraca nic. Polityka opisana w migracji jest deklaracją; dopiero te kroki robią z niej fakt sprawdzany w CI.
 
-Sprawdzenia SQL z `supabase/tests/rls_checks.sql` uruchamiasz przeciw lokalnemu Supabase:
+Sprawdzenia SQL z `supabase/tests/*.sql` uruchamiasz przeciw lokalnemu Supabase (wymaga `npx supabase start`):
 
 ```bash
-docker exec -i $(docker ps -qf name=supabase_db) psql -U postgres -d postgres -f - < supabase/tests/rls_checks.sql
+npm run db:check
 ```
 
-Plik sprawdza też dane z migracji rejestru i par: tabele nie są puste, każdy produkt mieści się w zakresie którejś pary, a skład każdego produktu pochodzi z jednego źródła (`composition_source`, a przy składzie przepisanym z innego produktu — z jednego produktu źródłowego).
+Polecenie idzie wyłącznie do lokalnego kontenera bazy `supabase_db_<project_id>` (nazwa z `supabase/config.toml`), nigdy do adresu z `.env`. Kończy się porażką, gdy kontenera nie ma, gdy któraś migracja z `supabase/migrations/` nie jest zastosowana w bazie, gdy dowolne sprawdzenie nie przejdzie albo gdy plik skończy się bez linii `GATE_COMPLETE <nazwa pliku>`. `npx supabase db query -f` tych plików nie wykona.
+
+Te same sprawdzenia biegną w CI w jobie `smoke`, zaraz po starcie lokalnego Supabase. Wcześniej ten sam krok puszcza dwie próbki z `scripts/db-checks/probes/`, które muszą wywrócić bramkę — dowód, że umie być czerwona.
+
+Czerwony `smoke` zatrzymuje deploy, ale nie blokuje merge'a: ochrona gałęzi `main` nie jest dostępna w planie GitHub Free. Dlatego:
+
+- nie merguj PR z czerwonym `smoke`,
+- przed `npx supabase db push` sprawdź, że commit z migracją ma zielony `smoke`.
+
+`supabase/tests/rls_checks.sql` sprawdza też dane z migracji rejestru i par: tabele nie są puste, każdy produkt mieści się w zakresie którejś pary, a skład każdego produktu pochodzi z jednego źródła (`composition_source`, a przy składzie przepisanym z innego produktu — z jednego produktu źródłowego).
 
 ### Dane rejestru leków i par kolizji
 

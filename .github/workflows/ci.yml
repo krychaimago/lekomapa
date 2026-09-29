@@ -41,6 +41,27 @@ jobs:
         run: |
           supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
           supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' > supabase.env
+      - name: SQL checks (RLS and history invariants)
+        run: |
+          # Probes first: the gate must be able to turn red. Each probe has to make the runner exit non-zero
+          # for its own reason; any other failure (no container, crash) means the probe measured nothing.
+          expect_probe_failure() {
+            probe="$1"; reason="$2"
+            if output=$(node scripts/db-checks.mjs "$probe" 2>&1); then
+              echo "$output"
+              echo "::error::SQL gate probe $probe passed, but it must fail. The gate cannot turn red."
+              exit 1
+            fi
+            echo "$output"
+            if ! grep -qF "FAIL $probe: $reason" <<<"$output"; then
+              echo "::error::SQL gate probe $probe failed for the wrong reason (expected: $reason)."
+              exit 1
+            fi
+            echo "Probe $probe failed as expected: $reason"
+          }
+          expect_probe_failure scripts/db-checks/probes/failing-check.sql "psql exited with code 3"
+          expect_probe_failure scripts/db-checks/probes/missing-marker.sql "file finished without completion marker"
+          npm run db:check
       - name: Configure secrets for build and preview
         run: |
           source supabase.env
