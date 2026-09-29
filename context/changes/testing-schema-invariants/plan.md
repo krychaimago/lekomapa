@@ -426,27 +426,27 @@ Brak. Zapytania katalogowe na kilkunastu tabelach, cały `npm run db:check` bieg
 
 #### Automated
 
-- [x] 2.1 `npm run db:check` przechodzi, w wyjściu jest `ISOLATION 0–6 OK` i `GATE_COMPLETE account_isolation_checks`
-- [x] 2.2 W pliku nie ma literału nazwy tabeli konta poza mapą danych testowych, komentarzami i jednym nazwanym wyjątkiem: kontrprzykładem ISOLATION 6 (krok 4) na tabeli-korzeniu `medications`, głębokość 1 (grep `'medications'`, `'medication_substances'`, `'dosage_periods'`)
-- [x] 2.3 Brak `when others` w plikach `supabase/tests/`
-- [x] 2.4 Próbka „tabela bez danych testowych” pada lokalnie z `ISOLATION 0 FAILED` i nazwą swojej tabeli, a pełny `npm run db:check` po niej przechodzi
-- [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą
+- [x] 2.1 `npm run db:check` przechodzi, w wyjściu jest `ISOLATION 0–6 OK` i `GATE_COMPLETE account_isolation_checks` — 880e870
+- [x] 2.2 W pliku nie ma literału nazwy tabeli konta poza mapą danych testowych, komentarzami i jednym nazwanym wyjątkiem: kontrprzykładem ISOLATION 6 (krok 4) na tabeli-korzeniu `medications`, głębokość 1 (grep `'medications'`, `'medication_substances'`, `'dosage_periods'`) — 880e870
+- [x] 2.3 Brak `when others` w plikach `supabase/tests/` — 880e870
+- [x] 2.4 Próbka „tabela bez danych testowych” pada lokalnie z `ISOLATION 0 FAILED` i nazwą swojej tabeli, a pełny `npm run db:check` po niej przechodzi — 880e870
+- [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — 880e870
 - [ ] 2.6 CI na PR: job `smoke` zielony, w logu 6 próbek padających z oczekiwanego powodu
 
 #### Manual
 
-- [x] 2.7 Ręczne zepsucie kaskady w transakcji (wyzwalacz `before delete` blokujący usunięcie z `dosage_periods` bez warunku) wywraca ISOLATION 6 z nazwą tabeli `dosage_periods`
-- [x] 2.8 Ręczne zepsucie polityki (`drop policy` SELECT na `medication_substances` i `create policy … using (medication_id is not null)`) wywraca ISOLATION 1, choć `schema_invariants_checks.sql` przechodzi — potwierdza podział: katalog wyznacza zbiór, zachowanie dowodzi
-- [x] 2.9 Przegląd mapy danych testowych: wartości zgodne z dotychczasowymi literałami, komunikat ISOLATION 0 czytelny dla kogoś, kto dodaje tabelę
+- [x] 2.7 Ręczne zepsucie kaskady w transakcji (wyzwalacz `before delete` blokujący usunięcie z `dosage_periods` bez warunku) wywraca ISOLATION 6 z nazwą tabeli `dosage_periods` — 880e870
+- [x] 2.8 Ręczne zepsucie polityki (`drop policy` SELECT na `medication_substances` i `create policy … using (medication_id is not null)`) wywraca ISOLATION 1, choć `schema_invariants_checks.sql` przechodzi — potwierdza podział: katalog wyznacza zbiór, zachowanie dowodzi — 880e870
+- [x] 2.9 Przegląd mapy danych testowych: wartości zgodne z dotychczasowymi literałami, komunikat ISOLATION 0 czytelny dla kogoś, kto dodaje tabelę — 880e870
 
 ### Phase 3: Checklista nowej tabeli i odsyłacze
 
 #### Automated
 
-- [ ] 3.1 `grep -n "TBD" context/foundation/test-plan.md` nie zwraca linii z §6.4
-- [ ] 3.2 `npx prettier --check context/foundation/test-plan.md README.md CLAUDE.md` przechodzi
+- [x] 3.1 `grep -n "TBD" context/foundation/test-plan.md` nie zwraca linii z §6.4
+- [x] 3.2 `npx prettier --check context/foundation/test-plan.md README.md CLAUDE.md` przechodzi
 
 #### Manual
 
-- [ ] 3.3 Autorka czyta §6.4 i potrafi z niego wypisać, czego potrzebuje tabela wpisów dzienniczka z S-05, bez zaglądania do plików SQL
-- [ ] 3.4 README i CLAUDE.md odsyłają do §6.4 i nie powtarzają pełnej listy
+- [x] 3.3 Autorka czyta §6.4 i potrafi z niego wypisać, czego potrzebuje tabela wpisów dzienniczka z S-05, bez zaglądania do plików SQL
+- [x] 3.4 README i CLAUDE.md odsyłają do §6.4 i nie powtarzają pełnej listy

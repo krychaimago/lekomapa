@@ -91,6 +91,8 @@ Pliki w `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_krotki_opis.sql`. **Każda
 
 **Każda nowa tabela dokłada też swój zestaw sprawdzeń izolacji do `scripts/smoke.mjs`** — cztery kroki na tabelę: konto widzi wyłącznie własne wiersze, nie odczyta cudzego wiersza po identyfikatorze, nie zmieni go ani nie usunie, a sam klucz publiczny bez sesji nie zwraca nic. Polityka opisana w migracji jest deklaracją; dopiero te kroki robią z niej fakt sprawdzany w CI.
 
+Nowa tabela z danymi konta wymaga też wiersza w mapie danych testowych `supabase/tests/account_isolation_checks.sql` i przejścia `supabase/tests/schema_invariants_checks.sql` — pełna checklista w `context/foundation/test-plan.md` §6.4.
+
 Sprawdzenia SQL z `supabase/tests/*.sql` uruchamiasz przeciw lokalnemu Supabase (wymaga `npx supabase start`):
 
 ```bash

@@ -125,7 +125,8 @@ a kod aplikacji nie ma żadnych.
 - **Kontrprzykład właściciela**: każda blokada ma obok ten sam zapis wykonany przez właściciela na swoim wierszu, z `row_count = 1`. Bez tego blokada może wynikać z literówki, a nie z polityki.
 - **Uruchomienie**: `npm run db:check` (wymaga `npx supabase start`), pojedynczy plik: `node scripts/db-checks.mjs supabase/tests/<nazwa>.sql`. Plik biegnie w transakcji z rollbackiem, nic nie zostaje w bazie.
 - **CI**: job `smoke`, krok „SQL checks”, zaraz po starcie lokalnego Supabase. Czerwony krok zatrzymuje deploy.
-- Otwarte na §3 Phase 2: sprawdzenie wyprowadzone z katalogu bazy (lista tabel z danymi konta nie wpisana ręcznie).
+- **Reguły katalogu**: `schema_invariants_checks.sql` wyprowadza tabele z danymi konta z katalogu bazy (domknięcie kluczy obcych do `auth.users`) i sprawdza ich strukturę (INVARIANT 1–8). `account_isolation_checks.sql` bierze ten sam zbiór i dowodzi zachowania. Nowej tabeli nie wpisuje się do listy w sprawdzeniu — patrz §6.4.
+- **Próbka czerwonej bramki**: nowa reguła dostaje próbkę w `scripts/db-checks/probes/` — `begin;` i DDL psujące jedną regułę. Runner dokleja ją przed plik sprawdzeń: `node scripts/db-checks.mjs --probe <próbka> <plik sprawdzeń>`. W CI dopisz wywołanie `expect_invariant_failure` z oczekiwanym tekstem `… FAILED` (`.github/workflows/ci.yml`, krok „SQL checks”). Próbka pada z innego powodu = niczego nie zmierzyła.
 
 ### 6.3 Adding a smoke step
 
@@ -133,11 +134,27 @@ a kod aplikacji nie ma żadnych.
 
 ### 6.4 Adding a new table with user data
 
-- TBD — see §3 Phase 2 (co musi przejść, zanim migracja z nową tabelą trafi do `main`).
+Migracja z nową tabelą z danymi konta przejdzie bramkę, gdy ma:
+
+- **klucz obcy do konta**: do `auth.users` albo do istniejącej tabeli konta, z `on delete cascade`. Bez klucza tabela nie należy do żadnego zbioru i pada INVARIANT 1. Inna reguła usuwania niż `cascade` wywraca INVARIANT 2.
+- **RLS i cztery polityki w tej samej migracji**: SELECT, INSERT, UPDATE, DELETE, każda osobno dla `authenticated`, z niepustym wyrażeniem wiążącym wiersz z `auth.uid()`. Bez `for all` i bez `using (true)`.
+- **`revoke truncate on public.<tabela> from anon, authenticated`**: `TRUNCATE` omija RLS i strażników historii (INVARIANT 6).
+- **nowa funkcja `security definer`**: `revoke execute … from anon` jawnie. `revoke … from public` nie wystarcza (INVARIANT 7).
+
+Potem w sprawdzeniach i smoke:
+
+- **wiersz w mapie danych testowych** `isolation_fixtures` w `supabase/tests/account_isolation_checks.sql` i wiersze kont A i B wstawione w ISOLATION 0. Bez nich pada `ISOLATION 0 FAILED: <tabela> has no test data`. Z mapą tabela sama przechodzi ISOLATION 1–6: odczyt, zapis, zmiana, przepięcie, usunięcie i usunięcie konta.
+- **nowy strażnik historii** (wyzwalacz blokujący zmianę rdzenia wpisu): wpis na liście w INVARIANT 8 `schema_invariants_checks.sql`. Strażnik nie wynika ze struktury bazy.
+- **cztery kroki izolacji** w `scripts/smoke.mjs` (`isolationTargets`). Lista ręczna — bramka SQL jej nie pilnuje, pilnuje tylko ta checklista.
+- **`npm run db:check` lokalnie przed PR** (wymaga `npx supabase start` i `npx supabase db reset` po nowej migracji).
+
+Tabela wspólna tylko do odczytu (słownik, rejestr) to świadomie inna droga: bez klucza do konta, dopisana do listy tabel wspólnych w **obu** plikach (`schema_invariants_checks.sql` i `account_isolation_checks.sql`), wyłącznie polityki SELECT i `revoke insert, update, delete, truncate … from anon, authenticated` (INVARIANT 5).
 
 ### 6.5 Per-rollout-phase notes
 
 (Uzupełniane po każdej fazie.)
+
+- **Faza 2 (niezmienniki schematu)**: katalog bazy wyznacza zbiór tabel konta i łapie jawne braki: brak klucza lub kaskady, brak RLS, brak polityki na operację, `TRUNCATE`, `EXECUTE` dla `anon`, brak strażnika. Katalog nie powie, czy polityka faktycznie wiąże wiersz z kontem — `using (medication_id is not null)` przejdzie każdą regułę strukturalną. To dowodzi wyłącznie zachowanie na dwóch kontach (ISOLATION 1–6). Dlatego brak danych testowych dla tabeli z katalogu to porażka, nie pominięcie.
 
 ## 7. What We Deliberately Don't Test
 
