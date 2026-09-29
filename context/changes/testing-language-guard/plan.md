@@ -272,27 +272,27 @@ Brak migracji. CSV i `20260924130100_interaction_pairs_seed.sql` się nie zmieni
 
 #### Automated
 
-- [x] 1.1 Test korpusu uruchomiony przed zmianą `FORBIDDEN_WORDS` pada na co najmniej 14 zdaniach z `research.md` §3
-- [x] 1.2 Po zmianie: `npm test` przechodzi w całości
-- [x] 1.3 `npm run lint` bez błędów
-- [x] 1.4 CSV z repo przechodzi walidator: `errors=0` i `accepted=24`
+- [x] 1.1 Test korpusu uruchomiony przed zmianą `FORBIDDEN_WORDS` pada na co najmniej 14 zdaniach z `research.md` §3 — b3eb0e0
+- [x] 1.2 Po zmianie: `npm test` przechodzi w całości — b3eb0e0
+- [x] 1.3 `npm run lint` bez błędów — b3eb0e0
+- [x] 1.4 CSV z repo przechodzi walidator: `errors=0` i `accepted=24` — b3eb0e0
 
 #### Manual
 
-- [x] 1.5 Autorka potwierdza klasy korpusu zakazanego i zgodność korpusu poprawnego z FR-012
-- [x] 1.6 Autorka przegląda nowe rdzenie pod kątem neutralnych słów
+- [x] 1.5 Autorka potwierdza klasy korpusu zakazanego i zgodność korpusu poprawnego z FR-012 — b3eb0e0
+- [x] 1.6 Autorka przegląda nowe rdzenie pod kątem neutralnych słów — b3eb0e0
 
 ### Phase 2: Bramka SQL na treści w bazie
 
 #### Automated
 
-- [ ] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset`
-- [ ] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED`
+- [x] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset`
+- [x] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED`
 - [ ] 2.3 Job `smoke` w CI zielony, w logu próbka failed as expected
 
 #### Manual
 
-- [ ] 2.4 Po biegu próbki opisy w lokalnej bazie są nietknięte
+- [x] 2.4 Po biegu próbki opisy w lokalnej bazie są nietknięte
 
 ### Phase 3: Kontrakt dla S-02 i dokumentacja
 
