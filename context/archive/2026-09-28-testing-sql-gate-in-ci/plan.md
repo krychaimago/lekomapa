@@ -347,40 +347,40 @@ Zmiana nie dodaje migracji i nie wymaga `supabase db push`. Ręczny próbny PR z
 
 #### Automated
 
-- [x] 1.1 `npm test` przechodzi, w tym `scripts/db-checks.test.mjs` — 6d10a56
-- [x] 1.2 `npm run lint` przechodzi — 6d10a56
-- [x] 1.3 `npm run db:check` lokalnie kończy się kodem 0 i wypisuje `GATE_COMPLETE rls_checks` — 6d10a56
-- [x] 1.4 Próbka `failing-check.sql` kończy runner kodem różnym od zera — 6d10a56
-- [x] 1.5 Próbka `missing-marker.sql` kończy runner kodem różnym od zera z komunikatem o braku znacznika — 6d10a56
-- [x] 1.6 Job `smoke` na PR zielony, obie próbki czerwone w logu kroku „SQL checks” — 6d10a56
+- [x] 1.1 `npm test` przechodzi, w tym `scripts/db-checks.test.mjs` — e092637
+- [x] 1.2 `npm run lint` przechodzi — e092637
+- [x] 1.3 `npm run db:check` lokalnie kończy się kodem 0 i wypisuje `GATE_COMPLETE rls_checks` — e092637
+- [x] 1.4 Próbka `failing-check.sql` kończy runner kodem różnym od zera — e092637
+- [x] 1.5 Próbka `missing-marker.sql` kończy runner kodem różnym od zera z komunikatem o braku znacznika — e092637
+- [x] 1.6 Job `smoke` na PR zielony, obie próbki czerwone w logu kroku „SQL checks” — e092637
 
 #### Manual
 
-- [x] 1.7 Przy zatrzymanym Supabase `npm run db:check` pada z nazwą kontenera — 6d10a56
-- [x] 1.8 README czytelnie mówi, co robić przy czerwonym `smoke` i przed `db push` — 6d10a56
+- [x] 1.7 Przy zatrzymanym Supabase `npm run db:check` pada z nazwą kontenera — e092637
+- [x] 1.8 README czytelnie mówi, co robić przy czerwonym `smoke` i przed `db push` — e092637
 
 ### Phase 2: Nienaruszalność historii (#3) w rls_checks.sql
 
 #### Automated
 
-- [x] 2.1 `npm run db:check` lokalnie przechodzi i wypisuje `CHECK 19 OK` — 17fbd98
-- [x] 2.2 Brak wpisanego `return true` i `when others` w `rls_checks.sql` — 17fbd98
-- [x] 2.3 Job `smoke` na PR zielony — 17fbd98
+- [x] 2.1 `npm run db:check` lokalnie przechodzi i wypisuje `CHECK 19 OK` — e092637
+- [x] 2.2 Brak wpisanego `return true` i `when others` w `rls_checks.sql` — e092637
+- [x] 2.3 Job `smoke` na PR zielony — e092637
 
 #### Manual
 
-- [x] 2.4 Lokalnie zepsuty wyzwalacz `dose_text` daje czerwone sprawdzenie 5 albo 19 — 17fbd98
-- [x] 2.5 Zmieniona oczekiwana fraza daje czerwone sprawdzenie z otrzymaną treścią w logu — 17fbd98
+- [x] 2.4 Lokalnie zepsuty wyzwalacz `dose_text` daje czerwone sprawdzenie 5 albo 19 — e092637
+- [x] 2.5 Zmieniona oczekiwana fraza daje czerwone sprawdzenie z otrzymaną treścią w logu — e092637
 
 ### Phase 3: Izolacja kont per operacja (#1)
 
 #### Automated
 
-- [x] 3.1 `npm run db:check` lokalnie przechodzi i wypisuje `GATE_COMPLETE account_isolation_checks` — 30d38d0
-- [x] 3.2 Brak `when others` w `account_isolation_checks.sql` — 30d38d0
-- [x] 3.3 Job `smoke` na PR zielony, log pokazuje oba pliki — 30d38d0
+- [x] 3.1 `npm run db:check` lokalnie przechodzi i wypisuje `GATE_COMPLETE account_isolation_checks` — e092637
+- [x] 3.2 Brak `when others` w `account_isolation_checks.sql` — e092637
+- [x] 3.3 Job `smoke` na PR zielony, log pokazuje oba pliki — e092637
 
 #### Manual
 
-- [x] 3.4 Próbny PR z polityką `using (true)` daje czerwony krok „SQL checks”, bez deployu, zamknięty bez merge'a — 30d38d0
-- [x] 3.5 Blok z rolą `postgres` pada na asercji `current_user` — 30d38d0
+- [x] 3.4 Próbny PR z polityką `using (true)` daje czerwony krok „SQL checks”, bez deployu, zamknięty bez merge'a — e092637
+- [x] 3.5 Blok z rolą `postgres` pada na asercji `current_user` — e092637
