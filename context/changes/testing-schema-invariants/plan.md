@@ -415,14 +415,14 @@ Brak. Zapytania katalogowe na kilkunastu tabelach, cały `npm run db:check` bieg
 - [x] 1.3 `npm run db:check` przechodzi, w wyjściu jest `GATE_COMPLETE schema_invariants_checks` i `INVARIANT 1–8 OK` — 4a0f7c3
 - [x] 1.4 Każda z 3 nowych próbek pada lokalnie z oczekiwanym `INVARIANT <n> FAILED`, a pełny `npm run db:check` po nich dalej przechodzi (brak przecieku DDL) — 4a0f7c3
 - [x] 1.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — 4a0f7c3
-- [ ] 1.6 CI na PR: job `smoke` zielony, w logu kroku „SQL checks” widać 5 próbek padających z oczekiwanego powodu
+- [x] 1.6 CI na PR: job `smoke` zielony, w logu kroku „SQL checks” widać 5 próbek padających z oczekiwanego powodu — PR #51, run 36563397446: 11 próbek pada z oczekiwanego powodu (5 z tej fazy + 5 dodanych po impl-review + 1 z fazy 2)
 
 #### Manual
 
 - [x] 1.7 Przegląd listy wspólnych i listy strażników w pliku: 5 + 5 pozycji zgodnych z research — 4a0f7c3
 - [x] 1.8 Ręczny kontrprzykład: w lokalnej bazie usuń w transakcji jedną politykę (np. DELETE na `dosage_periods`) i uruchom plik — pada `INVARIANT 4 FAILED` z nazwą tabeli i komendy — 4a0f7c3
-- [ ] 1.9 Po merge'u i zielonym `smoke` na commicie z migracją: autorka uruchamia `npx supabase migration list` (oczekiwane: tylko `20260929120000` bez odpowiednika zdalnego; inna oczekująca migracja = stop), potem `npx supabase db push` na produkcję, a potem w panelu SQL Supabase sprawdza `has_table_privilege('authenticated', 'public.medications', 'TRUNCATE')` = `false` i `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` = `false`
-- [ ] 1.10 Po `db push` logowanie i lista leków na produkcji działają jak przed zmianą
+- [x] 1.9 Po merge'u i zielonym `smoke` na commicie z migracją: autorka uruchamia `npx supabase migration list` (oczekiwane: tylko `20260929120000` bez odpowiednika zdalnego; inna oczekująca migracja = stop), potem `npx supabase db push` na produkcję, a potem w panelu SQL Supabase sprawdza `has_table_privilege('authenticated', 'public.medications', 'TRUNCATE')` = `false` i `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` = `false` — 2026-09-29: `migration list` pokazał tylko `20260929120000`, `db push` uruchomiła autorka; `supabase db query --linked`: oba warunki `false`, także `has_function_privilege('authenticated', …)` (po F3) i `TRUNCATE` dla `anon`/`authenticated` na 3 tabelach konta; `proacl = {postgres=X, service_role=X}`
+- [x] 1.10 Po `db push` logowanie i lista leków na produkcji działają jak przed zmianą — 2026-09-29: logowanie na produkcji działa; ekranu listy leków jeszcze nie ma (S-02), więc tej części nie dało się sprawdzić
 
 ### Phase 2: Izolacja i usunięcie konta dla każdej tabeli z domknięcia
 
@@ -433,7 +433,7 @@ Brak. Zapytania katalogowe na kilkunastu tabelach, cały `npm run db:check` bieg
 - [x] 2.3 Brak `when others` w plikach `supabase/tests/` — 880e870
 - [x] 2.4 Próbka „tabela bez danych testowych” pada lokalnie z `ISOLATION 0 FAILED` i nazwą swojej tabeli, a pełny `npm run db:check` po niej przechodzi — 880e870
 - [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck` przechodzą — 880e870
-- [ ] 2.6 CI na PR: job `smoke` zielony, w logu 6 próbek padających z oczekiwanego powodu
+- [x] 2.6 CI na PR: job `smoke` zielony, w logu 6 próbek padających z oczekiwanego powodu — PR #51, run 36563397446 (razem 11 próbek, patrz 1.6)
 
 #### Manual
 
