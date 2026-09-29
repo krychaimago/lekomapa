@@ -443,10 +443,10 @@ Brak. Zapytania katalogowe na kilkunastu tabelach, cały `npm run db:check` bieg
 
 #### Automated
 
-- [x] 3.1 `grep -n "TBD" context/foundation/test-plan.md` nie zwraca linii z §6.4
-- [x] 3.2 `npx prettier --check context/foundation/test-plan.md README.md CLAUDE.md` przechodzi
+- [x] 3.1 `grep -n "TBD" context/foundation/test-plan.md` nie zwraca linii z §6.4 — 6eb3b5f
+- [x] 3.2 `npx prettier --check context/foundation/test-plan.md README.md CLAUDE.md` przechodzi — 6eb3b5f
 
 #### Manual
 
-- [x] 3.3 Autorka czyta §6.4 i potrafi z niego wypisać, czego potrzebuje tabela wpisów dzienniczka z S-05, bez zaglądania do plików SQL
-- [x] 3.4 README i CLAUDE.md odsyłają do §6.4 i nie powtarzają pełnej listy
+- [x] 3.3 Autorka czyta §6.4 i potrafi z niego wypisać, czego potrzebuje tabela wpisów dzienniczka z S-05, bez zaglądania do plików SQL — 6eb3b5f
+- [x] 3.4 README i CLAUDE.md odsyłają do §6.4 i nie powtarzają pełnej listy — 6eb3b5f

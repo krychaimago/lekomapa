@@ -1,7 +1,7 @@
 ---
 change_id: testing-schema-invariants
 title: Niezmienniki schematu dla każdej tabeli (rollout testów, faza 2)
-status: implementing
+status: implemented
 created: 2026-09-29
 updated: 2026-09-29
 archived_at: null
