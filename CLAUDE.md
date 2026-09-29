@@ -181,4 +181,19 @@ Granice:
 
 Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji — w katalogu są tylko m1l5, m2l1 i m2l2.
 
+## Moduł 3, Lekcja 2 — od planu testów do testów
+
+Faza z `context/foundation/test-plan.md` idzie zwykłym łańcuchem: `/10x-test-plan` → `/10x-new` → `/10x-research` → `/10x-plan` → `/10x-implement` albo `/10x-tdd`.
+
+- `/10x-tdd <change-id> phase <n>` — wariant `/10x-implement` z testem pisanym przed kodem (red → green → refactor). Czyta ten sam `plan.md`, zapisuje ten sam `## Progress`, kończy fazę tym samym commitem. Fazy obu skilli można przeplatać.
+- Kiedy `/10x-tdd`: faza, dla której da się z góry nazwać pierwszą padającą asercję, a kodu produkcyjnego jeszcze nie ma. Konfiguracja, szkielet, wygląd, infrastruktura oraz faza z już napisanym kodem idą przez `/10x-implement`. Skill sam przerywa, gdy implementacja istnieje.
+- `.claude/prompts/m3l2-ad-hoc-testing.md` — testy pojedynczego pliku poza pełnym łańcuchem. Oczekiwany wynik ustalany z PRD i tech-stacku, nie z kodu; przy niejasności prompt każe pytać zamiast zgadywać.
+
+Granice:
+- `/10x-tdd` nie instaluje runnera ani nie konfiguruje CI. W repozytorium runnerem jest wbudowany `node --test` (`npm test`, pliki `scripts/**/*.test.mjs`) — Vitest nie jest zainstalowany.
+- Asercja sprawdza obserwowalny wynik, nie wewnętrzne wywołania i nie wartość policzoną tą samą logiką co testowany kod. Pokrycie linii nie dowodzi, że test złapie regresję.
+- Testy mutacyjne (Stryker) z lekcji są bramką jakości asercji. W repozytorium nie są skonfigurowane — dodanie to osobna decyzja z kosztem, nie przy okazji.
+
+Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji.
+
 <!-- END @przeprogramowani/10x-cli -->
