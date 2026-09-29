@@ -115,7 +115,12 @@ $$;
 --   repoint_column             ownership column (user_id, or the foreign key to the parent) re-pointed in ISOLATION 4
 --   repoint_a_target           value putting a row under account A (target of B's attempt)
 --   repoint_b_original         value of that column in b_row
---   repoint_owner_target       another value under account A, target of A re-pointing its own a_row
+--   repoint_owner_target       another value under account A, target of A re-pointing its own a_row. For the root
+--                              table (medications.user_id) the only value under A is A itself, so the owner case
+--                              writes the same value and proves only that `with check` lets the owner through, not
+--                              that B is stopped by RLS rather than by something blocking every change of the column.
+--                              For the root that proof comes from ISOLATION 3: the owner's UPDATE of product_name
+--                              succeeds where B's fails.
 -- ---------------------------------------------------------------------------
 
 create temporary table isolation_fixtures (
@@ -168,6 +173,16 @@ begin
   select count(*) into v_count from pg_temp.account_data_tables();
   if v_count = 0 then
     raise exception 'ISOLATION 0 FAILED: no public table is reachable by foreign keys from auth.users; the closure predicate is broken and every block would pass on an empty set';
+  end if;
+
+  select string_agg(s.table_name, ', ' order by s.table_name) into v_list
+  from pg_temp.shared_tables() s
+  where not exists (
+    select 1 from pg_class t
+    where t.relnamespace = 'public'::regnamespace and t.relkind in ('r', 'p') and t.relname = s.table_name
+  );
+  if v_list is not null then
+    raise exception 'ISOLATION 0 FAILED: shared list names tables that do not exist in public: %', v_list;
   end if;
 
   select string_agg(a.table_name, ', ' order by a.table_name) into v_list

@@ -80,7 +80,12 @@ jobs:
           expect_probe_failure scripts/db-checks/probes/missing-marker.sql "file finished without completion marker"
           expect_invariant_failure scripts/db-checks/probes/account-table-without-rls.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 3 FAILED"
           expect_invariant_failure scripts/db-checks/probes/account-fk-set-null.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 2 FAILED"
+          expect_invariant_failure scripts/db-checks/probes/account-table-without-cascade-path.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 2 FAILED: account tables not reached"
           expect_invariant_failure scripts/db-checks/probes/unclassified-table.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 1 FAILED"
+          expect_invariant_failure scripts/db-checks/probes/window-execute-for-authenticated.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 7 FAILED"
+          expect_invariant_failure scripts/db-checks/probes/definer-without-search-path.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 7 FAILED: security definer functions without a pinned search_path"
+          expect_invariant_failure scripts/db-checks/probes/account-table-truncate-for-anon.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 6 FAILED"
+          expect_invariant_failure scripts/db-checks/probes/view-without-security-invoker.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 9 FAILED"
           expect_invariant_failure scripts/db-checks/probes/account-table-without-fixture.sql supabase/tests/account_isolation_checks.sql "ISOLATION 0 FAILED: probe_account_without_fixture has no test data"
           npm run db:check
       - name: Configure secrets for build and preview

@@ -5,14 +5,17 @@
 --   (INVARIANT 8): neither follows from the structure of the database, so adding one is a deliberate entry here.
 --
 --   INVARIANT 1: every public table is either account data (in the closure) or on the shared list, never both.
---   INVARIANT 2: every foreign key leading to auth.users or to an account table is `on delete cascade`.
+--   INVARIANT 2: every foreign key to auth.users is `on delete cascade`, every account table is reachable from
+--                auth.users through cascading keys alone, and no key to an account table is `on delete set default`.
 --   INVARIANT 3: RLS is enabled on every public table.
 --   INVARIANT 4: every account table has a policy for SELECT, INSERT, UPDATE and DELETE, each only for
 --                authenticated, with a non-empty expression that is not literally `true`.
 --   INVARIANT 5: shared tables have SELECT policies only and no write privileges for anon/authenticated.
 --   INVARIANT 6: anon and authenticated have no TRUNCATE on any public table.
---   INVARIANT 7: anon has no EXECUTE on any security definer function in public that is not a trigger function.
+--   INVARIANT 7: anon and authenticated have no EXECUTE on any security definer function in public that is not a
+--                trigger function, and every security definer function in public pins its search_path.
 --   INVARIANT 8: the history guard triggers exist, are enabled and fire BEFORE the listed event for each row.
+--   INVARIANT 9: every view in public is security_invoker, or anon and authenticated have no privilege on it.
 --
 -- The catalog proves structure only. Whether a policy really ties a row to auth.uid() is proven by behaviour in
 -- account_isolation_checks.sql; a policy `using (medication_id is not null)` passes every rule here.
@@ -133,7 +136,19 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- INVARIANT 2: every foreign key to auth.users or to an account table deletes with the account
+-- INVARIANT 2: deleting the account deletes every account row
+-- Only keys whose TARGET is the account or an account table count: medications -> registry_products (restrict)
+-- points from account data to shared data and does not block deleting the account.
+--   - A key to auth.users must cascade, otherwise the row outlives the account or blocks its deletion.
+--   - Every account table must be reached from auth.users by cascading keys alone. A key between two account
+--     tables may then be cascade, set null, no action or restrict: the row leaves by its own cascade path, and
+--     whether deleting a parent (e.g. a medication added by mistake) takes its children along is a decision of the
+--     migration, not of this gate. Measured 2026-09-29: no action, set null and restrict between two account tables
+--     do not block `delete from auth.users`, in both orders of the cascade triggers.
+--   - set default is rejected: it re-points a row to another parent, which rewrites history as much as changing a
+--     value does.
+--   - set null on a key guarded by a history trigger turns the cascade into an UPDATE the guard may block; that is
+--     measured by behaviour (ISOLATION 6), not here.
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -141,8 +156,6 @@ declare
   v_list text;
   v_count integer;
 begin
-  -- Only keys whose TARGET is the account or an account table: medications -> registry_products (restrict) points
-  -- from account data to shared data and does not block deleting the account.
   select string_agg(format('%s.%s -> %s (confdeltype %s)', t.relname, c.conname, c.confrelid::regclass, c.confdeltype), ', '
                     order by t.relname, c.conname),
          count(*)
@@ -151,22 +164,52 @@ begin
   join pg_class t on t.oid = c.conrelid
   where c.contype = 'f'
     and t.relnamespace = 'public'::regnamespace
-    and (c.confrelid = 'auth.users'::regclass
-         or c.confrelid in (select a.table_oid from pg_temp.account_data_tables() a))
+    and c.confrelid = 'auth.users'::regclass
     and c.confdeltype <> 'c';
   if v_list is not null then
-    raise exception 'INVARIANT 2 FAILED: % foreign key(s) to the account or to an account table are not on delete cascade, so deleting an account would leave rows behind or be blocked: %', v_count, v_list;
+    raise exception 'INVARIANT 2 FAILED: % foreign key(s) to auth.users are not on delete cascade, so deleting an account would leave rows behind or be blocked: %', v_count, v_list;
   end if;
 
-  select count(*) into v_count
+  select string_agg(format('%s.%s -> %s', t.relname, c.conname, c.confrelid::regclass), ', '
+                    order by t.relname, c.conname) into v_list
   from pg_constraint c
   join pg_class t on t.oid = c.conrelid
   where c.contype = 'f'
     and t.relnamespace = 'public'::regnamespace
-    and (c.confrelid = 'auth.users'::regclass
-         or c.confrelid in (select a.table_oid from pg_temp.account_data_tables() a));
+    and c.confrelid in (select a.table_oid from pg_temp.account_data_tables() a)
+    and c.confdeltype = 'd';
+  if v_list is not null then
+    raise exception 'INVARIANT 2 FAILED: foreign key(s) to an account table are on delete set default, which re-points rows to another parent: %', v_list;
+  end if;
 
-  raise notice 'INVARIANT 2 OK: all % foreign key(s) to the account or to an account table are on delete cascade', v_count;
+  with recursive cascade_walk (relid, path) as (
+    select c.conrelid, array[c.conrelid]
+    from pg_constraint c
+    join pg_class t on t.oid = c.conrelid
+    where c.contype = 'f'
+      and c.confrelid = 'auth.users'::regclass
+      and c.confdeltype = 'c'
+      and t.relnamespace = 'public'::regnamespace
+      and t.relkind in ('r', 'p')
+    union
+    select c.conrelid, w.path || c.conrelid
+    from cascade_walk w
+    join pg_constraint c on c.contype = 'f' and c.confrelid = w.relid and c.confdeltype = 'c'
+    join pg_class t on t.oid = c.conrelid
+    where c.conrelid <> c.confrelid
+      and not (c.conrelid = any (w.path))
+      and t.relnamespace = 'public'::regnamespace
+      and t.relkind in ('r', 'p')
+  )
+  select string_agg(a.table_name, ', ' order by a.table_name) into v_list
+  from pg_temp.account_data_tables() a
+  where a.table_oid not in (select w.relid from cascade_walk w);
+  if v_list is not null then
+    raise exception 'INVARIANT 2 FAILED: account tables not reached from auth.users by on delete cascade keys alone, so deleting an account would leave their rows behind or be blocked: %', v_list;
+  end if;
+
+  raise notice 'INVARIANT 2 OK: every key to auth.users cascades, all % account table(s) are reached by cascading keys alone, no key to an account table is set default',
+    (select count(*) from pg_temp.account_data_tables());
 end;
 $$;
 
@@ -304,7 +347,14 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- INVARIANT 7: anon cannot execute security definer functions in public (trigger functions cannot be called directly)
+-- INVARIANT 7: anon and authenticated cannot execute security definer functions in public (trigger functions cannot
+-- be called directly). A security definer function runs with its owner's privileges, past RLS: callable by a
+-- signed-in account it answers about any account's rows unless it checks the owner itself. The history guards call
+-- medication_correction_window_open as their own definer and need no EXECUTE for the caller. A function that must
+-- be callable from the browser checks auth.uid() and gets a deliberate exception here.
+-- Every security definer function, trigger functions included, sets search_path: without it an object created
+-- earlier on the caller's path (a table or operator of the same name) is resolved in place of the intended one and
+-- runs with the owner's privileges.
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -326,12 +376,22 @@ begin
   where p.pronamespace = 'public'::regnamespace
     and p.prosecdef
     and p.prorettype <> 'trigger'::regtype
-    and has_function_privilege('anon', p.oid, 'EXECUTE');
+    and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'));
   if v_list is not null then
-    raise exception 'INVARIANT 7 FAILED: anon can execute security definer functions (revoke execute ... from anon; revoke from public alone does not remove the Supabase default grants): %', v_list;
+    raise exception 'INVARIANT 7 FAILED: anon or authenticated can execute security definer functions (revoke execute ... from anon, authenticated; revoke from public alone does not remove the Supabase default grants): %', v_list;
   end if;
 
-  raise notice 'INVARIANT 7 OK: anon cannot execute any of % security definer function(s) in public', v_count;
+  select string_agg(p.oid::regprocedure::text, ', ' order by p.oid::regprocedure::text) into v_list
+  from pg_proc p
+  where p.pronamespace = 'public'::regnamespace
+    and p.prosecdef
+    and not exists (select 1 from unnest(p.proconfig) as cfg(setting) where cfg.setting like 'search_path=%');
+  if v_list is not null then
+    raise exception 'INVARIANT 7 FAILED: security definer functions without a pinned search_path (add set search_path = '''' and schema-qualify every name): %', v_list;
+  end if;
+
+  raise notice 'INVARIANT 7 OK: anon and authenticated cannot execute any of % security definer function(s) in public, and all % security definer function(s) pin search_path', v_count,
+    (select count(*) from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prosecdef);
 end;
 $$;
 
@@ -379,6 +439,39 @@ begin
   end loop;
 
   raise notice 'INVARIANT 8 OK: 5 history guards exist, are enabled and fire BEFORE their event for each row';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- INVARIANT 9: views do not bypass RLS for anon and authenticated
+-- A view without security_invoker reads its tables with the privileges of its owner (postgres), so RLS on the
+-- account tables does not apply, and the Supabase default privileges in public give anon and authenticated every
+-- privilege on a new view. One `create view ... as select * from medications` would expose every account's rows
+-- through PostgREST. A materialized view cannot be security_invoker, so for it only the second branch holds.
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_list text;
+begin
+  select string_agg(format('%s (relkind %s): %s %s', t.relname, t.relkind, r.role_name, priv.name), ', '
+                    order by t.relname, r.role_name, priv.name) into v_list
+  from pg_class t
+  cross join unnest(array['anon', 'authenticated']) as r(role_name)
+  cross join unnest(array['SELECT', 'INSERT', 'UPDATE', 'DELETE']) as priv(name)
+  where t.relnamespace = 'public'::regnamespace
+    and t.relkind in ('v', 'm')
+    and not (t.relkind = 'v' and exists (
+      select 1 from pg_options_to_table(t.reloptions) o
+      where o.option_name = 'security_invoker' and lower(o.option_value) in ('true', 'on', 'yes', '1')
+    ))
+    and has_table_privilege(r.role_name, t.oid, priv.name);
+  if v_list is not null then
+    raise exception 'INVARIANT 9 FAILED: views readable by anon or authenticated bypass RLS (create view ... with (security_invoker = true), or revoke all ... from anon, authenticated): %', v_list;
+  end if;
+
+  raise notice 'INVARIANT 9 OK: all % view(s) in public are security_invoker or closed to anon and authenticated',
+    (select count(*) from pg_class t where t.relnamespace = 'public'::regnamespace and t.relkind in ('v', 'm'));
 end;
 $$;
 

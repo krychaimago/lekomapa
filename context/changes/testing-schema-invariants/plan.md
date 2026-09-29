@@ -154,6 +154,8 @@ Sprawdzenia:
   - domknięcie nie jest puste (inaczej zły predykat dałby fałszywą zieleń).
     Komunikat przy tabeli spoza obu zbiorów mówi, że trzeba dodać klucz obcy do konta albo świadomie dopisać tabelę do listy wspólnych.
 - **INVARIANT 2 — kaskada**: każdy klucz obcy z tabeli `public`, którego cel jest w domknięciu albo jest `auth.users`, ma `confdeltype = 'c'`.
+  - _Poprawka po impl-review (F2, 2026-09-29)_: reguła zawężona. `cascade` wymagany tylko od kluczy do `auth.users`; każda tabela z domknięcia ma ścieżkę od `auth.users` złożoną z samych kluczy `cascade`; klucz między tabelami konta może być `cascade`, `set null`, `no action` albo `restrict`, zakazany jest tylko `set default`. Powód: wymuszona kaskada między tabelami konta kasowałaby po cichu wpisy wskazujące na usuniętą pomyłkę. Zmierzone: `no action`, `set null` i `restrict` między tabelami konta nie blokują `delete from auth.users`. Nowa próbka `account-table-without-cascade-path` w CI.
+  - _Poprawka po impl-review (F3, 2026-09-29)_: migracja `20260929120000` odbiera `EXECUTE` na `medication_correction_window_open` także od `authenticated`, a INVARIANT 7 sprawdza obie role. Powód: funkcja nie sprawdza właściciela, więc po S-05 zalogowane konto dowiedziałoby się, czy cudzy lek ma wpisy. Strażnicy są `security definer` i działają bez tego uprawnienia — potwierdza to ISOLATION 1–6 po `db reset`. Nowa próbka `window-execute-for-authenticated` w CI.
 - **INVARIANT 3 — RLS**: `relrowsecurity` na każdej tabeli `public`.
 - **INVARIANT 4 — polityki tabel konta**:
   - dla każdej z komend SELECT/INSERT/UPDATE/DELETE co najmniej jedna polityka,
@@ -198,7 +200,7 @@ Krok CI sprawdza dla każdej próbki niezerowy kod runnera **oraz** obecność o
 
 - Przegląd listy wspólnych i listy strażników w pliku: 5 + 5 pozycji zgodnych z research
 - Ręczny kontrprzykład: w lokalnej bazie usuń w transakcji jedną politykę (np. DELETE na `dosage_periods`) i uruchom plik — pada `INVARIANT 4 FAILED` z nazwą tabeli i komendy
-- Po merge'u i zielonym `smoke` na commicie z migracją: autorka uruchamia `npx supabase migration list` (oczekiwane: tylko `20260929120000` bez odpowiednika zdalnego; inna oczekująca migracja = stop), potem `npx supabase db push` na produkcję, a potem w panelu SQL Supabase sprawdza `has_table_privilege('authenticated', 'public.medications', 'TRUNCATE')` = `false` i `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` = `false`
+- Po merge'u i zielonym `smoke` na commicie z migracją: autorka uruchamia `npx supabase migration list` (oczekiwane: tylko `20260929120000` bez odpowiednika zdalnego; inna oczekująca migracja = stop), potem `npx supabase db push` na produkcję, a potem w panelu SQL Supabase sprawdza `has_table_privilege('authenticated', 'public.medications', 'TRUNCATE')` = `false` i `has_function_privilege('anon', 'public.medication_correction_window_open(uuid)', 'EXECUTE')` = `false` oraz to samo dla `'authenticated'` = `false` (dopisane po impl-review F3)
 - Po `db push` logowanie i lista leków na produkcji działają jak przed zmianą
 
 **Implementation Note**: Po zielonej weryfikacji automatycznej zatrzymaj się na potwierdzenie ręcznych kroków przez autorkę, zanim przejdziesz do fazy 2. `db push` na produkcję wykonuje wyłącznie autorka, nie agent.

@@ -125,8 +125,8 @@ a kod aplikacji nie ma żadnych.
 - **Kontrprzykład właściciela**: każda blokada ma obok ten sam zapis wykonany przez właściciela na swoim wierszu, z `row_count = 1`. Bez tego blokada może wynikać z literówki, a nie z polityki.
 - **Uruchomienie**: `npm run db:check` (wymaga `npx supabase start`), pojedynczy plik: `node scripts/db-checks.mjs supabase/tests/<nazwa>.sql`. Plik biegnie w transakcji z rollbackiem, nic nie zostaje w bazie.
 - **CI**: job `smoke`, krok „SQL checks”, zaraz po starcie lokalnego Supabase. Czerwony krok zatrzymuje deploy.
-- **Reguły katalogu**: `schema_invariants_checks.sql` wyprowadza tabele z danymi konta z katalogu bazy (domknięcie kluczy obcych do `auth.users`) i sprawdza ich strukturę (INVARIANT 1–8). `account_isolation_checks.sql` bierze ten sam zbiór i dowodzi zachowania. Nowej tabeli nie wpisuje się do listy w sprawdzeniu — patrz §6.4.
-- **Próbka czerwonej bramki**: nowa reguła dostaje próbkę w `scripts/db-checks/probes/` — `begin;` i DDL psujące jedną regułę. Runner dokleja ją przed plik sprawdzeń: `node scripts/db-checks.mjs --probe <próbka> <plik sprawdzeń>`. W CI dopisz wywołanie `expect_invariant_failure` z oczekiwanym tekstem `… FAILED` (`.github/workflows/ci.yml`, krok „SQL checks”). Próbka pada z innego powodu = niczego nie zmierzyła.
+- **Reguły katalogu**: `schema_invariants_checks.sql` wyprowadza tabele z danymi konta z katalogu bazy (domknięcie kluczy obcych do `auth.users`) i sprawdza ich strukturę (INVARIANT 1–9). `account_isolation_checks.sql` bierze ten sam zbiór i dowodzi zachowania. Nowej tabeli nie wpisuje się do listy w sprawdzeniu — patrz §6.4.
+- **Próbka czerwonej bramki**: nowa reguła dostaje próbkę w `scripts/db-checks/probes/` — samo DDL psujące jedną regułę, bez `begin;` i bez `commit;` (`begin;` dokleja runner, `commit`/`end`/`rollback` w próbce runner odrzuca). Runner dokleja ją przed plik sprawdzeń: `node scripts/db-checks.mjs --probe <próbka> <plik sprawdzeń>`. W CI dopisz wywołanie `expect_invariant_failure` z oczekiwanym tekstem `… FAILED` (`.github/workflows/ci.yml`, krok „SQL checks”). Próbka pada z innego powodu = niczego nie zmierzyła.
 
 ### 6.3 Adding a smoke step
 
@@ -136,10 +136,12 @@ a kod aplikacji nie ma żadnych.
 
 Migracja z nową tabelą z danymi konta przejdzie bramkę, gdy ma:
 
-- **klucz obcy do konta**: do `auth.users` albo do istniejącej tabeli konta, z `on delete cascade`. Bez klucza tabela nie należy do żadnego zbioru i pada INVARIANT 1. Inna reguła usuwania niż `cascade` wywraca INVARIANT 2.
+- **klucz obcy do konta**: do `auth.users` albo do istniejącej tabeli konta. Bez klucza tabela nie należy do żadnego zbioru i pada INVARIANT 1. Klucz do `auth.users` zawsze z `on delete cascade`, a tabela musi mieć ścieżkę od `auth.users` złożoną wyłącznie z kluczy `cascade` (INVARIANT 2).
+- **klucz między dwiema tabelami konta** (np. wpis dzienniczka → lek): `cascade`, `set null`, `no action` albo `restrict` — świadoma decyzja migracji, czy usunięcie rodzica-pomyłki zabiera wpisy podrzędne. Zakazany jest tylko `set default`, bo przepina wiersz pod innego rodzica. Przy `set null` na kolumnie pilnowanej przez strażnika historii usunięcie konta może się zablokować — pokaże to ISOLATION 6.
 - **RLS i cztery polityki w tej samej migracji**: SELECT, INSERT, UPDATE, DELETE, każda osobno dla `authenticated`, z niepustym wyrażeniem wiążącym wiersz z `auth.uid()`. Bez `for all` i bez `using (true)`.
 - **`revoke truncate on public.<tabela> from anon, authenticated`**: `TRUNCATE` omija RLS i strażników historii (INVARIANT 6).
-- **nowa funkcja `security definer`**: `revoke execute … from anon` jawnie. `revoke … from public` nie wystarcza (INVARIANT 7).
+- **nowa funkcja `security definer`** (także wyzwalacz): `set search_path = ''` i nazwy z nazwą schematu. Do tego `revoke execute … from anon, authenticated` jawnie. `revoke … from public` nie wystarcza (INVARIANT 7). Funkcja działa z prawami właściciela i omija RLS, więc wywołana przez zalogowane konto odpowie o cudzych wierszach. Strażnicy historii wołają ją jako własny definer i nie potrzebują uprawnień wywołującego. Funkcja, którą musi wołać przeglądarka, sama sprawdza `auth.uid()` i dostaje świadomy wyjątek w INVARIANT 7.
+- **nowy widok w `public`**: `create view … with (security_invoker = true)`. Bez tego widok czyta tabele jako `postgres`, RLS go nie obejmuje, a domyślne uprawnienia Supabase dają `anon` i `authenticated` dostęp do niego (INVARIANT 9). Widok zmaterializowany nie ma `security_invoker` — dla niego `revoke all … from anon, authenticated`.
 
 Potem w sprawdzeniach i smoke:
 
