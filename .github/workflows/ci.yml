@@ -87,6 +87,7 @@ jobs:
           expect_invariant_failure scripts/db-checks/probes/account-table-truncate-for-anon.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 6 FAILED"
           expect_invariant_failure scripts/db-checks/probes/view-without-security-invoker.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 9 FAILED"
           expect_invariant_failure scripts/db-checks/probes/account-table-without-fixture.sql supabase/tests/account_isolation_checks.sql "ISOLATION 0 FAILED: probe_account_without_fixture has no test data"
+          expect_invariant_failure scripts/db-checks/probes/interaction-pairs-empty.sql supabase/tests/fr012_language_checks.sql "LANGUAGE 1 FAILED"
           expect_invariant_failure scripts/db-checks/probes/pair-description-without-phrase.sql supabase/tests/fr012_language_checks.sql "LANGUAGE 2 FAILED"
           npm run db:check
       - name: Configure secrets for build and preview

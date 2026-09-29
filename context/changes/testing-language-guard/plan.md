@@ -76,6 +76,7 @@ Wyrocznia z PRD jako wspólny moduł danych, test walidatora na tej wyroczni, za
 - `REQUIRED_PHRASE` — literał „może mieć związek” (`prd.md:144`), nie import `REQUIRED_WORDING`.
 - `FORBIDDEN_SENTENCES` — obiekt klas → lista zdań. Klasy z odnośnikiem do PRD w komentarzu: `cause` (FR-012, `prd.md:144`), `advice` (odstawienie/zmiana dawki/zamiana leku, FR-012), `safety` (ocena bezpieczeństwa, `prd.md:49`, `:67`), `ranking` (porządkowanie wg podejrzenia, FR-012, `:66`), `ban` (zakaz łączenia, US-01 `:66`). Każda klasa ma co najmniej dwa zdania; łącznie zawierają 14 zdań z `research.md` §3 oraz 6 zdań z `pairs.test.mjs:195-201`.
 - `ALLOWED_SENTENCES` — zdania zgodne z FR-012, co najmniej jedno na każdy nowy rdzeń: realne neutralne użycie tego słowa, także spoza 24 obecnych opisów (np. „może mieć związek ze zwiększonym ryzykiem krwawień” dla `ryzyk`, „…ze zmniejszoną skutecznością leku” dla `zmniejsz`, „…z wynikami badań krzepliwości” dla `wynik`, „…z ograniczonym działaniem” dla `ogranicz`). Każde zawiera `REQUIRED_PHRASE`.
+  - Odchylenie (impl-review 2026-09-29): rdzenie `wywoł`, `bezpieczn`, `podejrz`, `zamień`, `rezygn`, `nie bierz` oraz dodane po przeglądzie `zamien`, `zmień lek`, `nie przyjmuj`, `nie stosuj`, `nieszkodliw`, `dozwolon`, `grozi` nie mają zdania w `ALLOWED_SENTENCES`. W opisie pary te słowa wyłącznie stwierdzają przyczynę, oceniają bezpieczeństwo, szeregują podejrzenie albo radzą — neutralne użycie nie istnieje. Każdy rdzeń uzasadnia zdanie z `FORBIDDEN_SENTENCES`; uzasadnienie stoi też w komentarzu nad `ALLOWED_SENTENCES`.
 - `ACCEPTED_FALSE_POSITIVES` — zdania zgodne z FR-012, które walidator świadomie odrzuca: każde z rdzeniem, który je łapie, i jednym zdaniem uzasadnienia (wzór: `dawk`). Trafia tu zdanie z `ALLOWED_SENTENCES` tylko wtedy, gdy rdzenia nie da się zawęzić bez przepuszczenia zdania zakazanego.
 
 #### 2. Test walidatora na korpusie
@@ -201,6 +202,8 @@ Utrwalenie tego, czego faza 3 nie może dziś sprawdzić, jako wymagania S-02, o
 
 **Contract**: §6.1 zamiast „TBD”: wyrocznia z PRD w `scripts/fr012/corpus.mjs`, nigdy import z kodu pod testem; test czerwony przed poprawką; korpus zdań poprawnych obok zakazanych. §6.2: wzmianka o `fr012_language_checks.sql` jako wzorcu sprawdzenia treści. §6.5: notatka fazy 3 — co dowiedzione (walidator, baza), co przeszło do S-02 (nota, zdanie o bezpieczeństwie, smoke, kolejność listy). §5: przy ryzyku #2 dopisek, że jest częściowo otwarte do S-02 (nota, zdanie o bezpieczeństwie, smoke, kolejność listy), z odnośnikiem do §6.5 — żeby oznaczenie fazy 3 jako complete nie wyglądało na zamknięcie ryzyka. Status wiersza fazy 3 w §3 zostaje dla orkiestratora `/10x-test-plan`.
 
+Odchylenie (impl-review 2026-09-29): commit fazy 1 (b3eb0e0) zmienił w §3 wiersz 2 na `complete` (poprawka nieaktualnego stanu po zarchiwizowanej zmianie) i wiersz 3 na `change opened`. Oba stany są zgodne z dyskiem; zostają.
+
 #### 3. Lekcja
 
 **File**: `context/foundation/lessons.md` (wpis „Filtr języka wymaga formuły, nie tylko zakazuje słów”)
@@ -288,7 +291,7 @@ Brak migracji. CSV i `20260924130100_interaction_pairs_seed.sql` się nie zmieni
 
 - [x] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset` — 6d8768c
 - [x] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED` — 6d8768c
-- [ ] 2.3 Job `smoke` w CI zielony, w logu próbka failed as expected
+- [x] 2.3 Job `smoke` w CI zielony, w logu próbka failed as expected — run 36608545879 (341298b)
 
 #### Manual
 
@@ -298,10 +301,10 @@ Brak migracji. CSV i `20260924130100_interaction_pairs_seed.sql` się nie zmieni
 
 #### Automated
 
-- [x] 3.1 `prettier --check` na roadmapie, planie testów i lekcjach bez błędów
-- [x] 3.2 Kotwica w lekcji wskazuje linie `FORBIDDEN_WORDS`
+- [x] 3.1 `prettier --check` na roadmapie, planie testów i lekcjach bez błędów — 341298b
+- [x] 3.2 Kotwica w lekcji wskazuje linie `FORBIDDEN_WORDS` — 341298b
 
 #### Manual
 
-- [x] 3.3 Autorka potwierdza, że kontrakt S-02 nie rozstrzyga brzmienia noty
-- [x] 3.4 Autorka potwierdza, że **Rule** w lekcji się nie zmieniła
+- [x] 3.3 Autorka potwierdza, że kontrakt S-02 nie rozstrzyga brzmienia noty — 341298b
+- [x] 3.4 Autorka potwierdza, że **Rule** w lekcji się nie zmieniła — 341298b

@@ -11,6 +11,7 @@ export const REQUIRED_PHRASE = "może mieć związek";
 export const FORBIDDEN_SENTENCES = {
   // FR-012 (prd.md:144): never state that a medicine causes a symptom.
   cause: [
+    "Lek powoduje objawy.",
     "Połączenie wywoła krwawienie.",
     "Połączenie wywołało krwawienie.",
     "Lek odpowiada za objawy.",
@@ -24,6 +25,8 @@ export const FORBIDDEN_SENTENCES = {
   // FR-012 (prd.md:144), guardrail (prd.md:50): never suggest stopping a medicine, changing a dose or swapping
   // one medicine for another.
   advice: [
+    "Odstaw jeden z leków.",
+    "Przerwij leczenie.",
     "Przerwanie leczenia jednym z leków.",
     "Nie bierz obu leków razem.",
     "Zrezygnuj z jednego z leków.",
@@ -32,20 +35,36 @@ export const FORBIDDEN_SENTENCES = {
     "Zamień ibuprofen na paracetamol.",
     "Dostosuj dawkę leku.",
     "Przestań przyjmować jeden z leków.",
+    "Zmień lek na inny.",
+    "Zamien lek.",
   ],
   // Guardrail (prd.md:49), US-01 (prd.md:67): no warning never means "safe", and no text may claim safety.
-  safety: ["Połączenie jest bezpieczne.", "Te leki można bezpiecznie przyjmować razem."],
+  safety: [
+    "Połączenie jest bezpieczne.",
+    "Te leki można bezpiecznie przyjmować razem.",
+    "Połączenie jest groźne.",
+    "Połączenie jest nieszkodliwe.",
+    "Nic nie grozi.",
+    "Przyjmowanie razem jest dozwolone.",
+  ],
   // FR-012 (prd.md:144), US-01 (prd.md:66): never order medicines by degree of suspicion.
   ranking: ["Ten lek jest najbardziej podejrzany.", "Ibuprofen jest bardziej podejrzany niż ramipryl."],
   // US-01 (prd.md:66): never state a ban on taking medicines together.
-  ban: ["Unikaj tego połączenia.", "Nie łącz tych leków.", "Tych leków nie wolno przyjmować razem."],
+  ban: [
+    "Unikaj tego połączenia.",
+    "Nie łącz tych leków.",
+    "Tych leków nie wolno przyjmować razem.",
+    "Przyjmowanie razem jest zakazane.",
+    "Nie przyjmuj obu leków razem.",
+    "Nie stosuj tych leków razem.",
+  ],
 };
 
 // Full pair descriptions that follow FR-012 and must pass. Each carries REQUIRED_PHRASE and uses, neutrally, a
 // word a broader stem could catch (risk, reduced, test results, limited, breaks, "responsible for", "most").
-// No neutral sentence exists for wywoł, bezpieczn, podejrz, zamień, rezygn, nie bierz: in a pair description these
-// words only state a cause, judge safety, rank suspicion or give advice, so each stem is justified by
-// FORBIDDEN_SENTENCES alone.
+// No neutral sentence exists for wywoł, bezpieczn, podejrz, zamień, zamien, zmień lek, rezygn, nie bierz,
+// nie przyjmuj, nie stosuj, nieszkodliw, dozwolon, grozi: in a pair description these words only state a cause,
+// judge safety, rank suspicion or give advice, so each stem is justified by FORBIDDEN_SENTENCES alone.
 export const ALLOWED_SENTENCES = [
   "Leki przeciwkrzepliwe z grupy rywaroksabanu i leki przeciwbólowe z grupy ibuprofenu mogą wchodzić w interakcję. Jednoczesne przyjmowanie może mieć związek ze zwiększonym ryzykiem krwawień.",
   "Leki z grupy amlodypiny i statyny mogą wchodzić w interakcję. Jednoczesne przyjmowanie może mieć związek ze zmniejszoną skutecznością leku.",
@@ -65,5 +84,26 @@ export const ACCEPTED_FALSE_POSITIVES = [
     stem: "dawk",
     reason:
       "Any mention of a dose is blocked because advice to change it has too many forms (adjust, lower, split) to list.",
+  },
+  {
+    sentence:
+      "Antagoniści witaminy K i leki przeciwdepresyjne z grupy SSRI mogą wchodzić w interakcję. Jednoczesne przyjmowanie może mieć związek z nieprawidłowym wynikiem badania krzepliwości krwi.",
+    stem: "wynikiem",
+    reason:
+      "Narrowing to `jest wynikiem` would let `Objawy są wynikiem interakcji.` through; the plural `wynikach` stays allowed.",
+  },
+  {
+    sentence:
+      "Leki przeciwdepresyjne z grupy SSRI i lit mogą wchodzić w interakcję. Jednoczesne przyjmowanie może mieć związek z objawami, o których warto przekazać komunikat lekarzowi.",
+    stem: "unika",
+    reason:
+      "The stem sits inside `komunikat`; narrowing to `unikaj` would let `Należy unikać tego połączenia.` through.",
+  },
+  {
+    sentence:
+      "Pętlowe leki moczopędne i inhibitory ACE mogą wchodzić w interakcję. Jednoczesne przyjmowanie może mieć związek z niższym ciśnieniem krwi po wprowadzeniu drugiego leku.",
+    stem: "prowadz",
+    reason:
+      "The stem sits inside `wprowadzenie`; `prowadzi do` has enough inflected forms (prowadził, prowadzące) that a narrower stem would miss some.",
   },
 ];

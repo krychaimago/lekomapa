@@ -13,7 +13,8 @@
 -- How to run: `npm run db:check` (needs `npx supabase start`), or this file alone:
 -- `node scripts/db-checks.mjs supabase/tests/fr012_language_checks.sql`. The runner (scripts/db-checks.mjs)
 -- pipes it into psql inside the local database container, forces ON_ERROR_STOP and passes it only when it prints
--- `GATE_COMPLETE fr012_language_checks`. CI also runs it behind the probe
+-- `GATE_COMPLETE fr012_language_checks`. CI also runs it behind two probes:
+-- scripts/db-checks/probes/interaction-pairs-empty.sql, which must make LANGUAGE 1 fail, and
 -- scripts/db-checks/probes/pair-description-without-phrase.sql, which must make LANGUAGE 2 fail.
 --
 -- Everything runs as postgres in one transaction ended with rollback: nothing is left behind.
