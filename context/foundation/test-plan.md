@@ -66,12 +66,12 @@ Każdy wiersz to osobna faza rolloutu, otwierająca własny folder zmiany
 przez `/10x-new`. Status przesuwa się od lewej do prawej; orkiestrator
 aktualizuje go, gdy artefakty pojawiają się na dysku.
 
-| #   | Phase name                               | Goal (one line)                                                                                                                 | Risks covered | Test types                         | Status        | Change folder                                      |
-| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------- | ------------- | -------------------------------------------------- |
-| 1   | Bramka SQL w CI                          | Udowodnić, że PR łamiący RLS lub niezmiennik historii nie przejdzie CI                                                          | #4, #1, #3    | CI gate + SQL                      | complete      | context/archive/2026-09-28-testing-sql-gate-in-ci/ |
-| 2   | Niezmienniki schematu dla każdej tabeli  | Udowodnić, że nowa tabela bez RLS per operacja lub bez usuwania razem z kontem wywraca bramkę, zanim S-02 i S-05 dodadzą tabele | #1, #3, #6    | integration (SQL na katalogu bazy) | change opened | context/changes/testing-schema-invariants/         |
-| 3   | Strażnik języka FR-012                   | Udowodnić, że żaden tekst o kolizji nie stwierdza przyczyny ani nie zaleca zmian, i że nota poglądowa jest zawsze obecna        | #2            | unit + smoke step                  | not started   | —                                                  |
-| 4   | Odzyskiwanie dostępu bez kroków ręcznych | Udowodnić automatycznie, że wygasły lub zużyty link nie daje sesji, a sesja z linku nie wychodzi poza ekran nowego hasła        | #5            | smoke / integration                | not started   | —                                                  |
+| #   | Phase name                               | Goal (one line)                                                                                                                 | Risks covered | Test types                         | Status        | Change folder                                         |
+| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------- | ------------- | ----------------------------------------------------- |
+| 1   | Bramka SQL w CI                          | Udowodnić, że PR łamiący RLS lub niezmiennik historii nie przejdzie CI                                                          | #4, #1, #3    | CI gate + SQL                      | complete      | context/archive/2026-09-28-testing-sql-gate-in-ci/    |
+| 2   | Niezmienniki schematu dla każdej tabeli  | Udowodnić, że nowa tabela bez RLS per operacja lub bez usuwania razem z kontem wywraca bramkę, zanim S-02 i S-05 dodadzą tabele | #1, #3, #6    | integration (SQL na katalogu bazy) | complete      | context/archive/2026-09-29-testing-schema-invariants/ |
+| 3   | Strażnik języka FR-012                   | Udowodnić, że żaden tekst o kolizji nie stwierdza przyczyny ani nie zaleca zmian, i że nota poglądowa jest zawsze obecna        | #2            | unit + smoke step                  | change opened | context/changes/testing-language-guard/               |
+| 4   | Odzyskiwanie dostępu bez kroków ręcznych | Udowodnić automatycznie, że wygasły lub zużyty link nie daje sesji, a sesja z linku nie wychodzi poza ekran nowego hasła        | #5            | smoke / integration                | not started   | —                                                     |
 
 Kolejność: faza 1 jest najtańsza i zamyka lukę z wywiadu (P4). Faza 2
 musi wejść przed kolejnymi migracjami (P3). Faza 3 przed UI znaczników
@@ -108,15 +108,22 @@ a kod aplikacji nie ma żadnych.
 | niezmienniki katalogu bazy            | CI                            | required after §3 Phase 2 | nowa tabela bez RLS per operacja lub bez usuwania z kontem                       |
 | automatyczne wygaśnięcie linku resetu | CI (smoke)                    | required after §3 Phase 4 | link działający po czasie lub drugi raz                                          |
 
+Ryzyko #2 po Phase 3 jest częściowo otwarte do S-02: nota poglądowa, zdanie o tym, że brak ostrzeżenia nie oznacza bezpieczeństwa, krok smoke z notą i kolejność leków na liście niezależna od kolizji. Bramki powyżej pilnują dziś wyłącznie opisów par (walidator i baza). Status `complete` fazy 3 w §3 nie zamyka ryzyka — patrz §6.5.
+
 ## 6. Cookbook Patterns
 
 ### 6.1 Adding a unit test
 
-- TBD — see §3 Phase 3 (wzorzec: walidator tekstu o zdrowiu z wyrocznią z FR-012).
+- **Gdzie**: `scripts/**/*.test.mjs`, `node:test`, nazwy testów po angielsku. `npm test` bierze każdy plik z tego wzorca sam i biegnie w jobie `ci`. Dzięki `--experimental-strip-types` test może importować moduł `.ts` z `src/`.
+- **Wyrocznia spoza kodu pod testem**: oczekiwane wartości biorą się z PRD, nigdy z importu z testowanego modułu. Wzorzec: `scripts/fr012/corpus.mjs` — same dane z odnośnikami do linii PRD, bez żadnego importu (pilnuje tego test w `scripts/rpl/pairs-fr012.test.mjs`). Pętla generująca testy z listy walidatora (`for (const word of FORBIDDEN_WORDS)`) jest zakazana: usunięcie pozycji z kodu usuwa też jej test.
+- **Test czerwony przed poprawką**: test uruchom przed zmianą kodu i zapisz, co padło. Test zielony od początku niczego nie zmierzył.
+- **Korpus poprawny obok zakazanego**: każda rozszerzona reguła odrzucania ma obok przypadki, które musi przepuścić (`ALLOWED_SENTENCES`). Świadomie odrzucany poprawny przypadek trafia na osobną listę z regułą, która go łapie, i uzasadnieniem (`ACCEPTED_FALSE_POSITIVES`) — koszt fałszywego alarmu jest zmierzony, nie domniemany.
+- **Nazwany wynik**: sprawdzaj konkretny powód odrzucenia (`reason: "forbidden_word"`), nie sam fakt błędu. Przypadek odrzucony z innego powodu przechodzi test, nie mierząc tego, co deklaruje.
+- **Teksty o zdrowiu w UI**: moduł copy (wzorzec `src/lib/copy/password-recovery.ts`) i test w `scripts/` importujący go razem z korpusem FR-012 — kontrakt dla S-02 w `context/foundation/roadmap.md`.
 
 ### 6.2 Adding a database invariant check (SQL)
 
-- **Gdzie**: nowy plik `supabase/tests/<nazwa>.sql`. Runner bierze każdy `*.sql` z tego katalogu sam, bez rejestracji. Wzorce: `rls_checks.sql` (schemat, wyzwalacze historii), `account_isolation_checks.sql` (RLS per operacja na dwóch kontach i `anon`).
+- **Gdzie**: nowy plik `supabase/tests/<nazwa>.sql`. Runner bierze każdy `*.sql` z tego katalogu sam, bez rejestracji. Wzorce: `rls_checks.sql` (schemat, wyzwalacze historii), `account_isolation_checks.sql` (RLS per operacja na dwóch kontach i `anon`), `fr012_language_checks.sql` (treść wierszy po migracjach: najpierw sprawdzenie, że tabela nie jest pusta, potem wymagana fraza na tekście znormalizowanym tak jak w walidatorze; bez drugiej kopii listy zakazanych słów).
 - **Szkielet pliku**: `\set ON_ERROR_STOP on`, `begin;`, sprawdzenia w blokach `do $$ … $$`, na końcu `rollback;`. Dane testowe jako `postgres`, stałe UUID z puli innej niż w pozostałych plikach.
 - **Znacznik ukończenia**: tuż przed `rollback;` blok z `raise notice 'GATE_COMPLETE <nazwa pliku bez .sql>'`. Bez niego runner uznaje plik za czerwony, nawet przy kodzie 0.
 - **Nazwany błąd**: łap wyłącznie konkretny SQLSTATE (`42501`, `P0001`, `exclusion_violation`), nigdy `when others`, i sprawdź treść komunikatu (`get stacked diagnostics … = message_text`). Przykłady: blokada RLS → `42501` z „row-level security” albo „permission denied”; wyzwalacz historii → `P0001` z „okno korekty … jest już zamknięte” i nazwą pola.
@@ -157,6 +164,7 @@ Tabela wspólna tylko do odczytu (słownik, rejestr) to świadomie inna droga: b
 (Uzupełniane po każdej fazie.)
 
 - **Faza 2 (niezmienniki schematu)**: katalog bazy wyznacza zbiór tabel konta i łapie jawne braki: brak klucza lub kaskady, brak RLS, brak polityki na operację, `TRUNCATE`, `EXECUTE` dla `anon`, brak strażnika. Katalog nie powie, czy polityka faktycznie wiąże wiersz z kontem — `using (medication_id is not null)` przejdzie każdą regułę strukturalną. To dowodzi wyłącznie zachowanie na dwóch kontach (ISOLATION 1–6). Dlatego brak danych testowych dla tabeli z katalogu to porażka, nie pominięcie.
+- **Faza 3 (strażnik języka FR-012)**: dowiedzione na dwóch warstwach, które dziś istnieją. Walidator (b3eb0e0): korpus z PRD w `scripts/fr012/corpus.mjs`, test `scripts/rpl/pairs-fr012.test.mjs` padał przed rozszerzeniem listy rdzeni na 14 zdaniach z researchu; teraz każde zdanie zakazane, także obok frazy „może mieć związek”, daje `forbidden_word`, a korpus poprawny i 24 opisy z CSV przechodzą. Baza (6d8768c): `fr012_language_checks.sql` (LANGUAGE 1–2) sprawdza, że każdy opis w `interaction_pairs` po migracjach zawiera frazę, a próbka `pair-description-without-phrase.sql` wywraca LANGUAGE 2. Lista rdzeni zostaje z natury niepełna — test dowodzi korpusu, nie każdego przyszłego zdania. Do S-02 przeszło, jako kontrakt w roadmapie: nota poglądowa, zdanie o tym, że brak ostrzeżenia nie oznacza bezpieczeństwa, krok smoke z notą i kolejność leków na liście niezależna od kolizji. Dziś nie ma UI, które dałoby się sprawdzić.
 
 ## 7. What We Deliberately Don't Test
 
