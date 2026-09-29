@@ -102,8 +102,8 @@
 
 ## Filtr języka wymaga formuły, nie tylko zakazuje słów
 
-- **Context**: `scripts/rpl/pairs.mjs:21-34` — filtr języka opisów par kolizji (FR-012), każdy przyszły zbiór opisów przyjmowany przez walidator.
-- **Problem**: Lista zakazanych rdzeni łapie „powoduj”, „odstaw”, „zmień daw”, ale przepuszcza „prowadzi do krwawień”, „jest przyczyną”, „skutkuje”, „dostosuj dawkę”, „unikaj”. Walidator nie sprawdza też pozytywnie, że opis zawiera „może mieć związek”. Obecne 24 opisy są poprawne tylko dlatego, że autorka przeczytała każdy — filtr sam tego nie gwarantuje przy kolejnych parach.
+- **Context**: `scripts/rpl/pairs.mjs:24-54` (`FORBIDDEN_WORDS`) — filtr języka opisów par kolizji (FR-012), każdy przyszły zbiór opisów przyjmowany przez walidator. Przypadki testowe, napisane z PRD, a nie z listy: `scripts/fr012/corpus.mjs`.
+- **Problem**: Po fazie 3 planu testów walidator wymaga frazy „może mieć związek” i odrzuca rdzenie z listy, ale lista jest z natury niepełna. Pomiar przed fazą 3: 14 zdań łamiących FR-012 (np. „Połączenie wywoła krwawienie.”, „Połączenie jest bezpieczne.”, „Zamień ibuprofen na paracetamol.”) nie trafiało w żaden rdzeń — z dopisaną frazą walidator przyjąłby każde. Lista została rozszerzona pod te zdania, a kolejne sformułowania mogą znów przejść. Sama fraza też nie wystarcza: wystarczy, że wystąpi gdziekolwiek w opisie, więc drugie zdanie może stwierdzać przyczynę. Obecne 24 opisy są poprawne także dlatego, że autorka przeczytała każdy.
 - **Rule**: Walidator tekstu o zdrowiu zawsze wymaga obecności formuły „może mieć związek”. Lista zakazanych słów jest uzupełnieniem, nigdy jedyną bramką — zawsze będzie niepełna.
 - **Applies to**: plan, implement, impl-review
 

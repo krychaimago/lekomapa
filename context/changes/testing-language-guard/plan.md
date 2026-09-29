@@ -286,22 +286,22 @@ Brak migracji. CSV i `20260924130100_interaction_pairs_seed.sql` się nie zmieni
 
 #### Automated
 
-- [x] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset`
-- [x] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED`
+- [x] 2.1 `npm run db:check` przechodzi lokalnie po `npx supabase db reset` — 6d8768c
+- [x] 2.2 Próbka pada z właściwego powodu: `LANGUAGE 2 FAILED` — 6d8768c
 - [ ] 2.3 Job `smoke` w CI zielony, w logu próbka failed as expected
 
 #### Manual
 
-- [x] 2.4 Po biegu próbki opisy w lokalnej bazie są nietknięte
+- [x] 2.4 Po biegu próbki opisy w lokalnej bazie są nietknięte — 6d8768c
 
 ### Phase 3: Kontrakt dla S-02 i dokumentacja
 
 #### Automated
 
-- [ ] 3.1 `prettier --check` na roadmapie, planie testów i lekcjach bez błędów
-- [ ] 3.2 Kotwica w lekcji wskazuje linie `FORBIDDEN_WORDS`
+- [x] 3.1 `prettier --check` na roadmapie, planie testów i lekcjach bez błędów
+- [x] 3.2 Kotwica w lekcji wskazuje linie `FORBIDDEN_WORDS`
 
 #### Manual
 
-- [ ] 3.3 Autorka potwierdza, że kontrakt S-02 nie rozstrzyga brzmienia noty
-- [ ] 3.4 Autorka potwierdza, że **Rule** w lekcji się nie zmieniła
+- [x] 3.3 Autorka potwierdza, że kontrakt S-02 nie rozstrzyga brzmienia noty
+- [x] 3.4 Autorka potwierdza, że **Rule** w lekcji się nie zmieniła
