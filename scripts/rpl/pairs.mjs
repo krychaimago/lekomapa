@@ -15,25 +15,39 @@ import { ATC_SHAPE } from "./parse.mjs";
 
 export const PAIR_COLUMNS = ["group_a", "group_b", "description", "source", "verified_on"];
 
-// FR-012: a description never states a cause, never suggests stopping or changing a dose, never bans and never
-// alarms. Stems, matched as substrings, case-insensitive. The list is a check, not a style guide — a description
-// that passes it can still be wrong, which is why the author reads every one.
+// FR-012: a description never states a cause, never suggests stopping or changing a dose, never bans, never claims
+// safety and never ranks by suspicion. Stems, matched as substrings, case-insensitive. The list is a check, not a
+// style guide — a description that passes it can still be wrong, which is why the author reads every one.
+// Test cases live in scripts/fr012/corpus.mjs, written from the PRD, not from this list. Every stem can also block a
+// neutral word (like `dawk` blocks any mention of a dose); a stem that would reject a compliant corpus sentence is
+// narrowed to the forbidden phrasing (`zwiększa ryzyk`, `ogranicz przyjm`) instead of being dropped.
 export const FORBIDDEN_WORDS = [
   "powoduj",
-  "wywołuj",
+  "wywoł",
   "odstaw",
   "przerwij",
+  "przerwan",
   "zmień daw",
   "zmniejsz daw",
+  "zmniejsz ilość",
   "zwiększ daw",
+  "ogranicz przyjm",
+  "zamień",
+  "rezygn",
+  "nie bierz",
   "nie łącz",
   "zakaz",
   "nie wolno",
-  "niebezpieczn",
+  "bezpieczn",
   "groźn",
   "prowadz",
   "przyczyn",
   "skutk",
+  "wynikiem",
+  "wynikaj",
+  "odpowiada za objaw",
+  "zwiększa ryzyk",
+  "podejrz",
   "dawk",
   "przesta",
   "unika",
