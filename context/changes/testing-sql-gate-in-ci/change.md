@@ -1,7 +1,7 @@
 ---
 change_id: testing-sql-gate-in-ci
 title: Bramka SQL w CI — sprawdzenia RLS i niezmienników historii przed merge'em
-status: implementing
+status: implemented
 created: 2026-09-28
 updated: 2026-09-29
 archived_at: null

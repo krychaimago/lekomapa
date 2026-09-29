@@ -376,11 +376,11 @@ Zmiana nie dodaje migracji i nie wymaga `supabase db push`. Ręczny próbny PR z
 
 #### Automated
 
-- [x] 3.1 `npm run db:check` lokalnie przechodzi i wypisuje `GATE_COMPLETE account_isolation_checks`
-- [x] 3.2 Brak `when others` w `account_isolation_checks.sql`
-- [ ] 3.3 Job `smoke` na PR zielony, log pokazuje oba pliki
+- [x] 3.1 `npm run db:check` lokalnie przechodzi i wypisuje `GATE_COMPLETE account_isolation_checks` — 30d38d0
+- [x] 3.2 Brak `when others` w `account_isolation_checks.sql` — 30d38d0
+- [x] 3.3 Job `smoke` na PR zielony, log pokazuje oba pliki — 30d38d0
 
 #### Manual
 
-- [ ] 3.4 Próbny PR z polityką `using (true)` daje czerwony krok „SQL checks”, bez deployu, zamknięty bez merge'a
-- [x] 3.5 Blok z rolą `postgres` pada na asercji `current_user`
+- [x] 3.4 Próbny PR z polityką `using (true)` daje czerwony krok „SQL checks”, bez deployu, zamknięty bez merge'a — 30d38d0
+- [x] 3.5 Blok z rolą `postgres` pada na asercji `current_user` — 30d38d0
