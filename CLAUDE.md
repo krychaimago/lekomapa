@@ -103,7 +103,7 @@ Starter pokrywa FR-001 i FR-002 (rejestracja, logowanie, odzyskiwanie dostępu) 
   - Bramka: `scripts/tokens/hardcoded-colors.mjs` w `npm test` odrzuca kolor wpisany na sztywno w `src/`. Lista `EXCEPTIONS` obejmuje wyłącznie ekrany wejściowe startera; S-01 i S-10 zdejmują z niej swoje pliki. Nie dopisuj tam nowych plików.
 - **Ekrany wnętrza**: przez `src/layouts/AppLayout.astro`. Pozycja menu przez `NAV_ITEMS` w `src/lib/navigation.ts` — trasa z menu jest chroniona automatycznie. Trasa wnętrza spoza menu wymaga ręcznego wpisu w `PROTECTED_ROUTES` w `src/middleware.ts`.
 - **API routes**: eksporty wielkimi literami (`GET`, `POST`), `export const prerender = false`; walidacja wejścia przez zod — zod nie jest jeszcze zainstalowany, pierwsza route go dociąga (`npm i zod`).
-- **Migracje Supabase**: `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_short_description.sql`. Na każdej nowej tabeli włączaj RLS z politykami per-operacja i per-rola — to jest mechanizm izolacji danych zdrowotnych per-konto z wymagań niefunkcjonalnych, nie opcja do odłożenia.
+- **Migracje Supabase**: `supabase/migrations/`, nazwy `YYYYMMDDHHmmss_short_description.sql`. Na każdej nowej tabeli włączaj RLS z politykami per-operacja i per-rola i `revoke truncate` od `anon`/`authenticated` — to jest mechanizm izolacji danych zdrowotnych per-konto z wymagań niefunkcjonalnych, nie opcja do odłożenia. Pełna checklista: `context/foundation/test-plan.md` §6.4.
 - **React**: bez dyrektyw Next.js (`"use client"` itp.). Hooki wydzielaj do `src/components/hooks/`.
 - **Serwisy i helpery** w `src/lib/` (logika biznesowa w `src/lib/services/`).
 - **Typy współdzielone** (encje, DTO) w `src/types.ts`. Plik jeszcze nie istnieje — utwórz przy pierwszym typie, nie rozsypuj typów po komponentach.

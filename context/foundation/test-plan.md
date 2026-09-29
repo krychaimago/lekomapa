@@ -66,12 +66,12 @@ Każdy wiersz to osobna faza rolloutu, otwierająca własny folder zmiany
 przez `/10x-new`. Status przesuwa się od lewej do prawej; orkiestrator
 aktualizuje go, gdy artefakty pojawiają się na dysku.
 
-| #   | Phase name                               | Goal (one line)                                                                                                                 | Risks covered | Test types                         | Status        | Change folder                           |
-| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------- | ------------- | --------------------------------------- |
-| 1   | Bramka SQL w CI                          | Udowodnić, że PR łamiący RLS lub niezmiennik historii nie przejdzie CI                                                          | #4, #1, #3    | CI gate + SQL                      | change opened | context/changes/testing-sql-gate-in-ci/ |
-| 2   | Niezmienniki schematu dla każdej tabeli  | Udowodnić, że nowa tabela bez RLS per operacja lub bez usuwania razem z kontem wywraca bramkę, zanim S-02 i S-05 dodadzą tabele | #1, #3, #6    | integration (SQL na katalogu bazy) | not started   | —                                       |
-| 3   | Strażnik języka FR-012                   | Udowodnić, że żaden tekst o kolizji nie stwierdza przyczyny ani nie zaleca zmian, i że nota poglądowa jest zawsze obecna        | #2            | unit + smoke step                  | not started   | —                                       |
-| 4   | Odzyskiwanie dostępu bez kroków ręcznych | Udowodnić automatycznie, że wygasły lub zużyty link nie daje sesji, a sesja z linku nie wychodzi poza ekran nowego hasła        | #5            | smoke / integration                | not started   | —                                       |
+| #   | Phase name                               | Goal (one line)                                                                                                                 | Risks covered | Test types                         | Status        | Change folder                                      |
+| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------- | ------------- | -------------------------------------------------- |
+| 1   | Bramka SQL w CI                          | Udowodnić, że PR łamiący RLS lub niezmiennik historii nie przejdzie CI                                                          | #4, #1, #3    | CI gate + SQL                      | complete      | context/archive/2026-09-28-testing-sql-gate-in-ci/ |
+| 2   | Niezmienniki schematu dla każdej tabeli  | Udowodnić, że nowa tabela bez RLS per operacja lub bez usuwania razem z kontem wywraca bramkę, zanim S-02 i S-05 dodadzą tabele | #1, #3, #6    | integration (SQL na katalogu bazy) | change opened | context/changes/testing-schema-invariants/         |
+| 3   | Strażnik języka FR-012                   | Udowodnić, że żaden tekst o kolizji nie stwierdza przyczyny ani nie zaleca zmian, i że nota poglądowa jest zawsze obecna        | #2            | unit + smoke step                  | not started   | —                                                  |
+| 4   | Odzyskiwanie dostępu bez kroków ręcznych | Udowodnić automatycznie, że wygasły lub zużyty link nie daje sesji, a sesja z linku nie wychodzi poza ekran nowego hasła        | #5            | smoke / integration                | not started   | —                                                  |
 
 Kolejność: faza 1 jest najtańsza i zamyka lukę z wywiadu (P4). Faza 2
 musi wejść przed kolejnymi migracjami (P3). Faza 3 przed UI znaczników
@@ -125,7 +125,8 @@ a kod aplikacji nie ma żadnych.
 - **Kontrprzykład właściciela**: każda blokada ma obok ten sam zapis wykonany przez właściciela na swoim wierszu, z `row_count = 1`. Bez tego blokada może wynikać z literówki, a nie z polityki.
 - **Uruchomienie**: `npm run db:check` (wymaga `npx supabase start`), pojedynczy plik: `node scripts/db-checks.mjs supabase/tests/<nazwa>.sql`. Plik biegnie w transakcji z rollbackiem, nic nie zostaje w bazie.
 - **CI**: job `smoke`, krok „SQL checks”, zaraz po starcie lokalnego Supabase. Czerwony krok zatrzymuje deploy.
-- Otwarte na §3 Phase 2: sprawdzenie wyprowadzone z katalogu bazy (lista tabel z danymi konta nie wpisana ręcznie).
+- **Reguły katalogu**: `schema_invariants_checks.sql` wyprowadza tabele z danymi konta z katalogu bazy (domknięcie kluczy obcych do `auth.users`) i sprawdza ich strukturę (INVARIANT 1–9). `account_isolation_checks.sql` bierze ten sam zbiór i dowodzi zachowania. Nowej tabeli nie wpisuje się do listy w sprawdzeniu — patrz §6.4.
+- **Próbka czerwonej bramki**: nowa reguła dostaje próbkę w `scripts/db-checks/probes/` — samo DDL psujące jedną regułę, bez `begin;` i bez `commit;` (`begin;` dokleja runner, `commit`/`end`/`rollback` w próbce runner odrzuca). Runner dokleja ją przed plik sprawdzeń: `node scripts/db-checks.mjs --probe <próbka> <plik sprawdzeń>`. W CI dopisz wywołanie `expect_invariant_failure` z oczekiwanym tekstem `… FAILED` (`.github/workflows/ci.yml`, krok „SQL checks”). Próbka pada z innego powodu = niczego nie zmierzyła.
 
 ### 6.3 Adding a smoke step
 
@@ -133,11 +134,29 @@ a kod aplikacji nie ma żadnych.
 
 ### 6.4 Adding a new table with user data
 
-- TBD — see §3 Phase 2 (co musi przejść, zanim migracja z nową tabelą trafi do `main`).
+Migracja z nową tabelą z danymi konta przejdzie bramkę, gdy ma:
+
+- **klucz obcy do konta**: do `auth.users` albo do istniejącej tabeli konta. Bez klucza tabela nie należy do żadnego zbioru i pada INVARIANT 1. Klucz do `auth.users` zawsze z `on delete cascade`, a tabela musi mieć ścieżkę od `auth.users` złożoną wyłącznie z kluczy `cascade` (INVARIANT 2).
+- **klucz między dwiema tabelami konta** (np. wpis dzienniczka → lek): `cascade`, `set null`, `no action` albo `restrict` — świadoma decyzja migracji, czy usunięcie rodzica-pomyłki zabiera wpisy podrzędne. Zakazany jest tylko `set default`, bo przepina wiersz pod innego rodzica. Przy `set null` na kolumnie pilnowanej przez strażnika historii usunięcie konta może się zablokować — pokaże to ISOLATION 6.
+- **RLS i cztery polityki w tej samej migracji**: SELECT, INSERT, UPDATE, DELETE, każda osobno dla `authenticated`, z niepustym wyrażeniem wiążącym wiersz z `auth.uid()`. Bez `for all` i bez `using (true)`.
+- **`revoke truncate on public.<tabela> from anon, authenticated`**: `TRUNCATE` omija RLS i strażników historii (INVARIANT 6).
+- **nowa funkcja `security definer`** (także wyzwalacz): `set search_path = ''` i nazwy z nazwą schematu. Do tego `revoke execute … from anon, authenticated` jawnie. `revoke … from public` nie wystarcza (INVARIANT 7). Funkcja działa z prawami właściciela i omija RLS, więc wywołana przez zalogowane konto odpowie o cudzych wierszach. Strażnicy historii wołają ją jako własny definer i nie potrzebują uprawnień wywołującego. Funkcja, którą musi wołać przeglądarka, sama sprawdza `auth.uid()` i dostaje świadomy wyjątek w INVARIANT 7.
+- **nowy widok w `public`**: `create view … with (security_invoker = true)`. Bez tego widok czyta tabele jako `postgres`, RLS go nie obejmuje, a domyślne uprawnienia Supabase dają `anon` i `authenticated` dostęp do niego (INVARIANT 9). Widok zmaterializowany nie ma `security_invoker` — dla niego `revoke all … from anon, authenticated`.
+
+Potem w sprawdzeniach i smoke:
+
+- **wiersz w mapie danych testowych** `isolation_fixtures` w `supabase/tests/account_isolation_checks.sql` i wiersze kont A i B wstawione w ISOLATION 0. Bez nich pada `ISOLATION 0 FAILED: <tabela> has no test data`. Z mapą tabela sama przechodzi ISOLATION 1–6: odczyt, zapis, zmiana, przepięcie, usunięcie i usunięcie konta.
+- **nowy strażnik historii** (wyzwalacz blokujący zmianę rdzenia wpisu): wpis na liście w INVARIANT 8 `schema_invariants_checks.sql`. Strażnik nie wynika ze struktury bazy.
+- **cztery kroki izolacji** w `scripts/smoke.mjs` (`isolationTargets`). Lista ręczna — bramka SQL jej nie pilnuje, pilnuje tylko ta checklista.
+- **`npm run db:check` lokalnie przed PR** (wymaga `npx supabase start` i `npx supabase db reset` po nowej migracji).
+
+Tabela wspólna tylko do odczytu (słownik, rejestr) to świadomie inna droga: bez klucza do konta, dopisana do listy tabel wspólnych w **obu** plikach (`schema_invariants_checks.sql` i `account_isolation_checks.sql`), wyłącznie polityki SELECT i `revoke insert, update, delete, truncate … from anon, authenticated` (INVARIANT 5).
 
 ### 6.5 Per-rollout-phase notes
 
 (Uzupełniane po każdej fazie.)
+
+- **Faza 2 (niezmienniki schematu)**: katalog bazy wyznacza zbiór tabel konta i łapie jawne braki: brak klucza lub kaskady, brak RLS, brak polityki na operację, `TRUNCATE`, `EXECUTE` dla `anon`, brak strażnika. Katalog nie powie, czy polityka faktycznie wiąże wiersz z kontem — `using (medication_id is not null)` przejdzie każdą regułę strukturalną. To dowodzi wyłącznie zachowanie na dwóch kontach (ISOLATION 1–6). Dlatego brak danych testowych dla tabeli z katalogu to porażka, nie pominięcie.
 
 ## 7. What We Deliberately Don't Test
 

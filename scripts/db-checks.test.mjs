@@ -1,15 +1,21 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import { test } from "node:test";
 
 import {
   checkName,
+  composeProbe,
   containerName,
   errorStopWeakening,
   evaluateRun,
   hasCompletionMarker,
+  isSchemaProbe,
   migrationVersions,
   missingVersions,
   parseProjectId,
+  PROBES_DIR,
+  REPO_ROOT,
+  transactionEnd,
 } from "./db-checks.mjs";
 
 test("project_id is read from the top level of config.toml", () => {
@@ -107,4 +113,40 @@ test("a file that turns ON_ERROR_STOP off is flagged with its line", () => {
   assert.equal(errorStopWeakening("\\set ON_ERROR_STOP 0\n")?.line, 1);
   assert.equal(errorStopWeakening("\\set ON_ERROR_STOP\n")?.line, 1);
   assert.equal(errorStopWeakening("  \\set ON_ERROR_STOP off\n")?.line, 1);
+});
+
+test("a composed probe starts with begin; so the probe DDL runs inside the check file's transaction", () => {
+  const probe = "create table public.probe_x (id uuid);";
+  const check = "\\set ON_ERROR_STOP on\n\nbegin;\nselect 1;\nrollback;\n";
+  const sql = composeProbe(probe, check);
+  assert.ok(sql.startsWith("begin;\n"));
+  assert.ok(sql.indexOf(probe) > 0 && sql.indexOf(probe) < sql.indexOf(check));
+  assert.ok(sql.endsWith(check), "check file content must be appended unchanged");
+  assert.equal(errorStopWeakening(sql), null);
+});
+
+test("files in the probes directory are schema probes, except the runner's own probes", () => {
+  assert.equal(isSchemaProbe(path.join(PROBES_DIR, "account-table-without-rls.sql")), true);
+  assert.equal(isSchemaProbe("scripts/db-checks/probes/view-without-security-invoker.sql"), true);
+  assert.equal(isSchemaProbe(path.join(PROBES_DIR, "failing-check.sql")), false);
+  assert.equal(isSchemaProbe(path.join(PROBES_DIR, "missing-marker.sql")), false);
+  assert.equal(isSchemaProbe(path.join(REPO_ROOT, "supabase", "tests", "schema_invariants_checks.sql")), false);
+});
+
+test("a probe that ends the transaction itself is flagged", () => {
+  assert.equal(transactionEnd("create table public.probe_x (id uuid);\ncommit;\n"), "commit");
+  assert.equal(transactionEnd("create table public.probe_x (id uuid); END;"), "end");
+  assert.equal(transactionEnd("  rollback;\n"), "rollback");
+  assert.equal(transactionEnd("abort;"), "abort");
+});
+
+test("DDL, comments and do-block bodies do not count as ending the transaction", () => {
+  assert.equal(
+    transactionEnd("create table public.probe_x (id uuid);\ngrant select on public.probe_x to anon;\n"),
+    null,
+  );
+  assert.equal(transactionEnd("-- the check file's rollback; removes this\ncreate view public.v as select 1;\n"), null);
+  assert.equal(transactionEnd("do $$\nbegin\n  perform 1;\nend;\n$$;\n"), null);
+  assert.equal(transactionEnd("create function f() returns int language sql as $body$ select 1; $body$;"), null);
+  assert.equal(transactionEnd("create table public.probe_x (ended_on date, end_reason text);"), null);
 });
