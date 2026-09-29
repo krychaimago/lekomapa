@@ -1,6 +1,11 @@
 // SQL gate runner: runs the SQL checks against the database container started by `npx supabase start`.
 // Usage: npm run db:check                  -> every supabase/tests/*.sql, sorted by name
 //        node scripts/db-checks.mjs <file>  -> only the given files (used by the probes in CI)
+//        node scripts/db-checks.mjs --probe <probe.sql> <check.sql>
+//                                           -> schema probe: `begin;` + the probe's DDL + the check file, composed
+//                                              in memory and run as one file under the check file's name, so the
+//                                              final `rollback;` of the check file removes the DDL (used in CI to
+//                                              prove that a named check turns the gate red)
 //
 // The runner does not trust the SQL files to keep the gate honest, so it enforces three conditions itself:
 //   - ON_ERROR_STOP comes from the command line, so a failed check ends psql with a non-zero code even when the
@@ -76,6 +81,13 @@ export function errorStopWeakening(sql) {
     }
   }
   return null;
+}
+
+// Composes a schema probe with a check file: `begin;` first, so the probe's DDL runs inside the transaction that the
+// check file ends with `rollback;` and is never committed; the check file's own `begin;` only gives a WARNING. The
+// check file is appended unchanged, so a probe cannot drift from the checks it targets.
+export function composeProbe(probeSql, checkSql) {
+  return `begin;\n${probeSql}\n${checkSql}`;
 }
 
 // Decides the result of one file from the psql exit code and its combined output.
@@ -185,52 +197,66 @@ async function defaultFiles() {
   return names.map((name) => path.join(TESTS_DIR, name));
 }
 
+// Turns the command line into runs: each has a label for the log, the name its completion marker must carry and
+// the files whose contents make up its SQL (one file, or a probe followed by a check file).
+async function plannedRuns(args) {
+  if (args[0] === "--probe") {
+    if (args.length !== 3) fail("Usage: node scripts/db-checks.mjs --probe <probe.sql> <check.sql>");
+    const [probe, check] = args.slice(1).map((file) => path.resolve(file));
+    return [
+      {
+        label: `${path.relative(REPO_ROOT, probe)} + ${path.relative(REPO_ROOT, check)}`,
+        name: checkName(check),
+        files: [probe, check],
+      },
+    ];
+  }
+  const files = args.length > 0 ? args.map((file) => path.resolve(file)) : await defaultFiles();
+  return files.map((file) => ({ label: path.relative(REPO_ROOT, file), name: checkName(file), files: [file] }));
+}
+
 async function main() {
   const projectId = parseProjectId(await readFile(CONFIG_PATH, "utf8"));
   if (!projectId) fail(`No top-level project_id in ${path.relative(REPO_ROOT, CONFIG_PATH)}`);
   const container = containerName(projectId);
 
-  const args = process.argv.slice(2);
-  const files = args.length > 0 ? args.map((file) => path.resolve(file)) : await defaultFiles();
-  if (files.length === 0) fail(`No SQL files to run in ${path.relative(REPO_ROOT, TESTS_DIR)}`);
+  const runs = await plannedRuns(process.argv.slice(2));
+  if (runs.length === 0) fail(`No SQL files to run in ${path.relative(REPO_ROOT, TESTS_DIR)}`);
 
   assertContainerRunning(container);
   await assertMigrationsApplied(container);
 
   const failed = [];
-  for (const file of files) {
-    const relative = path.relative(REPO_ROOT, file);
-    const name = checkName(file);
-    console.log(`\n=== RUN ${relative} (container ${container}) ===`);
+  for (const { label, name, files } of runs) {
+    console.log(`\n=== RUN ${label} (container ${container}) ===`);
     let sql;
     try {
-      sql = await readFile(file, "utf8");
+      const contents = await Promise.all(files.map((file) => readFile(file, "utf8")));
+      sql = contents.length === 2 ? composeProbe(contents[0], contents[1]) : contents[0];
     } catch (error) {
-      console.error(`FAIL ${relative}: cannot read file (${error instanceof Error ? error.message : String(error)})`);
-      failed.push(relative);
+      console.error(`FAIL ${label}: cannot read file (${error instanceof Error ? error.message : String(error)})`);
+      failed.push(label);
       continue;
     }
     const weakening = errorStopWeakening(sql);
     if (weakening) {
-      console.error(
-        `FAIL ${relative}: file turns off ON_ERROR_STOP (line ${String(weakening.line)}: ${weakening.text})`,
-      );
-      failed.push(relative);
+      console.error(`FAIL ${label}: file turns off ON_ERROR_STOP (line ${String(weakening.line)}: ${weakening.text})`);
+      failed.push(label);
       continue;
     }
     const { ok, reason } = evaluateRun({ ...(await runFile(container, sql)), name });
     if (ok) {
-      console.log(`PASS ${relative}`);
+      console.log(`PASS ${label}`);
     } else {
-      console.error(`FAIL ${relative}: ${String(reason)}`);
-      failed.push(relative);
+      console.error(`FAIL ${label}: ${String(reason)}`);
+      failed.push(label);
     }
   }
 
   if (failed.length > 0) {
     fail(`\nSQL checks failed: ${failed.join(", ")}`);
   }
-  console.log(`\nAll SQL checks passed (${String(files.length)} file(s)).`);
+  console.log(`\nAll SQL checks passed (${String(runs.length)} file(s)).`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) await main();

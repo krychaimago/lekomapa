@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   checkName,
+  composeProbe,
   containerName,
   errorStopWeakening,
   evaluateRun,
@@ -107,4 +108,14 @@ test("a file that turns ON_ERROR_STOP off is flagged with its line", () => {
   assert.equal(errorStopWeakening("\\set ON_ERROR_STOP 0\n")?.line, 1);
   assert.equal(errorStopWeakening("\\set ON_ERROR_STOP\n")?.line, 1);
   assert.equal(errorStopWeakening("  \\set ON_ERROR_STOP off\n")?.line, 1);
+});
+
+test("a composed probe starts with begin; so the probe DDL runs inside the check file's transaction", () => {
+  const probe = "create table public.probe_x (id uuid);";
+  const check = "\\set ON_ERROR_STOP on\n\nbegin;\nselect 1;\nrollback;\n";
+  const sql = composeProbe(probe, check);
+  assert.ok(sql.startsWith("begin;\n"));
+  assert.ok(sql.indexOf(probe) > 0 && sql.indexOf(probe) < sql.indexOf(check));
+  assert.ok(sql.endsWith(check), "check file content must be appended unchanged");
+  assert.equal(errorStopWeakening(sql), null);
 });
