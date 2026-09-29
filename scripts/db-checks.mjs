@@ -4,7 +4,8 @@
 //
 // The runner does not trust the SQL files to keep the gate honest, so it enforces three conditions itself:
 //   - ON_ERROR_STOP comes from the command line, so a failed check ends psql with a non-zero code even when the
-//     file forgets `\set ON_ERROR_STOP on`,
+//     file forgets `\set ON_ERROR_STOP on`; a file that turns it off (`\unset`, or `\set` to anything but on)
+//     fails without being run, because it could print its marker after a failed check,
 //   - the target is the local container named after project_id in supabase/config.toml, never SUPABASE_URL or
 //     .env (which point at production), and every migration in supabase/migrations/ must be applied there,
 //   - a file passes only when psql exits with 0 AND prints the notice `GATE_COMPLETE <file name without .sql>`,
@@ -22,6 +23,8 @@ export const TESTS_DIR = path.join(REPO_ROOT, "supabase", "tests");
 
 const MIGRATION_VERSION = /^(\d{14})_.+\.sql$/;
 const COMPLETION_MARKER = /NOTICE:\s+GATE_COMPLETE\s+(\S+)\s*$/;
+const ERROR_STOP_COMMAND = /^\s*\\(set|unset)\s+ON_ERROR_STOP\b[ \t]*(\S*)/;
+const ERROR_STOP_ON = /^(on|true|yes|1)$/i;
 
 // Reads the top-level project_id from supabase/config.toml. Keys inside [sections] (e.g. a commented-out
 // project_id of an auth provider) are ignored.
@@ -59,6 +62,20 @@ export function checkName(filePath) {
 // True only when the psql output has a NOTICE line with the completion marker of exactly this file.
 export function hasCompletionMarker(output, name) {
   return output.split(/\r?\n/).some((line) => COMPLETION_MARKER.exec(line)?.[1] === name);
+}
+
+// Returns the first line (1-based number and text) that unsets ON_ERROR_STOP or sets it to anything but on,
+// or null when the file leaves it on. Only meta-commands at the start of a line count, so comments that
+// mention `\set ON_ERROR_STOP on` are not flagged.
+export function errorStopWeakening(sql) {
+  const lines = sql.split(/\r?\n/);
+  for (const [index, line] of lines.entries()) {
+    const match = ERROR_STOP_COMMAND.exec(line);
+    if (match && (match[1] === "unset" || !ERROR_STOP_ON.test(match[2]))) {
+      return { line: index + 1, text: line.trim() };
+    }
+  }
+  return null;
 }
 
 // Decides the result of one file from the psql exit code and its combined output.
@@ -155,6 +172,10 @@ function runFile(container, sql) {
     child.on("close", (code) => {
       resolve({ exitCode: code ?? -1, output });
     });
+    // psql may exit before reading the whole file; the broken pipe is reported through the exit code, not thrown.
+    child.stdin.on("error", (error) => {
+      output += `\n${error.message}`;
+    });
     child.stdin.end(sql);
   });
 }
@@ -186,6 +207,14 @@ async function main() {
       sql = await readFile(file, "utf8");
     } catch (error) {
       console.error(`FAIL ${relative}: cannot read file (${error instanceof Error ? error.message : String(error)})`);
+      failed.push(relative);
+      continue;
+    }
+    const weakening = errorStopWeakening(sql);
+    if (weakening) {
+      console.error(
+        `FAIL ${relative}: file turns off ON_ERROR_STOP (line ${String(weakening.line)}: ${weakening.text})`,
+      );
       failed.push(relative);
       continue;
     }

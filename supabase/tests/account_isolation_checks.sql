@@ -32,7 +32,8 @@ begin;
 -- ISOLATION 0: test data (as postgres) and preconditions
 -- UUID pool 00000000-0000-4000-9000-*, distinct from rls_checks.sql.
 --   account A: 0a00; medication 0a01, substance 0a02, period 0a03
---              extra rows for the owner DELETE counterexample: medication 0a11, substance 0a12, period 0a13
+--              extra rows for the owner DELETE counterexample: medication 0a11 (no children),
+--              substance 0a12 and period 0a13 under medication 0a01
 --   account B: 0b00; medication 0b01, substance 0b02, period 0b03
 -- ---------------------------------------------------------------------------
 
@@ -365,7 +366,8 @@ declare
   v_actor record;
   v_count integer;
 begin
-  -- Children before the parent, so that the owner deletes of 0a12 and 0a13 are not cascades.
+  -- 0a12 and 0a13 hang under 0a01, which is never deleted, so each owner delete removes exactly
+  -- its own row and the order of cases does not matter.
   for v_case in
     select * from (values
       (1, 'medication_substances', '00000000-0000-4000-9000-000000000a02'::uuid, '00000000-0000-4000-9000-000000000a12'::uuid),

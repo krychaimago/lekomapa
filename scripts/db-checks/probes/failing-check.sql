@@ -3,8 +3,6 @@
 -- There is deliberately no `\set ON_ERROR_STOP on` here: the runner must enforce it from the command line.
 -- Without it psql would go on to the completion marker below and exit with 0.
 
-begin;
-
 do $$
 begin
   raise exception 'PROBE FAILED: deliberate failure';
@@ -16,5 +14,3 @@ begin
   raise notice 'GATE_COMPLETE failing-check';
 end;
 $$;
-
-rollback;

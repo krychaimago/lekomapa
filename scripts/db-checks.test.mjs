@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   checkName,
   containerName,
+  errorStopWeakening,
   evaluateRun,
   hasCompletionMarker,
   migrationVersions,
@@ -88,4 +89,22 @@ test("a non-zero exit code fails even when the marker was printed", () => {
   const result = evaluateRun({ exitCode: 3, output, name: "failing-check" });
   assert.equal(result.ok, false);
   assert.match(result.reason, /psql exited with code 3/);
+});
+
+test("a file that keeps ON_ERROR_STOP on is not flagged", () => {
+  assert.equal(errorStopWeakening("begin;\n\\set ON_ERROR_STOP on\nselect 1;\n"), null);
+  assert.equal(errorStopWeakening("\\set ON_ERROR_STOP true\n\\set ON_ERROR_STOP 1\n"), null);
+  assert.equal(errorStopWeakening("-- the runner forces ON_ERROR_STOP from the command line\n"), null);
+  assert.equal(errorStopWeakening("-- There is deliberately no `\\set ON_ERROR_STOP on` here\n"), null);
+});
+
+test("a file that turns ON_ERROR_STOP off is flagged with its line", () => {
+  assert.deepEqual(errorStopWeakening("begin;\n\\set ON_ERROR_STOP off\n"), {
+    line: 2,
+    text: "\\set ON_ERROR_STOP off",
+  });
+  assert.equal(errorStopWeakening("\\unset ON_ERROR_STOP\n")?.line, 1);
+  assert.equal(errorStopWeakening("\\set ON_ERROR_STOP 0\n")?.line, 1);
+  assert.equal(errorStopWeakening("\\set ON_ERROR_STOP\n")?.line, 1);
+  assert.equal(errorStopWeakening("  \\set ON_ERROR_STOP off\n")?.line, 1);
 });
