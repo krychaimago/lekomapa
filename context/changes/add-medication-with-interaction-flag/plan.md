@@ -664,27 +664,27 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
-- [x] 1.2 Wszystkie pliki sprawdzeń SQL przechodzą, w tym nowy `medication_interaction_checks`: `npm run db:check`
-- [x] 1.3 Sprawdzenia strażnika padają bez migracji strażnika
-- [x] 1.4 Typy i lint przechodzą: `npm run typecheck` i `npm run lint`
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — da38bed
+- [x] 1.2 Wszystkie pliki sprawdzeń SQL przechodzą, w tym nowy `medication_interaction_checks`: `npm run db:check` — da38bed
+- [x] 1.3 Sprawdzenia strażnika padają bez migracji strażnika — da38bed
+- [x] 1.4 Typy i lint przechodzą: `npm run typecheck` i `npm run lint` — da38bed
 
 #### Manual
 
-- [x] 1.5 Nagłówek migracji i komentarz przy `medication_interactions()` zrozumiałe bez znajomości kodu
+- [x] 1.5 Nagłówek migracji i komentarz przy `medication_interactions()` zrozumiałe bez znajomości kodu — da38bed
 
 ### Phase 2: Teksty o kolizji i test FR-012
 
 #### Automated
 
-- [ ] 2.1 Nowe testy przechodzą razem z istniejącymi: `npm test`
-- [ ] 2.2 Test języka pada po dopisaniu zdania zakazanego do `note`
-- [ ] 2.3 Test kolejności pada, gdy `orderMedications` sortuje po znaczniku
-- [ ] 2.4 `npm run typecheck` i `npm run lint`
+- [x] 2.1 Nowe testy przechodzą razem z istniejącymi: `npm test`
+- [x] 2.2 Test języka pada po dopisaniu zdania zakazanego do `note`
+- [x] 2.3 Test kolejności pada, gdy `orderMedications` sortuje po znaczniku
+- [x] 2.4 `npm run typecheck` i `npm run lint`
 
 #### Manual
 
-- [ ] 2.5 Autorka akceptuje brzmienie tekstów w `src/lib/copy/interactions.ts`
+- [x] 2.5 Autorka akceptuje brzmienie tekstów w `src/lib/copy/interactions.ts`
 
 ### Phase 3: Dodanie leku z rejestru i lista ze znacznikiem
 
