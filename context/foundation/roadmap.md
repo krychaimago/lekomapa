@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-09-27
+updated: 2026-09-30
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -53,7 +53,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | proposed    |
 | S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | ready       |
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | ready       |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | planning    |
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | proposed    |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | proposed    |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | ready       |
@@ -204,13 +204,15 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Risk:** To gwiazda przewodnia i jedyne miejsce, w którym produkt mógłby wyrządzić szkodę. Język komunikatu podlega sprawdzeniu, nie jest wytyczną: „może wchodzić w interakcję", nigdy zakaz łączenia, nigdy porządkowanie leków według stopnia podejrzenia, stała nota o charakterze poglądowym przy każdej informacji. Brak znacznika nie może wyglądać jak potwierdzenie bezpieczeństwa. Sekwencjonowane najwcześniej, jak pozwalają wymagania wstępne, bo cała reszta roadmapy zakłada zapisane leki.
 - **Dług przejęty z F-02:** migracja tego plasterka musi dodać na `medications` wyzwalacz na UPDATE, który po zamknięciu okna korekty blokuje zmianę `registry_medication_id` i `composition_source`, oraz kontrolę spójności `composition_source = 'registry'` ⇔ `registry_medication_id is not null`, ze sprawdzeniem w `supabase/tests/rls_checks.sql`. Powód: reguła z S-03 — zmiana substancji czynnej to zakończenie leku i dodanie nowego — jest dziś pilnowana tylko na `medication_substances`; przepięcie samego leku pod inny produkt rejestru ją omija. Do rozstrzygnięcia w planie: czy `product_name` należy do rdzenia wpisu. Źródło: `context/archive/2026-09-23-interaction-rules-seed/reviews/impl-review.md`, F2.
 - **Decyzja przejęta z F-02:** klucz unikalny `medication_substances (medication_id, substance_name, atc_code)` przepuszcza ten sam kod pod różną pisownią nazwy („Ibuprofenum” / „ibuprofenum”), więc jedna substancja może zostać policzona podwójnie. Plan S-02 wybiera: normalizacja nazwy przy zapisie albo częściowy indeks `(medication_id, atc_code) where atc_code is not null`. Zmierzone 2026-09-26: w rejestrze nie ma produktu z dwiema różnymi substancjami o tym samym kodzie; ścieżki z ulotki nie zmierzono. Źródło: impl-review F7.
+  - **Poprawka pomiaru (2026-09-30):** zdanie z 2026-09-26 jest nieprawdziwe. 4 produkty mają ten sam kod ATC dwa razy: Ibuprofen Zentiva 400 mg (dwa razy „Ibuprofenum” / M01AE01 — kopia 1:1 łamie istniejący klucz), Dexak (M01AE17) i dwa warianty Coroswera („Rosuvastatinum” i „Rosuvastatinum calicum”, C10AA07).
+  - **Wybrany wariant:** częściowy indeks unikalny `medication_substances_medication_id_atc_code_key` na `(medication_id, atc_code) where atc_code is not null` oraz deduplikacja przy kopiowaniu składu z rejestru (jeden wiersz na kod). Stary klucz zostaje dla wierszy bez kodu. Migracja: `supabase/migrations/20260930120000_medication_write_and_interactions.sql`.
 - **Uwaga do makiety:** ekran dodawania leku w `design-draft.md` jest sprzed rewizji FR-003 — zakłada wybór substancji czynnej ze słownika. Obowiązuje wejście po nazwie handlowej z rejestru, a substancja z ulotki tylko dla leku spoza rejestru. Z makiety zostają paleta, kolor możliwej interakcji i dwa objaśnienia („Dawka ma historię”, „Substancji nie podmienisz”). Ekran jest pierwszym ekranem wnętrza: używa nazwanych kolorów z F-04 i dopina swoją pozycję menu.
 - **Kontrakt z fazy 3 planu testów:** faza 3 (`testing-language-guard`) dowiodła języka opisów par w walidatorze i w bazie; teksty, które powstają dopiero w tym plasterku, muszą trafić w zasięg testu. Brzmienie noty rozstrzyga ten plasterek — kontrakt wymaga tylko, żeby istniała i była sprawdzana.
   1. Nota poglądowa i zdanie „brak ostrzeżenia nie oznacza, że połączenie jest bezpieczne” żyją w jednym module copy (wzorzec: `src/lib/copy/password-recovery.ts`), nie rozsypane po komponentach.
   2. Test w `scripts/` importuje ten moduł i `scripts/fr012/corpus.mjs` i dowodzi, że: każdy tekst z modułu przechodzi przez `forbiddenWordsIn` z `scripts/rpl/pairs.mjs` bez trafień (nie porównanie z listą zdań korpusu — takie porównanie przechodzi zawsze); nota i zdanie o bezpieczeństwie istnieją i nie są puste. Zdanie o bezpieczeństwie jest jedynym jawnym wyjątkiem: test sprawdza je bez rdzenia `bezpieczn`, bo PRD go wymaga (`prd.md:67`, guardrail `prd.md:49`). Wyjątek jest nazwany w teście, nie w walidatorze.
   3. Jeden krok smoke sprawdza, że widok z kolizją zawiera notę.
   4. Kolejność leków na liście nie zależy od kolizji — ranking według podejrzenia to własność listy, której walidator tekstu nie widzi (FR-012).
-- **Status:** ready
+- **Status:** planning
 
 ### S-03: Zmiana dawkowania zamyka okres i otwiera nowy
 
