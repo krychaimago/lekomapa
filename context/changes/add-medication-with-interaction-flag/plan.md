@@ -736,11 +736,11 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 6.1 `npm run lint`, `npm run typecheck`, `npm run build`, `npm test`
-- [x] 6.2 `npm run smoke` bez regresji; trasa podpowiedzi 200 z sesją, 401 bez
+- [x] 6.1 `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` — 78a61e0
+- [x] 6.2 `npm run smoke` bez regresji; trasa podpowiedzi 200 z sesją, 401 bez — 78a61e0
 
 #### Manual
 
-- [x] 6.3 Podpowiedzi w przeglądarce: klawiatura, mysz, Esc
-- [x] 6.4 Bez JavaScriptu formularz „Szukaj” działa
-- [x] 6.5 VoiceOver odczytuje liczbę podpowiedzi i aktywną pozycję
+- [x] 6.3 Podpowiedzi w przeglądarce: klawiatura, mysz, Esc — 78a61e0
+- [x] 6.4 Bez JavaScriptu formularz „Szukaj” działa — 78a61e0
+- [x] 6.5 VoiceOver odczytuje liczbę podpowiedzi i aktywną pozycję — 78a61e0
