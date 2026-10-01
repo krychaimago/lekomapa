@@ -669,83 +669,83 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — da38bed
-- [x] 1.2 Wszystkie pliki sprawdzeń SQL przechodzą, w tym nowy `medication_interaction_checks`: `npm run db:check` — da38bed
-- [x] 1.3 Sprawdzenia strażnika padają bez migracji strażnika — da38bed
-- [x] 1.4 Typy i lint przechodzą: `npm run typecheck` i `npm run lint` — da38bed
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — d1c4ad0
+- [x] 1.2 Wszystkie pliki sprawdzeń SQL przechodzą, w tym nowy `medication_interaction_checks`: `npm run db:check` — d1c4ad0
+- [x] 1.3 Sprawdzenia strażnika padają bez migracji strażnika — d1c4ad0
+- [x] 1.4 Typy i lint przechodzą: `npm run typecheck` i `npm run lint` — d1c4ad0
 
 #### Manual
 
-- [x] 1.5 Nagłówek migracji i komentarz przy `medication_interactions()` zrozumiałe bez znajomości kodu — da38bed
+- [x] 1.5 Nagłówek migracji i komentarz przy `medication_interactions()` zrozumiałe bez znajomości kodu — d1c4ad0
 
 ### Phase 2: Teksty o kolizji i test FR-012
 
 #### Automated
 
-- [x] 2.1 Nowe testy przechodzą razem z istniejącymi: `npm test` — 4b37d99
-- [x] 2.2 Test języka pada po dopisaniu zdania zakazanego do `note` — 4b37d99
-- [x] 2.3 Test kolejności pada, gdy `orderMedications` sortuje po znaczniku — 4b37d99
-- [x] 2.4 `npm run typecheck` i `npm run lint` — 4b37d99
+- [x] 2.1 Nowe testy przechodzą razem z istniejącymi: `npm test` — d1c4ad0
+- [x] 2.2 Test języka pada po dopisaniu zdania zakazanego do `note` — d1c4ad0
+- [x] 2.3 Test kolejności pada, gdy `orderMedications` sortuje po znaczniku — d1c4ad0
+- [x] 2.4 `npm run typecheck` i `npm run lint` — d1c4ad0
 
 #### Manual
 
-- [x] 2.5 Autorka akceptuje brzmienie tekstów w `src/lib/copy/interactions.ts` — 4b37d99
+- [x] 2.5 Autorka akceptuje brzmienie tekstów w `src/lib/copy/interactions.ts` — d1c4ad0
 
 ### Phase 3: Dodanie leku z rejestru i lista ze znacznikiem
 
 #### Automated
 
-- [x] 3.1 `npm test` (nawigacja, skaner kolorów, kontrast) — d251cc4
-- [x] 3.2 `npm run lint` i `npm run typecheck` — d251cc4
-- [x] 3.3 `npm run build` — d251cc4
-- [x] 3.4 `npm run smoke` bez regresji istniejących kroków — d251cc4
+- [x] 3.1 `npm test` (nawigacja, skaner kolorów, kontrast) — d1c4ad0
+- [x] 3.2 `npm run lint` i `npm run typecheck` — d1c4ad0
+- [x] 3.3 `npm run build` — d1c4ad0
+- [x] 3.4 `npm run smoke` bez regresji istniejących kroków — d1c4ad0
 
 #### Manual
 
-- [x] 3.5 Acenocumarol + Ibuprom: znacznik przy obu, nota i zdanie o bezpieczeństwie pod listą — d251cc4
-- [x] 3.6 Sartesta pokazuje warianty z różnym składem; jeden wariant bez dodatkowego kliknięcia — d251cc4
-- [x] 3.7 `%` i `_` w wyszukiwarce nie zwracają całego rejestru — d251cc4
-- [x] 3.8 Kolejność wg daty rozpoczęcia, niezależna od znacznika — d251cc4
-- [x] 3.9 Wylogowane wejście na `/leki/nowy` przekierowuje do logowania — d251cc4
+- [x] 3.5 Acenocumarol + Ibuprom: znacznik przy obu, nota i zdanie o bezpieczeństwie pod listą — d1c4ad0
+- [x] 3.6 Sartesta pokazuje warianty z różnym składem; jeden wariant bez dodatkowego kliknięcia — d1c4ad0
+- [x] 3.7 `%` i `_` w wyszukiwarce nie zwracają całego rejestru — d1c4ad0
+- [x] 3.8 Kolejność wg daty rozpoczęcia, niezależna od znacznika — d1c4ad0
+- [x] 3.9 Wylogowane wejście na `/leki/nowy` przekierowuje do logowania — d1c4ad0
 
 ### Phase 4: Szczegóły leku i dodanie z ulotki
 
 #### Automated
 
-- [x] 4.1 `npm test` (test `similarSubstances`) — 106eb84
-- [x] 4.2 `npm run lint`, `npm run typecheck`, `npm run build` — 106eb84
-- [x] 4.3 `npm run db:check` bez regresji — 106eb84
+- [x] 4.1 `npm test` (test `similarSubstances`) — d1c4ad0
+- [x] 4.2 `npm run lint`, `npm run typecheck`, `npm run build` — d1c4ad0
+- [x] 4.3 `npm run db:check` bez regresji — d1c4ad0
 
 #### Manual
 
-- [x] 4.4 Szczegóły leku z pary: skład, opis pary z nazwą drugiego leku, nota — 106eb84
-- [x] 4.5 Szczegóły leku bez pary: brak sekcji kolizji, zdanie o bezpieczeństwie — 106eb84
-- [x] 4.6 Lek z ulotki z „ibuprofenum” i lek B01AA mają znacznik — 106eb84
-- [x] 4.7 „ibuprofen” zwraca propozycję „ibuprofenum”; zapis bez potwierdzenia nie przechodzi — 106eb84
-- [x] 4.8 Lek zapisany bez sprawdzania ma linijkę o substancji nieobjętej parą — 106eb84
-- [x] 4.9 Szczegóły leku z innego konta zwracają 404 — 106eb84
+- [x] 4.4 Szczegóły leku z pary: skład, opis pary z nazwą drugiego leku, nota — d1c4ad0
+- [x] 4.5 Szczegóły leku bez pary: brak sekcji kolizji, zdanie o bezpieczeństwie — d1c4ad0
+- [x] 4.6 Lek z ulotki z „ibuprofenum” i lek B01AA mają znacznik — d1c4ad0
+- [x] 4.7 „ibuprofen” zwraca propozycję „ibuprofenum”; zapis bez potwierdzenia nie przechodzi — d1c4ad0
+- [x] 4.8 Lek zapisany bez sprawdzania ma linijkę o substancji nieobjętej parą — d1c4ad0
+- [x] 4.9 Szczegóły leku z innego konta zwracają 404 — d1c4ad0
 
 ### Phase 5: Smoke — znacznik i nota na zbudowanej aplikacji
 
 #### Automated
 
-- [x] 5.1 Świeży podgląd i `npm run smoke` — wszystkie kroki zielone — 0cbf35d
-- [x] 5.2 Krok z notą pada, gdy nota zniknie ze szczegółów — 0cbf35d
-- [x] 5.3 Bieg smoke pisze do lokalnej bazy — 0cbf35d
+- [x] 5.1 Świeży podgląd i `npm run smoke` — wszystkie kroki zielone — d1c4ad0
+- [x] 5.2 Krok z notą pada, gdy nota zniknie ze szczegółów — d1c4ad0
+- [x] 5.3 Bieg smoke pisze do lokalnej bazy — d1c4ad0
 
 #### Manual
 
-- [x] 5.4 CI na PR: joby `ci` i `smoke` zielone — 0cbf35d
+- [x] 5.4 CI na PR: joby `ci` i `smoke` zielone — d1c4ad0
 
 ### Phase 6: Podpowiedzi przy wpisywaniu nazwy (odkładalna)
 
 #### Automated
 
-- [x] 6.1 `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` — 78a61e0
-- [x] 6.2 `npm run smoke` bez regresji; trasa podpowiedzi 200 z sesją, 401 bez — 78a61e0
+- [x] 6.1 `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` — d1c4ad0
+- [x] 6.2 `npm run smoke` bez regresji; trasa podpowiedzi 200 z sesją, 401 bez — d1c4ad0
 
 #### Manual
 
-- [x] 6.3 Podpowiedzi w przeglądarce: klawiatura, mysz, Esc — 78a61e0
-- [x] 6.4 Bez JavaScriptu formularz „Szukaj” działa — 78a61e0
-- [x] 6.5 VoiceOver odczytuje liczbę podpowiedzi i aktywną pozycję — 78a61e0
+- [x] 6.3 Podpowiedzi w przeglądarce: klawiatura, mysz, Esc — d1c4ad0
+- [x] 6.4 Bez JavaScriptu formularz „Szukaj” działa — d1c4ad0
+- [x] 6.5 VoiceOver odczytuje liczbę podpowiedzi i aktywną pozycję — d1c4ad0
