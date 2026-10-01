@@ -22,6 +22,11 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 import { createClient, isAuthApiError } from "@supabase/supabase-js";
 
+// Loaded as TypeScript (`--experimental-strip-types` in the npm script): the screens' own copy and "today" rule,
+// so the steps compare against what the app renders instead of a second copy of the text.
+import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
+import { todayInWarsaw } from "../src/lib/services/medications.ts";
+
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const EXISTING_EMAIL = process.env.SMOKE_EMAIL;
 const EXISTING_PASSWORD = process.env.SMOKE_PASSWORD;
@@ -97,6 +102,16 @@ async function request(path, { method = "GET", form, jar: cookieJar = jar, origi
   });
   storeCookies(response, cookieJar);
   return { status: response.status, location: response.headers.get("location") ?? "" };
+}
+
+// GET a page and keep its HTML: the steps that check what a screen says need the body, which request() discards.
+async function requestPage(path, { jar: cookieJar = jar } = {}) {
+  const response = await fetch(BASE_URL + path, {
+    redirect: "manual",
+    headers: { Cookie: cookieHeader(cookieJar) },
+  });
+  storeCookies(response, cookieJar);
+  return { status: response.status, location: response.headers.get("location") ?? "", body: await response.text() };
 }
 
 // A browser derives the Origin of a form POST from the referrer policy of the page holding the form: under
@@ -451,6 +466,223 @@ const isolationSteps = isolationSkipReason
     ]
   : [fixtureStep, ...isolationTargets.flatMap(isolationChecks), ...sharedTargets.flatMap(sharedTableChecks)];
 
+// --- Medications and the interaction flag (S-02) ---------------------------
+//
+// Walks the add form, the list and the details screen over HTTP, signed in as the two fixture accounts, the way a
+// browser does: form POSTs carry the Origin the form page's referrer policy allows (formOrigin), nothing more.
+// Writes medications, so it runs in the same mode and behind the same gate as the isolation checks. Runs after them:
+// those count account A's rows and would see the medications added here.
+//
+// Products and the pair description come from the database, never typed in: the registry seed may change, the
+// group pair B01AA × M01AE is the contract (both groups are in the checked pairs).
+
+const FLAG_GROUPS = ["B01AA", "M01AE"];
+const MEDICATION_ADD_PAGE = "/leki/nowy";
+const LEAFLET_ADD_PAGE = "/leki/nowy/z-ulotki";
+const ADDED_PREFIX = "/leki?dodano=";
+
+// Filled by the steps below and read by the later ones.
+const flow = { jarA: new Map(), jarB: new Map(), products: {}, description: null, ids: {} };
+
+// Astro escapes these five characters in rendered text; a string is compared in the form it takes in the HTML.
+function escapeHtml(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function pageContains(body, text) {
+  return body.includes(escapeHtml(text));
+}
+
+// The <li> of one medication on the list, so the flag is checked per medication rather than counted on the page —
+// a legend or an explanation mentioning the label would change a page-wide count.
+function listItemOf(body, medicationId) {
+  const start = body.indexOf(`data-medication-id="${medicationId}"`);
+  if (start === -1) return null;
+  const end = body.indexOf("</li>", start);
+  return end === -1 ? null : body.slice(start, end);
+}
+
+function addedIdFrom(location) {
+  if (!location.startsWith(ADDED_PREFIX)) return null;
+  const id = location.slice(ADDED_PREFIX.length);
+  return /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+}
+
+// A registry product whose every coded substance falls in `group`: one group per product keeps the expected flags
+// down to the one pair under test.
+async function registryProductIn(client, group) {
+  const candidates = await client
+    .from("registry_substances")
+    .select("registry_product_id")
+    .like("atc_code", `${group}%`)
+    .limit(50);
+  if (candidates.error) throw new Error(`registry lookup for ${group} failed: ${candidates.error.message}`);
+  const productIds = [...new Set(candidates.data.map((row) => row.registry_product_id))];
+  if (productIds.length === 0) throw new Error(`no registry product with a substance in ${group}`);
+
+  const products = await client
+    .from("registry_products")
+    .select("id, product_name, registry_substances(atc_code)")
+    .in("id", productIds);
+  if (products.error) throw new Error(`registry products for ${group} failed: ${products.error.message}`);
+  const product = products.data.find((row) =>
+    row.registry_substances.every((substance) => substance.atc_code === null || substance.atc_code.startsWith(group)),
+  );
+  if (!product) throw new Error(`no registry product with substances only in ${group}`);
+  return { id: product.id, name: product.product_name };
+}
+
+async function addMedication(form, pagePath) {
+  return request("/api/medications", {
+    method: "POST",
+    jar: flow.jarA,
+    origin: await formOrigin(pagePath, flow.jarA),
+    form: { doseText: "1 tabletka (smoke)", startedOn: todayInWarsaw(), ...form },
+  });
+}
+
+function addRegistryStep(group) {
+  return [
+    `medications: adding the ${group} product from the registry redirects to the list`,
+    async () => {
+      const product = flow.products[group];
+      if (!product) return { ok: false, detail: `check did not run: no ${group} product was found` };
+      const response = await addMedication({ source: "registry", registryProductId: product.id }, MEDICATION_ADD_PAGE);
+      const id = response.status === 302 ? addedIdFrom(response.location) : null;
+      if (id) flow.ids[group] = id;
+      return { ok: id !== null, detail: `${response.status} ${response.location}` };
+    },
+    EXPECT_OK,
+  ];
+}
+
+const medicationFlowSteps = [
+  [
+    "medications: both fixture accounts sign in over HTTP",
+    async () => {
+      if (!fixtures.a || !fixtures.b) return { ok: false, detail: "check did not run: no fixture accounts" };
+      const a = await request("/api/auth/signin", {
+        method: "POST",
+        jar: flow.jarA,
+        form: { email: fixtures.a.address, password },
+      });
+      const b = await request("/api/auth/signin", {
+        method: "POST",
+        jar: flow.jarB,
+        form: { email: fixtures.b.address, password },
+      });
+      const ok = [a, b].every((response) => response.status === 302 && response.location === "/");
+      return { ok, detail: `A: ${a.status} ${a.location}; B: ${b.status} ${b.location}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    `medications: registry has a product in each of ${FLAG_GROUPS.join(" and ")}, and the pair has a description`,
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      for (const group of FLAG_GROUPS) {
+        flow.products[group] = await registryProductIn(fixtures.a.client, group);
+      }
+      const pair = await fixtures.a.client
+        .from("interaction_pairs")
+        .select("description")
+        .eq("group_a", FLAG_GROUPS[0])
+        .eq("group_b", FLAG_GROUPS[1])
+        .maybeSingle();
+      if (pair.error) return { ok: false, detail: `pair lookup failed: ${pair.error.message}` };
+      flow.description = pair.data?.description ?? null;
+      return {
+        ok: flow.description !== null,
+        detail: `${FLAG_GROUPS.map((group) => `${group}: ${flow.products[group].name}`).join("; ")}; pair ${
+          flow.description ? "found" : "missing"
+        }`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  ...FLAG_GROUPS.map(addRegistryStep),
+  [
+    "medications: list flags both medications and shows the note",
+    async () => {
+      const ids = FLAG_GROUPS.map((group) => flow.ids[group]);
+      if (ids.some((id) => !id)) return { ok: false, detail: "check did not run: a medication was not added" };
+      const page = await requestPage("/leki", { jar: flow.jarA });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      const flagged = ids.map((id) => {
+        const item = listItemOf(page.body, id);
+        return item !== null && pageContains(item, INTERACTION_COPY.flagLabel);
+      });
+      const note = pageContains(page.body, INTERACTION_COPY.note);
+      return {
+        ok: flagged.every(Boolean) && note,
+        detail: `flags: ${flagged.join(", ")}; note ${note ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: details show the pair description and the note",
+    async () => {
+      const id = flow.ids[FLAG_GROUPS[0]];
+      if (!id || !flow.description) return { ok: false, detail: "check did not run: no medication or description" };
+      const page = await requestPage(`/leki/${id}`, { jar: flow.jarA });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      const description = pageContains(page.body, flow.description);
+      const note = pageContains(page.body, INTERACTION_COPY.note);
+      return {
+        ok: description && note,
+        detail: `description ${description ? "present" : "missing"}; note ${note ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: a substance saved from a leaflet without checking is shown as not covered",
+    async () => {
+      // A made-up name no dictionary holds, sent with the "save without checking" box ticked.
+      const response = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat z ulotki",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = response.status === 302 ? addedIdFrom(response.location) : null;
+      if (!id) return { ok: false, detail: `add: ${response.status} ${response.location}` };
+      flow.ids.leaflet = id;
+      const page = await requestPage(`/leki/${id}`, { jar: flow.jarA });
+      const notCovered = page.status === 200 && pageContains(page.body, INTERACTION_COPY.substanceNotCovered);
+      return {
+        ok: notCovered,
+        detail: `details ${page.status}; not-covered text ${notCovered ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: another account gets 404 for the medication's details",
+    async () => {
+      const id = flow.ids[FLAG_GROUPS[0]];
+      if (!id) return { ok: false, detail: "check did not run: no medication was added" };
+      const page = await requestPage(`/leki/${id}`, { jar: flow.jarB });
+      // Exactly 404: a redirect to sign-in or a 500 would mean the page never looked the row up for account B.
+      return { ok: page.status === 404, detail: `${page.status} ${page.location}` };
+    },
+    EXPECT_OK,
+  ],
+];
+
+const medicationSteps = isolationSkipReason
+  ? [["medication and interaction flag checks", null, { skip: isolationSkipReason }]]
+  : medicationFlowSteps;
+
 // --- Password recovery -----------------------------------------------------
 //
 // Walks the whole reset path of S-10 over HTTP and reads the reset mail from the local mailpit. Every step asserts
@@ -705,6 +937,7 @@ const steps = [
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ...isolationSteps,
+  ...medicationSteps,
   ...passwordRecoverySteps,
 ];
 

@@ -707,26 +707,26 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 4.1 `npm test` (test `similarSubstances`)
-- [x] 4.2 `npm run lint`, `npm run typecheck`, `npm run build`
-- [x] 4.3 `npm run db:check` bez regresji
+- [x] 4.1 `npm test` (test `similarSubstances`) — 106eb84
+- [x] 4.2 `npm run lint`, `npm run typecheck`, `npm run build` — 106eb84
+- [x] 4.3 `npm run db:check` bez regresji — 106eb84
 
 #### Manual
 
-- [x] 4.4 Szczegóły leku z pary: skład, opis pary z nazwą drugiego leku, nota
-- [x] 4.5 Szczegóły leku bez pary: brak sekcji kolizji, zdanie o bezpieczeństwie
-- [x] 4.6 Lek z ulotki z „ibuprofenum” i lek B01AA mają znacznik
-- [x] 4.7 „ibuprofen” zwraca propozycję „ibuprofenum”; zapis bez potwierdzenia nie przechodzi
-- [x] 4.8 Lek zapisany bez sprawdzania ma linijkę o substancji nieobjętej parą
-- [x] 4.9 Szczegóły leku z innego konta zwracają 404
+- [x] 4.4 Szczegóły leku z pary: skład, opis pary z nazwą drugiego leku, nota — 106eb84
+- [x] 4.5 Szczegóły leku bez pary: brak sekcji kolizji, zdanie o bezpieczeństwie — 106eb84
+- [x] 4.6 Lek z ulotki z „ibuprofenum” i lek B01AA mają znacznik — 106eb84
+- [x] 4.7 „ibuprofen” zwraca propozycję „ibuprofenum”; zapis bez potwierdzenia nie przechodzi — 106eb84
+- [x] 4.8 Lek zapisany bez sprawdzania ma linijkę o substancji nieobjętej parą — 106eb84
+- [x] 4.9 Szczegóły leku z innego konta zwracają 404 — 106eb84
 
 ### Phase 5: Smoke — znacznik i nota na zbudowanej aplikacji
 
 #### Automated
 
-- [ ] 5.1 Świeży podgląd i `npm run smoke` — wszystkie kroki zielone
-- [ ] 5.2 Krok z notą pada, gdy nota zniknie ze szczegółów
-- [ ] 5.3 Bieg smoke pisze do lokalnej bazy
+- [x] 5.1 Świeży podgląd i `npm run smoke` — wszystkie kroki zielone
+- [x] 5.2 Krok z notą pada, gdy nota zniknie ze szczegółów
+- [x] 5.3 Bieg smoke pisze do lokalnej bazy
 
 #### Manual
 
