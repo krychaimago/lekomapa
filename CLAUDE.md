@@ -196,4 +196,34 @@ Granice:
 
 Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji.
 
+## Moduł 3, Lekcja 3 — hooki agenta
+
+`/10x-configure-hook` zamienia bramki z sekcji „Quality Gates” w `context/foundation/test-plan.md` na hooki Claude Code, które odpalają się w trakcie pracy agenta. Odpalaj po `/10x-test-plan`.
+
+- Moment wg szybkości: po każdej edycji (sprawdza tylko edytowany plik) → koniec tury (cały projekt, np. `npm run typecheck`) → pre-commit → pre-push → CI.
+- Hook ma sens tylko wtedy, gdy jego komunikat dociera do agenta kanałem, który harness czyta dla tego zdarzenia. Skill uruchamia każdy skrypt na celowo zepsutym pliku i na czystym, zanim go odda.
+- Istniejąca konfiguracja w `.claude/settings.json` jest scalana, nie nadpisywana; diff pokazany przed zapisem.
+
+Granice:
+- Skill nie zmienia hooków gita. Pre-commit to `.husky/pre-commit` z `lint-staged` (`eslint --fix`, prettier) — zostaje bez zmian.
+- Hook końca tury nie może blokować na czystym drzewie. Po świeżym klonie `npx astro sync` przed pierwszym biegiem (patrz `### Po świeżym klonie`), inaczej lint i typecheck są czerwone bez powodu.
+
+Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji. Reguła `CLAUDE-m3l3-hooks` pominięta przez CLI (lokalne zmiany w tym pliku) — ta sekcja ją zastępuje.
+
+## Moduł 3, Lekcja 4 — testy E2E (Playwright)
+
+Testy przeglądarkowe łapią to, czego nie widzą hooki i testy jednostkowe: dane, które nie przetrwają pełnej ścieżki, zepsutą nawigację, regresje tylko w wyrenderowanym UI.
+
+- `/10x-e2e-setup` — jednorazowo, ponowne uruchomienie niczego nie zmienia. Instaluje `@playwright/test`, pisze `playwright.config.ts` (`webServer` na build + preview, projekt `setup` logujący raz do `storageState`), zielony test seed dla prawdziwego ryzyka, podpina `playwright-cli`, zapisuje ustalenia w `context/foundation/test-stack.md`.
+- `/10x-e2e <change-id> [phase <n>] | <risk-id>` — rodzeństwo `/10x-implement` i `/10x-tdd`: ten sam `plan.md` i `## Progress`. Jedno ryzyko naraz: plan → generowanie → przegląd → weryfikacja, że test pada, gdy ryzyko wystąpi.
+- Zaczynaj od ryzyka, nie od stron: 2–3 ryzyka z `test-plan.md` przecinające kilka granic (auth, routing, API, baza). Resztę zostaw testom jednostkowym i smoke.
+- Reguły jakości testów E2E (`getByRole` zamiast CSS/XPath, izolowane testy z unikalnymi danymi i sprzątaniem, czekanie na stan zamiast `waitForTimeout`, asercje biznesowe) żyją w `references/e2e-quality-rules.md` skilli — nie dopisuj ich do tego pliku.
+
+Granice:
+- Przed biegiem zatrzymaj stary podgląd i sprawdź, że port jest wolny — przy `reuseExistingServer` Playwright po cichu testuje stary build (patrz lesson „Zatrzymaj stary podgląd”).
+- Bieg idzie do lokalnego Supabase, nigdy do produkcji — `.env` wskazuje produkcję (patrz lesson „Lokalne bramki sprawdź…”). Żadnych nazw leków ani dawek w URL także w testach.
+- Nie commituj `playwright/.auth/` ani pliku env z `E2E_USERNAME` / `E2E_PASSWORD`.
+
+Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji. Reguła `CLAUDE-m3l4` pominięta przez CLI (lokalne zmiany w tym pliku) — ta sekcja ją zastępuje.
+
 <!-- END @przeprogramowani/10x-cli -->
