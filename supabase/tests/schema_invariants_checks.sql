@@ -411,6 +411,7 @@ begin
   for v_guard in
     select * from (values
       ('medications', 'medications_guard_delete', 'DELETE'),
+      ('medications', 'medications_guard_core', 'UPDATE'),
       ('medication_substances', 'medication_substances_guard_core', 'UPDATE'),
       ('medication_substances', 'medication_substances_guard_delete', 'DELETE'),
       ('dosage_periods', 'dosage_periods_guard_core', 'UPDATE'),
@@ -438,7 +439,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'INVARIANT 8 OK: 5 history guards exist, are enabled and fire BEFORE their event for each row';
+  raise notice 'INVARIANT 8 OK: 6 history guards exist, are enabled and fire BEFORE their event for each row';
 end;
 $$;
 

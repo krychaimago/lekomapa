@@ -5,7 +5,7 @@ export interface NavItem {
   label: string;
 }
 
-export const NAV_ITEMS: readonly NavItem[] = [];
+export const NAV_ITEMS: readonly NavItem[] = [{ href: "/leki", label: "Leki" }];
 
 // A path matches an href when it is equal to it or lies below it:
 // "/leki" matches "/leki" and "/leki/nowe", but not "/leki-archiwum".

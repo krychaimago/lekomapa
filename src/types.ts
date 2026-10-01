@@ -65,40 +65,48 @@ export interface DosagePeriod {
   created_at: string;
 }
 
-/**
- * Polecenie zapisu nowego leku.
- *
- * Bez `user_id`: wartość pochodzi z sesji (`context.locals.user`), a polityka
- * RLS i tak porównuje ją z `auth.uid()`. Przyjmowanie jej z wejścia dawałoby
- * pole, które wygląda na ustawialne przez wywołującego.
- */
-export interface NewMedicationCommand {
-  product_name: string;
-  composition_source: CompositionSource;
-  registry_medication_id?: string | null;
-  discontinued_on?: string | null;
-}
+// ---------------------------------------------------------------------------
+// Saving a medication and reading interaction flags (S-02).
+// Source of truth: supabase/migrations/20260930120000_medication_write_and_interactions.sql.
+// A medication is saved only through the database functions below, never by separate inserts into the
+// three tables: the functions write the medication, its composition and the first dosage period atomically.
+// No user_id in the commands: the functions take it from auth.uid() of the session.
+// Dates are ISO `YYYY-MM-DD`.
+// ---------------------------------------------------------------------------
 
-/** Polecenie zapisu jednej substancji czynnej preparatu. */
-export interface NewMedicationSubstanceCommand {
-  medication_id: string;
-  substance_name: string;
-  /** Null when the substance has no matched ATC code; see `MedicationSubstance.atc_code`. */
-  atc_code: string | null;
+/** Arguments of `add_medication_from_registry(p_registry_product_id, p_dose_text, p_started_on)`. */
+export interface AddRegistryMedicationCommand {
+  /** `registry_products.id` of the chosen variant; the name and composition are copied from the registry. */
+  registryProductId: string;
+  doseText: string;
+  startedOn: string;
 }
 
 /**
- * Polecenie zapisu nowego okresu dawkowania.
- *
- * Bez `period`: to kolumna wyliczana przez bazę, więc podanie jej przy zapisie
- * kończy się błędem. Zmiana dawki dopisuje nowy okres i zamyka poprzedni
- * datą w `ended_on`, zamiast nadpisywać istniejący wiersz.
+ * Arguments of `add_medication_from_leaflet(p_product_name, p_substance_name, p_verified, p_dose_text, p_started_on)`.
+ * `verified: false` saves the substance without an ATC code, so it never matches a pair; pass it only after
+ * the user explicitly confirms saving an unchecked substance.
  */
-export interface NewDosagePeriodCommand {
+export interface AddLeafletMedicationCommand {
+  productName: string;
+  substanceName: string;
+  verified: boolean;
+  doseText: string;
+  startedOn: string;
+}
+
+/**
+ * Row of `medication_interactions()`: a current medication of the caller that forms an interaction pair with
+ * another current medication of the caller. Symmetric — pair A-B gives one row for each of the two medications.
+ * A row says only that a pair exists; user-facing wording is "may be related", never a cause (FR-012).
+ */
+export interface MedicationInteraction {
   medication_id: string;
-  dose_text: string;
-  started_on: string;
-  ended_on?: string | null;
+  other_medication_id: string;
+  pair_id: string;
+  group_a: string;
+  group_b: string;
+  description: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +170,15 @@ export interface RegistrySubstance {
   composition_source: RegistryCompositionSource;
   /** `rpl_id` of the product the composition was copied from; set only for `"sibling"`. */
   composition_source_rpl_id: string | null;
+}
+
+/** One registry variant offered in the add-medication form (strength, form and the composition to be saved). */
+export interface RegistryVariantOption {
+  id: string;
+  strength: string | null;
+  form: string | null;
+  /** Substance names as they will be saved (registryCompositionNames). */
+  composition: string[];
 }
 
 /**

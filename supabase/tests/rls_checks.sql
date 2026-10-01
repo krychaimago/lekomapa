@@ -4,6 +4,9 @@
 --   Checks 15–18: shared symptom catalog and search terms (F-03).
 --   Check 19: dosage change closes a period and opens a new one (the positive half of the history rule).
 --   Check 19 runs with the correction window closed, so it stands between check 7 and check 8.
+--   Checks 20–24: S-02 changes to the medication schema — guard on medications (20 open window, 21 closed
+--   window, so 21 stands after check 19), registry source consistency (22), one row per ATC code (23),
+--   blank texts (24).
 --   Check 11 runs on the data loaded by the generated migrations, before any test row is added to the shared tables.
 --   Check 18 runs on the loaded symptom list, so it stands before check 17 adds its test rows.
 --
@@ -254,6 +257,55 @@ begin
   end if;
 
   raise notice 'SPRAWDZENIE 4 OK: przy otwartym oknie korekty zmiana i usunięcie rdzenia przechodzą';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 20 (S-02): with the correction window open, the composition source and the registry product of a
+-- medication can be corrected
+-- ---------------------------------------------------------------------------
+-- Uses its own medication (...0020), which stays until the final rollback. Two seed products are picked by
+-- rpl_id (Ibuprofen Zentiva 200 mg and 400 mg), so the check does not depend on test rows of check 13.
+
+do $$
+declare
+  v_product_200 uuid;
+  v_product_400 uuid;
+  v_row record;
+begin
+  select id into v_product_200 from public.registry_products where rpl_id = '100432653';
+  select id into v_product_400 from public.registry_products where rpl_id = '100432660';
+  if v_product_200 is null or v_product_400 is null then
+    raise exception 'CHECK 20 FAILED: seed products 100432653 / 100432660 are missing, so the check would not measure anything';
+  end if;
+
+  insert into public.medications (id, user_id, product_name, composition_source)
+  values (
+    '00000000-0000-4000-8000-000000000020',
+    '00000000-0000-4000-8000-000000000001',
+    'Check 20 medication',
+    'leaflet'
+  );
+
+  -- 20a: leaflet -> registry with a product
+  update public.medications
+     set composition_source = 'registry',
+         registry_medication_id = v_product_200
+   where id = '00000000-0000-4000-8000-000000000020';
+
+  -- 20b: another registry product
+  update public.medications
+     set registry_medication_id = v_product_400
+   where id = '00000000-0000-4000-8000-000000000020';
+
+  select composition_source, registry_medication_id into v_row
+    from public.medications where id = '00000000-0000-4000-8000-000000000020';
+  if v_row.composition_source is distinct from 'registry' or v_row.registry_medication_id is distinct from v_product_400 then
+    raise exception 'CHECK 20 FAILED: correction with the window open was not saved (source %, product %)',
+      v_row.composition_source, v_row.registry_medication_id;
+  end if;
+
+  raise notice 'CHECK 20 OK: with the correction window open, composition_source and registry_medication_id can be corrected';
 end;
 $$;
 
@@ -575,6 +627,118 @@ begin
   end if;
 
   raise notice 'CHECK 19 OK: with the correction window closed, P1 closed and adjacent P2 with a new dose opened; old dose kept in history; overwriting it blocked by the dose_text guard';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 21 (S-02): with the correction window closed, the composition source, the registry product and the
+-- owner of a medication cannot change; the name and the discontinuation date still can
+-- ---------------------------------------------------------------------------
+-- Uses its own registry medication (...0021) and a second account (...0022); both disappear with the savepoint.
+-- Every blocked case catches only P0001 and checks the message names the blocked field. Without the guard the
+-- updates pass as postgres, so the check fails instead of looking green.
+
+do $$
+declare
+  v_product_200 uuid;
+  v_product_400 uuid;
+  v_message text;
+  v_row record;
+begin
+  if public.medication_correction_window_open('00000000-0000-4000-8000-000000000021') then
+    raise exception 'CHECK 21 FAILED: the correction window is open, so the check would not measure the closed-window rule';
+  end if;
+
+  select id into v_product_200 from public.registry_products where rpl_id = '100432653';
+  select id into v_product_400 from public.registry_products where rpl_id = '100432660';
+
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, created_at, updated_at)
+  values (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-4000-8000-000000000022',
+    'authenticated',
+    'authenticated',
+    'rls-checks-21@example.test',
+    'x',
+    now(),
+    now()
+  );
+
+  insert into public.medications (id, user_id, product_name, composition_source, registry_medication_id)
+  values (
+    '00000000-0000-4000-8000-000000000021',
+    '00000000-0000-4000-8000-000000000001',
+    'Check 21 medication',
+    'registry',
+    v_product_200
+  );
+
+  -- 21a: another registry product
+  v_message := null;
+  begin
+    update public.medications
+       set registry_medication_id = v_product_400
+     where id = '00000000-0000-4000-8000-000000000021';
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_message is null then
+    raise exception 'CHECK 21 FAILED: changing registry_medication_id passed with the correction window closed';
+  end if;
+  perform pg_temp.assert_history_guard_message('21', '21a registry_medication_id change', v_message, 'registry_medication_id');
+
+  -- 21b: registry -> leaflet (both columns change together, so the consistency check alone would let it through)
+  v_message := null;
+  begin
+    update public.medications
+       set composition_source = 'leaflet',
+           registry_medication_id = null
+     where id = '00000000-0000-4000-8000-000000000021';
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_message is null then
+    raise exception 'CHECK 21 FAILED: changing composition_source passed with the correction window closed';
+  end if;
+  perform pg_temp.assert_history_guard_message('21', '21b composition_source change', v_message, 'composition_source');
+
+  -- 21c: moving the medication to another account
+  v_message := null;
+  begin
+    update public.medications
+       set user_id = '00000000-0000-4000-8000-000000000022'
+     where id = '00000000-0000-4000-8000-000000000021';
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_message is null then
+    raise exception 'CHECK 21 FAILED: changing user_id passed with the correction window closed';
+  end if;
+  perform pg_temp.assert_history_guard_message('21', '21c user_id change', v_message, 'user_id');
+
+  -- 21d: the name is a label and the discontinuation date ends the medication (S-04); both pass
+  update public.medications
+     set product_name = 'Check 21 medication renamed'
+   where id = '00000000-0000-4000-8000-000000000021';
+  update public.medications
+     set discontinued_on = date '2026-06-01'
+   where id = '00000000-0000-4000-8000-000000000021';
+
+  select product_name, discontinued_on, composition_source, registry_medication_id, user_id into v_row
+    from public.medications where id = '00000000-0000-4000-8000-000000000021';
+  if v_row.product_name is distinct from 'Check 21 medication renamed'
+     or v_row.discontinued_on is distinct from date '2026-06-01' then
+    raise exception 'CHECK 21 FAILED: product_name / discontinued_on were not saved with the window closed (got %, %)',
+      v_row.product_name, v_row.discontinued_on;
+  end if;
+  if v_row.composition_source is distinct from 'registry'
+     or v_row.registry_medication_id is distinct from v_product_200
+     or v_row.user_id is distinct from '00000000-0000-4000-8000-000000000001' then
+    raise exception 'CHECK 21 FAILED: a blocked field changed anyway (source %, product %, owner %)',
+      v_row.composition_source, v_row.registry_medication_id, v_row.user_id;
+  end if;
+
+  raise notice 'CHECK 21 OK: with the correction window closed, composition_source, registry_medication_id and user_id are blocked by medications_guard_core; product_name and discontinued_on pass';
 end;
 $$;
 
@@ -903,11 +1067,14 @@ do $$
 declare
   v_constraint text;
 begin
-  -- 14a: registry_medication_id pointing to a non-existent product
+  -- 14a: registry_medication_id pointing to a non-existent product. composition_source changes together with it,
+  -- because a leaflet medication with a product fails medications_registry_source_check (S-02) before the
+  -- foreign key is checked.
   v_constraint := null;
   begin
     update public.medications
-       set registry_medication_id = '00000000-0000-4000-8000-0000000000ff'
+       set composition_source = 'registry',
+           registry_medication_id = '00000000-0000-4000-8000-0000000000ff'
      where id = '00000000-0000-4000-8000-000000000005';
   exception when foreign_key_violation then
     get stacked diagnostics v_constraint = constraint_name;
@@ -938,7 +1105,8 @@ begin
 
   -- 14e: a registry product a medication points to cannot be deleted (on delete restrict)
   update public.medications
-     set registry_medication_id = '00000000-0000-4000-8000-000000000010'
+     set composition_source = 'registry',
+         registry_medication_id = '00000000-0000-4000-8000-000000000010'
    where id = '00000000-0000-4000-8000-000000000005';
   v_constraint := null;
   begin
@@ -951,6 +1119,126 @@ begin
   end if;
 
   raise notice 'CHECK 14 OK: registry foreign key enforced on insert and delete; substances without a code accepted, duplicate rejected';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 22 (S-02): composition_source = 'registry' exactly when registry_medication_id is set
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_constraint text;
+begin
+  -- 22a: registry without a product
+  v_constraint := null;
+  begin
+    insert into public.medications (user_id, product_name, composition_source)
+    values ('00000000-0000-4000-8000-000000000001', 'Check 22 registry without product', 'registry');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medications_registry_source_check' then
+    raise exception 'CHECK 22 FAILED: registry medication without registry_medication_id was not rejected by medications_registry_source_check (got %)', v_constraint;
+  end if;
+
+  -- 22b: leaflet with a product
+  v_constraint := null;
+  begin
+    insert into public.medications (user_id, product_name, composition_source, registry_medication_id)
+    values (
+      '00000000-0000-4000-8000-000000000001',
+      'Check 22 leaflet with product',
+      'leaflet',
+      (select id from public.registry_products where rpl_id = '100432653')
+    );
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medications_registry_source_check' then
+    raise exception 'CHECK 22 FAILED: leaflet medication with registry_medication_id was not rejected by medications_registry_source_check (got %)', v_constraint;
+  end if;
+
+  raise notice 'CHECK 22 OK: registry without a product and leaflet with a product rejected by medications_registry_source_check';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 23 (S-02, F7): one row per ATC code in a medication
+-- ---------------------------------------------------------------------------
+-- The second row has a different substance name, so the older key (medication_id, substance_name, atc_code)
+-- does not catch it; only the partial unique index on (medication_id, atc_code) does.
+
+do $$
+declare
+  v_constraint text;
+begin
+  insert into public.medication_substances (medication_id, substance_name, atc_code)
+  values ('00000000-0000-4000-8000-000000000020', 'Ibuprofenum', 'M01AE01');
+
+  v_constraint := null;
+  begin
+    insert into public.medication_substances (medication_id, substance_name, atc_code)
+    values ('00000000-0000-4000-8000-000000000020', 'Ibuprofenum (other spelling)', 'M01AE01');
+  exception when unique_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medication_substances_medication_id_atc_code_key' then
+    raise exception 'CHECK 23 FAILED: a second row with the same ATC code was not rejected by medication_substances_medication_id_atc_code_key (got %)', v_constraint;
+  end if;
+
+  -- two different substances without a code still pass
+  insert into public.medication_substances (medication_id, substance_name, atc_code)
+  values
+    ('00000000-0000-4000-8000-000000000020', 'Check 23 extract A', null),
+    ('00000000-0000-4000-8000-000000000020', 'Check 23 extract B', null);
+
+  raise notice 'CHECK 23 OK: same ATC code twice in one medication rejected; two substances without a code accepted';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Check 24 (S-02): blank product name, dose and substance name are rejected
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_constraint text;
+begin
+  v_constraint := null;
+  begin
+    insert into public.medications (user_id, product_name, composition_source)
+    values ('00000000-0000-4000-8000-000000000001', '   ', 'leaflet');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medications_product_name_check' then
+    raise exception 'CHECK 24 FAILED: blank product_name was not rejected by medications_product_name_check (got %)', v_constraint;
+  end if;
+
+  v_constraint := null;
+  begin
+    insert into public.dosage_periods (medication_id, dose_text, started_on)
+    values ('00000000-0000-4000-8000-000000000020', '  ', date '2026-01-01');
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'dosage_periods_dose_text_check' then
+    raise exception 'CHECK 24 FAILED: blank dose_text was not rejected by dosage_periods_dose_text_check (got %)', v_constraint;
+  end if;
+
+  v_constraint := null;
+  begin
+    insert into public.medication_substances (medication_id, substance_name, atc_code)
+    values ('00000000-0000-4000-8000-000000000020', ' ', null);
+  exception when check_violation then
+    get stacked diagnostics v_constraint = constraint_name;
+  end;
+  if v_constraint is distinct from 'medication_substances_substance_name_check' then
+    raise exception 'CHECK 24 FAILED: blank substance_name was not rejected by medication_substances_substance_name_check (got %)', v_constraint;
+  end if;
+
+  raise notice 'CHECK 24 OK: blank product_name, dose_text and substance_name rejected by their checks';
 end;
 $$;
 

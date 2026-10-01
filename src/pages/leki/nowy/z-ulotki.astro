@@ -1,0 +1,130 @@
+---
+// Adding a medication from outside the registry (S-02, FR-003): a free product name and one active substance from
+// the leaflet, suggested from the dictionary of substances that have an ATC code. Driven by GET:
+//   ?nazwa=, ?substancja=, ?data=  values typed before an error, put back into the fields (never the dose);
+//   ?niedopasowana=                "no match" state: the typed substance is not in the dictionary, so the page lists
+//                                  similar names and offers "save without checking" (the only way to save it
+//                                  without a code);
+//   ?error=                        a code from the save route, looked up in MEDICATION_COPY.apiErrors.
+import AppLayout from "@/layouts/AppLayout.astro";
+import AddLeafletMedicationForm from "@/components/medications/AddLeafletMedicationForm";
+import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import { similarSubstances, todayInWarsaw } from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+
+const MAX_INPUT_LENGTH = 200;
+const PATH = "/leki/nowy/z-ulotki";
+
+const copy = MEDICATION_COPY.leaflet;
+const params = Astro.url.searchParams;
+const readParam = (key: string) => (params.get(key) ?? "").trim().slice(0, MAX_INPUT_LENGTH);
+const productName = readParam("nazwa");
+const unmatched = readParam("niedopasowana");
+const substanceName = unmatched || readParam("substancja");
+const today = todayInWarsaw();
+const requestedDate = readParam("data");
+const startedOn = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= today ? requestedDate : today;
+const error = apiErrorMessage(params.get("error"));
+
+// Distinct dictionary names with a code, alphabetically, in one call. The function returns a single array, so the
+// PostgREST row cap (max_rows) cannot drop names.
+let substanceNames: string[] = [];
+let loadFailed: boolean;
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase) {
+  const response = await supabase.rpc("coded_substance_names");
+  if (response.error) console.error("Reading the substance dictionary failed", { code: response.error.code });
+  const names: unknown = response.error ? null : response.data;
+  // A missing or empty dictionary would hide names and push the user towards saving without a code: fail visibly.
+  const isNameList = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.length > 0 && value.every((name) => typeof name === "string");
+  loadFailed = !isNameList(names);
+  if (isNameList(names)) substanceNames = names;
+} else {
+  loadFailed = true;
+}
+
+const showNoMatch = unmatched !== "";
+const similar = showNoMatch ? similarSubstances(unmatched, substanceNames) : [];
+function similarHref(name: string): string {
+  const next = new URLSearchParams();
+  if (productName) next.set("nazwa", productName);
+  next.set("substancja", name);
+  next.set("data", startedOn);
+  return `${PATH}?${next.toString()}`;
+}
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h1 class="text-3xl font-bold">{copy.title}</h1>
+      <a href="/leki" class:list={linkClass}>
+        {MEDICATION_COPY.add.backToList}
+      </a>
+    </div>
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    )}
+
+    {showNoMatch && !loadFailed && (
+      <section
+        role="status"
+        class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+      >
+        <p>{copy.noMatch}</p>
+        {similar.length > 0 ? (
+          <ul class="flex flex-col gap-2">
+            {similar.map((name) => (
+              <li>
+                <a
+                  href={similarHref(name)}
+                  class="flex min-h-12 items-center rounded-lg border border-border bg-card px-4 py-2 font-medium text-card-foreground hover:border-primary"
+                >
+                  {name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="text-sm text-muted-foreground">{copy.noSimilar}</p>
+        )}
+      </section>
+    )}
+
+    {!loadFailed && (
+      <AddLeafletMedicationForm
+        substanceNames={substanceNames}
+        productName={productName}
+        substanceName={substanceName}
+        startedOn={startedOn}
+        today={today}
+        showConfirmUnverified={showNoMatch}
+        serverError={error}
+        client:load
+      />
+    )}
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <section class="rounded-lg border border-border bg-card p-4 text-card-foreground">
+        <h2 class="mb-1 font-semibold">{MEDICATION_COPY.hints.doseHistoryTitle}</h2>
+        <p class="text-sm text-muted-foreground">{MEDICATION_COPY.hints.doseHistory}</p>
+      </section>
+      <section class="rounded-lg border border-border bg-card p-4 text-card-foreground">
+        <h2 class="mb-1 font-semibold">{MEDICATION_COPY.hints.fixedCompositionTitle}</h2>
+        <p class="text-sm text-muted-foreground">{MEDICATION_COPY.hints.fixedComposition}</p>
+      </section>
+    </div>
+
+    <a href="/leki/nowy" class:list={linkClass}>
+      {copy.registryInstead}
+    </a>
+  </div>
+</AppLayout>

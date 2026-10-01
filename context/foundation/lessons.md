@@ -104,7 +104,8 @@
 
 - **Context**: `scripts/rpl/pairs.mjs:24-54` (`FORBIDDEN_WORDS`) — filtr języka opisów par kolizji (FR-012), każdy przyszły zbiór opisów przyjmowany przez walidator. Przypadki testowe, napisane z PRD, a nie z listy: `scripts/fr012/corpus.mjs`.
 - **Problem**: Po fazie 3 planu testów walidator wymaga frazy „może mieć związek” i odrzuca rdzenie z listy, ale lista jest z natury niepełna. Pomiar przed fazą 3: 14 zdań łamiących FR-012 (np. „Połączenie wywoła krwawienie.”, „Połączenie jest bezpieczne.”, „Zamień ibuprofen na paracetamol.”) nie trafiało w żaden rdzeń — z dopisaną frazą walidator przyjąłby każde. Lista została rozszerzona pod te zdania, a kolejne sformułowania mogą znów przejść. Sama fraza też nie wystarcza: wystarczy, że wystąpi gdziekolwiek w opisie, więc drugie zdanie może stwierdzać przyczynę. Obecne 24 opisy są poprawne także dlatego, że autorka przeczytała każdy.
-- **Rule**: Walidator tekstu o zdrowiu zawsze wymaga obecności formuły „może mieć związek”. Lista zakazanych słów jest uzupełnieniem, nigdy jedyną bramką — zawsze będzie niepełna.
+- **Rule**: Tekst o zdrowiu ma być neutralny i nie odstraszać. Gdy łączy lek z objawem albo opisuje skutek połączenia leków, używa wyłącznie formuły „może mieć związek”, nigdy stwierdzenia przyczyny — tam walidator wymaga tej formuły (opisy par w `pairs.mjs`). Teksty, które leku z objawem nie łączą (znacznik „Możliwa interakcja”, nota, etykiety formularzy), formuły nie potrzebują, ale przechodzą filtr słów zakazanych. Lista zakazanych słów jest uzupełnieniem, nigdy jedyną bramką — zawsze będzie niepełna.
+- **Correction (2026-10-01)**: Wcześniejsze brzmienie wymagało formuły „może mieć związek” w każdym tekście o zdrowiu. Autorka sprostowała po impl-review S-02 (F7): celem jest neutralność, nie obowiązkowa fraza.
 - **Applies to**: plan, implement, impl-review
 
 ## Nowa metoda logowania wymaga wpisu w NORMAL_SESSION_METHODS
@@ -119,4 +120,11 @@
 - **Context**: Kroki `scripts/smoke.mjs` wysyłające formularze POST do tras Astro (`checkOrigin`) oraz każda zmiana nagłówków bezpieczeństwa (`Referrer-Policy`, CSP) na stronie z formularzem.
 - **Problem**: Poprawka po przeglądzie fazy 2 w password-recovery ustawiła `Referrer-Policy: no-referrer` na stronach resetu hasła. Przeglądarka wysyłała przez to formularze z `Origin: null`, a Astro odpowiadał 403 — odzyskiwanie hasła nie działało dla nikogo. Smoke przechodził, bo sam dopisywał poprawny `Origin`; błąd wyszedł dopiero w ręcznym teście.
 - **Rule**: Smoke nigdy nie dopisuje nagłówków, których przeglądarka nie wyśle — Origin formularza wyprowadzaj z Referrer-Policy strony z formularzem. Każda zmiana nagłówków bezpieczeństwa strony z formularzem wymaga sprawdzenia formularza w prawdziwej przeglądarce.
+- **Applies to**: plan, implement, impl-review
+
+## Żadna nazwa leku ani dawka w adresie URL
+
+- **Context**: Każda trasa i formularz operujące na lekach: wyszukiwanie w rejestrze, wybór wariantu, przekierowania po błędzie, podpowiedzi (`fetch`), linki między krokami. Dotyczy też każdego przyszłego ekranu z danymi zdrowotnymi (dzienniczek objawów S-05 i dalej).
+- **Problem**: W S-02 dawkę świadomie trzymano poza URL, ale nazwa leku i substancji trafiała tam w sześciu miejscach (`?q=`, `?nazwa=`, `?substancja=`, `?niedopasowana=`, `/api/registry/search?q=`), a komentarz w kodzie twierdził, że „health data does not travel in URLs”. Adres trafia do historii przeglądarki, zakładek, nagłówka Referer i logów Cloudflare. To, jaki lek ktoś bierze, jest daną zdrowotną tak samo jak dawka.
+- **Rule**: Nazwa leku, nazwa substancji, dawka ani objaw nigdy nie trafiają do URL — ani w ścieżce, ani w parametrach, ani w zapytaniach `fetch`. Tekst wpisany przez użytkowniczkę idzie w treści żądania POST; między krokami przekazuj wyłącznie identyfikatory (uuid); stan formularza po błędzie w krótkotrwałym ciasteczku HttpOnly. Regułę pilnuje test, nie komentarz.
 - **Applies to**: plan, implement, impl-review
