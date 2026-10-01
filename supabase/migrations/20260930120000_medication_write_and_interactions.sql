@@ -32,8 +32,12 @@
 --      - One save writes three things together: the medication, its full composition copied from the registry,
 --        and the first dosage period. Either all three are saved, or nothing is. Before, these were three separate
 --        steps, and an error halfway could leave a medication without a composition or without a dose.
---      - The registry lists this product's substance twice (ibuprofen, M01AE01, two times). The copy keeps it
---        ONCE, otherwise the save would fail on the "one code per medication" rule (part E).
+--      - The registry lists this product's substance twice (ibuprofen, M01AE01, two times). The copy keeps each
+--        code ONCE, otherwise the save would fail on the "one code per medication" rule (part E). For some products
+--        the two rows under one code carry different names — a salt form (Dexak: "Dexketoprofenum" and
+--        "DExketoprofenum Trometamolum"; Coroswera: "Rosuvastatinum" and "Rosuvastatinum calicum"). Deliberate
+--        decision: the first name in registry order is kept and the other is NOT copied. Interaction matching is
+--        unaffected (same code); the full source composition stays reachable through registry_medication_id.
 --      - A substance the registry has without a code (e.g. sacubitril in Sartesta) is copied too, without a code.
 --        Nothing from the composition is thrown away.
 --
@@ -62,7 +66,8 @@
 --      - The name of a medication, the dose and the name of a substance cannot be empty or only spaces.
 --      - One medication cannot hold the same code twice (medication_substances_medication_id_atc_code_key). The same
 --        code twice would count one substance as two. Measured 2026-09-30: 4 registry products list a code twice
---        (Ibuprofen Zentiva 400 mg, Dexak, two Coroswera variants). The older rule on name + code stays, because it
+--        (Ibuprofen Zentiva 400 mg, Dexak, two Coroswera variants); only Ibuprofen Zentiva repeats the same name,
+--        the others differ by salt form, see part B. The older rule on name + code stays, because it
 --        still stops the same substance without a code from being saved twice.
 --
 -- Access: only a signed-in person can call the three functions in A–C (EXECUTE for authenticated only). Inside them
@@ -210,7 +215,7 @@ end;
 $$;
 
 comment on function public.add_medication_from_registry(uuid, text, date) is
-  'Adds a medication chosen from the registry. Example: Ibuprofen Zentiva 400 mg with the dose "1 tablet 3 times a day". One call saves the medication (name taken from the registry), its full composition and the first dosage period; either all three are saved or nothing is. Copying the composition: each code is saved once. When the registry lists the same code twice (Ibuprofen Zentiva 400 mg lists ibuprofen M01AE01 two times), the first one in the registry order is kept. A substance without a code is kept too (once per name), e.g. sacubitril in Sartesta. When the registry offers several possible codes for one substance, all of them are kept: more flags instead of a silent miss. Errors: 28000 = no signed-in session, P0002 = no such registry product; an empty dose fails on the table rules.';
+  'Adds a medication chosen from the registry. Example: Ibuprofen Zentiva 400 mg with the dose "1 tablet 3 times a day". One call saves the medication (name taken from the registry), its full composition and the first dosage period; either all three are saved or nothing is. Copying the composition: each code is saved once. When the registry lists the same code twice (Ibuprofen Zentiva 400 mg lists ibuprofen M01AE01 two times), the first one in the registry order is kept. When the two rows carry different names (a salt form, e.g. Dexak), only the first name is kept; the full composition stays in the registry product. A substance without a code is kept too (once per name), e.g. sacubitril in Sartesta. When the registry offers several possible codes for one substance, all of them are kept: more flags instead of a silent miss. Errors: 28000 = no signed-in session, P0002 = no such registry product; an empty dose fails on the table rules.';
 
 -- ---------------------------------------------------------------------------
 -- 6. Saving a medication from a leaflet

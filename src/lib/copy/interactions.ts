@@ -10,7 +10,7 @@ export const INTERACTION_COPY = {
   noWarningIsNotSafe: "Brak oznaczenia nie znaczy, że połączenie jest bezpieczne.",
   detailsHeading: "Możliwe interakcje",
   withMedication: "z lekiem {nazwa}",
-  noInteractionsForMedication: "Ten lek nie należy do żadnej ze sprawdzanych par substancji.",
+  noInteractionsForMedication: "Wśród Twoich bieżących leków nie znaleziono sprawdzanej pary z tym lekiem.",
   substanceNotCovered: "Ta substancja nie jest objęta żadną sprawdzaną parą.",
   rulesIncomplete: "Lekomapa sprawdza tylko wybrane pary substancji — ta lista nie obejmuje wszystkich interakcji.",
 } as const;

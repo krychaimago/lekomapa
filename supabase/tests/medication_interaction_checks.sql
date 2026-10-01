@@ -6,14 +6,15 @@
 --                   composition, never the amlodipine of another variant with the same name.
 --   INTERACTION 3:  saving is atomic — a failed save leaves no medication and no substance behind.
 --   INTERACTION 4:  saving from a leaflet — verified name gives one row per dictionary code, unknown verified name
---                   is a named error, unverified name gives one row without a code.
+--                   and a verified name present only without a code are named errors, unverified name gives one
+--                   row without a code; coded_substance_names() returns exactly the distinct coded names.
 --   INTERACTION 5:  basic interaction — B01AA and M01AE give two rows (A->B, B->A) with the same pair.
 --   INTERACTION 6:  a group paired with itself (M01AE x M01AE) flags two medications, never one with itself.
 --   INTERACTION 7:  several substances in the same group give one row per (medication, other medication, pair).
 --   INTERACTION 8:  a discontinued medication drops out; one with a future discontinuation date stays.
 --   INTERACTION 9:  isolation — another account's medications never pair with mine.
 --   INTERACTION 10: a medication without a code creates no rows.
---   INTERACTION 11: privileges — anon cannot execute the three functions; a call without a session is a named error.
+--   INTERACTION 11: privileges — anon cannot execute the four functions; a call without a session is a named error.
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`). The runner (scripts/db-checks.mjs) passes this file
 -- only when it prints `GATE_COMPLETE medication_interaction_checks` at the end.
@@ -233,14 +234,28 @@ declare
   v_id_spaced uuid;
   v_id_unverified uuid;
   v_message text;
+  v_codeless_name text;
+  v_codeless_message text;
+  v_expected_names text[];
+  v_names text[];
 begin
   select array_agg(distinct atc_code order by atc_code) into v_expected_codes
     from public.registry_substances where normalized_name = 'diclofenacum' and atc_code is not null;
   if coalesce(array_length(v_expected_codes, 1), 0) < 2 then
     raise exception 'INTERACTION 4 FAILED: diclofenacum has fewer than two codes in the dictionary, so "one row per code" is not measured';
   end if;
+  -- A name the dictionary knows only from rows without a code: verifying it must fail, not save a codeless row.
+  select normalized_name into v_codeless_name
+    from public.registry_substances group by normalized_name
+    having bool_and(atc_code is null) order by normalized_name limit 1;
+  if v_codeless_name is null then
+    raise exception 'INTERACTION 4 FAILED: no dictionary name exists only without a code, so the case is not measured';
+  end if;
+  select array_agg(distinct normalized_name order by normalized_name) into v_expected_names
+    from public.registry_substances where atc_code is not null;
 
   perform pg_temp.act_as(v_a);
+  v_names := public.coded_substance_names();
   v_id := public.add_medication_from_leaflet('Check 4 diclofenac', 'diclofenacum', true, '1 tabletka', date '2026-09-01');
   v_id_spaced := public.add_medication_from_leaflet('Check 4 diclofenac spaced', '  Diclofenacum ', true, '1 tabletka', date '2026-09-01');
   v_message := null;
@@ -248,6 +263,12 @@ begin
     perform public.add_medication_from_leaflet('Check 4 unknown', 'substantia ignota', true, '1 tabletka', date '2026-09-01');
   exception when sqlstate 'P0002' then
     get stacked diagnostics v_message = message_text;
+  end;
+  v_codeless_message := null;
+  begin
+    perform public.add_medication_from_leaflet('Check 4 codeless', v_codeless_name, true, '1 tabletka', date '2026-09-01');
+  exception when sqlstate 'P0002' then
+    get stacked diagnostics v_codeless_message = message_text;
   end;
   v_id_unverified := public.add_medication_from_leaflet('Check 4 unverified', 'ibuprofen', false, '1 tabletka', date '2026-09-01');
   perform pg_temp.act_as_postgres();
@@ -266,13 +287,23 @@ begin
   if v_message is null or v_message not like '%substantia ignota%' then
     raise exception 'INTERACTION 4 FAILED: unknown verified substance was not rejected with a named error naming it (got %)', v_message;
   end if;
+  if v_names is distinct from v_expected_names then
+    raise exception 'INTERACTION 4 FAILED: coded_substance_names() returned % names, expected the % distinct coded names',
+      coalesce(array_length(v_names, 1), 0), coalesce(array_length(v_expected_names, 1), 0);
+  end if;
+  if v_codeless_name = any(v_names) then
+    raise exception 'INTERACTION 4 FAILED: coded_substance_names() lists "%", which has no code', v_codeless_name;
+  end if;
+  if v_codeless_message is null then
+    raise exception 'INTERACTION 4 FAILED: verified name "%" present only without a code was not rejected with P0002', v_codeless_name;
+  end if;
   if (select count(*) from public.medication_substances where medication_id = v_id_unverified) <> 1
      or exists (select 1 from public.medication_substances where medication_id = v_id_unverified and atc_code is not null) then
     raise exception 'INTERACTION 4 FAILED: unverified leaflet save must give exactly one row without a code';
   end if;
 
-  raise notice 'INTERACTION 4 OK: verified name gives % rows (one per dictionary code), case and spaces ignored; unknown name rejected (P0002); unverified name saved without a code',
-    array_length(v_expected_codes, 1);
+  raise notice 'INTERACTION 4 OK: verified name gives % rows (one per dictionary code), case and spaces ignored; unknown name and codeless-only name "%" rejected (P0002); unverified name saved without a code; coded_substance_names() gives the % coded names',
+    array_length(v_expected_codes, 1), v_codeless_name, array_length(v_expected_names, 1);
 end;
 $$;
 
@@ -511,7 +542,8 @@ begin
   foreach v_function in array array[
     'public.add_medication_from_registry(uuid, text, date)',
     'public.add_medication_from_leaflet(text, text, boolean, text, date)',
-    'public.medication_interactions()'
+    'public.medication_interactions()',
+    'public.coded_substance_names()'
   ] loop
     if has_function_privilege('anon', v_function, 'execute') then
       raise exception 'INTERACTION 11 FAILED: anon can execute %', v_function;
@@ -555,7 +587,7 @@ begin
     raise exception 'INTERACTION 11 FAILED: registry save of a missing product was not rejected with P0002';
   end if;
 
-  raise notice 'INTERACTION 11 OK: anon cannot execute the three functions, authenticated can; no session is 28000; a missing product is P0002';
+  raise notice 'INTERACTION 11 OK: anon cannot execute the four functions, authenticated can; no session is 28000; a missing product is P0002';
 end;
 $$;
 

@@ -6,7 +6,7 @@
 // A search that finds exactly one name goes straight to its variants. The search field is RegistrySearch: the same GET
 // form without JavaScript, with suggestions from /api/registry/search once hydrated.
 import AppLayout from "@/layouts/AppLayout.astro";
-import AddMedicationForm, { type RegistryVariantOption } from "@/components/medications/AddMedicationForm";
+import AddMedicationForm from "@/components/medications/AddMedicationForm";
 import RegistrySearch from "@/components/medications/RegistrySearch";
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
 import {
@@ -17,7 +17,7 @@ import {
 } from "@/lib/services/medications";
 import { likeLiteral, searchRegistryNames } from "@/lib/services/registry-search";
 import { createClient } from "@/lib/supabase";
-import type { RegistryProduct } from "@/types";
+import type { RegistryProduct, RegistryVariantOption } from "@/types";
 
 type VariantRow = Pick<RegistryProduct, "id" | "product_name" | "strength" | "pharmaceutical_form"> & {
   registry_substances: RegistrySubstanceRow[];

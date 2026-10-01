@@ -11,13 +11,8 @@ import AddLeafletMedicationForm from "@/components/medications/AddLeafletMedicat
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
 import { similarSubstances, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
-import type { RegistrySubstance } from "@/types";
 
 const MAX_INPUT_LENGTH = 200;
-// Pages of the dictionary read until one comes back empty. The table has thousands of rows for about 100 names and
-// PostgREST caps every response (max_rows), so a single read would silently drop names.
-const PAGE_SIZE = 1000;
-const MAX_PAGES = 50;
 const PATH = "/leki/nowy/z-ulotki";
 
 const copy = MEDICATION_COPY.leaflet;
@@ -31,41 +26,20 @@ const requestedDate = readParam("data");
 const startedOn = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= today ? requestedDate : today;
 const error = apiErrorMessage(params.get("error"));
 
-// Distinct dictionary names with a code, alphabetically. Keyset paging on the name: each page starts after the last
-// name already seen, so the loop ends on an empty page whatever the server's row cap is.
+// Distinct dictionary names with a code, alphabetically, in one call. The function returns a single array, so the
+// PostgREST row cap (max_rows) cannot drop names.
 let substanceNames: string[] = [];
 let loadFailed: boolean;
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (supabase) {
-  const names = new Set<string>();
-  let after: string | null = null;
-  let complete = false;
-  for (let page = 0; page < MAX_PAGES; page += 1) {
-    let query = supabase
-      .from("registry_substances")
-      .select("normalized_name")
-      .not("atc_code", "is", null)
-      .order("normalized_name")
-      .limit(PAGE_SIZE);
-    if (after !== null) query = query.gt("normalized_name", after);
-    const { data, error: readError } = await query.overrideTypes<
-      Pick<RegistrySubstance, "normalized_name">[],
-      { merge: false }
-    >();
-    if (readError) {
-      console.error("Reading the substance dictionary failed", { code: readError.code });
-      break;
-    }
-    if (data.length === 0) {
-      complete = true;
-      break;
-    }
-    for (const row of data) names.add(row.normalized_name);
-    after = data[data.length - 1].normalized_name;
-  }
-  // An incomplete dictionary would hide names and push the user towards saving without a code: fail visibly.
-  loadFailed = !complete;
-  if (complete) substanceNames = [...names];
+  const response = await supabase.rpc("coded_substance_names");
+  if (response.error) console.error("Reading the substance dictionary failed", { code: response.error.code });
+  const names: unknown = response.error ? null : response.data;
+  // A missing or empty dictionary would hide names and push the user towards saving without a code: fail visibly.
+  const isNameList = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.length > 0 && value.every((name) => typeof name === "string");
+  loadFailed = !isNameList(names);
+  if (isNameList(names)) substanceNames = names;
 } else {
   loadFailed = true;
 }

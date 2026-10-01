@@ -6,16 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
+import type { RegistryVariantOption } from "@/types";
 
 const copy = MEDICATION_COPY.add;
-
-export interface RegistryVariantOption {
-  id: string;
-  strength: string | null;
-  form: string | null;
-  // Substance names as they will be saved (registryCompositionNames).
-  composition: string[];
-}
 
 interface Props {
   // Trade name of the chosen step, sent back so an error redirect returns to the same variants.

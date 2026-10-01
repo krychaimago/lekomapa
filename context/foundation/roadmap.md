@@ -238,6 +238,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Pokusa zrobienia zwykłego usuwania, bo jest prostsze. Usunięcie kasuje kontekst dla wcześniejszych objawów i psuje S-06 tak samo jak nadpisanie okresu w S-03. Dwie ścieżki muszą być tu rozdzielone w interfejsie, żeby odstawienie nie wyglądało jak kasowanie.
+  Dług z S-02: strażnik `medications_guard_core` przepuszcza dziś każdą zmianę `discontinued_on`, także po zamknięciu okna korekty. S-04 musi to domknąć: po zamknięciu okna raz ustawiona data odstawienia nie może zostać wyczyszczona ani przesunięta (z testem w `supabase/tests/`).
 - **Status:** proposed
 
 ### S-05: Wpis o samopoczuciu z datą, godziną i objawami

@@ -172,6 +172,15 @@ export interface RegistrySubstance {
   composition_source_rpl_id: string | null;
 }
 
+/** One registry variant offered in the add-medication form (strength, form and the composition to be saved). */
+export interface RegistryVariantOption {
+  id: string;
+  strength: string | null;
+  form: string | null;
+  /** Substance names as they will be saved (registryCompositionNames). */
+  composition: string[];
+}
+
 /**
  * Row of `public.interaction_pairs` — a pair of ATC groups, matched by code prefix.
  * Canonical order: `group_a <= group_b`; a group may be paired with itself.

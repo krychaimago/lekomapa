@@ -53,3 +53,10 @@ test("the note and the no-warning sentence exist, and the latter is a negation",
   assert.match(INTERACTION_COPY.noWarningIsNotSafe, /(^|\s)nie(\s|$)/i);
   assert.ok(!FORBIDDEN_SENTENCES.safety.includes(INTERACTION_COPY.noWarningIsNotSafe));
 });
+
+// The absence text describes what was checked (pairs among current medications), never the medicine itself:
+// a medicine can belong to a checked pair whose other half the user does not take (review F1).
+test("the no-interaction text is scoped to current medications, not a claim about the medicine", () => {
+  assert.match(INTERACTION_COPY.noInteractionsForMedication, /bieżąc/i);
+  assert.doesNotMatch(INTERACTION_COPY.noInteractionsForMedication, /nie należy/i);
+});

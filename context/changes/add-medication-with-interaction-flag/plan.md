@@ -646,6 +646,11 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 - Kontrola spójności i nowe `check` wchodzą bez `not valid`. Żadne środowisko nie ma jeszcze wierszy `medications`, bo zapisu nie było. Gdyby produkcja miała wiersze testowe, `db reset` lokalnie tego nie pokaże — przed wdrożeniem sprawdź `select count(*) from medications` na produkcji.
 - Wycofanie: nowa migracja odwrotna (drop funkcji, wyzwalacza, indeksu, ograniczeń). Dane leków zapisane przez funkcje pozostają poprawne i bez nich.
 
+## Known Limitations (addendum po impl-review, 2026-10-01)
+
+- **Zapis tylko przez funkcje to konwencja aplikacji, nie gwarancja bazy.** Polityki INSERT z F-01 na `medications`, `medication_substances` i `dosage_periods` zostały. Zalogowana osoba może przez PostgREST wstawić we własnym koncie lek bez składu lub okresu, substancję z dowolnym `atc_code` albo `started_on` w przyszłości. Izolacja kont nie cierpi. Atomowość i „kod zawsze z danych” trzymają się na ścieżce aplikacji (`add_medication_from_registry`, `add_medication_from_leaflet`, zod w trasie).
+- Świadoma decyzja: twarde sprawdzenia w bazie (odebranie INSERT, funkcje `security definer`, `check` na datach) dopiero, gdy pojawi się klient spoza aplikacji. Do tego czasu S-03 i S-04 mogą pisać tym samym wzorcem.
+
 ## References
 
 - Research: `context/changes/add-medication-with-interaction-flag/research.md`
