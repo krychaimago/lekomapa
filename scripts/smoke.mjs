@@ -906,6 +906,42 @@ const passwordRecoverySteps = recoverySkipReason
   ? [["password recovery checks", null, { skip: recoverySkipReason }]]
   : recoverySteps;
 
+// --- Registry suggestions (S-02, phase 6) ----------------------------------
+//
+// The JSON route behind the suggestions under the name field. Read-only, so it runs in both modes, signed in with the
+// main account. The request carries only the cookie, like the page's same-origin fetch. "ibu" is a prefix the
+// registry seed must keep (ibuprofen products).
+
+const REGISTRY_SUGGESTIONS_PATH = "/api/registry/search?q=ibu";
+
+const registrySuggestionsStep = [
+  "registry suggestions: signed-in user gets a non-empty list of names",
+  async () => {
+    const page = await requestPage(REGISTRY_SUGGESTIONS_PATH);
+    if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+    let names;
+    try {
+      ({ names } = JSON.parse(page.body));
+    } catch {
+      return { ok: false, detail: "200 but the body is not JSON" };
+    }
+    const valid =
+      Array.isArray(names) &&
+      names.length > 0 &&
+      names.length <= 10 &&
+      names.every((group) => typeof group?.name === "string" && typeof group?.variants === "number");
+    return { ok: valid, detail: `200, ${Array.isArray(names) ? names.length : "no"} name(s)` };
+  },
+  EXPECT_OK,
+];
+
+// Exactly 401: a redirect to sign-in or a 500 would mean the route never decided on the missing session.
+const registrySuggestionsAnonymousStep = [
+  "registry suggestions: no session gets 401",
+  () => requestPage(REGISTRY_SUGGESTIONS_PATH),
+  { status: 401 },
+];
+
 // --- Steps -----------------------------------------------------------------
 
 const signupStep = [
@@ -934,8 +970,10 @@ const steps = [
     { status: 302, location: "/" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  registrySuggestionsStep,
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  registrySuggestionsAnonymousStep,
   ...isolationSteps,
   ...medicationSteps,
   ...passwordRecoverySteps,

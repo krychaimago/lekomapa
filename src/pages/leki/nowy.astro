@@ -3,22 +3,20 @@
 //   ?q=      search trade names (at most MAX_NAMES names, each a link to its variants);
 //   ?nazwa=  variants of one name with strength, form and composition, then the dose and the start date;
 //   ?error=  a code from the save route, looked up in MEDICATION_COPY.apiErrors.
-// A search that finds exactly one name goes straight to its variants.
+// A search that finds exactly one name goes straight to its variants. The search field is RegistrySearch: the same GET
+// form without JavaScript, with suggestions from /api/registry/search once hydrated.
 import AppLayout from "@/layouts/AppLayout.astro";
 import AddMedicationForm, { type RegistryVariantOption } from "@/components/medications/AddMedicationForm";
-import { buttonVariants } from "@/components/ui/button";
-import { inputClassName } from "@/components/ui/input";
+import RegistrySearch from "@/components/medications/RegistrySearch";
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
 import {
   type RegistryNameGroup,
   type RegistrySubstanceRow,
-  escapeLikePattern,
-  groupRegistryResults,
   registryCompositionNames,
   todayInWarsaw,
 } from "@/lib/services/medications";
+import { likeLiteral, searchRegistryNames } from "@/lib/services/registry-search";
 import { createClient } from "@/lib/supabase";
-import { cn } from "@/lib/utils";
 import type { RegistryProduct } from "@/types";
 
 type VariantRow = Pick<RegistryProduct, "id" | "product_name" | "strength" | "pharmaceutical_form"> & {
@@ -26,9 +24,6 @@ type VariantRow = Pick<RegistryProduct, "id" | "product_name" | "strength" | "ph
 };
 
 const MAX_NAMES = 20;
-// Rows read for one search. Grouping needs every variant of a name to count it; a name has far fewer variants
-// than this, so the first MAX_NAMES names are complete.
-const MAX_SEARCH_ROWS = 1000;
 const MAX_VARIANTS = 100;
 const MAX_INPUT_LENGTH = 200;
 const LEAFLET_PATH = "/leki/nowy/z-ulotki";
@@ -41,12 +36,6 @@ const requestedVariant = params.get("wariant");
 const error = apiErrorMessage(params.get("error"));
 const today = todayInWarsaw();
 
-// escapeLikePattern makes `%`, `_` and `\` literal for Postgres. PostgREST additionally reads `*` in a like pattern
-// as `%`, so it is escaped too: otherwise typing `*` would list the whole registry.
-function likeLiteral(input: string): string {
-  return escapeLikePattern(input).replaceAll("*", "\\*");
-}
-
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 let loadFailed = supabase === null && (query !== "" || name !== "");
 let searched = false;
@@ -55,18 +44,10 @@ let truncated = false;
 
 if (supabase && query && !name) {
   searched = true;
-  const { data, error: searchError } = await supabase
-    .from("registry_products")
-    .select("product_name")
-    .ilike("product_name", `%${likeLiteral(query)}%`)
-    .order("product_name")
-    .limit(MAX_SEARCH_ROWS)
-    .overrideTypes<Pick<RegistryProduct, "product_name">[], { merge: false }>();
-  if (searchError) {
+  const allGroups = await searchRegistryNames(supabase, query);
+  if (allGroups === null) {
     loadFailed = true;
-    console.error("Searching the registry failed", { code: searchError.code });
   } else {
-    const allGroups = groupRegistryResults(data);
     truncated = allGroups.length > MAX_NAMES;
     groups = allGroups.slice(0, MAX_NAMES);
     // One name needs no extra click: show its variants at once.
@@ -118,27 +99,7 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
       </a>
     </div>
 
-    <form method="GET" action="/leki/nowy" class="flex flex-col gap-2">
-      <label for="q" class="text-sm font-medium">
-        {copy.searchLabel}
-      </label>
-      <div class="flex flex-col gap-2 sm:flex-row">
-        <input
-          id="q"
-          name="q"
-          type="search"
-          value={query || name}
-          placeholder={copy.searchPlaceholder}
-          maxlength={MAX_INPUT_LENGTH}
-          required
-          autocomplete="off"
-          class:list={inputClassName}
-        />
-        <button type="submit" class:list={cn(buttonVariants(), "sm:w-auto")}>
-          {copy.searchSubmit}
-        </button>
-      </div>
-    </form>
+    <RegistrySearch initialValue={query || name} maxLength={MAX_INPUT_LENGTH} client:load />
 
     {error && !showVariants && (
       <p

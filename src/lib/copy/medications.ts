@@ -21,6 +21,10 @@ export const MEDICATION_COPY = {
     moreResults: "Pokazano pierwsze {liczba} nazw. Wpisz dokładniejszą nazwę, żeby zawęzić wyniki.",
     searchError: "Nie udało się przeszukać rejestru. Spróbuj ponownie.",
     variants: "Warianty: {liczba}",
+    // Suggestions under the name field (RegistrySearch). The count is read out by a screen reader.
+    suggestionsLabel: "Podpowiedzi nazw",
+    suggestionsCount: "Podpowiedzi: {liczba}. Wybierz strzałkami w górę i w dół, zatwierdź Enterem.",
+    suggestionsNone: "Brak podpowiedzi dla tej nazwy. Naciśnij Szukaj, żeby zobaczyć wyniki.",
     chooseVariant: "Wybierz wariant",
     strength: "Moc",
     form: "Postać",
