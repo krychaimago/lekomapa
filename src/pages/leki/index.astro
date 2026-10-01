@@ -1,0 +1,136 @@
+---
+// List of current medications (S-02). Newest start date first; a medication in a checked pair carries the amber
+// flag, which never changes the order (FR-012). The note and the "no flag is not safe" sentence stay under the list
+// whatever it holds.
+import AppLayout from "@/layouts/AppLayout.astro";
+import { badgeVariants } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { INTERACTION_COPY } from "@/lib/copy/interactions";
+import { MEDICATION_COPY } from "@/lib/copy/medications";
+import { formatIsoDate, orderMedications, todayInWarsaw } from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import type { DosagePeriod, Medication, MedicationInteraction } from "@/types";
+
+type MedicationRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
+  dosage_periods: Pick<DosagePeriod, "started_on">[];
+};
+
+const copy = MEDICATION_COPY.list;
+const addedId = Astro.url.searchParams.get("dodano");
+
+let loadFailed = false;
+let rows: MedicationRow[] = [];
+let flagged = new Set<string>();
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase) {
+  const today = todayInWarsaw();
+  // Same "current" rule as medication_interactions(): not discontinued, or discontinued after today (Polish time).
+  // RLS limits both reads to the signed-in person.
+  const [medications, interactions] = await Promise.all([
+    supabase
+      .from("medications")
+      .select("id, product_name, created_at, dosage_periods(started_on)")
+      .or(`discontinued_on.is.null,discontinued_on.gt.${today}`)
+      .overrideTypes<MedicationRow[], { merge: false }>(),
+    supabase.rpc("medication_interactions"),
+  ]);
+  if (medications.error || interactions.error) {
+    loadFailed = true;
+    console.error("Loading the medication list failed", {
+      medicationsCode: medications.error?.code,
+      interactionsCode: interactions.error?.code,
+    });
+  } else {
+    rows = medications.data;
+    // Untyped client: the setof result is typed as a single row, so the rows are cast here.
+    const interactionRows = (interactions.data ?? []) as MedicationInteraction[];
+    flagged = new Set(interactionRows.map((row) => row.medication_id));
+  }
+} else {
+  loadFailed = true;
+}
+
+// The first dosage period gives the start date shown on the list.
+const items = orderMedications(
+  rows.map((row) => {
+    const firstStart = row.dosage_periods
+      .map((period) => period.started_on)
+      .sort()
+      .at(0);
+    return {
+      id: row.id,
+      name: row.product_name,
+      startedOn: firstStart ?? "",
+      createdAt: row.created_at,
+      flagged: flagged.has(row.id),
+    };
+  }),
+);
+const addedVisible = addedId !== null && items.some((item) => item.id === addedId);
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h1 class="text-3xl font-bold">{copy.title}</h1>
+      <a href="/leki/nowy" class:list={buttonVariants()}>
+        {copy.add}
+      </a>
+    </div>
+
+    {addedVisible && (
+      <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+        {copy.added}
+      </p>
+    )}
+
+    {loadFailed ? (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    ) : items.length === 0 ? (
+      <section class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <p class="mb-4">{copy.empty}</p>
+        <a href="/leki/nowy" class:list={buttonVariants()}>
+          {copy.add}
+        </a>
+      </section>
+    ) : (
+      <ul class="flex flex-col gap-3">
+        {items.map((item) => (
+          <li data-medication-id={item.id}>
+            <a
+              href={`/leki/${item.id}`}
+              class:list={cn(
+                "flex min-h-12 flex-col gap-2 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm hover:border-primary sm:flex-row sm:items-center sm:justify-between",
+                item.id === addedId && "border-primary ring-2 ring-primary",
+              )}
+            >
+              <span class="flex flex-col gap-1">
+                <span class="text-lg font-semibold">{item.name}</span>
+                {item.startedOn && (
+                  <span class="text-sm text-muted-foreground">
+                    {copy.since.replace("{data}", formatIsoDate(item.startedOn))}
+                  </span>
+                )}
+              </span>
+              {item.flagged && (
+                <span class:list={badgeVariants({ variant: "interaction" })}>{INTERACTION_COPY.flagLabel}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <div class="flex flex-col gap-2 text-sm text-muted-foreground">
+      <p>{INTERACTION_COPY.note}</p>
+      <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
+    </div>
+  </div>
+</AppLayout>

@@ -49,3 +49,35 @@ export function todayInWarsaw(now: Date = new Date()): string {
     day: "2-digit",
   }).format(now);
 }
+
+export interface RegistrySubstanceRow {
+  position: number;
+  substance_name: string;
+  atc_code: string | null;
+}
+
+// Substance names of a registry product as the user sees them before saving: in `position` order, a repeated code
+// shown once (the first by position, then by name) and each name once. Mirrors the deduplication of
+// add_medication_from_registry (supabase/migrations/20260930120000_medication_write_and_interactions.sql), so the
+// composition on screen is the one that gets saved.
+export function registryCompositionNames(rows: readonly RegistrySubstanceRow[]): string[] {
+  const sorted = [...rows].sort(
+    (a, b) => a.position - b.position || a.substance_name.localeCompare(b.substance_name, "pl"),
+  );
+  const seenCodes = new Set<string>();
+  const names: string[] = [];
+  for (const row of sorted) {
+    if (row.atc_code !== null) {
+      if (seenCodes.has(row.atc_code)) continue;
+      seenCodes.add(row.atc_code);
+    }
+    if (!names.includes(row.substance_name)) names.push(row.substance_name);
+  }
+  return names;
+}
+
+// ISO `YYYY-MM-DD` as the Polish `DD.MM.YYYY`, without a Date object (no time zone shift).
+export function formatIsoDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return `${day}.${month}.${year}`;
+}

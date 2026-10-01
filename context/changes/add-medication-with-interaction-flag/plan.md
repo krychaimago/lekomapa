@@ -677,31 +677,31 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 2.1 Nowe testy przechodzą razem z istniejącymi: `npm test`
-- [x] 2.2 Test języka pada po dopisaniu zdania zakazanego do `note`
-- [x] 2.3 Test kolejności pada, gdy `orderMedications` sortuje po znaczniku
-- [x] 2.4 `npm run typecheck` i `npm run lint`
+- [x] 2.1 Nowe testy przechodzą razem z istniejącymi: `npm test` — 4b37d99
+- [x] 2.2 Test języka pada po dopisaniu zdania zakazanego do `note` — 4b37d99
+- [x] 2.3 Test kolejności pada, gdy `orderMedications` sortuje po znaczniku — 4b37d99
+- [x] 2.4 `npm run typecheck` i `npm run lint` — 4b37d99
 
 #### Manual
 
-- [x] 2.5 Autorka akceptuje brzmienie tekstów w `src/lib/copy/interactions.ts`
+- [x] 2.5 Autorka akceptuje brzmienie tekstów w `src/lib/copy/interactions.ts` — 4b37d99
 
 ### Phase 3: Dodanie leku z rejestru i lista ze znacznikiem
 
 #### Automated
 
-- [ ] 3.1 `npm test` (nawigacja, skaner kolorów, kontrast)
-- [ ] 3.2 `npm run lint` i `npm run typecheck`
-- [ ] 3.3 `npm run build`
-- [ ] 3.4 `npm run smoke` bez regresji istniejących kroków
+- [x] 3.1 `npm test` (nawigacja, skaner kolorów, kontrast)
+- [x] 3.2 `npm run lint` i `npm run typecheck`
+- [x] 3.3 `npm run build`
+- [x] 3.4 `npm run smoke` bez regresji istniejących kroków
 
 #### Manual
 
-- [ ] 3.5 Acenocumarol + Ibuprom: znacznik przy obu, nota i zdanie o bezpieczeństwie pod listą
-- [ ] 3.6 Sartesta pokazuje warianty z różnym składem; jeden wariant bez dodatkowego kliknięcia
-- [ ] 3.7 `%` i `_` w wyszukiwarce nie zwracają całego rejestru
-- [ ] 3.8 Kolejność wg daty rozpoczęcia, niezależna od znacznika
-- [ ] 3.9 Wylogowane wejście na `/leki/nowy` przekierowuje do logowania
+- [x] 3.5 Acenocumarol + Ibuprom: znacznik przy obu, nota i zdanie o bezpieczeństwie pod listą
+- [x] 3.6 Sartesta pokazuje warianty z różnym składem; jeden wariant bez dodatkowego kliknięcia
+- [x] 3.7 `%` i `_` w wyszukiwarce nie zwracają całego rejestru
+- [x] 3.8 Kolejność wg daty rozpoczęcia, niezależna od znacznika
+- [x] 3.9 Wylogowane wejście na `/leki/nowy` przekierowuje do logowania
 
 ### Phase 4: Szczegóły leku i dodanie z ulotki
 

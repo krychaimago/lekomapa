@@ -1,0 +1,226 @@
+---
+// Adding a medication from the registry (S-02, FR-003) in three steps on one server-rendered page, driven by GET:
+//   ?q=      search trade names (at most MAX_NAMES names, each a link to its variants);
+//   ?nazwa=  variants of one name with strength, form and composition, then the dose and the start date;
+//   ?error=  a code from the save route, looked up in MEDICATION_COPY.apiErrors.
+// A search that finds exactly one name goes straight to its variants.
+import AppLayout from "@/layouts/AppLayout.astro";
+import AddMedicationForm, { type RegistryVariantOption } from "@/components/medications/AddMedicationForm";
+import { buttonVariants } from "@/components/ui/button";
+import { inputClassName } from "@/components/ui/input";
+import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import {
+  type RegistryNameGroup,
+  type RegistrySubstanceRow,
+  escapeLikePattern,
+  groupRegistryResults,
+  registryCompositionNames,
+  todayInWarsaw,
+} from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import type { RegistryProduct } from "@/types";
+
+type VariantRow = Pick<RegistryProduct, "id" | "product_name" | "strength" | "pharmaceutical_form"> & {
+  registry_substances: RegistrySubstanceRow[];
+};
+
+const MAX_NAMES = 20;
+// Rows read for one search. Grouping needs every variant of a name to count it; a name has far fewer variants
+// than this, so the first MAX_NAMES names are complete.
+const MAX_SEARCH_ROWS = 1000;
+const MAX_VARIANTS = 100;
+const MAX_INPUT_LENGTH = 200;
+const LEAFLET_PATH = "/leki/nowy/z-ulotki";
+
+const copy = MEDICATION_COPY.add;
+const params = Astro.url.searchParams;
+const query = (params.get("q") ?? "").trim().slice(0, MAX_INPUT_LENGTH);
+let name = (params.get("nazwa") ?? "").trim().slice(0, MAX_INPUT_LENGTH);
+const requestedVariant = params.get("wariant");
+const error = apiErrorMessage(params.get("error"));
+const today = todayInWarsaw();
+
+// escapeLikePattern makes `%`, `_` and `\` literal for Postgres. PostgREST additionally reads `*` in a like pattern
+// as `%`, so it is escaped too: otherwise typing `*` would list the whole registry.
+function likeLiteral(input: string): string {
+  return escapeLikePattern(input).replaceAll("*", "\\*");
+}
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+let loadFailed = supabase === null && (query !== "" || name !== "");
+let searched = false;
+let groups: RegistryNameGroup[] = [];
+let truncated = false;
+
+if (supabase && query && !name) {
+  searched = true;
+  const { data, error: searchError } = await supabase
+    .from("registry_products")
+    .select("product_name")
+    .ilike("product_name", `%${likeLiteral(query)}%`)
+    .order("product_name")
+    .limit(MAX_SEARCH_ROWS)
+    .overrideTypes<Pick<RegistryProduct, "product_name">[], { merge: false }>();
+  if (searchError) {
+    loadFailed = true;
+    console.error("Searching the registry failed", { code: searchError.code });
+  } else {
+    const allGroups = groupRegistryResults(data);
+    truncated = allGroups.length > MAX_NAMES;
+    groups = allGroups.slice(0, MAX_NAMES);
+    // One name needs no extra click: show its variants at once.
+    if (allGroups.length === 1) name = allGroups[0].name;
+  }
+}
+
+let variants: RegistryVariantOption[] = [];
+if (supabase && name && !loadFailed) {
+  // No wildcard: ilike with a literal pattern is a case-insensitive equality on the name.
+  const { data, error: variantsError } = await supabase
+    .from("registry_products")
+    .select("id, product_name, strength, pharmaceutical_form, registry_substances(position, substance_name, atc_code)")
+    .ilike("product_name", likeLiteral(name))
+    .limit(MAX_VARIANTS)
+    .overrideTypes<VariantRow[], { merge: false }>();
+  if (variantsError) {
+    loadFailed = true;
+    console.error("Reading registry variants failed", { code: variantsError.code });
+  } else {
+    variants = data
+      .map((row) => ({
+        id: row.id,
+        strength: row.strength,
+        form: row.pharmaceutical_form,
+        composition: registryCompositionNames(row.registry_substances),
+      }))
+      .sort(
+        (a, b) =>
+          (a.strength ?? "").localeCompare(b.strength ?? "", "pl", { numeric: true }) ||
+          (a.form ?? "").localeCompare(b.form ?? "", "pl"),
+      );
+    if (data.length > 0) name = data[0].product_name;
+  }
+}
+
+const selectedId = variants.find((variant) => variant.id === requestedVariant)?.id ?? variants.at(0)?.id ?? "";
+const showVariants = variants.length > 0;
+const showNoResults = !loadFailed && ((name !== "" && !showVariants) || (searched && groups.length === 0));
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h1 class="text-3xl font-bold">{copy.title}</h1>
+      <a href="/leki" class:list={linkClass}>
+        {copy.backToList}
+      </a>
+    </div>
+
+    <form method="GET" action="/leki/nowy" class="flex flex-col gap-2">
+      <label for="q" class="text-sm font-medium">
+        {copy.searchLabel}
+      </label>
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <input
+          id="q"
+          name="q"
+          type="search"
+          value={query || name}
+          placeholder={copy.searchPlaceholder}
+          maxlength={MAX_INPUT_LENGTH}
+          required
+          autocomplete="off"
+          class:list={inputClassName}
+        />
+        <button type="submit" class:list={cn(buttonVariants(), "sm:w-auto")}>
+          {copy.searchSubmit}
+        </button>
+      </div>
+    </form>
+
+    {error && !showVariants && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {error}
+      </p>
+    )}
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.searchError}
+      </p>
+    )}
+
+    {showNoResults && (
+      <section class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <p>{copy.noResults}</p>
+        <a href={LEAFLET_PATH} class:list={linkClass}>
+          {copy.notInRegistry}
+        </a>
+      </section>
+    )}
+
+    {!showVariants && groups.length > 1 && (
+      <section class="flex flex-col gap-3">
+        <h2 class="text-xl font-semibold">{copy.results}</h2>
+        <ul class="flex flex-col gap-2">
+          {groups.map((group) => (
+            <li>
+              <a
+                href={`/leki/nowy?${new URLSearchParams({ nazwa: group.name }).toString()}`}
+                class="flex min-h-12 items-center justify-between gap-4 rounded-lg border border-border bg-card px-4 py-2 text-card-foreground hover:border-primary"
+              >
+                <span class="font-medium">{group.name}</span>
+                <span class="text-sm text-muted-foreground">
+                  {copy.variants.replace("{liczba}", String(group.variants))}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        {truncated && (
+          <p class="text-sm text-muted-foreground">{copy.moreResults.replace("{liczba}", String(MAX_NAMES))}</p>
+        )}
+        <p class="text-sm text-muted-foreground">{copy.registrySource}</p>
+        <a href={LEAFLET_PATH} class:list={linkClass}>
+          {copy.notInRegistry}
+        </a>
+      </section>
+    )}
+
+    {showVariants && (
+      <section class="flex flex-col gap-4">
+        <h2 class="text-2xl font-semibold">{name}</h2>
+        <AddMedicationForm
+          name={name}
+          variants={variants}
+          selectedId={selectedId}
+          today={today}
+          serverError={error}
+          client:load
+        />
+        <div class="grid gap-4 sm:grid-cols-2">
+          <section class="rounded-lg border border-border bg-card p-4 text-card-foreground">
+            <h3 class="mb-1 font-semibold">{MEDICATION_COPY.hints.doseHistoryTitle}</h3>
+            <p class="text-sm text-muted-foreground">{MEDICATION_COPY.hints.doseHistory}</p>
+          </section>
+          <section class="rounded-lg border border-border bg-card p-4 text-card-foreground">
+            <h3 class="mb-1 font-semibold">{MEDICATION_COPY.hints.fixedCompositionTitle}</h3>
+            <p class="text-sm text-muted-foreground">{MEDICATION_COPY.hints.fixedComposition}</p>
+          </section>
+        </div>
+        <p class="text-sm text-muted-foreground">{copy.registrySource}</p>
+        <a href={LEAFLET_PATH} class:list={linkClass}>
+          {copy.notInRegistry}
+        </a>
+      </section>
+    )}
+  </div>
+</AppLayout>
