@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-10-01
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -53,7 +53,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | proposed    |
 | S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | ready       |
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | in-progress |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done        |
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | proposed    |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | proposed    |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | ready       |
@@ -212,7 +212,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   2. Test w `scripts/` importuje ten moduł i `scripts/fr012/corpus.mjs` i dowodzi, że: każdy tekst z modułu przechodzi przez `forbiddenWordsIn` z `scripts/rpl/pairs.mjs` bez trafień (nie porównanie z listą zdań korpusu — takie porównanie przechodzi zawsze); nota i zdanie o bezpieczeństwie istnieją i nie są puste. Zdanie o bezpieczeństwie jest jedynym jawnym wyjątkiem: test sprawdza je bez rdzenia `bezpieczn`, bo PRD go wymaga (`prd.md:67`, guardrail `prd.md:49`). Wyjątek jest nazwany w teście, nie w walidatorze.
   3. Jeden krok smoke sprawdza, że widok z kolizją zawiera notę.
   4. Kolejność leków na liście nie zależy od kolizji — ranking według podejrzenia to własność listy, której walidator tekstu nie widzi (FR-012).
-- **Status:** in-progress
+- **Status:** done
 
 ### S-03: Zmiana dawkowania zamyka okres i otwiera nowy
 
@@ -394,3 +394,4 @@ Rozstrzygnięte:
 - **F-03: (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania** — Archived 2026-09-27 → `context/archive/2026-09-26-symptom-catalog-seed/`. Lesson: —.
 - **F-04: (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza** — Archived 2026-09-27 → `context/archive/2026-09-26-app-shell-visual-foundation/`. Lesson: —.
 - **F-04: (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza** — Archived 2026-09-27 → `context/archive/2026-09-26-app-shell-visual-foundation/`. Lesson: —.
+- **S-02: Użytkowniczka może dodać przyjmowany preparat, wpisując jego nazwę handlową i podając dawkowanie z datą rozpoczęcia; przy nowo dodanej pozycji widzi dyskretny znacznik możliwej kolizji, a w szczegółach leku pełną treść informacji wraz ze składem preparatu. Preparat spoza rejestru dodaje, wskazując substancję czynną z ulotki, i uczestniczy w regułach tak samo.** — Archived 2026-10-01 → `context/archive/2026-09-29-add-medication-with-interaction-flag/`. Lesson: —.
