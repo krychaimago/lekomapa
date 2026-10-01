@@ -690,35 +690,35 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 3.1 `npm test` (nawigacja, skaner kolorów, kontrast)
-- [x] 3.2 `npm run lint` i `npm run typecheck`
-- [x] 3.3 `npm run build`
-- [x] 3.4 `npm run smoke` bez regresji istniejących kroków
+- [x] 3.1 `npm test` (nawigacja, skaner kolorów, kontrast) — d251cc4
+- [x] 3.2 `npm run lint` i `npm run typecheck` — d251cc4
+- [x] 3.3 `npm run build` — d251cc4
+- [x] 3.4 `npm run smoke` bez regresji istniejących kroków — d251cc4
 
 #### Manual
 
-- [x] 3.5 Acenocumarol + Ibuprom: znacznik przy obu, nota i zdanie o bezpieczeństwie pod listą
-- [x] 3.6 Sartesta pokazuje warianty z różnym składem; jeden wariant bez dodatkowego kliknięcia
-- [x] 3.7 `%` i `_` w wyszukiwarce nie zwracają całego rejestru
-- [x] 3.8 Kolejność wg daty rozpoczęcia, niezależna od znacznika
-- [x] 3.9 Wylogowane wejście na `/leki/nowy` przekierowuje do logowania
+- [x] 3.5 Acenocumarol + Ibuprom: znacznik przy obu, nota i zdanie o bezpieczeństwie pod listą — d251cc4
+- [x] 3.6 Sartesta pokazuje warianty z różnym składem; jeden wariant bez dodatkowego kliknięcia — d251cc4
+- [x] 3.7 `%` i `_` w wyszukiwarce nie zwracają całego rejestru — d251cc4
+- [x] 3.8 Kolejność wg daty rozpoczęcia, niezależna od znacznika — d251cc4
+- [x] 3.9 Wylogowane wejście na `/leki/nowy` przekierowuje do logowania — d251cc4
 
 ### Phase 4: Szczegóły leku i dodanie z ulotki
 
 #### Automated
 
-- [ ] 4.1 `npm test` (test `similarSubstances`)
-- [ ] 4.2 `npm run lint`, `npm run typecheck`, `npm run build`
-- [ ] 4.3 `npm run db:check` bez regresji
+- [x] 4.1 `npm test` (test `similarSubstances`)
+- [x] 4.2 `npm run lint`, `npm run typecheck`, `npm run build`
+- [x] 4.3 `npm run db:check` bez regresji
 
 #### Manual
 
-- [ ] 4.4 Szczegóły leku z pary: skład, opis pary z nazwą drugiego leku, nota
-- [ ] 4.5 Szczegóły leku bez pary: brak sekcji kolizji, zdanie o bezpieczeństwie
-- [ ] 4.6 Lek z ulotki z „ibuprofenum” i lek B01AA mają znacznik
-- [ ] 4.7 „ibuprofen” zwraca propozycję „ibuprofenum”; zapis bez potwierdzenia nie przechodzi
-- [ ] 4.8 Lek zapisany bez sprawdzania ma linijkę o substancji nieobjętej parą
-- [ ] 4.9 Szczegóły leku z innego konta zwracają 404
+- [x] 4.4 Szczegóły leku z pary: skład, opis pary z nazwą drugiego leku, nota
+- [x] 4.5 Szczegóły leku bez pary: brak sekcji kolizji, zdanie o bezpieczeństwie
+- [x] 4.6 Lek z ulotki z „ibuprofenum” i lek B01AA mają znacznik
+- [x] 4.7 „ibuprofen” zwraca propozycję „ibuprofenum”; zapis bez potwierdzenia nie przechodzi
+- [x] 4.8 Lek zapisany bez sprawdzania ma linijkę o substancji nieobjętej parą
+- [x] 4.9 Szczegóły leku z innego konta zwracają 404
 
 ### Phase 5: Smoke — znacznik i nota na zbudowanej aplikacji
 

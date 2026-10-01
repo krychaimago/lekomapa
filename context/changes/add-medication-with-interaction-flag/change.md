@@ -3,7 +3,7 @@ change_id: add-medication-with-interaction-flag
 title: Dodanie leku po nazwie handlowej ze znacznikiem możliwej kolizji
 status: implementing
 created: 2026-09-29
-updated: 2026-09-30
+updated: 2026-10-01
 archived_at: null
 ---
 

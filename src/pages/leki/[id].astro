@@ -1,0 +1,228 @@
+---
+// Medication details (S-02, FR-006, FR-007): dose, start date, the full composition and every possible interaction
+// with another current medication, each with the note. Interactions are ordered alphabetically by the other
+// medication's name, never by suspicion (FR-012). RLS limits every read to the signed-in person, so another
+// account's medication reads as missing and gets the same 404 as an unknown id.
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import { INTERACTION_COPY } from "@/lib/copy/interactions";
+import { MEDICATION_COPY } from "@/lib/copy/medications";
+import { formatIsoDate } from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstance, RegistryProduct } from "@/types";
+
+type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source"> & {
+  registry_products: Pick<RegistryProduct, "strength" | "pharmaceutical_form"> | null;
+  medication_substances: Pick<MedicationSubstance, "substance_name" | "atc_code">[];
+  dosage_periods: Pick<DosagePeriod, "dose_text" | "started_on" | "ended_on">[];
+};
+
+interface SubstanceLine {
+  name: string;
+  // Every code saved for this name; empty when the substance was saved without a code.
+  codes: string[];
+}
+
+interface InteractionItem {
+  otherId: string;
+  otherName: string;
+  description: string;
+}
+
+const copy = MEDICATION_COPY.details;
+const id = Astro.params.id ?? "";
+
+let medication: MedicationDetailsRow | null = null;
+let interactions: InteractionItem[] = [];
+let loadFailed = false;
+
+// A non-uuid id never reaches the database: it would be a 22P02 error there, here it is simply not found.
+const validId = z.uuid().safeParse(id).success;
+const supabase = validId ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validId && !supabase) loadFailed = true;
+
+if (supabase) {
+  const [medicationResult, interactionResult] = await Promise.all([
+    supabase
+      .from("medications")
+      .select(
+        "id, product_name, composition_source, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(dose_text, started_on, ended_on)",
+      )
+      .eq("id", id)
+      .maybeSingle()
+      .overrideTypes<MedicationDetailsRow | null, { merge: false }>(),
+    supabase.rpc("medication_interactions"),
+  ]);
+  if (medicationResult.error || interactionResult.error) {
+    loadFailed = true;
+    console.error("Loading medication details failed", {
+      medicationCode: medicationResult.error?.code,
+      interactionsCode: interactionResult.error?.code,
+    });
+  } else {
+    medication = medicationResult.data;
+    // Untyped client: the setof result is typed as a single row, so the rows are cast here.
+    const rows = ((interactionResult.data ?? []) as MedicationInteraction[]).filter((row) => row.medication_id === id);
+    const otherIds = [...new Set(rows.map((row) => row.other_medication_id))];
+    if (medication && otherIds.length > 0) {
+      const others = await supabase
+        .from("medications")
+        .select("id, product_name")
+        .in("id", otherIds)
+        .overrideTypes<Pick<Medication, "id" | "product_name">[], { merge: false }>();
+      if (others.error) {
+        loadFailed = true;
+        console.error("Loading interacting medication names failed", { code: others.error.code });
+      } else {
+        const names = new Map(others.data.map((row) => [row.id, row.product_name]));
+        interactions = rows
+          .map((row) => ({
+            otherId: row.other_medication_id,
+            otherName: names.get(row.other_medication_id) ?? "",
+            description: row.description,
+          }))
+          // Alphabetically by the other medication, then by the text: a stable order that says nothing about risk.
+          .sort(
+            (a, b) => a.otherName.localeCompare(b.otherName, "pl") || a.description.localeCompare(b.description, "pl"),
+          );
+      }
+    }
+  }
+}
+
+const notFound = !loadFailed && medication === null;
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+// Start date of the first period; dose of the current (open) period, else of the latest one.
+const periods = [...(medication?.dosage_periods ?? [])].sort((a, b) => a.started_on.localeCompare(b.started_on));
+const firstStart = periods.at(0)?.started_on;
+const currentPeriod = periods.find((period) => period.ended_on === null) ?? periods.at(-1);
+
+// One line per substance name with all its codes (a leaflet substance may carry several, e.g. diclofenacum).
+const substanceLines: SubstanceLine[] = [];
+for (const row of medication?.medication_substances ?? []) {
+  let line = substanceLines.find((existing) => existing.name === row.substance_name);
+  if (!line) {
+    line = { name: row.substance_name, codes: [] };
+    substanceLines.push(line);
+  }
+  if (row.atc_code !== null) line.codes.push(row.atc_code);
+}
+substanceLines.sort((a, b) => a.name.localeCompare(b.name, "pl"));
+for (const line of substanceLines) line.codes.sort();
+
+const registry = medication?.composition_source === "registry" ? medication.registry_products : null;
+const variantParts = [
+  registry?.strength && `${MEDICATION_COPY.add.strength}: ${registry.strength}`,
+  registry?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${registry.pharmaceutical_form}`,
+].filter(Boolean);
+
+const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+<AppLayout title={medication?.product_name ?? copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <a href="/leki" class:list={linkClass}>
+      {copy.backToList}
+    </a>
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <h1 class="mb-2 text-2xl font-bold">{copy.title}</h1>
+        <p>{copy.notFound}</p>
+      </section>
+    )}
+
+    {medication && !loadFailed && (
+      <>
+        <h1 class="text-3xl font-bold">{medication.product_name}</h1>
+
+        <section class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+          <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
+            {currentPeriod && (
+              <>
+                <dt class="text-sm text-muted-foreground">{copy.doseLabel}</dt>
+                <dd>{currentPeriod.dose_text}</dd>
+              </>
+            )}
+            {firstStart && (
+              <>
+                <dt class="text-sm text-muted-foreground">{copy.startedOnLabel}</dt>
+                <dd>{formatIsoDate(firstStart)}</dd>
+              </>
+            )}
+            {variantParts.length > 0 && (
+              <>
+                <dt class="text-sm text-muted-foreground">{copy.variant}</dt>
+                <dd>{variantParts.join(" · ")}</dd>
+              </>
+            )}
+          </dl>
+        </section>
+
+        <section class="flex flex-col gap-3">
+          <h2 class="text-xl font-semibold">{copy.compositionHeading}</h2>
+          <ul class="flex flex-col gap-2">
+            {substanceLines.map((line) => (
+              <li class="flex flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground">
+                <span class="font-medium">{line.name}</span>
+                {line.codes.length > 0 ? (
+                  <span class="text-sm text-muted-foreground">
+                    {copy.codeLabel}: {line.codes.join(", ")}
+                  </span>
+                ) : (
+                  <span class="text-sm text-muted-foreground">{INTERACTION_COPY.substanceNotCovered}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p class="text-sm text-muted-foreground">
+            {registry ? MEDICATION_COPY.add.registrySource : copy.leafletSource}
+          </p>
+        </section>
+
+        {interactions.length > 0 ? (
+          <section class="flex flex-col gap-3">
+            <h2 class="text-xl font-semibold">{INTERACTION_COPY.detailsHeading}</h2>
+            <ul class="flex flex-col gap-3">
+              {interactions.map((item) => (
+                <li
+                  data-other-medication-id={item.otherId}
+                  class="flex flex-col gap-2 rounded-xl border border-interaction-border bg-interaction p-4 text-interaction-foreground"
+                >
+                  <p class="font-semibold">
+                    {withBefore}
+                    <a href={`/leki/${item.otherId}`} class="underline underline-offset-4 hover:no-underline">
+                      {item.otherName}
+                    </a>
+                    {withAfter}
+                  </p>
+                  <p>{item.description}</p>
+                  <p class="text-sm">{INTERACTION_COPY.note}</p>
+                </li>
+              ))}
+            </ul>
+            <p class="text-sm text-muted-foreground">{INTERACTION_COPY.rulesIncomplete}</p>
+            <p class="text-sm text-muted-foreground">{INTERACTION_COPY.noWarningIsNotSafe}</p>
+          </section>
+        ) : (
+          <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
+            <p>{INTERACTION_COPY.noInteractionsForMedication}</p>
+            <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
+          </section>
+        )}
+      </>
+    )}
+  </div>
+</AppLayout>

@@ -8,6 +8,7 @@ import {
   escapeLikePattern,
   groupRegistryResults,
   orderMedications,
+  similarSubstances,
   todayInWarsaw,
 } from "../../src/lib/services/medications.ts";
 
@@ -59,4 +60,32 @@ test("today is the Warsaw date, not the UTC one", () => {
   assert.equal(todayInWarsaw(new Date("2026-09-30T22:30:00Z")), "2026-10-01");
   // 23:30 UTC on 1 December is 00:30 on 2 December in Warsaw (CET, UTC+1).
   assert.equal(todayInWarsaw(new Date("2026-12-01T23:30:00Z")), "2026-12-02");
+});
+
+// A slice of the real dictionary (registry_substances.normalized_name with a code), not names made up to fit.
+const DICTIONARY = ["dexibuprofenum", "diclofenacum", "ibuprofenum", "indometacinum", "ketoprofenum", "warfarinum"];
+
+test("a Polish leaflet name finds the Latin dictionary entry", () => {
+  assert.deepEqual(similarSubstances("ibuprofen", DICTIONARY), ["ibuprofenum"]);
+});
+
+test("an entry sharing no prefix with the dictionary finds nothing", () => {
+  assert.deepEqual(similarSubstances("xyz", DICTIONARY), []);
+});
+
+test("case and diacritics do not matter when comparing", () => {
+  assert.deepEqual(similarSubstances("  IBUPRÓFEN ", DICTIONARY), ["ibuprofenum"]);
+  assert.deepEqual(similarSubstances("Wałfarin", ["walfarinum"]), ["walfarinum"]);
+});
+
+test("a shared prefix shorter than four characters is not similar", () => {
+  assert.deepEqual(similarSubstances("ibux", DICTIONARY), []);
+  assert.deepEqual(similarSubstances("ibu", DICTIONARY), []);
+});
+
+test("at most five names, the longest shared prefix first", () => {
+  const names = ["abcd1", "abcd2", "abcd3", "abcde4", "abcd5", "abcd6", "abcdef"];
+  const result = similarSubstances("abcdefgh", names);
+  assert.equal(result.length, 5);
+  assert.deepEqual(result.slice(0, 2), ["abcdef", "abcde4"]);
 });

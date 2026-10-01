@@ -42,6 +42,23 @@ export const MEDICATION_COPY = {
     substanceHint: "Pierwsza wersja przyjmuje jedną substancję czynną na lek.",
     noMatch: "Nie znaleziono tej substancji na liście. Czy chodzi o jedną z poniższych?",
     confirmUnverified: "Zapisz bez sprawdzania — ta substancja nie będzie objęta żadną parą",
+    substancePlaceholder: "np. ibuprofenum",
+    substanceListHint: "Wybierz nazwę z podpowiedzi, jeśli ją widzisz.",
+    noSimilar: "Nie ma podobnych nazw na liście.",
+    loadError: "Nie udało się wczytać listy substancji. Odśwież stronę.",
+    registryInstead: "Wróć do wyszukiwania w rejestrze",
+  },
+  details: {
+    title: "Szczegóły leku",
+    doseLabel: "Dawkowanie",
+    startedOnLabel: "Data rozpoczęcia",
+    compositionHeading: "Skład",
+    codeLabel: "kod ATC",
+    variant: "Wariant",
+    leafletSource: "Skład wpisany z ulotki.",
+    notFound: "Nie znaleziono takiego leku.",
+    loadError: "Nie udało się wczytać leku. Odśwież stronę.",
+    backToList: "Wróć do listy leków",
   },
   // Hints next to the form (design-draft.md:196-199), reworded for a product chosen by its trade name.
   hints: {
@@ -61,7 +78,9 @@ export const MEDICATION_COPY = {
     invalidDate: "Wpisz poprawną datę rozpoczęcia.",
     futureDate: "Data rozpoczęcia nie może być późniejsza niż dziś.",
     productNameRequired: "Wpisz nazwę leku.",
+    productNameTooLong: "Nazwa leku może mieć najwyżej 200 znaków.",
     substanceRequired: "Wpisz substancję czynną.",
+    substanceTooLong: "Nazwa substancji może mieć najwyżej 200 znaków.",
     generic: "Nie udało się zapisać leku. Spróbuj ponownie.",
   },
 } as const;

@@ -81,3 +81,38 @@ export function formatIsoDate(iso: string): string {
   const [year, month, day] = iso.split("-");
   return `${day}.${month}.${year}`;
 }
+
+const MIN_SHARED_PREFIX = 4;
+const MAX_SIMILAR = 5;
+
+// Lower case without diacritics: "Ibuprofén" and "ibuprofen" fold the same. `ł` has no combining form in NFD,
+// so it is mapped by hand.
+function foldForComparison(text: string): string {
+  return text.trim().toLocaleLowerCase("pl").normalize("NFD").replace(/\p{M}/gu, "").replaceAll("ł", "l");
+}
+
+function sharedPrefixLength(a: string, b: string): number {
+  let length = 0;
+  while (length < a.length && length < b.length && a[length] === b[length]) length += 1;
+  return length;
+}
+
+// Dictionary names that share a prefix of at least MIN_SHARED_PREFIX characters with the input, ignoring case and
+// diacritics: the Polish leaflet "ibuprofen" finds the Latin "ibuprofenum". Longest shared prefix first, then
+// alphabetically; at most MAX_SIMILAR names, each once, spelled as in the dictionary.
+export function similarSubstances(input: string, names: readonly string[]): string[] {
+  const folded = foldForComparison(input);
+  if (folded.length < MIN_SHARED_PREFIX) return [];
+  const seen = new Set<string>();
+  const matches: { name: string; shared: number }[] = [];
+  for (const name of names) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    const shared = sharedPrefixLength(folded, foldForComparison(name));
+    if (shared >= MIN_SHARED_PREFIX) matches.push({ name, shared });
+  }
+  return matches
+    .sort((a, b) => b.shared - a.shared || a.name.localeCompare(b.name, "pl"))
+    .slice(0, MAX_SIMILAR)
+    .map((match) => match.name);
+}
