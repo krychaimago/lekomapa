@@ -167,7 +167,7 @@
 - **Location**: N/A (gałąź `ahead 2` względem `origin`)
 - **Detail**: Kryterium 5.4 (CI zielone) dotyczy `3e8e7e7`. Commity fazy 6 (`78a61e0`, nowy krok smoke dla `/api/registry/search`) i epilogu nie są wypchnięte, więc CI ich nie widział; PR #56 ma w tytule „fazy 1–5”. Smoke nie był też uruchomiony w tym przeglądzie (`.env` → produkcja).
 - **Fix**: `git push`, zaktualizować tytuł PR na „fazy 1–6” i potwierdzić zielone `ci` i `smoke`.
-- **Decision**: FIXED — poprawki z triage zacommitowane, branch wypchnięty, tytuł PR #56 na „fazy 1–6”; wynik CI w opisie triage poniżej
+- **Decision**: FIXED — poprawki z triage zacommitowane, branch wypchnięty, tytuł PR #56 na „fazy 1–6”; CI dla 0ca4e9b: `ci` i `smoke` zielone
 
 ## Triage (2026-10-01)
 
