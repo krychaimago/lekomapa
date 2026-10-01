@@ -137,7 +137,7 @@
 - **Location**: scripts/fr012/interaction-copy.test.mjs:4-5; src/lib/copy/medications.ts
 - **Detail**: Test celowo nie wymaga „może mieć związek” (teksty o parze leków, nie o objawie) — zgodnie z planem, ale wbrew dosłownemu brzmieniu lekcji, a uzasadnienie żyje tylko w komentarzu. `medications.ts` nie przechodzi przez żaden filtr, choć zawiera podpowiedzi o lekach (np. `hints.fixedComposition`).
 - **Fix**: Doprecyzować lekcję przez `/10x-lesson` (formuła dotyczy tekstów lek–objaw) i dodać test `forbiddenWordsIn` dla `medications.ts` z wąskim wyjątkiem `dawk`.
-- **Decision**: FIXED (inaczej) — lekcja „Filtr języka…” poprawiona w miejscu (cel: neutralność, formuła tylko przy łączeniu leku z objawem/skutkiem połączenia); nowy test scripts/fr012/medication-copy.test.mjs (wyjątki: `dawk` wszędzie, `przesta` w hints.fixedComposition)
+- **Decision**: FIXED (inaczej) — lekcja „Filtr języka…” poprawiona w miejscu (cel: neutralność, formuła tylko przy łączeniu leku z objawem/skutkiem połączenia); nowy test scripts/fr012/medication-copy.test.mjs (jedyny wyjątek: rdzeń `dawk`); podpowiedź hints.fixedComposition przeredagowana przez autorkę, żeby nie trafiała w rdzeń `przesta`
 
 ### F8 — Formularz z ulotki czyta cały słownik przy każdym wyświetleniu
 

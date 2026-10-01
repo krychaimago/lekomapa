@@ -71,7 +71,7 @@ export const MEDICATION_COPY = {
       "Późniejsza zmiana dawkowania zamknie ten wpis datą i otworzy nowy okres obok. Lek zostaje jedną pozycją na liście.",
     fixedCompositionTitle: "Substancji nie podmienisz",
     fixedComposition:
-      "Skład leku zostaje taki, jaki zapiszesz. Inny lek to zakończenie tego i dodanie nowego — inaczej dawne wpisy o samopoczuciu przestałyby się zgadzać.",
+      "Skład leku zostaje taki, jaki zapiszesz. Inny lek to zakończenie obecnego i dodanie nowego — inaczej dawne wpisy o samopoczuciu nie będą się zgadzać.",
   },
   // Errors the API route sends back as `?error=<key>`. The page looks the text up here, so the URL can never put
   // arbitrary text on screen. Never a raw Supabase error.message.
