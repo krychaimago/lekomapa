@@ -724,13 +724,13 @@ Wygoda nałożona na działający formularz: podpowiedzi nazw w trakcie pisania.
 
 #### Automated
 
-- [x] 5.1 Świeży podgląd i `npm run smoke` — wszystkie kroki zielone
-- [x] 5.2 Krok z notą pada, gdy nota zniknie ze szczegółów
-- [x] 5.3 Bieg smoke pisze do lokalnej bazy
+- [x] 5.1 Świeży podgląd i `npm run smoke` — wszystkie kroki zielone — 0cbf35d
+- [x] 5.2 Krok z notą pada, gdy nota zniknie ze szczegółów — 0cbf35d
+- [x] 5.3 Bieg smoke pisze do lokalnej bazy — 0cbf35d
 
 #### Manual
 
-- [ ] 5.4 CI na PR: joby `ci` i `smoke` zielone
+- [x] 5.4 CI na PR: joby `ci` i `smoke` zielone — 0cbf35d
 
 ### Phase 6: Podpowiedzi przy wpisywaniu nazwy (odkładalna)
 
