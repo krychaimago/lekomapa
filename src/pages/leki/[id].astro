@@ -7,13 +7,14 @@ import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
-import { formatIsoDate, lastDayOfPeriod } from "@/lib/services/medications";
+import { buttonVariants } from "@/components/ui/button";
+import { formatIsoDate, lastDayOfPeriod, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstance, RegistryProduct } from "@/types";
 
 type VariantRow = Pick<RegistryProduct, "strength" | "pharmaceutical_form">;
 
-type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source"> & {
+type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source" | "discontinued_on"> & {
   registry_products: VariantRow | null;
   medication_substances: Pick<MedicationSubstance, "substance_name" | "atc_code">[];
   // Each period carries the variant taken in it (S-03); null for a leaflet medication.
@@ -51,7 +52,7 @@ if (supabase) {
     supabase
       .from("medications")
       .select(
-        "id, product_name, composition_source, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, registry_products(strength, pharmaceutical_form))",
+        "id, product_name, composition_source, discontinued_on, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, registry_products(strength, pharmaceutical_form))",
       )
       .eq("id", id)
       .maybeSingle()
@@ -146,6 +147,13 @@ const history = [...periods].reverse().map((period) => ({
           .replace("{do}", formatIsoDate(lastDayOfPeriod(period.ended_on))),
 }));
 
+// Same "current" rule as DP001 in change_dosage: not discontinued, or discontinued after today (Polish time).
+// Only a current medication offers the dose change.
+const isCurrent =
+  medication !== null && (medication.discontinued_on === null || medication.discontinued_on > todayInWarsaw());
+// Banner after a saved dose change; the flag carries no data.
+const dosageChanged = Astro.url.searchParams.get("zmieniono") === "1";
+
 const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
@@ -174,7 +182,20 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
 
     {medication && !loadFailed && (
       <>
-        <h1 class="text-3xl font-bold">{medication.product_name}</h1>
+        {dosageChanged && (
+          <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+            {MEDICATION_COPY.dosageChange.saved}
+          </p>
+        )}
+
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <h1 class="text-3xl font-bold break-words">{medication.product_name}</h1>
+          {isCurrent && (
+            <a href={`/leki/${medication.id}/zmiana-dawki`} class:list={buttonVariants({ variant: "outline" })}>
+              {MEDICATION_COPY.dosageChange.open}
+            </a>
+          )}
+        </div>
 
         <section class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
           <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">

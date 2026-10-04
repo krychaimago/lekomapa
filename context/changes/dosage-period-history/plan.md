@@ -425,34 +425,34 @@ Użytkowniczka zmienia dawkę z poziomu szczegółów leku. Każde odrzucenie pr
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe dat i filtr FR-012 przechodzą: `npm test`
-- [x] 3.2 Lint przechodzi: `npm run lint`
-- [x] 3.3 Typy przechodzą: `npm run typecheck`
+- [x] 3.1 Testy jednostkowe dat i filtr FR-012 przechodzą: `npm test` — dfad9b0
+- [x] 3.2 Lint przechodzi: `npm run lint` — dfad9b0
+- [x] 3.3 Typy przechodzą: `npm run typecheck` — dfad9b0
 
 #### Manual
 
-- [x] 3.4 Lek z dwoma okresami (wstawionymi przez `change_dosage` w lokalnej bazie) pokazuje oba, najnowszy na górze, z datą „do” o dzień wcześniejszą niż początek nowego
-- [x] 3.5 Lek z jednym okresem pokazuje jeden wpis „od …”
-- [x] 3.6 Lek z ulotki nie pokazuje wariantu przy okresach
-- [x] 3.7 Na telefonie (szerokość ~375 px) historia czyta się bez poziomego przewijania
+- [x] 3.4 Lek z dwoma okresami (wstawionymi przez `change_dosage` w lokalnej bazie) pokazuje oba, najnowszy na górze, z datą „do” o dzień wcześniejszą niż początek nowego — dfad9b0
+- [x] 3.5 Lek z jednym okresem pokazuje jeden wpis „od …” — dfad9b0
+- [x] 3.6 Lek z ulotki nie pokazuje wariantu przy okresach — dfad9b0
+- [x] 3.7 Na telefonie (szerokość ~375 px) historia czyta się bez poziomego przewijania — dfad9b0
 
 ### Phase 4: Ekran i trasa zmiany dawki
 
 #### Automated
 
-- [ ] 4.1 Kody błędów zmierzone: `error.code` z PostgREST dla `DP00x` zapisany w Notes przed spięciem mapy
-- [ ] 4.2 Testy przechodzą, w tym filtr FR-012 nowych tekstów: `npm test`
-- [ ] 4.3 Lint przechodzi: `npm run lint`
-- [ ] 4.4 Typy przechodzą: `npm run typecheck`
-- [ ] 4.5 Build przechodzi: `npm run build`
-- [ ] 4.6 Smoke przeciw lokalnemu Supabase przechodzi (`.env` odsunięty, nowy podgląd potwierdzony): `npm run smoke`
+- [x] 4.1 Kody błędów zmierzone: `error.code` z PostgREST dla `DP00x` zapisany w Notes przed spięciem mapy
+- [x] 4.2 Testy przechodzą, w tym filtr FR-012 nowych tekstów: `npm test`
+- [x] 4.3 Lint przechodzi: `npm run lint`
+- [x] 4.4 Typy przechodzą: `npm run typecheck`
+- [x] 4.5 Build przechodzi: `npm run build`
+- [x] 4.6 Smoke przeciw lokalnemu Supabase przechodzi (`.env` odsunięty, nowy podgląd potwierdzony): `npm run smoke`
 
 #### Manual
 
-- [ ] 4.7 Zmiana dawki z dzisiejszą datą: powrót do szczegółów z banerem, historia ma dwa okresy, lek nadal jedną pozycją na liście
-- [ ] 4.8 Zmiana z datą cofniętą o kilka dni zapisuje tę datę; data przed początkiem bieżącego okresu albo starsza niż 14 dni daje komunikat
-- [ ] 4.9 Ta sama dawka daje komunikat „już zapisane”; ta sama dawka z innym wariantem przechodzi
-- [ ] 4.10 Zmiana mocy leku z rejestru: nowy okres pokazuje nową moc, stary starą
-- [ ] 4.11 Lek dodany dziś: ekran mówi, że zmiana jest możliwa od jutra
-- [ ] 4.12 Po błędzie adres zawiera wyłącznie `?error=<klucz>` — ani dawki, ani daty
-- [ ] 4.13 Na telefonie formularz i komunikaty czytelne
+- [x] 4.7 Zmiana dawki z dzisiejszą datą: powrót do szczegółów z banerem, historia ma dwa okresy, lek nadal jedną pozycją na liście
+- [x] 4.8 Zmiana z datą cofniętą o kilka dni zapisuje tę datę; data przed początkiem bieżącego okresu albo starsza niż 14 dni daje komunikat
+- [x] 4.9 Ta sama dawka daje komunikat „już zapisane”; ta sama dawka z innym wariantem przechodzi
+- [x] 4.10 Zmiana mocy leku z rejestru: nowy okres pokazuje nową moc, stary starą
+- [x] 4.11 Lek dodany dziś: ekran mówi, że zmiana jest możliwa od jutra
+- [x] 4.12 Po błędzie adres zawiera wyłącznie `?error=<klucz>` — ani dawki, ani daty
+- [x] 4.13 Na telefonie formularz i komunikaty czytelne
