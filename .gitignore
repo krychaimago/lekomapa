@@ -42,3 +42,6 @@ playwright/.cache/
 
 # stryker temp files
 .stryker-tmp
+
+# stryker mutation report (npm run test:mutation)
+reports/mutation

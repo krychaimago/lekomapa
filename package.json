@@ -13,6 +13,7 @@
     "smoke": "node --experimental-strip-types --env-file-if-exists=.env scripts/smoke.mjs",
     "db:check": "node scripts/db-checks.mjs",
     "test": "node --experimental-strip-types --test \"scripts/**/*.test.mjs\"",
+    "test:mutation": "stryker run",
     "typecheck": "astro check",
     "prepare": "husky"
   },
