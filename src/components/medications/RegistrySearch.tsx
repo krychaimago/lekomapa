@@ -7,6 +7,7 @@ import type { RegistryNameGroup } from "@/lib/services/medications";
 import { cn } from "@/lib/utils";
 
 const copy = MEDICATION_COPY.add;
+const formCopy = MEDICATION_COPY.form;
 const ADD_PATH = "/leki/nowy";
 
 interface Props {
@@ -32,6 +33,7 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
   const id = useId();
   const inputId = "q";
   const listboxId = `${id}-suggestions`;
+  const hintId = `${id}-hint`;
   const optionId = (index: number) => `${id}-option-${index}`;
 
   const [value, setValue] = useState(initialValue);
@@ -103,7 +105,7 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
   return (
     <form method="GET" action={ADD_PATH} className="flex flex-col gap-2">
       <label htmlFor={inputId} className="text-sm font-medium">
-        {copy.searchLabel}
+        {copy.searchLabel} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative w-full">
@@ -112,7 +114,6 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
             name="q"
             type="search"
             value={value}
-            placeholder={copy.searchPlaceholder}
             maxLength={maxLength}
             required
             autoComplete="off"
@@ -120,6 +121,7 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
             aria-autocomplete="list"
             aria-expanded={open}
             aria-controls={listboxId}
+            aria-describedby={hintId}
             aria-activedescendant={open && activeIndex !== -1 ? optionId(activeIndex) : undefined}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
@@ -164,6 +166,9 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
           {copy.searchSubmit}
         </button>
       </div>
+      <p id={hintId} className="text-muted-foreground text-sm">
+        {copy.searchHint}
+      </p>
       <p role="status" aria-live="polite" className="sr-only">
         {announcement}
       </p>

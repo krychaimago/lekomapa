@@ -3,6 +3,10 @@
 // stem filter blocks. Nothing here may speak about an interaction or its absence — that belongs in interactions.ts.
 
 export const MEDICATION_COPY = {
+  // Shared by every medication form. Plain text inside the label, so a screen reader reads it with the field name.
+  form: {
+    requiredMark: "(obowiązkowe)",
+  },
   list: {
     title: "Leki",
     add: "Dodaj lek",
@@ -14,7 +18,8 @@ export const MEDICATION_COPY = {
   add: {
     title: "Dodaj lek",
     searchLabel: "Nazwa handlowa",
-    searchPlaceholder: "np. Ibuprom",
+    // Example value shown as a hint under the field, not inside it: an example inside the field reads as typed text.
+    searchHint: "Na przykład: Ibuprom",
     searchSubmit: "Szukaj",
     results: "Wyniki wyszukiwania",
     noResults: "Nie znaleziono leku o tej nazwie w rejestrze.",
@@ -31,7 +36,7 @@ export const MEDICATION_COPY = {
     composition: "Skład",
     compositionUnknown: "brak danych w rejestrze",
     doseLabel: "Dawkowanie",
-    dosePlaceholder: "np. 1 tabletka rano",
+    doseHint: "Na przykład: 1 tabletka rano",
     startedOnLabel: "Data rozpoczęcia",
     submit: "Zapisz lek",
     pending: "Zapisywanie...",
@@ -46,8 +51,7 @@ export const MEDICATION_COPY = {
     substanceHint: "Pierwsza wersja przyjmuje jedną substancję czynną na lek.",
     noMatch: "Nie znaleziono tej substancji na liście. Czy chodzi o jedną z poniższych?",
     confirmUnverified: "Zapisz bez sprawdzania — ta substancja nie będzie objęta żadną parą",
-    substancePlaceholder: "np. ibuprofenum",
-    substanceListHint: "Wybierz nazwę z podpowiedzi, jeśli ją widzisz.",
+    substanceListHint: "Na przykład: ibuprofenum. Wybierz nazwę z podpowiedzi, jeśli ją widzisz.",
     noSimilar: "Nie ma podobnych nazw na liście.",
     loadError: "Nie udało się wczytać listy substancji. Odśwież stronę.",
     registryInstead: "Wróć do wyszukiwania w rejestrze",

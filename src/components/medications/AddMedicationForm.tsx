@@ -9,6 +9,7 @@ import { MEDICATION_COPY } from "@/lib/copy/medications";
 import type { RegistryVariantOption } from "@/types";
 
 const copy = MEDICATION_COPY.add;
+const formCopy = MEDICATION_COPY.form;
 
 interface Props {
   // Trade name of the chosen step, sent back so an error redirect returns to the same variants.
@@ -33,7 +34,9 @@ export default function AddMedicationForm({ name, variants, selectedId, today, s
           <input type="hidden" name="nazwa" value={name} />
 
           <fieldset className="flex flex-col gap-3">
-            <legend className="mb-3 text-lg font-semibold">{copy.chooseVariant}</legend>
+            <legend className="mb-3 text-lg font-semibold">
+              {copy.chooseVariant} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </legend>
             {variants.map((variant) => (
               <label
                 key={variant.id}
@@ -61,19 +64,26 @@ export default function AddMedicationForm({ name, variants, selectedId, today, s
           </fieldset>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="doseText">{copy.doseLabel}</Label>
+            <Label htmlFor="doseText">
+              {copy.doseLabel} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </Label>
             <Input
               id="doseText"
               name="doseText"
-              placeholder={copy.dosePlaceholder}
               maxLength={200}
               required
               autoComplete="off"
+              aria-describedby="doseText-hint"
             />
+            <p id="doseText-hint" className="text-muted-foreground text-sm">
+              {copy.doseHint}
+            </p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="startedOn">{copy.startedOnLabel}</Label>
+            <Label htmlFor="startedOn">
+              {copy.startedOnLabel} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </Label>
             <Input id="startedOn" name="startedOn" type="date" defaultValue={today} max={today} required />
           </div>
 
