@@ -269,23 +269,23 @@ Pełny `npm run test:mutation` trwa ~3–4 min; bieg zawężony do pliku krócej
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 2.2 Lint przechodzi: `npm run lint`
-- [x] 2.3 Stryker zawężony do `pairs.mjs` — padają #56, #79, #206 i #234–#237
-- [x] 2.4 Każdy przeżyły jest na liście pominiętych albo w `main()`
+- [x] 2.1 Testy jednostkowe przechodzą: `npm test` — 67d070e
+- [x] 2.2 Lint przechodzi: `npm run lint` — 67d070e
+- [x] 2.3 Stryker zawężony do `pairs.mjs` — padają #56, #79, #206 i #234–#237 — 67d070e
+- [x] 2.4 Każdy przeżyły jest na liście pominiętych albo w `main()` — 67d070e
 
 #### Manual
 
-- [x] 2.5 Walidacja pliku par z README daje ten sam wynik co przed zmianą
+- [x] 2.5 Walidacja pliku par z README daje ten sam wynik co przed zmianą — 67d070e
 
 ### Phase 3: Pomiar i zapis pominiętych
 
 #### Automated
 
-- [ ] 3.1 Pełny bieg przechodzi: `npm run test:mutation`
-- [ ] 3.2 Liczba przeżyłych w obu plikach równa się liczbie wierszy w `surviving-mutants.md`
-- [ ] 3.3 `contrast.mjs` i `navigation.ts` bez zmian (32 i 4 przeżyłe)
+- [x] 3.1 Pełny bieg przechodzi: `npm run test:mutation`
+- [x] 3.2 Liczba przeżyłych w obu plikach równa się liczbie wierszy w `surviving-mutants.md`
+- [x] 3.3 `contrast.mjs` i `navigation.ts` bez zmian (32 i 4 przeżyłe)
 
 #### Manual
 
-- [ ] 3.4 Autorka akceptuje każdy powód w `surviving-mutants.md`
+- [x] 3.4 Autorka akceptuje każdy powód w `surviving-mutants.md`
