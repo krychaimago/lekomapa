@@ -1,7 +1,8 @@
 # Przeżyłe mutanty pominięte świadomie — `medications.ts` i `pairs.mjs`
 
-- **Pomiar**: 4.10.2026, `npm run test:mutation` (pełny zakres z `stryker.config.json`), kod na commicie `0fdb5cd` z poprawką F1 z impl-review (test CLI sprawdza też kod błędu `[missing_required_wording]`).
+- **Pomiar**: 4.10.2026, `npm run test:mutation` (pełny zakres z `stryker.config.json`), kod na commicie `47f464b` (poprawki P1 i P3 z impl-review: test CLI sprawdza też kod błędu `[missing_required_wording]`, nowe testy sprzątają katalogi tymczasowe).
 - **Wynik**: `medications.ts` 92,31 % (8 przeżyłych), `pairs.mjs` 87,98 % (28 przeżyłych). Łącznie w projekcie 88,64 % (558 zabitych, 4 timeout, 72 przeżyłe).
+- **Po pomiarze**: `runScript` w `pairs.test.mjs` dostał `timeout: 10_000` (F3 z drugiego impl-review) — bez ponownego biegu. Zmienia wynik wyłącznie mutantów, które zawieszają skrypt CLI.
 - **Numery mutantów (`#`) są ważne tylko dla tego pomiaru.** Inny zakres `mutate` albo zmiana kodu je przesuwa. Porównuj po linii i mutatorze.
 - Źródło powodów: `research.md` (tabele „medications.ts” i „pairs.mjs”), `plan.md` (What We're NOT Doing, Phase 2 §3) i decyzje autorki z 4.10.2026 zapisane w `change.md`.
 

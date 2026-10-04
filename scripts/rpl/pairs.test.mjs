@@ -301,7 +301,7 @@ test("a read error other than a missing file comes out unchanged", async (t) => 
 // file. The printed lines are for a human and are not checked, except the stable reason code of a row error: it
 // proves the validation ran and rejected the row, not that the script crashed before it (exit code 1 either way).
 const SCRIPT = path.join(import.meta.dirname, "pairs.mjs");
-const runScript = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8" });
+const runScript = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", timeout: 10_000 });
 
 test("the CLI exits with 1 without a file argument", () => {
   assert.equal(runScript().status, 1);
