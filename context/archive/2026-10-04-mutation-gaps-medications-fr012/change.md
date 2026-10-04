@@ -1,10 +1,10 @@
 ---
 change_id: mutation-gaps-medications-fr012
 title: Luki w testach wskazane przez Strykera — leki i filtr FR-012
-status: impl_reviewed
+status: archived
 created: 2026-10-04
 updated: 2026-10-04
-archived_at: null
+archived_at: 2026-10-04T18:18:42Z
 ---
 
 ## Notes

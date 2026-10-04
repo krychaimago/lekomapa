@@ -256,27 +256,27 @@ Pełny `npm run test:mutation` trwa ~3–4 min; bieg zawężony do pliku krócej
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — b72090b
-- [x] 1.2 Lint przechodzi: `npm run lint` — b72090b
-- [x] 1.3 Typy przechodzą: `npm run typecheck` — b72090b
-- [x] 1.4 Stryker zawężony do `medications.ts` — przeżywa dokładnie 6 mutantów z listy pominiętych — b72090b
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 46c8b24
+- [x] 1.2 Lint przechodzi: `npm run lint` — 46c8b24
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — 46c8b24
+- [x] 1.4 Stryker zawężony do `medications.ts` — przeżywa dokładnie 6 mutantów z listy pominiętych — 46c8b24
 
 #### Manual
 
-- [x] 1.5 Autorka potwierdza przypadki `registryCompositionNames` — b72090b
+- [x] 1.5 Autorka potwierdza przypadki `registryCompositionNames` — 46c8b24
 
 ### Phase 2: Testy `pairs.mjs`
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe przechodzą: `npm test` — 67d070e
-- [x] 2.2 Lint przechodzi: `npm run lint` — 67d070e
-- [x] 2.3 Stryker zawężony do `pairs.mjs` — padają #56, #79, #206 i #234–#237 — 67d070e
-- [x] 2.4 Każdy przeżyły jest na liście pominiętych albo w `main()` — 67d070e
+- [x] 2.1 Testy jednostkowe przechodzą: `npm test` — 46c8b24
+- [x] 2.2 Lint przechodzi: `npm run lint` — 46c8b24
+- [x] 2.3 Stryker zawężony do `pairs.mjs` — padają #56, #79, #206 i #234–#237 — 46c8b24
+- [x] 2.4 Każdy przeżyły jest na liście pominiętych albo w `main()` — 46c8b24
 
 #### Manual
 
-- [x] 2.5 Walidacja pliku par z README daje ten sam wynik co przed zmianą — 67d070e
+- [x] 2.5 Walidacja pliku par z README daje ten sam wynik co przed zmianą — 46c8b24
 
 ### Phase 3: Pomiar i zapis pominiętych
 
