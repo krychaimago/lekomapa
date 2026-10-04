@@ -440,19 +440,19 @@ Użytkowniczka zmienia dawkę z poziomu szczegółów leku. Każde odrzucenie pr
 
 #### Automated
 
-- [x] 4.1 Kody błędów zmierzone: `error.code` z PostgREST dla `DP00x` zapisany w Notes przed spięciem mapy
-- [x] 4.2 Testy przechodzą, w tym filtr FR-012 nowych tekstów: `npm test`
-- [x] 4.3 Lint przechodzi: `npm run lint`
-- [x] 4.4 Typy przechodzą: `npm run typecheck`
-- [x] 4.5 Build przechodzi: `npm run build`
-- [x] 4.6 Smoke przeciw lokalnemu Supabase przechodzi (`.env` odsunięty, nowy podgląd potwierdzony): `npm run smoke`
+- [x] 4.1 Kody błędów zmierzone: `error.code` z PostgREST dla `DP00x` zapisany w Notes przed spięciem mapy — abd2986
+- [x] 4.2 Testy przechodzą, w tym filtr FR-012 nowych tekstów: `npm test` — abd2986
+- [x] 4.3 Lint przechodzi: `npm run lint` — abd2986
+- [x] 4.4 Typy przechodzą: `npm run typecheck` — abd2986
+- [x] 4.5 Build przechodzi: `npm run build` — abd2986
+- [x] 4.6 Smoke przeciw lokalnemu Supabase przechodzi (`.env` odsunięty, nowy podgląd potwierdzony): `npm run smoke` — abd2986
 
 #### Manual
 
-- [x] 4.7 Zmiana dawki z dzisiejszą datą: powrót do szczegółów z banerem, historia ma dwa okresy, lek nadal jedną pozycją na liście
-- [x] 4.8 Zmiana z datą cofniętą o kilka dni zapisuje tę datę; data przed początkiem bieżącego okresu albo starsza niż 14 dni daje komunikat
-- [x] 4.9 Ta sama dawka daje komunikat „już zapisane”; ta sama dawka z innym wariantem przechodzi
-- [x] 4.10 Zmiana mocy leku z rejestru: nowy okres pokazuje nową moc, stary starą
-- [x] 4.11 Lek dodany dziś: ekran mówi, że zmiana jest możliwa od jutra
-- [x] 4.12 Po błędzie adres zawiera wyłącznie `?error=<klucz>` — ani dawki, ani daty
-- [x] 4.13 Na telefonie formularz i komunikaty czytelne
+- [x] 4.7 Zmiana dawki z dzisiejszą datą: powrót do szczegółów z banerem, historia ma dwa okresy, lek nadal jedną pozycją na liście — abd2986
+- [x] 4.8 Zmiana z datą cofniętą o kilka dni zapisuje tę datę; data przed początkiem bieżącego okresu albo starsza niż 14 dni daje komunikat — abd2986
+- [x] 4.9 Ta sama dawka daje komunikat „już zapisane”; ta sama dawka z innym wariantem przechodzi — abd2986
+- [x] 4.10 Zmiana mocy leku z rejestru: nowy okres pokazuje nową moc, stary starą — abd2986
+- [x] 4.11 Lek dodany dziś: ekran mówi, że zmiana jest możliwa od jutra — abd2986
+- [x] 4.12 Po błędzie adres zawiera wyłącznie `?error=<klucz>` — ani dawki, ani daty — abd2986
+- [x] 4.13 Na telefonie formularz i komunikaty czytelne — abd2986

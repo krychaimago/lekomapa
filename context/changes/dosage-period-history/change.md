@@ -1,7 +1,7 @@
 ---
 change_id: dosage-period-history
 title: Historia okresów dawkowania — zmiana dawki zamyka stary okres i otwiera nowy
-status: implementing
+status: implemented
 created: 2026-10-04
 updated: 2026-10-04
 archived_at: null
