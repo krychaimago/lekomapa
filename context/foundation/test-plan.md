@@ -99,14 +99,14 @@ a kod aplikacji nie ma żadnych.
 
 ## 5. Quality Gates
 
-| Gate                                  | Where                         | Required?                 | Catches                                                                          |
-| ------------------------------------- | ----------------------------- | ------------------------- | -------------------------------------------------------------------------------- |
-| lint + typecheck                      | pre-commit (lint-staged) + CI | required                  | błędy składni i typów                                                            |
-| unit (`npm test`)                     | CI                            | required                  | regresje parsera RPL, tokenów kolorów, nawigacji; po Phase 3 także języka FR-012 |
-| smoke                                 | CI (lokalny Supabase)         | required                  | zepsuta ścieżka auth, izolacja dwóch kont, dostęp do tabel współdzielonych       |
-| sprawdzenia SQL (RLS i niezmienniki)  | CI                            | required after §3 Phase 1 | złamane RLS, wyzwalacze historii, niezmienniki danych                            |
-| niezmienniki katalogu bazy            | CI                            | required after §3 Phase 2 | nowa tabela bez RLS per operacja lub bez usuwania z kontem                       |
-| automatyczne wygaśnięcie linku resetu | CI (smoke)                    | required after §3 Phase 4 | link działający po czasie lub drugi raz                                          |
+| Gate                                  | Where                                                                                                                          | Required?                 | Catches                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------- | -------------------------------------------------------------------------------- |
+| lint + typecheck                      | hooki agenta (lint po edycji; lint, typecheck i unit na koniec tury) + pre-commit lint (lint-staged) + pre-push typecheck + CI | required                  | błędy składni i typów                                                            |
+| unit (`npm test`)                     | CI                                                                                                                             | required                  | regresje parsera RPL, tokenów kolorów, nawigacji; po Phase 3 także języka FR-012 |
+| smoke                                 | CI (lokalny Supabase)                                                                                                          | required                  | zepsuta ścieżka auth, izolacja dwóch kont, dostęp do tabel współdzielonych       |
+| sprawdzenia SQL (RLS i niezmienniki)  | CI                                                                                                                             | required after §3 Phase 1 | złamane RLS, wyzwalacze historii, niezmienniki danych                            |
+| niezmienniki katalogu bazy            | CI                                                                                                                             | required after §3 Phase 2 | nowa tabela bez RLS per operacja lub bez usuwania z kontem                       |
+| automatyczne wygaśnięcie linku resetu | CI (smoke)                                                                                                                     | required after §3 Phase 4 | link działający po czasie lub drugi raz                                          |
 
 Ryzyko #2 po Phase 3 jest częściowo otwarte do S-02: nota poglądowa, zdanie o tym, że brak ostrzeżenia nie oznacza bezpieczeństwa, krok smoke z notą i kolejność leków na liście niezależna od kolizji. Bramki powyżej pilnują dziś wyłącznie opisów par (walidator i baza). Status `complete` fazy 3 w §3 nie zamyka ryzyka — patrz §6.5.
 
