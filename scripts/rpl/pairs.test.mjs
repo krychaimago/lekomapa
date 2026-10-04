@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import process from "node:process";
 import { test } from "node:test";
 
 import { FORBIDDEN_WORDS, PAIR_COLUMNS, loadPairs, parsePairs, validatePairs } from "./pairs.mjs";
@@ -267,6 +269,56 @@ test("loadPairs reads a file and reports a missing one", async () => {
   const result = await loadPairs(file);
   assert.deepEqual(groups(result.accepted), [["C09CA", "M01AE"]]);
   await assert.rejects(loadPairs(path.join(dir, "missing.csv")), /No pairs file/);
+});
+
+test("header column names padded with spaces still match the expected header", () => {
+  // The author edits the file by hand; padding around a column name is not a shifted column.
+  const header = PAIR_COLUMNS.map((column) => `" ${column} "`).join(";");
+  const row = ["C09CA", "M01AE", DESCRIPTION, SOURCE, "2026-10-02"].map((value) => `"${value}"`).join(";");
+  const result = validatePairs(parsePairs(`${header}\n${row}\n`));
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(groups(result.accepted), [["C09CA", "M01AE"]]);
+});
+
+test("a read error other than a missing file comes out unchanged", async () => {
+  // Only a missing file is reported as "No pairs file"; any other failure must keep its own cause.
+  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-"));
+  await assert.rejects(loadPairs(dir), (error) => {
+    assert.equal(error.code, "EISDIR");
+    assert.doesNotMatch(error.message, /No pairs file/);
+    return true;
+  });
+});
+
+// Author decision 2026-10-04: the exit code is the contract of the validation script — 1 on any error, 0 on a valid
+// file. The printed lines are for a human and are not checked.
+const SCRIPT = path.join(import.meta.dirname, "pairs.mjs");
+const runScript = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8" }).status;
+
+test("the CLI exits with 1 without a file argument", () => {
+  assert.equal(runScript(), 1);
+});
+
+test("the CLI exits with 1 for a file that does not exist", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-cli-"));
+  assert.equal(runScript(path.join(dir, "missing.csv")), 1);
+});
+
+test("the CLI exits with 1 for a file with a row error", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-cli-"));
+  const file = path.join(dir, "pairs.csv");
+  await writeFile(
+    file,
+    csv([["C09CA", "M01AE", "2026-10-02", "Sartany i leki z grupy ibuprofenu mogą wchodzić w interakcję."]]),
+  );
+  assert.equal(runScript(file), 1);
+});
+
+test("the CLI exits with 0 for a file with one valid, verified pair", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-cli-"));
+  const file = path.join(dir, "pairs.csv");
+  await writeFile(file, csv([["C09CA", "M01AE"]]));
+  assert.equal(runScript(file), 0);
 });
 
 test("the pairs file in the repository loads without errors", async () => {

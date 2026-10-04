@@ -39,6 +39,23 @@ for (const sentence of FORBIDDEN_SENTENCES.cause) {
   });
 }
 
+// FR-012: spacing is not wording. A forbidden sentence split by a double space or a line break (inside the quoted
+// CSV field) must still be rejected, so multi-word stems like "nie łącz" cannot be dodged by whitespace.
+const WHITESPACE_VARIANTS = {
+  "double spaces": (sentence) => sentence.replaceAll(" ", "  "),
+  "line breaks": (sentence) => sentence.replaceAll(" ", "\n"),
+};
+
+for (const [kind, sentences] of Object.entries(FORBIDDEN_SENTENCES)) {
+  for (const sentence of sentences) {
+    for (const [variant, respace] of Object.entries(WHITESPACE_VARIANTS)) {
+      test(`forbidden ${kind} with ${variant}: "${sentence}" is still rejected`, () => {
+        assertForbidden(`${respace(sentence)} Jednoczesne przyjmowanie ${REQUIRED_PHRASE} z objawami.`);
+      });
+    }
+  }
+}
+
 for (const sentence of ALLOWED_SENTENCES) {
   test(`allowed: "${sentence}" passes`, () => {
     assert.ok(sentence.includes(REQUIRED_PHRASE), "corpus sentence must carry the required phrase");
