@@ -14,7 +14,8 @@
 --   INTERACTION 8:  a discontinued medication drops out; one with a future discontinuation date stays.
 --   INTERACTION 9:  isolation — another account's medications never pair with mine.
 --   INTERACTION 10: a medication without a code creates no rows.
---   INTERACTION 11: privileges — anon cannot execute the four functions; a call without a session is a named error.
+--   INTERACTION 11: privileges — anon cannot execute the five functions (change_dosage from S-03 included); a call
+--                   without a session is a named error.
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`). The runner (scripts/db-checks.mjs) passes this file
 -- only when it prints `GATE_COMPLETE medication_interaction_checks` at the end.
@@ -543,7 +544,8 @@ begin
     'public.add_medication_from_registry(uuid, text, date)',
     'public.add_medication_from_leaflet(text, text, boolean, text, date)',
     'public.medication_interactions()',
-    'public.coded_substance_names()'
+    'public.coded_substance_names()',
+    'public.change_dosage(uuid, text, date, uuid)'
   ] loop
     if has_function_privilege('anon', v_function, 'execute') then
       raise exception 'INTERACTION 11 FAILED: anon can execute %', v_function;
@@ -587,7 +589,7 @@ begin
     raise exception 'INTERACTION 11 FAILED: registry save of a missing product was not rejected with P0002';
   end if;
 
-  raise notice 'INTERACTION 11 OK: anon cannot execute the four functions, authenticated can; no session is 28000; a missing product is P0002';
+  raise notice 'INTERACTION 11 OK: anon cannot execute the five functions, authenticated can; no session is 28000; a missing product is P0002';
 end;
 $$;
 

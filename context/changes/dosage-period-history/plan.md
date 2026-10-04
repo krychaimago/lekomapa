@@ -410,16 +410,16 @@ Użytkowniczka zmienia dawkę z poziomu szczegółów leku. Każde odrzucenie pr
 
 #### Automated
 
-- [ ] 2.1 Migracje wchodzą od zera: `npx supabase db reset`
-- [ ] 2.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy plik: `npm run db:check`
-- [ ] 2.3 Sondy CI nadal padają tam, gdzie powinny (krok „SQL checks” w `.github/workflows/ci.yml` uruchomiony lokalnie)
-- [ ] 2.4 Typy przechodzą: `npm run typecheck`
-- [ ] 2.5 Testy przechodzą: `npm test`
+- [x] 2.1 Migracje wchodzą od zera: `npx supabase db reset`
+- [x] 2.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy plik: `npm run db:check`
+- [x] 2.3 Sondy CI nadal padają tam, gdzie powinny (krok „SQL checks” w `.github/workflows/ci.yml` uruchomiony lokalnie)
+- [x] 2.4 Typy przechodzą: `npm run typecheck`
+- [x] 2.5 Testy przechodzą: `npm test`
 
 #### Manual
 
-- [ ] 2.6 Wynik pomiaru wariantów zapisany w `change.md` (Notes)
-- [ ] 2.7 Przegląd nagłówka migracji: opis z przykładami zrozumiały bez czytania SQL
+- [x] 2.6 Wynik pomiaru wariantów zapisany w `change.md` (Notes)
+- [x] 2.7 Przegląd nagłówka migracji: opis z przykładami zrozumiały bez czytania SQL
 
 ### Phase 3: Historia okresów na szczegółach leku
 
