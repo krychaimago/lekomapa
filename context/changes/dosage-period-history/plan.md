@@ -395,16 +395,16 @@ Użytkowniczka zmienia dawkę z poziomu szczegółów leku. Każde odrzucenie pr
 
 #### Automated
 
-- [x] 1.1 Testy przechodzą, w tym filtr FR-012 tekstów leku i bramka kolorów: `npm test`
-- [x] 1.2 Lint przechodzi: `npm run lint`
-- [x] 1.3 Typy przechodzą: `npm run typecheck`
-- [x] 1.4 Żaden formularz leku nie ma placeholdera: `grep -rn "placeholder" src/components/medications` nie zwraca nic
+- [x] 1.1 Testy przechodzą, w tym filtr FR-012 tekstów leku i bramka kolorów: `npm test` — e652cdc
+- [x] 1.2 Lint przechodzi: `npm run lint` — e652cdc
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — e652cdc
+- [x] 1.4 Żaden formularz leku nie ma placeholdera: `grep -rn "placeholder" src/components/medications` nie zwraca nic — e652cdc
 
 #### Manual
 
-- [x] 1.5 Na `/leki/nowy` i `/leki/nowy/z-ulotki` puste pole wygląda na puste, a przykład stoi pod nim
-- [x] 1.6 Każde pole obowiązkowe ma przy etykiecie „(obowiązkowe)”, także legenda wariantu
-- [x] 1.7 Czytnik ekranu (VoiceOver) odczytuje etykietę z dopiskiem i podpowiedź przy polu dawki
+- [x] 1.5 Na `/leki/nowy` i `/leki/nowy/z-ulotki` puste pole wygląda na puste, a przykład stoi pod nim — e652cdc
+- [x] 1.6 Każde pole obowiązkowe ma przy etykiecie „(obowiązkowe)”, także legenda wariantu — e652cdc
+- [x] 1.7 Czytnik ekranu (VoiceOver) odczytuje etykietę z dopiskiem i podpowiedź przy polu dawki — e652cdc
 
 ### Phase 2: Baza — wariant przy okresie i funkcja zmiany dawki
 
