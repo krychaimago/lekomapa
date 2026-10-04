@@ -6,11 +6,17 @@ import { test } from "node:test";
 
 import {
   escapeLikePattern,
+  formatIsoDate,
   groupRegistryResults,
   orderMedications,
+  registryCompositionNames,
   similarSubstances,
   todayInWarsaw,
 } from "../../src/lib/services/medications.ts";
+
+// Run in a zone other than Warsaw: on a machine already in Europe/Warsaw, todayInWarsaw would pass even without its
+// `timeZone` option. The Worker runs in UTC, so UTC is the zone that matters. Set before any test runs.
+process.env.TZ = "UTC";
 
 const ids = (items) => items.map((item) => item.id);
 
@@ -45,6 +51,16 @@ test("names differing only in case form one group, alphabetically, with the vari
     { name: "Acenocumarol WZF", variants: 1 },
     { name: "Bibloc", variants: 2 },
     { name: "Ibuprom", variants: 1 },
+  ]);
+});
+
+test("product names are sorted in Polish alphabetical order, L before Ł", () => {
+  // "Alphabetically" (plan S-02) means the Polish alphabet (author's decision, 4.10.2026). The default collation
+  // treats Ł as a variant of L and would put "Łagodny" first, because "a" comes before "o".
+  const rows = [{ product_name: "Łagodny" }, { product_name: "Lorafen" }];
+  assert.deepEqual(groupRegistryResults(rows), [
+    { name: "Lorafen", variants: 1 },
+    { name: "Łagodny", variants: 1 },
   ]);
 });
 
@@ -88,4 +104,72 @@ test("at most five names, the longest shared prefix first", () => {
   const result = similarSubstances("abcdefgh", names);
   assert.equal(result.length, 5);
   assert.deepEqual(result.slice(0, 2), ["abcdef", "abcde4"]);
+});
+
+test("an entry with a diacritic before the fourth character still finds the dictionary entry", () => {
+  // Folding ignores diacritics (plan S-02), also where they break the four-character prefix.
+  assert.deepEqual(similarSubstances("dićlofenac", DICTIONARY), ["diclofenacum"]);
+});
+
+test("an entry equal to a dictionary name finds that name", () => {
+  assert.deepEqual(similarSubstances("ibuprofenum", DICTIONARY), ["ibuprofenum"]);
+});
+
+test("an entry of exactly four characters is long enough", () => {
+  // Boundary from plan S-02: a shared prefix of at least four characters.
+  assert.deepEqual(similarSubstances("ibup", DICTIONARY), ["ibuprofenum"]);
+});
+
+test("a name listed twice in the dictionary is suggested once", () => {
+  // Each name once (author's decision, 4.10.2026).
+  assert.deepEqual(similarSubstances("ibuprofen", ["ibuprofenum", "ibuprofenum"]), ["ibuprofenum"]);
+});
+
+// The composition shown before saving must be the one add_medication_from_registry saves (FR-006: the full
+// composition): one name per ATC code, the first by position; rows without a code kept, each name once.
+// Rows are given out of `position` order on purpose.
+
+test("composition names follow the registry position, not the input order", () => {
+  const rows = [
+    { position: 2, substance_name: "Coffeinum", atc_code: "N06BC01" },
+    { position: 1, substance_name: "Paracetamolum", atc_code: "N02BE01" },
+  ];
+  assert.deepEqual(registryCompositionNames(rows), ["Paracetamolum", "Coffeinum"]);
+});
+
+test("a code repeated under a salt form shows the name from the lower position", () => {
+  // Pattern from the registry: Dexak lists M01AE17 twice under two spellings (plan S-02). The lower-position name
+  // sorts after the other alphabetically, so only the position can pick it.
+  const rows = [
+    { position: 2, substance_name: "Dexketoprofenum", atc_code: "M01AE17" },
+    { position: 1, substance_name: "Dexketoprofenum trometamolum", atc_code: "M01AE17" },
+  ];
+  assert.deepEqual(registryCompositionNames(rows), ["Dexketoprofenum trometamolum"]);
+});
+
+test("rows without a code stay next to rows with a code", () => {
+  // The SQL keeps every distinct uncoded name; dropping one would narrow the composition (FR-006).
+  const rows = [
+    { position: 3, substance_name: "Guaifenesinum", atc_code: null },
+    { position: 1, substance_name: "Paracetamolum", atc_code: "N02BE01" },
+    { position: 2, substance_name: "Phenylephrini hydrochloridum", atc_code: null },
+  ];
+  assert.deepEqual(registryCompositionNames(rows), ["Paracetamolum", "Phenylephrini hydrochloridum", "Guaifenesinum"]);
+});
+
+test("the same name under two codes is shown once", () => {
+  const rows = [
+    { position: 2, substance_name: "Diclofenacum", atc_code: "M02AA15" },
+    { position: 1, substance_name: "Diclofenacum", atc_code: "M01AB05" },
+  ];
+  assert.deepEqual(registryCompositionNames(rows), ["Diclofenacum"]);
+});
+
+test("an empty composition gives no names", () => {
+  assert.deepEqual(registryCompositionNames([]), []);
+});
+
+test("an ISO date is shown as day.month.year", () => {
+  // Date format in the medication list and details (author's decision, 4.10.2026).
+  assert.equal(formatIsoDate("2026-10-01"), "01.10.2026");
 });
