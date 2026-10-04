@@ -39,3 +39,6 @@ playwright/.cache/
 .playwright-cli/
 # E2E test-user credentials (local Supabase only)
 .env.e2e
+
+# stryker temp files
+.stryker-tmp
