@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -24,6 +24,13 @@ function csv(rows) {
 const validate = (rows) => validatePairs(parsePairs(csv(rows)));
 const reasons = (result) => result.errors.map((error) => [error.line, error.reason]);
 const groups = (pairs) => pairs.map((pair) => [pair.groupA, pair.groupB]);
+
+// A temp directory removed after the test: Stryker reruns the suite for every mutant, so leftovers pile up.
+async function tempDir(t, prefix) {
+  const dir = await mkdtemp(path.join(os.tmpdir(), prefix));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  return dir;
+}
 
 test("a verified pair in canonical order is accepted as written", () => {
   const result = validate([["C09CA", "M01AE"]]);
@@ -280,9 +287,9 @@ test("header column names padded with spaces still match the expected header", (
   assert.deepEqual(groups(result.accepted), [["C09CA", "M01AE"]]);
 });
 
-test("a read error other than a missing file comes out unchanged", async () => {
+test("a read error other than a missing file comes out unchanged", async (t) => {
   // Only a missing file is reported as "No pairs file"; any other failure must keep its own cause.
-  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-"));
+  const dir = await tempDir(t, "pairs-");
   await assert.rejects(loadPairs(dir), (error) => {
     assert.equal(error.code, "EISDIR");
     assert.doesNotMatch(error.message, /No pairs file/);
@@ -291,34 +298,37 @@ test("a read error other than a missing file comes out unchanged", async () => {
 });
 
 // Author decision 2026-10-04: the exit code is the contract of the validation script — 1 on any error, 0 on a valid
-// file. The printed lines are for a human and are not checked.
+// file. The printed lines are for a human and are not checked, except the stable reason code of a row error: it
+// proves the validation ran and rejected the row, not that the script crashed before it (exit code 1 either way).
 const SCRIPT = path.join(import.meta.dirname, "pairs.mjs");
-const runScript = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8" }).status;
+const runScript = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8" });
 
 test("the CLI exits with 1 without a file argument", () => {
-  assert.equal(runScript(), 1);
+  assert.equal(runScript().status, 1);
 });
 
-test("the CLI exits with 1 for a file that does not exist", async () => {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-cli-"));
-  assert.equal(runScript(path.join(dir, "missing.csv")), 1);
+test("the CLI exits with 1 for a file that does not exist", async (t) => {
+  const dir = await tempDir(t, "pairs-cli-");
+  assert.equal(runScript(path.join(dir, "missing.csv")).status, 1);
 });
 
-test("the CLI exits with 1 for a file with a row error", async () => {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-cli-"));
+test("the CLI exits with 1 for a file with a row error", async (t) => {
+  const dir = await tempDir(t, "pairs-cli-");
   const file = path.join(dir, "pairs.csv");
   await writeFile(
     file,
     csv([["C09CA", "M01AE", "2026-10-02", "Sartany i leki z grupy ibuprofenu mogą wchodzić w interakcję."]]),
   );
-  assert.equal(runScript(file), 1);
+  const result = runScript(file);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /\[missing_required_wording\]/);
 });
 
-test("the CLI exits with 0 for a file with one valid, verified pair", async () => {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "pairs-cli-"));
+test("the CLI exits with 0 for a file with one valid, verified pair", async (t) => {
+  const dir = await tempDir(t, "pairs-cli-");
   const file = path.join(dir, "pairs.csv");
   await writeFile(file, csv([["C09CA", "M01AE"]]));
-  assert.equal(runScript(file), 0);
+  assert.equal(runScript(file).status, 0);
 });
 
 test("the pairs file in the repository loads without errors", async () => {

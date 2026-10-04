@@ -1,7 +1,7 @@
 # Przeżyłe mutanty pominięte świadomie — `medications.ts` i `pairs.mjs`
 
-- **Pomiar**: 4.10.2026, `npm run test:mutation` (pełny zakres z `stryker.config.json`), kod na commicie `67d070e`.
-- **Wynik**: `medications.ts` 92,31 % (8 przeżyłych), `pairs.mjs` 87,55 % (29 przeżyłych). Łącznie w projekcie 88,49 % (557 zabitych, 4 timeout, 73 przeżyłe).
+- **Pomiar**: 4.10.2026, `npm run test:mutation` (pełny zakres z `stryker.config.json`), kod na commicie `0fdb5cd` z poprawką F1 z impl-review (test CLI sprawdza też kod błędu `[missing_required_wording]`).
+- **Wynik**: `medications.ts` 92,31 % (8 przeżyłych), `pairs.mjs` 87,98 % (28 przeżyłych). Łącznie w projekcie 88,64 % (558 zabitych, 4 timeout, 72 przeżyłe).
 - **Numery mutantów (`#`) są ważne tylko dla tego pomiaru.** Inny zakres `mutate` albo zmiana kodu je przesuwa. Porównuj po linii i mutatorze.
 - Źródło powodów: `research.md` (tabele „medications.ts” i „pairs.mjs”), `plan.md` (What We're NOT Doing, Phase 2 §3) i decyzje autorki z 4.10.2026 zapisane w `change.md`.
 
@@ -18,7 +18,7 @@
 | #629 | 96:31 | EqualityOperator: `length < b.length` → `length <= b.length`            | Równoważny — jak #624.                                                                                                                                                                                |
 | #636 | 105:7 | ConditionalExpression: `folded.length < MIN_SHARED_PREFIX` → `false`    | Równoważny. Osłona to skrót: wpis krótszy niż 4 znaki i tak nie ma wspólnego przedrostka ≥ 4, więc wynik jest pusty.                                                                                  |
 
-## `scripts/rpl/pairs.mjs` — 29
+## `scripts/rpl/pairs.mjs` — 28
 
 ### Filtr i parser — 17
 
@@ -34,12 +34,12 @@
 | #212                                               | 183:83                                                               | ObjectLiteral: `{ cause: error }` → `{}`                                  | Utrata przyczyny w błędzie „No pairs file”. Komunikat i kod wyjścia bez zmian; przyczynę czyta tylko człowiek debugujący skrypt.                           |
 | #89, #93, #109, #129, #136, #145, #152, #163, #198 | 92:67, 92:92, 113:47, 123:80, 124:70, 129:83, 133:59, 136:54, 170:82 | StringLiteral: treść komunikatu (`message`) → pusty napis albo `join("")` | Treść komunikatów. Testy sprawdzają stabilny kod `reason`, nie tekst — wzorzec „Nazwany wynik” z test-plan §6.1.                                           |
 
-### CLI `main()` — 12
+### CLI `main()` — 11
 
-Decyzja autorki z 4.10.2026: kontraktem skryptu jest kod wyjścia (błąd → 1, poprawny plik → 0), nie treść wypisywanych linii. Kod wyjścia pilnują testy w `scripts/rpl/pairs.test.mjs`.
+Decyzja autorki z 4.10.2026: kontraktem skryptu jest kod wyjścia (błąd → 1, poprawny plik → 0), nie treść wypisywanych linii. Kod wyjścia pilnują testy w `scripts/rpl/pairs.test.mjs`; test błędu w wierszu sprawdza też stały kod `[missing_required_wording]`, żeby awaria przed walidacją nie dawała zielonego wyniku (F1 z impl-review).
 
-| #                            | Linia                                  | Mutator i zmiana                                                                          | Powód pominięcia                                                                                                                                                                                                                       |
-| ---------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #216, #217, #219, #220       | 191:7, 191:18, 192:19, 193:5           | usunięcie gałęzi „brak argumentu”, jej komunikatu albo `process.exit(1)`                  | Kod wyjścia bez zmian. Bez argumentu skrypt woła `loadPairs(undefined)`, `readFile` rzuca błąd typu, a `catch` kończy z kodem 1. Zmierzone 4.10.2026: kod 1 przy braku argumentu i przy brakującym pliku. Zmienia się tylko komunikat. |
-| #222, #223, #224             | 198:19, 199:5, 200:5                   | usunięcie ciała `catch`, `console.error` albo `process.exit(1)`                           | Kod wyjścia bez zmian. Po połkniętym błędzie `result` jest `undefined`, destrukturyzacja rzuca, a nieobsłużony wyjątek kończy proces z kodem 1. Zmierzone 4.10.2026 (ciało `catch` usunięte): kod 1 w obu przypadkach.                 |
-| #226, #227, #229, #231, #233 | 203:44, 204:32, 205:17, 207:45, 208:15 | StringLiteral / BlockStatement: treść linii `accepted`, `skipped`, `error` i podsumowania | Treść wyjścia CLI — poza kontraktem (plan: What We're NOT Doing). Wynik czyta człowiek.                                                                                                                                                |
+| #                      | Linia                          | Mutator i zmiana                                                                 | Powód pominięcia                                                                                                                                                                                                                       |
+| ---------------------- | ------------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #216, #217, #219, #220 | 191:7, 191:18, 192:19, 193:5   | usunięcie gałęzi „brak argumentu”, jej komunikatu albo `process.exit(1)`         | Kod wyjścia bez zmian. Bez argumentu skrypt woła `loadPairs(undefined)`, `readFile` rzuca błąd typu, a `catch` kończy z kodem 1. Zmierzone 4.10.2026: kod 1 przy braku argumentu i przy brakującym pliku. Zmienia się tylko komunikat. |
+| #222, #223, #224       | 198:19, 199:5, 200:5           | usunięcie ciała `catch`, `console.error` albo `process.exit(1)`                  | Kod wyjścia bez zmian. Po połkniętym błędzie `result` jest `undefined`, destrukturyzacja rzuca, a nieobsłużony wyjątek kończy proces z kodem 1. Zmierzone 4.10.2026 (ciało `catch` usunięte): kod 1 w obu przypadkach.                 |
+| #226, #227, #229, #233 | 203:44, 204:32, 205:17, 208:15 | StringLiteral / BlockStatement: treść linii `accepted`, `skipped` i podsumowania | Treść wyjścia CLI — poza kontraktem (plan: What We're NOT Doing). Wynik czyta człowiek.                                                                                                                                                |
