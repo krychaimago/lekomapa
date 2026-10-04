@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "command",
+  "commandRunner": { "command": "npm test --silent" },
+  "coverageAnalysis": "off",
+  "mutate": [
+    "scripts/rpl/pairs.mjs",
+    "src/lib/services/medications.ts",
+    "src/lib/navigation.ts",
+    "scripts/tokens/contrast.mjs"
+  ],
+  "ignorePatterns": [
+    ".agents",
+    ".claude",
+    "dist",
+    ".astro",
+    ".wrangler",
+    "context",
+    "playwright-report",
+    "test-results",
+    "reports"
+  ],
+  "reporters": ["html", "clear-text", "progress"],
+  "htmlReporter": { "fileName": "reports/mutation/mutation.html" },
+  "tempDirName": ".stryker-tmp"
+}
