@@ -63,6 +63,10 @@ export const MEDICATION_COPY = {
     compositionHeading: "Skład",
     codeLabel: "kod ATC",
     variant: "Wariant",
+    // Dosage periods, newest first (S-03). A closed period shows its last day, the day before the saved end date.
+    historyHeading: "Historia dawkowania",
+    periodOngoing: "od {data}",
+    periodClosed: "{od} – {do}",
     leafletSource: "Skład wpisany z ulotki.",
     notFound: "Nie znaleziono takiego leku.",
     loadError: "Nie udało się wczytać leku. Odśwież stronę.",

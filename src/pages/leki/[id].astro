@@ -7,14 +7,19 @@ import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
-import { formatIsoDate } from "@/lib/services/medications";
+import { formatIsoDate, lastDayOfPeriod } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstance, RegistryProduct } from "@/types";
 
+type VariantRow = Pick<RegistryProduct, "strength" | "pharmaceutical_form">;
+
 type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source"> & {
-  registry_products: Pick<RegistryProduct, "strength" | "pharmaceutical_form"> | null;
+  registry_products: VariantRow | null;
   medication_substances: Pick<MedicationSubstance, "substance_name" | "atc_code">[];
-  dosage_periods: Pick<DosagePeriod, "dose_text" | "started_on" | "ended_on">[];
+  // Each period carries the variant taken in it (S-03); null for a leaflet medication.
+  dosage_periods: (Pick<DosagePeriod, "id" | "dose_text" | "started_on" | "ended_on"> & {
+    registry_products: VariantRow | null;
+  })[];
 };
 
 interface SubstanceLine {
@@ -46,7 +51,7 @@ if (supabase) {
     supabase
       .from("medications")
       .select(
-        "id, product_name, composition_source, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(dose_text, started_on, ended_on)",
+        "id, product_name, composition_source, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, registry_products(strength, pharmaceutical_form))",
       )
       .eq("id", id)
       .maybeSingle()
@@ -112,11 +117,34 @@ for (const row of medication?.medication_substances ?? []) {
 substanceLines.sort((a, b) => a.name.localeCompare(b.name, "pl"));
 for (const line of substanceLines) line.codes.sort();
 
-const registry = medication?.composition_source === "registry" ? medication.registry_products : null;
-const variantParts = [
-  registry?.strength && `${MEDICATION_COPY.add.strength}: ${registry.strength}`,
-  registry?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${registry.pharmaceutical_form}`,
-].filter(Boolean);
+const isRegistry = medication?.composition_source === "registry";
+const registry = isRegistry ? (medication?.registry_products ?? null) : null;
+
+// "Moc: … · Postać: …" for one registry variant; empty for none.
+function variantText(variant: VariantRow | null): string {
+  return [
+    variant?.strength && `${MEDICATION_COPY.add.strength}: ${variant.strength}`,
+    variant?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${variant.pharmaceutical_form}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+// The summary shows the variant of the current period; the medication's own variant only for a period without one.
+const summaryVariant = isRegistry ? variantText(currentPeriod?.registry_products ?? registry) : "";
+
+// Every dosage period, newest first. A leaflet medication has no registry variant, so its periods show none.
+const history = [...periods].reverse().map((period) => ({
+  id: period.id,
+  dose: period.dose_text,
+  variant: isRegistry ? variantText(period.registry_products) : "",
+  dates:
+    period.ended_on === null
+      ? copy.periodOngoing.replace("{data}", formatIsoDate(period.started_on))
+      : copy.periodClosed
+          .replace("{od}", formatIsoDate(period.started_on))
+          .replace("{do}", formatIsoDate(lastDayOfPeriod(period.ended_on))),
+}));
 
 const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
@@ -162,14 +190,29 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
                 <dd>{formatIsoDate(firstStart)}</dd>
               </>
             )}
-            {variantParts.length > 0 && (
+            {summaryVariant && (
               <>
                 <dt class="text-sm text-muted-foreground">{copy.variant}</dt>
-                <dd>{variantParts.join(" · ")}</dd>
+                <dd>{summaryVariant}</dd>
               </>
             )}
           </dl>
         </section>
+
+        {history.length > 0 && (
+          <section class="flex flex-col gap-3">
+            <h2 class="text-xl font-semibold">{copy.historyHeading}</h2>
+            <ol class="flex flex-col gap-2">
+              {history.map((item) => (
+                <li class="flex min-w-0 flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground">
+                  <span class="text-sm text-muted-foreground">{item.dates}</span>
+                  <span class="font-medium break-words">{item.dose}</span>
+                  {item.variant && <span class="text-sm break-words text-muted-foreground">{item.variant}</span>}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
 
         <section class="flex flex-col gap-3">
           <h2 class="text-xl font-semibold">{copy.compositionHeading}</h2>

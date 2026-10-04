@@ -5,9 +5,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  earliestChangeDate,
   escapeLikePattern,
   formatIsoDate,
   groupRegistryResults,
+  lastDayOfPeriod,
+  nextDay,
   orderMedications,
   registryCompositionNames,
   similarSubstances,
@@ -172,4 +175,32 @@ test("an empty composition gives no names", () => {
 test("an ISO date is shown as day.month.year", () => {
   // Date format in the medication list and details (author's decision, 4.10.2026).
   assert.equal(formatIsoDate("2026-10-01"), "01.10.2026");
+});
+
+// Periods are `[started_on, ended_on)`: the details screen shows the day before the saved end date (S-03).
+test("the last day of a period is the day before its saved end date", () => {
+  assert.equal(lastDayOfPeriod("2026-10-10"), "2026-10-09");
+  assert.equal(lastDayOfPeriod("2026-03-01"), "2026-02-28");
+  assert.equal(lastDayOfPeriod("2028-03-01"), "2028-02-29");
+  assert.equal(lastDayOfPeriod("2027-01-01"), "2026-12-31");
+});
+
+test("the next day rolls over month and year ends and 29 February", () => {
+  assert.equal(nextDay("2026-10-09"), "2026-10-10");
+  assert.equal(nextDay("2026-02-28"), "2026-03-01");
+  assert.equal(nextDay("2028-02-28"), "2028-02-29");
+  assert.equal(nextDay("2028-02-29"), "2028-03-01");
+  assert.equal(nextDay("2026-12-31"), "2027-01-01");
+});
+
+test("a dose change may go back fourteen days when the period started earlier", () => {
+  assert.equal(earliestChangeDate("2026-01-01", "2026-10-04"), "2026-09-20");
+});
+
+test("a dose change cannot fall on or before the day the current period started", () => {
+  assert.equal(earliestChangeDate("2026-10-01", "2026-10-04"), "2026-10-02");
+});
+
+test("the fourteen days back cross the end of February in a non-leap year", () => {
+  assert.equal(earliestChangeDate("2026-01-01", "2026-03-05"), "2026-02-19");
 });

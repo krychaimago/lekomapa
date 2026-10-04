@@ -410,31 +410,31 @@ Użytkowniczka zmienia dawkę z poziomu szczegółów leku. Każde odrzucenie pr
 
 #### Automated
 
-- [x] 2.1 Migracje wchodzą od zera: `npx supabase db reset`
-- [x] 2.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy plik: `npm run db:check`
-- [x] 2.3 Sondy CI nadal padają tam, gdzie powinny (krok „SQL checks” w `.github/workflows/ci.yml` uruchomiony lokalnie)
-- [x] 2.4 Typy przechodzą: `npm run typecheck`
-- [x] 2.5 Testy przechodzą: `npm test`
+- [x] 2.1 Migracje wchodzą od zera: `npx supabase db reset` — 2da1cc5
+- [x] 2.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy plik: `npm run db:check` — 2da1cc5
+- [x] 2.3 Sondy CI nadal padają tam, gdzie powinny (krok „SQL checks” w `.github/workflows/ci.yml` uruchomiony lokalnie) — 2da1cc5
+- [x] 2.4 Typy przechodzą: `npm run typecheck` — 2da1cc5
+- [x] 2.5 Testy przechodzą: `npm test` — 2da1cc5
 
 #### Manual
 
-- [x] 2.6 Wynik pomiaru wariantów zapisany w `change.md` (Notes)
-- [x] 2.7 Przegląd nagłówka migracji: opis z przykładami zrozumiały bez czytania SQL
+- [x] 2.6 Wynik pomiaru wariantów zapisany w `change.md` (Notes) — 2da1cc5
+- [x] 2.7 Przegląd nagłówka migracji: opis z przykładami zrozumiały bez czytania SQL — 2da1cc5
 
 ### Phase 3: Historia okresów na szczegółach leku
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe dat i filtr FR-012 przechodzą: `npm test`
-- [ ] 3.2 Lint przechodzi: `npm run lint`
-- [ ] 3.3 Typy przechodzą: `npm run typecheck`
+- [x] 3.1 Testy jednostkowe dat i filtr FR-012 przechodzą: `npm test`
+- [x] 3.2 Lint przechodzi: `npm run lint`
+- [x] 3.3 Typy przechodzą: `npm run typecheck`
 
 #### Manual
 
-- [ ] 3.4 Lek z dwoma okresami (wstawionymi przez `change_dosage` w lokalnej bazie) pokazuje oba, najnowszy na górze, z datą „do” o dzień wcześniejszą niż początek nowego
-- [ ] 3.5 Lek z jednym okresem pokazuje jeden wpis „od …”
-- [ ] 3.6 Lek z ulotki nie pokazuje wariantu przy okresach
-- [ ] 3.7 Na telefonie (szerokość ~375 px) historia czyta się bez poziomego przewijania
+- [x] 3.4 Lek z dwoma okresami (wstawionymi przez `change_dosage` w lokalnej bazie) pokazuje oba, najnowszy na górze, z datą „do” o dzień wcześniejszą niż początek nowego
+- [x] 3.5 Lek z jednym okresem pokazuje jeden wpis „od …”
+- [x] 3.6 Lek z ulotki nie pokazuje wariantu przy okresach
+- [x] 3.7 Na telefonie (szerokość ~375 px) historia czyta się bez poziomego przewijania
 
 ### Phase 4: Ekran i trasa zmiany dawki
 
