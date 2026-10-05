@@ -8,8 +8,8 @@
 --   ISOLATION 1: SELECT.
 --   ISOLATION 2: INSERT.
 --   ISOLATION 3: UPDATE.
---   ISOLATION 4: UPDATE that re-points a row of account B under account A (user_id / medication_id), with the
---                owner counterexample: account A re-points its own row.
+--   ISOLATION 4: UPDATE that re-points a row of account B under account A (user_id / medication_id / entry_id),
+--                with the owner counterexample: account A re-points its own row.
 --   ISOLATION 5: DELETE.
 --   ISOLATION 6: deleting account A with the correction window closed removes every row of A in every account
 --                table and leaves account B untouched.
@@ -105,12 +105,15 @@ $$;
 --   account A: 0a00; medication 0a01, substance 0a02, period 0a03
 --              extra rows for the owner DELETE counterexample: medication 0a11 (no children),
 --              substance 0a12 and period 0a13 under medication 0a01
---   account B: 0b00; medication 0b01, substance 0b02, period 0b03
+--              journal entry 0a04 with symptoms 0a05 and 0a15 (extra row for the owner DELETE counterexample);
+--              extra journal entry 0a14 with symptom 0a25 (target of the owner re-pointing in ISOLATION 4)
+--   account B: 0b00; medication 0b01, substance 0b02, period 0b03; journal entry 0b04 with symptom 0b05
 --   row inserted by account A in ISOLATION 2 (every table): c002
 -- Columns:
 --   a_row, a_extra_row, b_row  rows of A, the extra row of A deleted by its owner in ISOLATION 5, row of B
---   update_column, update_original
---                              column changed in ISOLATION 3 and its value in a_row as inserted in ISOLATION 0
+--   update_column, update_original, update_value
+--                              column changed in ISOLATION 3, its value in a_row as inserted in ISOLATION 0, and the
+--                              value the owner writes (it must pass the column's own checks, e.g. a severity)
 --   insert_statement           INSERT of a row belonging to account A, with the row id as $1 (ISOLATION 2)
 --   repoint_column             ownership column (user_id, or the foreign key to the parent) re-pointed in ISOLATION 4
 --   repoint_a_target           value putting a row under account A (target of B's attempt)
@@ -130,6 +133,7 @@ create temporary table isolation_fixtures (
   b_row uuid not null,
   update_column name not null,
   update_original text not null,
+  update_value text not null,
   insert_statement text not null,
   repoint_column name not null,
   repoint_a_target uuid not null,
@@ -140,22 +144,41 @@ create temporary table isolation_fixtures (
 insert into isolation_fixtures values
   ('medications',
    '00000000-0000-4000-9000-000000000a01', '00000000-0000-4000-9000-000000000a11', '00000000-0000-4000-9000-000000000b01',
-   'product_name', 'Isolation A',
+   'product_name', 'Isolation A', 'changed by owner',
    'insert into public.medications (id, user_id, product_name, composition_source) values ($1, ''00000000-0000-4000-9000-000000000a00'', ''inserted'', ''leaflet'')',
    'user_id', '00000000-0000-4000-9000-000000000a00', '00000000-0000-4000-9000-000000000b00',
    '00000000-0000-4000-9000-000000000a00'),
   ('medication_substances',
    '00000000-0000-4000-9000-000000000a02', '00000000-0000-4000-9000-000000000a12', '00000000-0000-4000-9000-000000000b02',
-   'substance_name', 'Substance A',
+   'substance_name', 'Substance A', 'changed by owner',
    'insert into public.medication_substances (id, medication_id, substance_name, atc_code) values ($1, ''00000000-0000-4000-9000-000000000a01'', ''inserted'', ''B01AC06'')',
    'medication_id', '00000000-0000-4000-9000-000000000a01', '00000000-0000-4000-9000-000000000b01',
    '00000000-0000-4000-9000-000000000a11'),
   ('dosage_periods',
    '00000000-0000-4000-9000-000000000a03', '00000000-0000-4000-9000-000000000a13', '00000000-0000-4000-9000-000000000b03',
-   'dose_text', 'dose A',
+   'dose_text', 'dose A', 'changed by owner',
    'insert into public.dosage_periods (id, medication_id, dose_text, started_on, ended_on) values ($1, ''00000000-0000-4000-9000-000000000a01'', ''inserted'', date ''2023-01-01'', date ''2023-02-01'')',
    'medication_id', '00000000-0000-4000-9000-000000000a01', '00000000-0000-4000-9000-000000000b01',
    '00000000-0000-4000-9000-000000000a11');
+
+-- Journal (S-05). The symptom ids come from the seeded closed list, so the INSERT of ISOLATION 2 is composed here,
+-- as postgres. Each row of the fixture uses a different symptom: re-pointing B's symptom into A's entry could only be
+-- stopped by RLS, never by the unique key (entry_id, symptom_id).
+insert into isolation_fixtures
+select 'symptom_entries'::name,
+       '00000000-0000-4000-9000-000000000a04'::uuid, '00000000-0000-4000-9000-000000000a14'::uuid, '00000000-0000-4000-9000-000000000b04'::uuid,
+       'note'::name, 'Note A', 'changed by owner',
+       'insert into public.symptom_entries (id, user_id, occurred_at) values ($1, ''00000000-0000-4000-9000-000000000a00'', now() - interval ''1 hour'')',
+       'user_id'::name, '00000000-0000-4000-9000-000000000a00'::uuid, '00000000-0000-4000-9000-000000000b00'::uuid,
+       '00000000-0000-4000-9000-000000000a00'::uuid
+union all
+select 'symptom_entry_items',
+       '00000000-0000-4000-9000-000000000a05', '00000000-0000-4000-9000-000000000a15', '00000000-0000-4000-9000-000000000b05',
+       'severity', 'mild', 'severe',
+       format('insert into public.symptom_entry_items (id, entry_id, symptom_id) values ($1, ''00000000-0000-4000-9000-000000000a04'', %L)',
+              (select id from public.symptoms where key = 'dizziness')),
+       'entry_id', '00000000-0000-4000-9000-000000000a04', '00000000-0000-4000-9000-000000000b04',
+       '00000000-0000-4000-9000-000000000a14';
 
 -- ---------------------------------------------------------------------------
 -- ISOLATION 0: partition, fixture map, test data (as postgres) and preconditions
@@ -245,6 +268,20 @@ begin
     ('00000000-0000-4000-9000-000000000a13', '00000000-0000-4000-9000-000000000a01', 'dose A to delete', date '2025-01-01', date '2025-02-01'),
     ('00000000-0000-4000-9000-000000000b03', '00000000-0000-4000-9000-000000000b01', 'dose B', date '2024-01-01', date '2024-06-01');
 
+  -- Journal entries with their symptoms. An entry needs a symptom only at commit, and this file ends with rollback.
+  insert into public.symptom_entries (id, user_id, occurred_at, note)
+  values
+    ('00000000-0000-4000-9000-000000000a04', '00000000-0000-4000-9000-000000000a00', now() - interval '2 hours', 'Note A'),
+    ('00000000-0000-4000-9000-000000000a14', '00000000-0000-4000-9000-000000000a00', now() - interval '3 hours', 'Note A to delete'),
+    ('00000000-0000-4000-9000-000000000b04', '00000000-0000-4000-9000-000000000b00', now() - interval '4 hours', 'Note B');
+
+  insert into public.symptom_entry_items (id, entry_id, symptom_id, severity)
+  values
+    ('00000000-0000-4000-9000-000000000a05', '00000000-0000-4000-9000-000000000a04', (select id from public.symptoms where key = 'nausea'), 'mild'),
+    ('00000000-0000-4000-9000-000000000a15', '00000000-0000-4000-9000-000000000a04', (select id from public.symptoms where key = 'headache'), null),
+    ('00000000-0000-4000-9000-000000000a25', '00000000-0000-4000-9000-000000000a14', (select id from public.symptoms where key = 'fatigue'), null),
+    ('00000000-0000-4000-9000-000000000b05', '00000000-0000-4000-9000-000000000b04', (select id from public.symptoms where key = 'vomiting'), 'moderate');
+
   -- Every row named in the fixture map exists in its table.
   for v_fixture in select * from isolation_fixtures order by table_name loop
     for v_row in
@@ -264,6 +301,11 @@ begin
      or not public.medication_correction_window_open('00000000-0000-4000-9000-000000000a11')
      or not public.medication_correction_window_open('00000000-0000-4000-9000-000000000b01') then
     raise exception 'ISOLATION 0 FAILED: correction window is closed for freshly created test medications';
+  end if;
+  if not public.symptom_entry_correction_window_open('00000000-0000-4000-9000-000000000a04')
+     or not public.symptom_entry_correction_window_open('00000000-0000-4000-9000-000000000a14')
+     or not public.symptom_entry_correction_window_open('00000000-0000-4000-9000-000000000b04') then
+    raise exception 'ISOLATION 0 FAILED: correction window is closed for freshly created test journal entries';
   end if;
 
   raise notice 'ISOLATION 0 OK: % account table(s) from the foreign key closure, each with a fixture row and test rows of accounts A and B; every public table classified; correction window open',
@@ -471,7 +513,7 @@ begin
       raise exception 'ISOLATION 3 FAILED: switch to account A did not take effect (current_user %, auth.uid %)', current_user, auth.uid();
     end if;
     execute format('update public.%I set %I = $1 where id = $2', v_case.table_name, v_case.update_column)
-      using 'changed by owner', v_case.a_row;
+      using v_case.update_value, v_case.a_row;
     get diagnostics v_count = row_count;
     execute 'reset role';
 
@@ -479,7 +521,7 @@ begin
       raise exception 'ISOLATION 3 FAILED: account A update of its own row in % touched % row(s), expected 1', v_case.table_name, v_count;
     end if;
     execute format('select %I::text from public.%I where id = $1', v_case.update_column, v_case.table_name) into v_value using v_case.a_row;
-    if v_value is distinct from 'changed by owner' then
+    if v_value is distinct from v_case.update_value then
       raise exception 'ISOLATION 3 FAILED: owner update in % did not persist (now %)', v_case.table_name, v_value;
     end if;
   end loop;
@@ -539,7 +581,7 @@ begin
     end if;
 
     -- Owner counterexample: account A re-points its own row to another target under A (children: the second
-    -- medication of A, with the correction window open; medications: user_id A). It must touch exactly one row, so
+    -- medication or journal entry of A, with the correction window open; root tables: user_id A). It must touch exactly one row, so
     -- the block above comes from RLS and not from something that rejects every change of this column.
     execute format('select %I from public.%I where id = $1', v_case.repoint_column, v_case.table_name) into v_original using v_case.a_row;
 
@@ -646,18 +688,44 @@ $$;
 -- ---------------------------------------------------------------------------
 -- ISOLATION 6: deleting account A with the correction window closed removes every row of A in every account table
 -- and leaves account B untouched (as postgres).
--- The window function is replaced by `return false` inside a savepoint and restored by rolling back to it, as in
--- rls_checks.sql; its fingerprint is compared afterwards, so this keeps working after S-05 replaces its body.
--- Counterexample in two parts: deleting A's medication by hand with the window closed fails with the history guard
--- (so the guards are active), and the rows of B stay (so the delete is not a blanket wipe).
+-- The three window functions (medication, dosage period and journal entry, S-05) are replaced by `return false` inside
+-- a savepoint and restored by rolling back to it, as in rls_checks.sql; their fingerprints are compared afterwards.
+-- Counterexample in two parts: deleting A's medication and A's journal entry by hand with the window closed fails
+-- with the history guards (so the guards are active), and the rows of B stay (so the delete is not a blanket wipe).
 -- ---------------------------------------------------------------------------
 
 create temporary table isolation_window_fingerprint as
-select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint;
+select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint,
+       md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) as period_fingerprint,
+       md5(pg_get_functiondef('public.symptom_entry_correction_window_open(uuid)'::regprocedure)) as journal_fingerprint;
 
 savepoint before_account_deleted;
 
 create or replace function public.medication_correction_window_open(p_medication_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return false;
+end;
+$$;
+
+create or replace function public.dosage_period_correction_window_open(p_period_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return false;
+end;
+$$;
+
+create or replace function public.symptom_entry_correction_window_open(p_entry_id uuid)
 returns boolean
 language plpgsql
 stable
@@ -707,6 +775,21 @@ begin
     raise exception 'ISOLATION 6 FAILED: deleting a medication of account A by hand was blocked by an unexpected P0001 error, expected the correction window guard (got %)', v_message;
   end if;
 
+  v_state := 'no error';
+  v_message := null;
+  begin
+    delete from public.symptom_entries where id = '00000000-0000-4000-9000-000000000a04';
+  exception when sqlstate 'P0001' then
+    v_state := 'P0001';
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_state <> 'P0001' then
+    raise exception 'ISOLATION 6 FAILED: deleting a journal entry of account A by hand with the correction window closed passed without an error; the journal history guards are not active, so the account deletion below would prove nothing';
+  end if;
+  if v_message not like '%okno korekty%jest już zamknięte%' or v_message not like '%usunąć wpisu o samopoczuciu%' then
+    raise exception 'ISOLATION 6 FAILED: deleting a journal entry of account A by hand was blocked by an unexpected P0001 error, expected the journal correction window guard (got %)', v_message;
+  end if;
+
   delete from auth.users where id = v_a;
   get diagnostics v_count = row_count;
   if v_count <> 1 then
@@ -727,7 +810,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'ISOLATION 6 OK: with the correction window closed a manual delete of A''s medication is blocked (P0001), deleting account A removes its rows from all % account tables, rows of B stay',
+  raise notice 'ISOLATION 6 OK: with the correction window closed a manual delete of A''s medication and journal entry is blocked (P0001), deleting account A removes its rows from all % account tables, rows of B stay',
     (select count(*) from isolation_fixtures);
 end;
 $$;
@@ -744,6 +827,18 @@ begin
   v_now := md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure));
   if v_before is null or v_now is distinct from v_before then
     raise exception 'ISOLATION 6 FAILED: correction window function differs from migration state after rollback to savepoint (fingerprint before %, now %)',
+      v_before, v_now;
+  end if;
+  select period_fingerprint into v_before from isolation_window_fingerprint;
+  v_now := md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure));
+  if v_before is null or v_now is distinct from v_before then
+    raise exception 'ISOLATION 6 FAILED: dosage period correction window function differs from migration state after rollback to savepoint (fingerprint before %, now %)',
+      v_before, v_now;
+  end if;
+  select journal_fingerprint into v_before from isolation_window_fingerprint;
+  v_now := md5(pg_get_functiondef('public.symptom_entry_correction_window_open(uuid)'::regprocedure));
+  if v_before is null or v_now is distinct from v_before then
+    raise exception 'ISOLATION 6 FAILED: journal entry correction window function differs from migration state after rollback to savepoint (fingerprint before %, now %)',
       v_before, v_now;
   end if;
 end;

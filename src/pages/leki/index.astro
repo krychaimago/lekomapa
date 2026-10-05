@@ -7,13 +7,17 @@ import { badgeVariants } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
+import { formatCorrectionDeadline } from "@/lib/services/journal";
 import { formatIsoDate, orderMedications, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import type { DosagePeriod, Medication, MedicationInteraction } from "@/types";
 
 type MedicationRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
-  dosage_periods: Pick<DosagePeriod, "started_on">[];
+  // End of the medication's correction window (S-05), read from the database so the banner agrees with the guard.
+  correction_window_ends_at: string | null;
+  // Each period carries its own window end: a dose change opens a new window on a medication added long ago.
+  dosage_periods: (Pick<DosagePeriod, "started_on"> & { correction_window_ends_at: string | null })[];
 };
 
 const copy = MEDICATION_COPY.list;
@@ -31,7 +35,9 @@ if (supabase) {
   const [medications, interactions] = await Promise.all([
     supabase
       .from("medications")
-      .select("id, product_name, created_at, dosage_periods(started_on)")
+      .select(
+        "id, product_name, created_at, correction_window_ends_at, dosage_periods(started_on, correction_window_ends_at)",
+      )
       .or(`discontinued_on.is.null,discontinued_on.gt.${today}`)
       .overrideTypes<MedicationRow[], { merge: false }>(),
     supabase.rpc("medication_interactions"),
@@ -52,6 +58,19 @@ if (supabase) {
   loadFailed = true;
 }
 
+const nowIso = new Date().toISOString();
+
+// Latest still-open correction window among the medication's dosage periods, compared with the server's clock;
+// null when none is open.
+function openPeriodDeadline(row: MedicationRow): string | null {
+  const open = row.dosage_periods
+    .map((period) => period.correction_window_ends_at)
+    .filter((endsAt): endsAt is string => endsAt !== null && Date.parse(endsAt) > Date.parse(nowIso))
+    .sort((a, b) => Date.parse(a) - Date.parse(b))
+    .at(-1);
+  return open === undefined ? null : formatCorrectionDeadline(open, nowIso);
+}
+
 // The first dosage period gives the start date shown on the list.
 const items = orderMedications(
   rows.map((row) => {
@@ -65,10 +84,18 @@ const items = orderMedications(
       startedOn: firstStart ?? "",
       createdAt: row.created_at,
       flagged: flagged.has(row.id),
+      deadline: openPeriodDeadline(row),
     };
   }),
 );
 const addedVisible = addedId !== null && items.some((item) => item.id === addedId);
+// "Until when" after adding: the window of the medication (its first period is saved in the same call, so it ends at
+// the same moment). Shown only while the window is open, compared with the server's clock.
+const addedEndsAt = addedVisible ? (rows.find((row) => row.id === addedId)?.correction_window_ends_at ?? null) : null;
+const addedDeadline =
+  addedEndsAt !== null && Date.parse(addedEndsAt) > Date.parse(nowIso)
+    ? formatCorrectionDeadline(addedEndsAt, nowIso)
+    : null;
 ---
 
 <AppLayout title={copy.title}>
@@ -82,7 +109,11 @@ const addedVisible = addedId !== null && items.some((item) => item.id === addedI
 
     {addedVisible && (
       <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
-        {copy.added}
+        {addedDeadline
+          ? copy.addedWithDeadline
+              .replace("{nazwa}", items.find((item) => item.id === addedId)?.name ?? "")
+              .replace("{do}", addedDeadline)
+          : copy.added}
       </p>
     )}
 
@@ -116,6 +147,11 @@ const addedVisible = addedId !== null && items.some((item) => item.id === addedI
                 {item.startedOn && (
                   <span class="text-sm text-muted-foreground">
                     {copy.since.replace("{data}", formatIsoDate(item.startedOn))}
+                  </span>
+                )}
+                {item.deadline && (
+                  <span class="text-sm text-muted-foreground">
+                    {copy.correctableUntil.replace("{do}", item.deadline)}
                   </span>
                 )}
               </span>

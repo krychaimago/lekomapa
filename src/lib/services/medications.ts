@@ -1,6 +1,8 @@
 // Pure helpers for the medication screens (S-02). No `@/` imports and no Supabase client, so
 // scripts/medications/medications.test.mjs can load this file directly under `node --experimental-strip-types`.
 
+import { foldForSearch } from "./text-fold.ts";
+
 export interface OrderableMedication {
   // Start date of the first dosage period, ISO `YYYY-MM-DD`.
   startedOn: string;
@@ -117,12 +119,6 @@ export function earliestChangeDate(startedOn: string, today: string): string {
 const MIN_SHARED_PREFIX = 4;
 const MAX_SIMILAR = 5;
 
-// Lower case without diacritics: "Ibuprofén" and "ibuprofen" fold the same. `ł` has no combining form in NFD,
-// so it is mapped by hand.
-function foldForComparison(text: string): string {
-  return text.trim().toLocaleLowerCase("pl").normalize("NFD").replace(/\p{M}/gu, "").replaceAll("ł", "l");
-}
-
 function sharedPrefixLength(a: string, b: string): number {
   let length = 0;
   while (length < a.length && length < b.length && a[length] === b[length]) length += 1;
@@ -133,14 +129,14 @@ function sharedPrefixLength(a: string, b: string): number {
 // diacritics: the Polish leaflet "ibuprofen" finds the Latin "ibuprofenum". Longest shared prefix first, then
 // alphabetically; at most MAX_SIMILAR names, each once, spelled as in the dictionary.
 export function similarSubstances(input: string, names: readonly string[]): string[] {
-  const folded = foldForComparison(input);
+  const folded = foldForSearch(input);
   if (folded.length < MIN_SHARED_PREFIX) return [];
   const seen = new Set<string>();
   const matches: { name: string; shared: number }[] = [];
   for (const name of names) {
     if (seen.has(name)) continue;
     seen.add(name);
-    const shared = sharedPrefixLength(folded, foldForComparison(name));
+    const shared = sharedPrefixLength(folded, foldForSearch(name));
     if (shared >= MIN_SHARED_PREFIX) matches.push({ name, shared });
   }
   return matches

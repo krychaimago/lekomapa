@@ -33,3 +33,10 @@ test("the longest matching href is the active item", () => {
   assert.equal(findActiveNavItem("/leki/nowe", items)?.href, "/leki");
   assert.equal(findActiveNavItem("/ustawienia", items), undefined);
 });
+
+test("the journal is in the menu, so its screens are highlighted and protected", () => {
+  // /dzienniczek/nowy is not in PROTECTED_ROUTES on its own: it is protected only through this menu item.
+  for (const path of ["/dzienniczek", "/dzienniczek/nowy"]) {
+    assert.equal(findActiveNavItem(path, NAV_ITEMS)?.href, "/dzienniczek", path);
+  }
+});

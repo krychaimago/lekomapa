@@ -1,5 +1,5 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together,
-// and that row level security really isolates one account's medications from another's.
+// and that row level security really isolates one account's medications and journal entries from another's.
 // It also proves that the shared registry, interaction pairs and symptom catalog are readable after sign-in and
 // read-only.
 // Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
@@ -25,6 +25,8 @@ import { createClient, isAuthApiError } from "@supabase/supabase-js";
 // Loaded as TypeScript (`--experimental-strip-types` in the npm script): the screens' own copy and "today" rule,
 // so the steps compare against what the app renders instead of a second copy of the text.
 import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
+import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
+import { MEDICATION_COPY } from "../src/lib/copy/medications.ts";
 import { todayInWarsaw } from "../src/lib/services/medications.ts";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
@@ -191,12 +193,34 @@ async function seedMedication(account, suffix) {
   return { ...account, medication, substance, dosagePeriod };
 }
 
+// One journal entry with one symptom, saved through add_symptom_entry. Two separate inserts would not do: an entry
+// without a symptom is refused when its own request commits (SE001, measured against the local Supabase). The
+// symptom is the first one on the shared list, read by id; no symptom name travels anywhere. The note is synthetic.
+async function seedSymptomEntry(account, suffix) {
+  const symptom = await account.client.from("symptoms").select("id").order("id").limit(1).single();
+  if (symptom.error) throw new Error(`symptom lookup failed: ${symptom.error.message}`);
+
+  const saved = await account.client.rpc("add_symptom_entry", {
+    p_occurred_local: null,
+    p_items: [{ symptom_id: symptom.data.id, severity: "mild" }],
+    p_note: `Smoke fixture ${suffix}`,
+  });
+  if (saved.error) throw new Error(`add_symptom_entry failed: ${saved.error.code} ${saved.error.message}`);
+
+  const entry = await account.client.from("symptom_entries").select().eq("id", saved.data).single();
+  if (entry.error) throw new Error(`read of symptom_entries failed: ${entry.error.message}`);
+  const item = await account.client.from("symptom_entry_items").select().eq("entry_id", saved.data).single();
+  if (item.error) throw new Error(`read of symptom_entry_items failed: ${item.error.message}`);
+
+  return { symptomEntry: entry.data, symptomEntryItem: item.data };
+}
+
 const fixtureStep = [
-  "isolation fixtures: two accounts, one medication each",
+  "isolation fixtures: two accounts, one medication and one journal entry each",
   async () => {
     const [a, b] = await Promise.all([createAccount("iso-a"), createAccount("iso-b")]);
-    fixtures.a = await seedMedication(a, "A");
-    fixtures.b = await seedMedication(b, "B");
+    fixtures.a = { ...(await seedMedication(a, "A")), ...(await seedSymptomEntry(a, "A")) };
+    fixtures.b = { ...(await seedMedication(b, "B")), ...(await seedSymptomEntry(b, "B")) };
     fixtures.anon = supabaseClient();
     return { ok: true, detail: `${fixtures.a.address}, ${fixtures.b.address}` };
   },
@@ -223,6 +247,19 @@ const isolationTargets = [
     rowOf: (fixture) => fixture.dosagePeriod,
     change: { dose_text: "Wpis z obcego konta" },
     guardedColumn: "dose_text",
+  },
+  {
+    table: "symptom_entries",
+    rowOf: (fixture) => fixture.symptomEntry,
+    change: { note: "Wpis z obcego konta" },
+    guardedColumn: "note",
+  },
+  {
+    // The fixture severity is "mild"; "severe" passes the column's check, so only RLS can stop the change.
+    table: "symptom_entry_items",
+    rowOf: (fixture) => fixture.symptomEntryItem,
+    change: { severity: "severe" },
+    guardedColumn: "severity",
   },
 ];
 
@@ -461,7 +498,7 @@ const isolationSkipReason = usesExistingAccount
 // The shared-table checks use the same fixture account, so they run in the same mode and skip for the same reason.
 const isolationSteps = isolationSkipReason
   ? [
-      ["medication isolation checks", null, { skip: isolationSkipReason }],
+      ["medication and journal isolation checks", null, { skip: isolationSkipReason }],
       ["shared read-only table checks", null, { skip: isolationSkipReason }],
     ]
   : [fixtureStep, ...isolationTargets.flatMap(isolationChecks), ...sharedTargets.flatMap(sharedTableChecks)];
@@ -480,6 +517,9 @@ const FLAG_GROUPS = ["B01AA", "M01AE"];
 const MEDICATION_ADD_PAGE = "/leki/nowy";
 const LEAFLET_ADD_PAGE = "/leki/nowy/z-ulotki";
 const ADDED_PREFIX = "/leki?dodano=";
+// Dose texts of the correction steps: a mistaken dose change, then its correction in the period's window.
+const SMOKE_MISTAKEN_DOSE = "2 tabletki (smoke pomyłka)";
+const SMOKE_CORRECTED_DOSE = "1 tabletka (smoke poprawka)";
 
 // Filled by the steps below and read by the later ones.
 const flow = { jarA: new Map(), jarB: new Map(), products: {}, description: null, ids: {} };
@@ -505,6 +545,23 @@ function listItemOf(body, medicationId) {
   if (start === -1) return null;
   const end = body.indexOf("</li>", start);
   return end === -1 ? null : body.slice(start, end);
+}
+
+// An ISO date `days` days before `iso`, pinned to UTC midnight so no zone or DST switch moves it.
+function isoDaysBefore(iso, days) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day) - days * 86_400_000).toISOString().slice(0, 10);
+}
+
+// Periods of one medication, oldest first, read as account A (RLS limits the read to its own rows).
+async function periodsOf(medicationId) {
+  const { data, error } = await fixtures.a.client
+    .from("dosage_periods")
+    .select("id, dose_text, started_on, ended_on")
+    .eq("medication_id", medicationId)
+    .order("started_on");
+  if (error) throw new Error(`reading periods failed: ${error.code}`);
+  return data;
 }
 
 function addedIdFrom(location) {
@@ -667,6 +724,84 @@ const medicationFlowSteps = [
     EXPECT_OK,
   ],
   [
+    "medications: a dose change over HTTP closes the period and opens a new one",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const today = todayInWarsaw();
+      // Started three days ago, so a change dated today is later than the start (DP002 otherwise).
+      const added = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do poprawy",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+          startedOn: isoDaysBefore(today, 3),
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = added.status === 302 ? addedIdFrom(added.location) : null;
+      if (!id) return { ok: false, detail: `add: ${added.status} ${added.location}` };
+      flow.ids.corrected = id;
+      const change = await request(`/api/medications/${id}/dosage`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zmiana-dawki`, flow.jarA),
+        form: { doseText: SMOKE_MISTAKEN_DOSE, changedOn: today },
+      });
+      const periods = await periodsOf(id);
+      const ongoing = periods.find((period) => period.ended_on === null);
+      if (ongoing) flow.ids.correctedPeriod = ongoing.id;
+      const ok =
+        change.status === 302 &&
+        change.location === `/leki/${id}?zmieniono=1` &&
+        periods.length === 2 &&
+        ongoing?.dose_text === SMOKE_MISTAKEN_DOSE &&
+        ongoing.started_on === today;
+      return { ok, detail: `${change.status} ${change.location}; periods: ${periods.length}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: correcting the new period over HTTP rewrites its dose and adds no period",
+    async () => {
+      const id = flow.ids.corrected;
+      const periodId = flow.ids.correctedPeriod;
+      if (!id || !periodId) return { ok: false, detail: "check did not run: no dose change was saved" };
+      const before = await periodsOf(id);
+      const correction = await request(`/api/medications/${id}/periods/${periodId}`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/okresy/${periodId}/poprawa`, flow.jarA),
+        form: { doseText: SMOKE_CORRECTED_DOSE },
+      });
+      const after = await periodsOf(id);
+      const corrected = after.find((period) => period.id === periodId);
+      const previous = before.find((period) => period.id === periodId);
+      // The same period: new dose, same dates; the number of periods unchanged; no dose in the redirect.
+      const samePeriod =
+        corrected?.dose_text === SMOKE_CORRECTED_DOSE &&
+        corrected.started_on === previous?.started_on &&
+        corrected.ended_on === previous.ended_on;
+      const noDoseInUrl = !correction.location.includes("smoke") && !correction.location.includes("tablet");
+      const page = await requestPage(`/leki/${id}?poprawiono=${periodId}`, { jar: flow.jarA });
+      const banner = page.status === 200 && page.body.includes(escapeHtml(MEDICATION_COPY.correction.saved));
+      const ok =
+        correction.status === 302 &&
+        correction.location === `/leki/${id}?poprawiono=${periodId}` &&
+        after.length === before.length &&
+        samePeriod &&
+        noDoseInUrl &&
+        banner;
+      return {
+        ok,
+        detail: `${correction.status} ${correction.location}; periods ${before.length} -> ${after.length}; dose ${
+          samePeriod ? "corrected in place" : "not corrected in place"
+        }; banner ${banner ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
     "medications: another account gets 404 for the medication's details",
     async () => {
       const id = flow.ids[FLAG_GROUPS[0]];
@@ -682,6 +817,181 @@ const medicationFlowSteps = [
 const medicationSteps = isolationSkipReason
   ? [["medication and interaction flag checks", null, { skip: isolationSkipReason }]]
   : medicationFlowSteps;
+
+// --- Symptom journal (S-05) ------------------------------------------------
+//
+// Saves an entry over HTTP the way the journal form does: fetch with a JSON body and the Origin a browser derives from
+// the referrer policy of /dzienniczek/nowy (formOrigin), Content-Type application/json, the session cookie, nothing
+// more. Writes a journal entry, so it runs in the same mode and behind the same gate as the isolation checks, signed
+// in as fixture account A in a jar of its own. Runs after the isolation checks: those count account A's rows.
+//
+// The symptom comes from the database by id, never typed in. Its name is used only to check the list and the URLs.
+
+const JOURNAL_NEW_PAGE = "/dzienniczek/nowy";
+const JOURNAL_LIST_PAGE = "/dzienniczek";
+const JOURNAL_ROUTE = "/api/journal";
+
+// Filled by the steps below and read by the later ones. `paths` holds every URL path the flow requested.
+const journal = { jar: new Map(), symptom: null, entryId: null, paths: [] };
+
+// A JSON POST like the form's fetch: the body never travels in the URL. Returns the status and the parsed body.
+async function postJson(path, body, { jar: cookieJar, origin }) {
+  journal.paths.push(path);
+  const response = await fetch(BASE_URL + path, {
+    method: "POST",
+    redirect: "manual",
+    headers: { Cookie: cookieHeader(cookieJar), Origin: origin, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  storeCookies(response, cookieJar);
+  const text = await response.text();
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // Not JSON: left null, the step reports the status.
+  }
+  return { status: response.status, json };
+}
+
+// The <li> of one journal entry on the list, so the symptom name is checked inside that entry.
+function entryItemOf(body, entryId) {
+  const start = body.indexOf(`data-entry-id="${entryId}"`);
+  if (start === -1) return null;
+  const end = body.indexOf("</ul>", start);
+  return end === -1 ? null : body.slice(start, end);
+}
+
+const journalFlowSteps = [
+  [
+    "journal: fixture account A signs in over HTTP and the new entry page renders",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const signIn = await request("/api/auth/signin", {
+        method: "POST",
+        jar: journal.jar,
+        form: { email: fixtures.a.address, password },
+      });
+      journal.paths.push(JOURNAL_NEW_PAGE);
+      const page = await requestPage(JOURNAL_NEW_PAGE, { jar: journal.jar });
+      return {
+        ok: signIn.status === 302 && signIn.location === "/" && page.status === 200,
+        detail: `sign-in ${signIn.status} ${signIn.location}; ${JOURNAL_NEW_PAGE} ${page.status} ${page.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: saving an entry returns 201 with its id, and the entry is in the database",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      // The second symptom by id: the isolation fixture already uses the first, so the list check below proves this
+      // entry and not the fixture.
+      const symptom = await fixtures.a.client.from("symptoms").select("id, name").order("id").range(1, 1).single();
+      if (symptom.error) return { ok: false, detail: `symptom lookup failed: ${symptom.error.message}` };
+      journal.symptom = symptom.data;
+
+      const response = await postJson(
+        JOURNAL_ROUTE,
+        {
+          occurredLocal: null,
+          items: [{ symptomId: journal.symptom.id, severity: "moderate" }],
+          note: "Smoke journal note",
+        },
+        { jar: journal.jar, origin: await formOrigin(JOURNAL_NEW_PAGE, journal.jar) },
+      );
+      const id = typeof response.json?.id === "string" ? response.json.id : null;
+      if (response.status !== 201 || !id) {
+        return { ok: false, detail: `${response.status} ${JSON.stringify(response.json)}` };
+      }
+      journal.entryId = id;
+
+      const items = await fixtures.a.client
+        .from("symptom_entry_items")
+        .select("symptom_id, severity")
+        .eq("entry_id", id);
+      if (items.error) return { ok: false, detail: `read-back failed: ${items.error.message}` };
+      const stored =
+        items.data.length === 1 &&
+        items.data[0].symptom_id === journal.symptom.id &&
+        items.data[0].severity === "moderate";
+      return {
+        ok: stored,
+        detail: `201; ${items.data.length} symptom row(s) stored ${stored ? "as sent" : "differently"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: an entry without symptoms gets 422 with its error key",
+    async () => {
+      const response = await postJson(
+        JOURNAL_ROUTE,
+        { occurredLocal: null, items: [], note: null },
+        { jar: journal.jar, origin: await formOrigin(JOURNAL_NEW_PAGE, journal.jar) },
+      );
+      const key = response.json?.error;
+      const ok = response.status === 422 && key === "noSymptoms" && Object.hasOwn(JOURNAL_COPY.apiErrors, key);
+      return { ok, detail: `${response.status} ${JSON.stringify(response.json)}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: no session gets 401",
+    async () => {
+      const response = await postJson(
+        JOURNAL_ROUTE,
+        { occurredLocal: null, items: [], note: null },
+        { jar: new Map(), origin: BASE_URL },
+      );
+      // Exactly 401: a redirect or a 422 would mean the route validated the body before deciding on the session.
+      return { ok: response.status === 401, detail: `${response.status} ${JSON.stringify(response.json)}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the list shows the saved entry with its symptom name and the saved message",
+    async () => {
+      if (!journal.entryId || !journal.symptom) return { ok: false, detail: "check did not run: no entry was saved" };
+      const path = `${JOURNAL_LIST_PAGE}?dodano=${journal.entryId}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      const item = entryItemOf(page.body, journal.entryId);
+      const named = item !== null && pageContains(item, journal.symptom.name);
+      // The message carries the entry's symptoms and the deadline, so only its fixed start is compared.
+      const savedPrefix = JOURNAL_COPY.list.savedWithDeadline.split(/\{(?:objawy|do)\}/)[0];
+      const saved = pageContains(page.body, savedPrefix);
+      return {
+        ok: named && saved,
+        detail: `entry ${item ? "listed" : "missing"}; symptom name ${named ? "present" : "missing"}; saved message ${
+          saved ? "present" : "missing"
+        }`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: no URL on the way carries the symptom name or the note",
+    async () => {
+      if (!journal.symptom) return { ok: false, detail: "check did not run: no symptom was read" };
+      const forbidden = [journal.symptom.name, "Smoke journal note"].flatMap((text) => [
+        text.toLowerCase(),
+        encodeURIComponent(text).toLowerCase(),
+      ]);
+      const leaking = journal.paths.filter((path) => forbidden.some((text) => path.toLowerCase().includes(text)));
+      return {
+        ok: journal.paths.length > 0 && leaking.length === 0,
+        detail: `${journal.paths.length} path(s) checked; ${leaking.length ? `leaking: ${leaking.join(", ")}` : "none leaks"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+];
+
+const journalSteps = isolationSkipReason
+  ? [["symptom journal checks", null, { skip: isolationSkipReason }]]
+  : journalFlowSteps;
 
 // --- Password recovery -----------------------------------------------------
 //
@@ -976,6 +1286,7 @@ const steps = [
   registrySuggestionsAnonymousStep,
   ...isolationSteps,
   ...medicationSteps,
+  ...journalSteps,
   ...passwordRecoverySteps,
 ];
 

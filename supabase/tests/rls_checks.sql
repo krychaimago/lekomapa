@@ -310,15 +310,18 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Correction window closed for checks 5–7 and 19.
--- The function is not restored by rewriting its body: its migration state is
--- fingerprinted here, the savepoint below is rolled back after check 19, and the
--- final check compares the fingerprint. This keeps working after S-05 replaces
--- the body of the function.
+-- Correction window closed for checks 5–7, 19 and 21.
+-- Both window functions are replaced: the medication window (medication guards,
+-- composition guards, insert guards) and the dosage period window (period guards,
+-- S-05). Neither is restored by rewriting its body: their migration state is
+-- fingerprinted here, the savepoint below is rolled back after check 21, and the
+-- final check compares both fingerprints. The real 24-hour rule is measured on
+-- backdated rows in correction_window_checks.sql.
 -- ---------------------------------------------------------------------------
 
 create temporary table rls_checks_window_fingerprint as
-select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint;
+select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint,
+       md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) as period_fingerprint;
 
 -- Content check for a history guard block. SQLSTATE P0001 comes from every
 -- `raise exception` without ERRCODE, so a typo in a check could look like a
@@ -341,6 +344,18 @@ $$;
 savepoint before_window_closed;
 
 create or replace function public.medication_correction_window_open(p_medication_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return false;
+end;
+$$;
+
+create or replace function public.dosage_period_correction_window_open(p_period_id uuid)
 returns boolean
 language plpgsql
 stable
@@ -403,13 +418,14 @@ begin
   end if;
   perform pg_temp.assert_history_guard_message('5', '5c started_on change', v_message, 'started_on');
 
-  -- 5d: zamknięcie trwającego okresu musi przejść zawsze
+  -- 5d: zamknięcie trwającego okresu przechodzi z datą w granicach change_dosage (najwyżej 14 dni wstecz, nie w
+  -- przyszłości) — granice mierzy WINDOW 6 w correction_window_checks.sql
   update public.dosage_periods
-     set ended_on = date '2026-06-01'
+     set ended_on = (now() at time zone 'Europe/Warsaw')::date - 1
    where id = '00000000-0000-4000-8000-000000000004';
 
   if (select ended_on from public.dosage_periods where id = '00000000-0000-4000-8000-000000000004')
-     is distinct from date '2026-06-01' then
+     is distinct from (now() at time zone 'Europe/Warsaw')::date - 1 then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zamknięcie okresu datą końca nie zapisało się';
   end if;
 
@@ -539,8 +555,9 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Uses its own medication (...0006) so its periods cannot collide with the
 -- periods of checks 3–7. Its rows are created after the savepoint and disappear
--- with it. Inserts are allowed with the window closed: the guards cover only
--- update and delete. A one-day period at the '[)' bound would be
+-- with it. With the medication window closed, dosage_periods_guard_insert lets a
+-- period through only at the end of the history and at most 14 days back: P1 is
+-- the first period and P2 starts after it, both within 14 days, so both pass. A one-day period at the '[)' bound would be
 -- started_on = d, ended_on = d + 1; here P2 starts on the day P1 ends.
 
 do $$
@@ -568,13 +585,13 @@ begin
     '00000000-0000-4000-8000-000000000007',
     '00000000-0000-4000-8000-000000000006',
     'check 19 dose A',
-    date '2026-01-01',
+    (now() at time zone 'Europe/Warsaw')::date - 10,
     null
   );
 
   -- 19b: closing P1 passes
   update public.dosage_periods
-     set ended_on = date '2026-04-01'
+     set ended_on = (now() at time zone 'Europe/Warsaw')::date - 5
    where id = '00000000-0000-4000-8000-000000000007';
   get diagnostics v_rows = row_count;
   if v_rows <> 1 then
@@ -587,7 +604,7 @@ begin
     '00000000-0000-4000-8000-000000000008',
     '00000000-0000-4000-8000-000000000006',
     'check 19 dose B',
-    date '2026-04-01',
+    (now() at time zone 'Europe/Warsaw')::date - 5,
     null
   );
 
@@ -611,15 +628,15 @@ begin
   select dose_text, started_on, ended_on into v_p2
     from public.dosage_periods where id = '00000000-0000-4000-8000-000000000008';
   if v_p1.dose_text is distinct from 'check 19 dose A'
-     or v_p1.started_on is distinct from date '2026-01-01'
-     or v_p1.ended_on is distinct from date '2026-04-01' then
-    raise exception 'CHECK 19 FAILED: period P1 changed (dose %, % – %), expected dose A, 2026-01-01 – 2026-04-01',
+     or v_p1.started_on is distinct from (now() at time zone 'Europe/Warsaw')::date - 10
+     or v_p1.ended_on is distinct from (now() at time zone 'Europe/Warsaw')::date - 5 then
+    raise exception 'CHECK 19 FAILED: period P1 changed (dose %, % – %), expected dose A, today-10 – today-5',
       v_p1.dose_text, v_p1.started_on, v_p1.ended_on;
   end if;
   if v_p2.dose_text is distinct from 'check 19 dose B'
-     or v_p2.started_on is distinct from date '2026-04-01'
+     or v_p2.started_on is distinct from (now() at time zone 'Europe/Warsaw')::date - 5
      or v_p2.ended_on is not null then
-    raise exception 'CHECK 19 FAILED: period P2 is missing or wrong (dose %, % – %), expected dose B from 2026-04-01, ongoing',
+    raise exception 'CHECK 19 FAILED: period P2 is missing or wrong (dose %, % – %), expected dose B from today-5, ongoing',
       v_p2.dose_text, v_p2.started_on, v_p2.ended_on;
   end if;
   if (select count(*) from public.dosage_periods where medication_id = '00000000-0000-4000-8000-000000000006') <> 2 then
@@ -753,9 +770,9 @@ rollback to savepoint before_window_closed;
 -- Sprawdzenie 8: przy otwartym oknie korekty usunięcie leku przechodzi wraz z kaskadą
 -- ---------------------------------------------------------------------------
 
--- Measures the migration state of the window function. Today (F-01) the window is
--- always open. After S-05 it depends on symptom entries, so this check will need
--- its own replacement of the function with an open window.
+-- Measures the migration state of the window function. Since S-05 the window is
+-- 24 hours from medications.created_at; the rows of this file were saved in this
+-- transaction (now() is constant inside it), so the window is open.
 
 do $$
 begin
@@ -1656,6 +1673,12 @@ begin
   v_now := md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure));
   if v_before is null or v_now is distinct from v_before then
     raise exception 'FINAL CHECK FAILED: correction window function differs from migration state (fingerprint before %, now %)',
+      v_before, v_now;
+  end if;
+  select period_fingerprint into v_before from rls_checks_window_fingerprint;
+  v_now := md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure));
+  if v_before is null or v_now is distinct from v_before then
+    raise exception 'FINAL CHECK FAILED: dosage period correction window function differs from migration state (fingerprint before %, now %)',
       v_before, v_now;
   end if;
   raise notice 'WSZYSTKIE SPRAWDZENIA PRZESZŁY — baza wraca do stanu sprzed skryptu (rollback)';

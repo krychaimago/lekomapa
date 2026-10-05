@@ -13,6 +13,11 @@ export const MEDICATION_COPY = {
     empty: "Nie masz jeszcze żadnego leku. Dodaj pierwszy, który przyjmujesz.",
     since: "od {data}",
     added: "Dodano lek.",
+    // `{do}` is formatCorrectionDeadline: "jutra (06.10), godz. 21:14", "dziś (05.10), godz. 21:14" or
+    // "23.10, godz. 21:14" (Polish time). `{nazwa}` is the medication's name, so the banner says which one it means.
+    addedWithDeadline: "Dodano lek {nazwa}. Dawkowanie możesz poprawić do {do} w szczegółach leku.",
+    // Under each medication whose dosage period is still in its correction window; the latest such window.
+    correctableUntil: "Dawkowanie możesz poprawić do {do}",
     loadError: "Nie udało się wczytać listy leków. Odśwież stronę.",
   },
   add: {
@@ -67,6 +72,8 @@ export const MEDICATION_COPY = {
     historyHeading: "Historia dawkowania",
     periodOngoing: "od {data}",
     periodClosed: "{od} – {do}",
+    // Link next to a period still in its correction window (S-05); `{do}` as in list.addedWithDeadline.
+    correctPeriod: "Popraw dawkę – do {do}",
     leafletSource: "Skład wpisany z ulotki.",
     notFound: "Nie znaleziono takiego leku.",
     loadError: "Nie udało się wczytać leku. Odśwież stronę.",
@@ -97,6 +104,28 @@ export const MEDICATION_COPY = {
     backToDetails: "Wróć do szczegółów leku",
     // Banner on the details screen after `?zmieniono=1`.
     saved: "Zapisano zmianę dawkowania.",
+    savedWithDeadline: "Zapisano zmianę dawkowania. Pomyłkę w nowym dawkowaniu możesz poprawić do {do}.",
+  },
+  // Correction of one dosage period inside its correction window (S-05, F6a): fixes a mistake in what was saved, the
+  // dates of the period stay and no new period appears. Never a suggestion that the dose should be different (FR-012).
+  correction: {
+    title: "Poprawa dawkowania",
+    intro:
+      "Poprawa pomyłki w zapisie tego okresu, na przykład literówki. Daty okresu zostają bez zmian i nie powstaje nowy okres.",
+    deadline: "Możesz poprawić do {do}.",
+    periodLabel: "Okres",
+    savedDoseLabel: "Zapisane dawkowanie",
+    doseLabel: "Dawkowanie",
+    variantHint: "Warianty tego samego preparatu o tym samym składzie.",
+    savedVariantMark: "(zapisany w tym okresie)",
+    submit: "Zapisz poprawkę",
+    closed:
+      "Okno korekty tego okresu jest już zamknięte, więc jego zapisu nie da się poprawić. Nowe dawkowanie zapisuje się jako zmianę dawkowania.",
+    openDosageChange: "Przejdź do zmiany dawkowania",
+    notFound: "Nie znaleziono takiego okresu dawkowania.",
+    // Banner on the details screen after `?poprawiono=<period id>`.
+    saved: "Poprawiono dawkowanie.",
+    savedWithDeadline: "Poprawiono dawkowanie. Możesz je poprawić jeszcze do {do}.",
   },
   // Hints next to the form (design-draft.md:196-199), reworded for a product chosen by its trade name.
   hints: {
@@ -130,6 +159,15 @@ export const MEDICATION_COPY = {
       "Ten wariant należy do innego preparatu albo ma inny skład. Taki preparat zapisuje się jako nowy lek.",
     noCurrentPeriod: "Ten lek nie ma bieżącego okresu dawkowania, więc nie ma czego zmienić.",
     medicationNotFound: "Nie znaleziono takiego leku.",
+    // Correction of a period (S-05): codes raised by correct_dosage_period
+    // (supabase/migrations/20261005140000_correct_dosage_period.sql).
+    periodNotFound: "Nie znaleziono takiego okresu dawkowania.",
+    correctionWindowClosed:
+      "Okno korekty tego okresu jest już zamknięte. Nowe dawkowanie zapisuje się jako zmianę dawkowania.",
+    sameDoseInPeriod: "To dawkowanie jest już zapisane w tym okresie.",
+    sameAsAdjacentPeriod:
+      "To dawkowanie jest takie samo jak w okresie bezpośrednio przed tym okresem albo po nim. Taka poprawa usunęłaby z historii zmianę dawkowania, a cofnięcia zmiany nie da się jeszcze zapisać.",
+    correctionGeneric: "Nie udało się zapisać poprawki. Spróbuj ponownie.",
     generic: "Nie udało się zapisać leku. Spróbuj ponownie.",
   },
 } as const;

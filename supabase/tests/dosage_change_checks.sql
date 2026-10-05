@@ -24,6 +24,13 @@
 --              into another account's medication is refused by RLS (42501), not by DP005.
 --   DOSAGE 15: registry_variants_of returns exactly the variants of the same name and composition (the variant the
 --              medication was added with included); nothing for a leaflet medication or another account's medication.
+--   DOSAGE 16: correct_dosage_period (S-05, F6a) — a correction inside the period's window rewrites the dose and
+--              variant of the same period, keeps its dates and adds no period; the first period of a medication can
+--              be corrected (no predecessor). 23 h 59 min after saving it passes; 24 h after saving it is
+--              DP009 (also for the same dose: DP009 comes before DP004). DP008 for another account's period, DP005
+--              for a variant of another product, DP004 for the same dose and variant, DP010 for the dose and variant
+--              of the period directly before or directly after (the same dose with another variant passes), 28000
+--              without a session.
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`), or this file alone:
 -- `node scripts/db-checks.mjs supabase/tests/dosage_change_checks.sql`. The runner (scripts/db-checks.mjs) passes it
@@ -635,10 +642,15 @@ $$;
 -- ---------------------------------------------------------------------------
 -- DOSAGE 13: with the correction window closed — a dose change passes, rewriting a period's variant is blocked
 -- ---------------------------------------------------------------------------
--- The window function is replaced inside a savepoint, as in rls_checks.sql, and restored by rolling back to it.
+-- Both window functions (medication and dosage period, S-05) are replaced inside a savepoint, as in rls_checks.sql,
+-- and restored by rolling back to it; their fingerprints are compared afterwards.
 -- The medication is created before the savepoint and survives it, for the open-window counterexample.
 
 create temporary table dosage_checks_state (medication_id uuid) on commit drop;
+
+create temporary table dosage_checks_window_fingerprint as
+select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint,
+       md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) as period_fingerprint;
 
 do $$
 declare
@@ -657,6 +669,18 @@ $$;
 savepoint before_window_closed;
 
 create or replace function public.medication_correction_window_open(p_medication_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return false;
+end;
+$$;
+
+create or replace function public.dosage_period_correction_window_open(p_period_id uuid)
 returns boolean
 language plpgsql
 stable
@@ -710,6 +734,22 @@ end;
 $$;
 
 rollback to savepoint before_window_closed;
+
+do $$
+declare
+  v_state record;
+begin
+  select * into v_state from dosage_checks_window_fingerprint;
+  if v_state.fingerprint is null
+     or md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) is distinct from v_state.fingerprint then
+    raise exception 'DOSAGE 13 FAILED: medication correction window function differs from migration state after rollback to savepoint';
+  end if;
+  if v_state.period_fingerprint is null
+     or md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) is distinct from v_state.period_fingerprint then
+    raise exception 'DOSAGE 13 FAILED: dosage period correction window function differs from migration state after rollback to savepoint';
+  end if;
+end;
+$$;
 
 -- Counterexample: with the window open again, the same update passes, so the guard branch is what blocked it.
 do $$
@@ -869,6 +909,221 @@ begin
   end if;
 
   raise notice 'DOSAGE 15 OK: registry_variants_of gives the same-name, same-composition variants; nothing for a leaflet medication or another account''s medication';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- DOSAGE 16: correct_dosage_period — correcting a freshly saved period (S-05, F6a)
+-- ---------------------------------------------------------------------------
+-- Rows get an old created_at only through pg_temp.backdate_period: as postgres it disables ONLY the freeze trigger of
+-- dosage_periods for one update and re-enables it, asserting that it is enabled again (as in
+-- correction_window_checks.sql). Every history guard stays active. `session_replication_role = replica` is never used.
+
+-- Calls correct_dosage_period and returns 'ok' or the SQLSTATE of a refusal. Only the codes the function raises are
+-- caught, each by name; any other error propagates and stops the file.
+create function pg_temp.try_correct(p_period_id uuid, p_dose_text text, p_variant uuid default null)
+returns text
+language plpgsql
+as $$
+begin
+  perform public.correct_dosage_period(p_period_id, p_dose_text, p_variant);
+  return 'ok';
+exception
+  when sqlstate '28000' then return '28000';
+  when sqlstate 'DP008' then return 'DP008';
+  when sqlstate 'DP009' then return 'DP009';
+  when sqlstate 'DP005' then return 'DP005';
+  when sqlstate 'DP004' then return 'DP004';
+  when sqlstate 'DP010' then return 'DP010';
+end;
+$$;
+
+-- Everything a correction may touch or must keep, as one comparable text.
+create function pg_temp.period_state(p_period_id uuid)
+returns text
+language sql
+stable
+as $$
+  select format('%s | [%s, %s) | %s | %s', dose_text, started_on, coalesce(ended_on::text, '…'),
+                coalesce(registry_product_id::text, '-'), medication_id)
+    from public.dosage_periods where id = p_period_id
+$$;
+
+create function pg_temp.assert_period_state(p_check text, p_case text, p_period_id uuid, p_expected text)
+returns void
+language plpgsql
+as $$
+begin
+  if pg_temp.period_state(p_period_id) is distinct from p_expected then
+    raise exception 'DOSAGE % FAILED: after % the period is %, expected %',
+      p_check, p_case, pg_temp.period_state(p_period_id), p_expected;
+  end if;
+end;
+$$;
+
+create function pg_temp.backdate_period(p_period_id uuid, p_age interval)
+returns void
+language plpgsql
+as $$
+declare
+  v_rows integer;
+begin
+  if current_user <> 'postgres' then
+    raise exception 'backdate_period must run as postgres (current_user %)', current_user;
+  end if;
+
+  alter table public.dosage_periods disable trigger dosage_periods_freeze_created_at;
+  update public.dosage_periods set created_at = now() - p_age where id = p_period_id;
+  get diagnostics v_rows = row_count;
+  alter table public.dosage_periods enable trigger dosage_periods_freeze_created_at;
+
+  if v_rows <> 1 then
+    raise exception 'backdate_period of % touched % row(s), expected 1', p_period_id, v_rows;
+  end if;
+  if (select tg.tgenabled from pg_trigger tg
+       where tg.tgrelid = 'public.dosage_periods'::regclass
+         and tg.tgname = 'dosage_periods_freeze_created_at') is distinct from 'O' then
+    raise exception 'freeze trigger dosage_periods_freeze_created_at was not re-enabled after backdate_period';
+  end if;
+  if (select created_at from public.dosage_periods where id = p_period_id) is distinct from now() - p_age then
+    raise exception 'backdate_period of % did not store now() - %', p_period_id, p_age;
+  end if;
+end;
+$$;
+
+-- 16a: corrections inside the window, and every refusal except DP009
+do $$
+declare
+  v_a constant uuid := '00000000-0000-4000-9200-000000000a00';
+  v_b constant uuid := '00000000-0000-4000-9200-000000000b00';
+  v_alpha_200 constant uuid := '00000000-0000-4000-9200-0000000000a1';
+  v_alpha_400 constant uuid := '00000000-0000-4000-9200-0000000000a2';
+  v_beta_200 constant uuid := '00000000-0000-4000-9200-0000000000b1';
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  v_med uuid;
+  v_first uuid;
+  v_new uuid;
+  v_result text;
+  v_first_state text;
+  v_new_state text;
+begin
+  perform pg_temp.act_as(v_a);
+  v_med := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+  perform pg_temp.act_as_postgres();
+  select id into v_first from public.dosage_periods where medication_id = v_med;
+
+  -- The first period of a medication has no predecessor: a correction passes and DP010 cannot apply.
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_first, '  1 tabletka wieczorem ');
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('16', 'correcting the first period of a medication', v_result, 'ok');
+  perform pg_temp.assert_period_count('16', 'correcting the first period', v_med, 1);
+  perform pg_temp.assert_period_state('16', 'correcting the first period', v_first,
+    format('1 tabletka wieczorem | [%s, …) | %s | %s', v_today - 30, v_alpha_200, v_med));
+
+  -- A dose change, then a correction of the new period: the same period, new dose and variant, the same dates.
+  perform pg_temp.act_as(v_a);
+  v_new := public.change_dosage(v_med, '2 tabletki', v_today - 3);
+  v_result := pg_temp.try_correct(v_new, ' 3 tabletki ', v_alpha_400);
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('16', 'correcting the period opened by a dose change', v_result, 'ok');
+  perform pg_temp.assert_period_count('16', 'correcting the period opened by a dose change', v_med, 2);
+  v_first_state := format('1 tabletka wieczorem | [%s, %s) | %s | %s', v_today - 30, v_today - 3, v_alpha_200, v_med);
+  v_new_state := format('3 tabletki | [%s, …) | %s | %s', v_today - 3, v_alpha_400, v_med);
+  perform pg_temp.assert_period_state('16', 'correcting the new period (new period)', v_new, v_new_state);
+  perform pg_temp.assert_period_state('16', 'correcting the new period (period before it)', v_first, v_first_state);
+
+  -- DP004: the same dose (case and spaces ignored) and the same variant, implicit and explicit.
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_new, '  3 TABLETKI ');
+  perform pg_temp.assert_result('16', 'the same dose with the variant kept', v_result, 'DP004');
+  v_result := pg_temp.try_correct(v_new, '3 Tabletki', v_alpha_400);
+  perform pg_temp.assert_result('16', 'the same dose with the same variant given explicitly', v_result, 'DP004');
+
+  -- DP010: the dose and variant of the period directly before (undoing the change).
+  v_result := pg_temp.try_correct(v_new, ' 1 TABLETKA wieczorem', v_alpha_200);
+  perform pg_temp.assert_result('16', 'the dose and variant of the previous period', v_result, 'DP010');
+
+  -- DP005: a variant of another product.
+  v_result := pg_temp.try_correct(v_new, '4 tabletki', v_beta_200);
+  perform pg_temp.assert_result('16', 'a variant of another product', v_result, 'DP005');
+
+  -- DP008: account B correcting account A's period.
+  perform pg_temp.act_as(v_b);
+  v_result := pg_temp.try_correct(v_new, '5 tabletek');
+  perform pg_temp.assert_result('16', 'account B correcting account A''s period', v_result, 'DP008');
+  perform pg_temp.act_as_postgres();
+
+  -- 28000: postgres without claims.
+  if auth.uid() is not null then
+    raise exception 'DOSAGE 16 FAILED: auth.uid() is not empty as postgres without claims, so the case is not measured';
+  end if;
+  v_result := pg_temp.try_correct(v_new, '6 tabletek');
+  perform pg_temp.assert_result('16', 'a correction without a session', v_result, '28000');
+
+  -- Nothing above changed either period.
+  perform pg_temp.assert_period_count('16', 'the refused corrections', v_med, 2);
+  perform pg_temp.assert_period_state('16', 'the refused corrections (new period)', v_new, v_new_state);
+  perform pg_temp.assert_period_state('16', 'the refused corrections (period before it)', v_first, v_first_state);
+
+  -- DP010 counterexample: the previous dose with another variant is a real correction and passes.
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_new, '1 tabletka wieczorem', v_alpha_400);
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('16', 'the previous dose with another variant', v_result, 'ok');
+  perform pg_temp.assert_period_count('16', 'the previous dose with another variant', v_med, 2);
+  perform pg_temp.assert_period_state('16', 'the previous dose with another variant', v_new,
+    format('1 tabletka wieczorem | [%s, …) | %s | %s', v_today - 3, v_alpha_400, v_med));
+
+  -- DP010 for the period directly after: the first period corrected to the dose and variant of the next one would
+  -- erase the change between them, so it is refused too.
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_first, ' 1 TABLETKA wieczorem ', v_alpha_400);
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('16', 'the dose and variant of the next period', v_result, 'DP010');
+  perform pg_temp.assert_period_state('16', 'the dose and variant of the next period (period before)', v_first, v_first_state);
+
+  raise notice 'DOSAGE 16 OK (window open): a correction rewrites the dose and variant of the same period, keeps its dates and adds no period, also for the first period; DP004, DP010 (previous and next period), DP005, DP008 and 28000 change nothing; the previous dose with another variant passes';
+end;
+$$;
+
+-- 16b: the 24-hour boundary of the period's own window
+do $$
+declare
+  v_a constant uuid := '00000000-0000-4000-9200-000000000a00';
+  v_alpha_200 constant uuid := '00000000-0000-4000-9200-0000000000a1';
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  v_med uuid;
+  v_new uuid;
+  v_result text;
+  v_state text;
+begin
+  perform pg_temp.act_as(v_a);
+  v_med := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+  v_new := public.change_dosage(v_med, '2 tabletki', v_today - 1);
+  perform pg_temp.act_as_postgres();
+
+  -- 23 h 59 min after saving the period: one minute of window left, the correction passes.
+  perform pg_temp.backdate_period(v_new, interval '23 hours 59 minutes');
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_new, '1,5 tabletki');
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('16', 'a correction 23 h 59 min after saving the period', v_result, 'ok');
+  v_state := format('1,5 tabletki | [%s, …) | %s | %s', v_today - 1, v_alpha_200, v_med);
+  perform pg_temp.assert_period_state('16', 'a correction 23 h 59 min after saving', v_new, v_state);
+
+  -- 24 h after saving: the window ended exactly now. DP009 comes before DP004, so the same dose is DP009 too.
+  perform pg_temp.backdate_period(v_new, interval '24 hours');
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_new, '2,5 tabletki');
+  perform pg_temp.assert_result('16', 'a correction 24 h after saving the period', v_result, 'DP009');
+  v_result := pg_temp.try_correct(v_new, '1,5 tabletki');
+  perform pg_temp.assert_result('16', 'the same dose 24 h after saving the period', v_result, 'DP009');
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_period_state('16', 'the refused corrections after 24 h', v_new, v_state);
+  perform pg_temp.assert_period_count('16', 'the refused corrections after 24 h', v_med, 2);
+
+  raise notice 'DOSAGE 16 OK (window boundary): 23 h 59 min after saving a period its correction passes; 24 h after saving it is DP009 (before DP004) and the period stays unchanged';
 end;
 $$;
 
