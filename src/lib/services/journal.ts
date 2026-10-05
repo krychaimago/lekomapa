@@ -113,15 +113,17 @@ function dayMonth(iso: string): string {
   return `${day}.${month}`;
 }
 
-// End of a correction window as the user reads it, in Polish time: "dziś, 21:14", "jutra, 21:14" (genitive, for
-// "do jutra"), otherwise "DD.MM, 21:14". `nowIso` is the server's (or browser's) now, passed in so the result is
+// End of a correction window as the user reads it, in Polish time: "dziś (05.10), godz. 21:14", "jutra (06.10),
+// godz. 21:14" (genitive, for "do jutra"), otherwise "23.10, godz. 21:14". The date next to "dziś"/"jutra" settles
+// which day is meant around midnight. `nowIso` is the server's (or browser's) now, passed in so the result is
 // testable.
 export function formatCorrectionDeadline(endsAtIso: string, nowIso: string): string {
   const ends = warsawParts(new Date(endsAtIso));
   const today = warsawParts(new Date(nowIso)).date;
-  if (ends.date === today) return `dziś, ${ends.time}`;
-  if (ends.date === nextIsoDay(today)) return `jutra, ${ends.time}`;
-  return `${dayMonth(ends.date)}, ${ends.time}`;
+  const date = dayMonth(ends.date);
+  if (ends.date === today) return `dziś (${date}), godz. ${ends.time}`;
+  if (ends.date === nextIsoDay(today)) return `jutra (${date}), godz. ${ends.time}`;
+  return `${date}, godz. ${ends.time}`;
 }
 
 // "DD.MM.YYYY, HH:MM" in Polish time: when an entry happened, and the earliest allowed time after SE003.

@@ -544,30 +544,30 @@ Katalog (34 + 82 wiersze) ładowany raz ze stroną i filtrowany w przeglądarce.
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe i FR-012 przechodzą: `npm test`
-- [x] 3.2 `npm run lint` i `npm run typecheck`
-- [x] 3.3 Skaner kolorów nie zgłasza nowych plików
-- [x] 3.4 Smoke z krokami dzienniczka przechodzi przeciw lokalnej bazie: `npm run smoke`
-- [x] 3.5 Build przechodzi: `npm run build`
+- [x] 3.1 Testy jednostkowe i FR-012 przechodzą: `npm test` — ed15d94
+- [x] 3.2 `npm run lint` i `npm run typecheck` — ed15d94
+- [x] 3.3 Skaner kolorów nie zgłasza nowych plików — ed15d94
+- [x] 3.4 Smoke z krokami dzienniczka przechodzi przeciw lokalnej bazie: `npm run smoke` — ed15d94
+- [x] 3.5 Build przechodzi: `npm run build` — ed15d94
 
 #### Manual
 
-- [x] 3.6 Na telefonie: wpis z dwoma objawami (bez polskich znaków, słowo potoczne), nasileniem, cofniętą godziną i notatką
-- [x] 3.7 Lista pokazuje poprawną godzinę polską i „Możesz poprawić do jutra, HH:MM”
-- [x] 3.8 Wymuszony błąd serwera zostawia zaznaczone objawy
-- [x] 3.9 Pasek adresu i historia przeglądarki bez nazwy objawu i notatki
-- [x] 3.10 Ekran czytelny na wąskim ekranie; brak płaskiej listy 34 pozycji bez wpisanego tekstu
+- [x] 3.6 Na telefonie: wpis z dwoma objawami (bez polskich znaków, słowo potoczne), nasileniem, cofniętą godziną i notatką — ed15d94
+- [x] 3.7 Lista pokazuje poprawną godzinę polską i „Możesz poprawić do jutra, HH:MM” — ed15d94
+- [x] 3.8 Wymuszony błąd serwera zostawia zaznaczone objawy — ed15d94
+- [x] 3.9 Pasek adresu i historia przeglądarki bez nazwy objawu i notatki — ed15d94
+- [x] 3.10 Ekran czytelny na wąskim ekranie; brak płaskiej listy 34 pozycji bez wpisanego tekstu — ed15d94
 
 ### Phase 4: Okno korekty w UI leków i poprawa dawki (F6a)
 
 #### Automated
 
-- [ ] 4.1 Migracje i sprawdzenia SQL z nowymi DOSAGE: `npx supabase db reset` + `npm run db:check`
-- [ ] 4.2 `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`
-- [ ] 4.3 Smoke z krokiem poprawy dawki przeciw lokalnej bazie: `npm run smoke`
+- [x] 4.1 Migracje i sprawdzenia SQL z nowymi DOSAGE: `npx supabase db reset` + `npm run db:check`
+- [x] 4.2 `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`
+- [x] 4.3 Smoke z krokiem poprawy dawki przeciw lokalnej bazie: `npm run smoke`
 
 #### Manual
 
-- [ ] 4.4 Dodanie leku pokazuje „do kiedy” w komunikacie po zapisie
-- [ ] 4.5 Pomyłka w zmianie dawki poprawiona w oknie; historia bez fałszywego okresu
-- [ ] 4.6 Okres sprzed ponad 24 h bez odnośnika poprawy; ekran poprawy mówi, że okno zamknięte
+- [x] 4.4 Dodanie leku pokazuje „do kiedy” w komunikacie po zapisie
+- [x] 4.5 Pomyłka w zmianie dawki poprawiona w oknie; historia bez fałszywego okresu
+- [x] 4.6 Okres sprzed ponad 24 h bez odnośnika poprawy; ekran poprawy mówi, że okno zamknięte

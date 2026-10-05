@@ -85,29 +85,29 @@ test("a category missing from the screen's list throws with its name instead of 
   assert.throws(() => groupSymptomsByCategory(unknown), /endocrine/);
 });
 
-test("deadline later the same Polish day reads 'dziś'", () => {
+test("deadline later the same Polish day reads 'dziś' with the date", () => {
   // 07:00 and 21:14 in Warsaw (CEST, UTC+2).
-  assert.equal(formatCorrectionDeadline("2026-10-20T19:14:00Z", "2026-10-20T05:00:00Z"), "dziś, 21:14");
+  assert.equal(formatCorrectionDeadline("2026-10-20T19:14:00Z", "2026-10-20T05:00:00Z"), "dziś (20.10), godz. 21:14");
 });
 
-test("deadline on the next Polish day reads 'jutra'", () => {
-  assert.equal(formatCorrectionDeadline("2026-10-21T19:14:00Z", "2026-10-20T19:14:00Z"), "jutra, 21:14");
+test("deadline on the next Polish day reads 'jutra' with the date", () => {
+  assert.equal(formatCorrectionDeadline("2026-10-21T19:14:00Z", "2026-10-20T19:14:00Z"), "jutra (21.10), godz. 21:14");
 });
 
 test("the day boundary is Polish midnight, not UTC midnight", () => {
   // Now 00:30 on 21.10 in Warsaw (still 20.10 in UTC); deadline 07:00 on 21.10: today.
-  assert.equal(formatCorrectionDeadline("2026-10-21T05:00:00Z", "2026-10-20T22:30:00Z"), "dziś, 07:00");
+  assert.equal(formatCorrectionDeadline("2026-10-21T05:00:00Z", "2026-10-20T22:30:00Z"), "dziś (21.10), godz. 07:00");
   // Now 23:30 on 20.10 in Warsaw; deadline 00:30 on 21.10 (same UTC date 20.10): tomorrow.
-  assert.equal(formatCorrectionDeadline("2026-10-20T22:30:00Z", "2026-10-20T21:30:00Z"), "jutra, 00:30");
+  assert.equal(formatCorrectionDeadline("2026-10-20T22:30:00Z", "2026-10-20T21:30:00Z"), "jutra (21.10), godz. 00:30");
 });
 
 test("on the clock change (25.10.2026) a 24-hour window ends an hour earlier on the wall clock", () => {
   // Saved 24.10 at 21:14 CEST (19:14 UTC); 24 hours later is 25.10 19:14 UTC = 20:14 CET.
-  assert.equal(formatCorrectionDeadline("2026-10-25T19:14:00Z", "2026-10-24T19:14:00Z"), "jutra, 20:14");
+  assert.equal(formatCorrectionDeadline("2026-10-25T19:14:00Z", "2026-10-24T19:14:00Z"), "jutra (25.10), godz. 20:14");
 });
 
 test("a deadline on any other day shows its date", () => {
-  assert.equal(formatCorrectionDeadline("2026-10-23T10:00:00Z", "2026-10-20T10:00:00Z"), "23.10, 12:00");
+  assert.equal(formatCorrectionDeadline("2026-10-23T10:00:00Z", "2026-10-20T10:00:00Z"), "23.10, godz. 12:00");
 });
 
 test("entry time default is Polish wall-clock time with seconds dropped", () => {

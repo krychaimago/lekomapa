@@ -1,0 +1,233 @@
+---
+// Correction of one dosage period (S-05, F6a): fixes a mistake in the saved dose (and, for a registry medication, the
+// variant of the same product) while the period's own correction window is open — 24 hours from saving that period.
+// The dates of the period stay and no new period appears; the save goes through correct_dosage_period. Only the two
+// ids travel in the URL; the save route returns nothing but `?error=<key>`, looked up in MEDICATION_COPY.apiErrors.
+// The end of the window comes from the database (correction_window_ends_at), so the screen agrees with the guard.
+// RLS limits every read to the signed-in person, so another account's medication reads as missing (404).
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import CorrectDosageForm from "@/components/medications/CorrectDosageForm";
+import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import { formatCorrectionDeadline } from "@/lib/services/journal";
+import {
+  type RegistrySubstanceRow,
+  formatIsoDate,
+  lastDayOfPeriod,
+  registryCompositionNames,
+} from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import type { DosagePeriod, Medication, RegistryProduct, RegistryVariantOption } from "@/types";
+
+type PeriodRow = Pick<DosagePeriod, "id" | "dose_text" | "started_on" | "ended_on" | "registry_product_id"> & {
+  correction_window_ends_at: string | null;
+};
+
+type MedicationRow = Pick<Medication, "id" | "product_name" | "composition_source" | "registry_medication_id"> & {
+  dosage_periods: PeriodRow[];
+};
+
+type VariantRow = Pick<RegistryProduct, "id" | "strength" | "pharmaceutical_form"> & {
+  registry_substances: RegistrySubstanceRow[];
+};
+
+const copy = MEDICATION_COPY.correction;
+const id = Astro.params.id ?? "";
+const periodId = Astro.params.periodId ?? "";
+const error = apiErrorMessage(Astro.url.searchParams.get("error"));
+
+let medication: MedicationRow | null = null;
+let loadFailed = false;
+
+// Non-uuid ids never reach the database: they would be a 22P02 error there, here they are simply not found.
+const validIds = z.uuid().safeParse(id).success && z.uuid().safeParse(periodId).success;
+const supabase = validIds ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validIds && !supabase) loadFailed = true;
+
+if (supabase) {
+  const result = await supabase
+    .from("medications")
+    .select(
+      "id, product_name, composition_source, registry_medication_id, dosage_periods(id, dose_text, started_on, ended_on, registry_product_id, correction_window_ends_at)",
+    )
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<MedicationRow | null, { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading a medication for a dosage correction failed", { code: result.error.code });
+  } else {
+    medication = result.data;
+  }
+}
+
+// The period must belong to this medication: a period id from another medication reads as missing.
+const period = medication?.dosage_periods.find((row) => row.id === periodId) ?? null;
+
+// One "now" for the whole page, from the server's clock.
+const nowIso = new Date().toISOString();
+const endsAt = period?.correction_window_ends_at ?? null;
+const deadline =
+  endsAt !== null && Date.parse(endsAt) > Date.parse(nowIso) ? formatCorrectionDeadline(endsAt, nowIso) : null;
+const windowOpen = deadline !== null;
+
+const isRegistry = medication?.composition_source === "registry";
+// Same fallback as correct_dosage_period: a period without a variant takes the one the medication was added with.
+const savedVariantId = isRegistry ? (period?.registry_product_id ?? medication?.registry_medication_id ?? null) : null;
+
+// Variants offered: the database picks them (registry_variants_of) by the same DP005 rule the correction applies, so
+// the screen never offers a variant the database refuses. Only ids travel: the medication id in the RPC body, the
+// variant ids in the URL of the second read — never the product name. Same reads as the dose change screen.
+let variants: RegistryVariantOption[] = [];
+if (supabase && medication && period && windowOpen && isRegistry) {
+  const isIdList = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.every((item) => typeof item === "string");
+  const allowed = await supabase.rpc("registry_variants_of", { p_medication_id: medication.id });
+  const allowedIds: unknown = allowed.error ? null : allowed.data;
+  let rows: VariantRow[] | null = null;
+  if (isIdList(allowedIds)) {
+    const result = await supabase
+      .from("registry_products")
+      .select("id, strength, pharmaceutical_form, registry_substances(position, substance_name, atc_code)")
+      .in("id", allowedIds)
+      .overrideTypes<VariantRow[], { merge: false }>();
+    if (result.error) {
+      console.error("Reading registry variants for a dosage correction failed", { code: result.error.code });
+    } else {
+      rows = result.data;
+    }
+  } else {
+    console.error("Reading allowed registry variants for a dosage correction failed", { code: allowed.error?.code });
+  }
+  if (rows === null) {
+    loadFailed = true;
+  } else {
+    variants = rows
+      .map((row) => ({
+        id: row.id,
+        strength: row.strength,
+        form: row.pharmaceutical_form,
+        composition: registryCompositionNames(row.registry_substances),
+      }))
+      .sort(
+        (a, b) =>
+          (a.strength ?? "").localeCompare(b.strength ?? "", "pl", { numeric: true }) ||
+          (a.form ?? "").localeCompare(b.form ?? "", "pl"),
+      );
+    // Without the saved variant on the list, no radio could be preselected: send none, which keeps the saved one.
+    if (!variants.some((variant) => variant.id === savedVariantId)) variants = [];
+  }
+}
+
+const savedVariant = variants.find((variant) => variant.id === savedVariantId) ?? null;
+const savedVariantText = savedVariant
+  ? `${MEDICATION_COPY.add.strength}: ${savedVariant.strength ?? "—"} · ${MEDICATION_COPY.add.form}: ${savedVariant.form ?? "—"}`
+  : "";
+
+const periodDates = period
+  ? period.ended_on === null
+    ? MEDICATION_COPY.details.periodOngoing.replace("{data}", formatIsoDate(period.started_on))
+    : MEDICATION_COPY.details.periodClosed
+        .replace("{od}", formatIsoDate(period.started_on))
+        .replace("{do}", formatIsoDate(lastDayOfPeriod(period.ended_on)))
+  : "";
+
+const notFound = !loadFailed && (medication === null || period === null);
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+const detailsHref = `/leki/${id}`;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const noticeClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    {validIds && medication ? (
+      <a href={detailsHref} class:list={linkClass}>
+        {MEDICATION_COPY.dosageChange.backToDetails}
+      </a>
+    ) : (
+      <a href="/leki" class:list={linkClass}>
+        {MEDICATION_COPY.details.backToList}
+      </a>
+    )}
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {MEDICATION_COPY.details.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class:list={noticeClass}>
+        <h1 class="text-2xl font-bold">{copy.title}</h1>
+        <p>{medication === null ? MEDICATION_COPY.details.notFound : copy.notFound}</p>
+      </section>
+    )}
+
+    {medication && period && !loadFailed && (
+      <>
+        <div class="flex flex-col gap-1">
+          <h1 class="text-3xl font-bold">{copy.title}</h1>
+          <p class="text-lg break-words">{medication.product_name}</p>
+        </div>
+
+        {error && !windowOpen && (
+          <p
+            role="alert"
+            class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        <section class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+          <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
+            <dt class="text-sm text-muted-foreground">{copy.periodLabel}</dt>
+            <dd>{periodDates}</dd>
+            <dt class="text-sm text-muted-foreground">{copy.savedDoseLabel}</dt>
+            <dd class="break-words">{period.dose_text}</dd>
+            {savedVariantText && (
+              <>
+                <dt class="text-sm text-muted-foreground">{MEDICATION_COPY.details.variant}</dt>
+                <dd>{savedVariantText}</dd>
+              </>
+            )}
+          </dl>
+        </section>
+
+        {deadline ? (
+          <>
+            <div class="flex flex-col gap-1 text-sm text-muted-foreground">
+              <p>{copy.intro}</p>
+              <p>{copy.deadline.replace("{do}", deadline)}</p>
+            </div>
+            <CorrectDosageForm
+              medicationId={medication.id}
+              periodId={period.id}
+              savedDose={period.dose_text}
+              variants={variants}
+              savedVariantId={savedVariantId}
+              serverError={error}
+              client:load
+            />
+          </>
+        ) : (
+          <section class:list={noticeClass}>
+            <p>{copy.closed}</p>
+            <a href={`/leki/${medication.id}/zmiana-dawki`} class:list={linkClass}>
+              {copy.openDosageChange}
+            </a>
+            <a href={detailsHref} class:list={linkClass}>
+              {MEDICATION_COPY.dosageChange.backToDetails}
+            </a>
+          </section>
+        )}
+      </>
+    )}
+  </div>
+</AppLayout>

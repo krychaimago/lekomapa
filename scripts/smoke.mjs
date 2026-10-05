@@ -26,6 +26,7 @@ import { createClient, isAuthApiError } from "@supabase/supabase-js";
 // so the steps compare against what the app renders instead of a second copy of the text.
 import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
 import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
+import { MEDICATION_COPY } from "../src/lib/copy/medications.ts";
 import { todayInWarsaw } from "../src/lib/services/medications.ts";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
@@ -516,6 +517,9 @@ const FLAG_GROUPS = ["B01AA", "M01AE"];
 const MEDICATION_ADD_PAGE = "/leki/nowy";
 const LEAFLET_ADD_PAGE = "/leki/nowy/z-ulotki";
 const ADDED_PREFIX = "/leki?dodano=";
+// Dose texts of the correction steps: a mistaken dose change, then its correction in the period's window.
+const SMOKE_MISTAKEN_DOSE = "2 tabletki (smoke pomyłka)";
+const SMOKE_CORRECTED_DOSE = "1 tabletka (smoke poprawka)";
 
 // Filled by the steps below and read by the later ones.
 const flow = { jarA: new Map(), jarB: new Map(), products: {}, description: null, ids: {} };
@@ -541,6 +545,23 @@ function listItemOf(body, medicationId) {
   if (start === -1) return null;
   const end = body.indexOf("</li>", start);
   return end === -1 ? null : body.slice(start, end);
+}
+
+// An ISO date `days` days before `iso`, pinned to UTC midnight so no zone or DST switch moves it.
+function isoDaysBefore(iso, days) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day) - days * 86_400_000).toISOString().slice(0, 10);
+}
+
+// Periods of one medication, oldest first, read as account A (RLS limits the read to its own rows).
+async function periodsOf(medicationId) {
+  const { data, error } = await fixtures.a.client
+    .from("dosage_periods")
+    .select("id, dose_text, started_on, ended_on")
+    .eq("medication_id", medicationId)
+    .order("started_on");
+  if (error) throw new Error(`reading periods failed: ${error.code}`);
+  return data;
 }
 
 function addedIdFrom(location) {
@@ -698,6 +719,84 @@ const medicationFlowSteps = [
       return {
         ok: notCovered,
         detail: `details ${page.status}; not-covered text ${notCovered ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: a dose change over HTTP closes the period and opens a new one",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const today = todayInWarsaw();
+      // Started three days ago, so a change dated today is later than the start (DP002 otherwise).
+      const added = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do poprawy",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+          startedOn: isoDaysBefore(today, 3),
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = added.status === 302 ? addedIdFrom(added.location) : null;
+      if (!id) return { ok: false, detail: `add: ${added.status} ${added.location}` };
+      flow.ids.corrected = id;
+      const change = await request(`/api/medications/${id}/dosage`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zmiana-dawki`, flow.jarA),
+        form: { doseText: SMOKE_MISTAKEN_DOSE, changedOn: today },
+      });
+      const periods = await periodsOf(id);
+      const ongoing = periods.find((period) => period.ended_on === null);
+      if (ongoing) flow.ids.correctedPeriod = ongoing.id;
+      const ok =
+        change.status === 302 &&
+        change.location === `/leki/${id}?zmieniono=1` &&
+        periods.length === 2 &&
+        ongoing?.dose_text === SMOKE_MISTAKEN_DOSE &&
+        ongoing.started_on === today;
+      return { ok, detail: `${change.status} ${change.location}; periods: ${periods.length}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: correcting the new period over HTTP rewrites its dose and adds no period",
+    async () => {
+      const id = flow.ids.corrected;
+      const periodId = flow.ids.correctedPeriod;
+      if (!id || !periodId) return { ok: false, detail: "check did not run: no dose change was saved" };
+      const before = await periodsOf(id);
+      const correction = await request(`/api/medications/${id}/periods/${periodId}`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/okresy/${periodId}/poprawa`, flow.jarA),
+        form: { doseText: SMOKE_CORRECTED_DOSE },
+      });
+      const after = await periodsOf(id);
+      const corrected = after.find((period) => period.id === periodId);
+      const previous = before.find((period) => period.id === periodId);
+      // The same period: new dose, same dates; the number of periods unchanged; no dose in the redirect.
+      const samePeriod =
+        corrected?.dose_text === SMOKE_CORRECTED_DOSE &&
+        corrected.started_on === previous?.started_on &&
+        corrected.ended_on === previous.ended_on;
+      const noDoseInUrl = !correction.location.includes("smoke") && !correction.location.includes("tablet");
+      const page = await requestPage(`/leki/${id}?poprawiono=${periodId}`, { jar: flow.jarA });
+      const banner = page.status === 200 && page.body.includes(escapeHtml(MEDICATION_COPY.correction.saved));
+      const ok =
+        correction.status === 302 &&
+        correction.location === `/leki/${id}?poprawiono=${periodId}` &&
+        after.length === before.length &&
+        samePeriod &&
+        noDoseInUrl &&
+        banner;
+      return {
+        ok,
+        detail: `${correction.status} ${correction.location}; periods ${before.length} -> ${after.length}; dose ${
+          samePeriod ? "corrected in place" : "not corrected in place"
+        }; banner ${banner ? "present" : "missing"}`,
       };
     },
     EXPECT_OK,

@@ -8,6 +8,7 @@ import AppLayout from "@/layouts/AppLayout.astro";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { buttonVariants } from "@/components/ui/button";
+import { formatCorrectionDeadline } from "@/lib/services/journal";
 import { formatIsoDate, lastDayOfPeriod, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstance, RegistryProduct } from "@/types";
@@ -17,9 +18,11 @@ type VariantRow = Pick<RegistryProduct, "strength" | "pharmaceutical_form">;
 type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source" | "discontinued_on"> & {
   registry_products: VariantRow | null;
   medication_substances: Pick<MedicationSubstance, "substance_name" | "atc_code">[];
-  // Each period carries the variant taken in it (S-03); null for a leaflet medication.
+  // Each period carries the variant taken in it (S-03); null for a leaflet medication. correction_window_ends_at is
+  // the end of the period's own correction window (S-05), read from the database so the link agrees with the guard.
   dosage_periods: (Pick<DosagePeriod, "id" | "dose_text" | "started_on" | "ended_on"> & {
     registry_products: VariantRow | null;
+    correction_window_ends_at: string | null;
   })[];
 };
 
@@ -52,7 +55,7 @@ if (supabase) {
     supabase
       .from("medications")
       .select(
-        "id, product_name, composition_source, discontinued_on, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, registry_products(strength, pharmaceutical_form))",
+        "id, product_name, composition_source, discontinued_on, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
       )
       .eq("id", id)
       .maybeSingle()
@@ -134,9 +137,18 @@ function variantText(variant: VariantRow | null): string {
 // The summary shows the variant of the current period; the medication's own variant only for a period without one.
 const summaryVariant = isRegistry ? variantText(currentPeriod?.registry_products ?? registry) : "";
 
+// One "now" for the whole page, from the server's clock. A period's correction deadline is shown only while its window
+// is open; the same comparison the database makes (now() < correction_window_end(created_at)).
+const nowIso = new Date().toISOString();
+const deadlineOf = (period: { correction_window_ends_at: string | null } | undefined): string | null =>
+  period?.correction_window_ends_at != null && Date.parse(period.correction_window_ends_at) > Date.parse(nowIso)
+    ? formatCorrectionDeadline(period.correction_window_ends_at, nowIso)
+    : null;
+
 // Every dosage period, newest first. A leaflet medication has no registry variant, so its periods show none.
 const history = [...periods].reverse().map((period) => ({
   id: period.id,
+  deadline: deadlineOf(period),
   dose: period.dose_text,
   variant: isRegistry ? variantText(period.registry_products) : "",
   dates:
@@ -151,8 +163,15 @@ const history = [...periods].reverse().map((period) => ({
 // Only a current medication offers the dose change.
 const isCurrent =
   medication !== null && (medication.discontinued_on === null || medication.discontinued_on > todayInWarsaw());
-// Banner after a saved dose change; the flag carries no data.
+// Banner after a saved dose change; the flag carries no data. The new period is the ongoing one.
 const dosageChanged = Astro.url.searchParams.get("zmieniono") === "1";
+const changedDeadline = dosageChanged ? deadlineOf(periods.find((period) => period.ended_on === null)) : null;
+// Banner after a saved correction: the corrected period's id (a validated uuid of this medication), never the dose.
+const correctedParam = z.uuid().safeParse(Astro.url.searchParams.get("poprawiono"));
+const correctedPeriod = correctedParam.success
+  ? periods.find((period) => period.id === correctedParam.data)
+  : undefined;
+const correctedDeadline = deadlineOf(correctedPeriod);
 
 const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
@@ -184,7 +203,17 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
       <>
         {dosageChanged && (
           <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
-            {MEDICATION_COPY.dosageChange.saved}
+            {changedDeadline
+              ? MEDICATION_COPY.dosageChange.savedWithDeadline.replace("{do}", changedDeadline)
+              : MEDICATION_COPY.dosageChange.saved}
+          </p>
+        )}
+
+        {correctedPeriod && (
+          <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+            {correctedDeadline
+              ? MEDICATION_COPY.correction.savedWithDeadline.replace("{do}", correctedDeadline)
+              : MEDICATION_COPY.correction.saved}
           </p>
         )}
 
@@ -225,10 +254,18 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
             <h2 class="text-xl font-semibold">{copy.historyHeading}</h2>
             <ol class="flex flex-col gap-2">
               {history.map((item) => (
-                <li class="flex min-w-0 flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground">
+                <li
+                  data-period-id={item.id}
+                  class="flex min-w-0 flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground"
+                >
                   <span class="text-sm text-muted-foreground">{item.dates}</span>
                   <span class="font-medium break-words">{item.dose}</span>
                   {item.variant && <span class="text-sm break-words text-muted-foreground">{item.variant}</span>}
+                  {item.deadline && (
+                    <a href={`/leki/${medication.id}/okresy/${item.id}/poprawa`} class:list={[linkClass, "text-sm"]}>
+                      {copy.correctPeriod.replace("{do}", item.deadline)}
+                    </a>
+                  )}
                 </li>
               ))}
             </ol>
