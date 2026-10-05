@@ -44,7 +44,7 @@ timeline_budget:
 2. **Ile par substancji czynnych i z jakiego źródła trafia do tabeli reguł?** — ustalono "kilkanaście par plus leki faktycznie przyjmowane", bez wskazania źródła, z którego zostaną przepisane. Właściciel: użytkowniczka. Zebranie i sprawdzenie tych danych to praca poza kodem, wliczona w budżet czasu.
 3. **Ile pozycji liczy zamknięta lista objawów i skąd pochodzi?** — przyjęto rząd 15–20 pozycji wraz z potocznymi określeniami do wyszukiwania; konkretna lista nieustalona.
 4. **Jak długie jest okno czasowe w FR-010?** — przyjęto roboczo około 30 dni przed objawem; wartość do potwierdzenia.
-5. **Jak długo trwa okno korekty wpisu dzienniczka?** — zasada jest przesądzona i wspólna z lekami (FR-004/FR-009); nieustalona pozostaje sama miara. Przy leku warunek jest zdarzeniowy, przy wpisie dzienniczka musi być czasowy, bo wpis zasila złożone pytanie natychmiast. Właściciel: użytkowniczka.
+5. ~~**Jak długo trwa okno korekty wpisu dzienniczka?**~~ — ROZSTRZYGNIĘTE 2026-10-05 (issue #4): 24 godziny od chwili zapisu, zegarem serwera, wspólne dla wpisów dzienniczka, leków i okresów dawkowania; warunek zdarzeniowy dla leku odpada. Szczegóły: `prd.md`, `## Open Questions`, pytanie 5.
 
 ## Seed idea (verbatim)
 
@@ -81,18 +81,22 @@ Dane zdrowotne są danymi wrażliwymi — konsekwencje dla prywatności zapisane
 ## Success Criteria
 
 ### Primary
+
 - Użytkowniczka po zalogowaniu dodaje pojedynczo przyjmowane leki (wybierając substancję czynną ze słownika) i po dodaniu leku kolidującego z już zapisanym widzi ostrzeżenie bez proszenia o nie.
 - Użytkowniczka zapisuje w dzienniczku wpis o samopoczuciu z datą i godziną, wybierając objaw z zamkniętej listy, a aplikacja sama składa pytanie do lekarza zestawiające ten objaw z okresami dawkowania przyjmowanych leków.
 - Użytkowniczka przed wizytą otwiera sekcję "Do omówienia z lekarzem" i widzi w jednym miejscu możliwe kolizje oraz gotowe pytania o zbieżność objawów z okresami dawkowania.
 
 ### Secondary
+
 - Oś czasu: objawy i leki zestawione w czasie, w formie wizualnej albo raportu do wygenerowania. (Pierwotne "podsumowanie na wizytę" zostało podniesione do wymagań obowiązkowych jako FR-011.)
 
 ### Guardrails
+
 - Prywatność danych zdrowotnych: leki i wpisy jednej osoby nie są widoczne dla nikogo innego ani nie opuszczają systemu.
 - Brak ostrzeżenia nie oznacza „bezpieczne”. Tabela reguł jest z założenia niepełna i produkt musi mówić to wprost — fałszywe poczucie bezpieczeństwa jest gorsze niż brak narzędzia.
 
 ### Pierwsza sesja — przepływ MVP
+
 1. Rejestracja z jednorazową, świadomą akceptacją warunków korzystania (zapisana data i wersja dokumentu); treść mówi wprost: narzędzie informacyjne wspierające rozmowę z lekarzem, nie diagnoza, nie podstawa do zmiany dawkowania.
 2. Logowanie.
 3. Dodanie pojedynczo przyjmowanych leków — wybór substancji czynnej ze słownika.
@@ -104,7 +108,9 @@ Dane zdrowotne są danymi wrażliwymi — konsekwencje dla prywatności zapisane
 Nota o charakterze informacyjnym występuje w dwóch warstwach: świadoma akceptacja przy rejestracji (ślad: data + wersja) oraz stała linijka przy każdym ostrzeżeniu. Bez modalu przy każdym wejściu — po kilku logowaniach przestaje być czytany.
 
 ### Zakres przycięty w tej fazie
+
 Zakres urósł podczas fazy 3 (trzy tabele reguł + zestawianie objawów) i został świadomie przycięty. Przyjęte cięcia:
+
 - Niedobory (substancja → wyczerpywany składnik) przesunięte do wersji drugiej — najsłabsze powiązanie z dzienniczkiem, najmniejsza liczba leków, mechanizm i tak powstaje przy dwóch pozostałych regułach.
 - Lek wybierany po substancji czynnej ze słownika zamiast po nazwie handlowej — zdejmuje z MVP mapowanie nazw handlowych na substancje czynne.
 - Zamknięta lista objawów zamiast wolnego tekstu — warunek działania zestawiania.
@@ -117,15 +123,18 @@ Acknowledged on 2026-09-15: pierwsza wersja szacowana na 4–5 tygodni przy ~8h 
 ## Functional Requirements
 
 ### Konto i dostęp
+
 - FR-001: Użytkowniczka może założyć konto, akceptując warunki korzystania. Priority: must-have
   > Socrates: Kontrargument rozważony: "przy jednej użytkowniczce konto to zbędny koszt, a dane zdrowotne na serwerze tworzą nowe ryzyko; zgoda przez checkbox i tak nie jest czytana". Rozstrzygnięcie: zostaje. Uwierzytelnianie jest wymogiem projektu, rejestracja otwiera drogę do pokazania prototypu bliskim, a akceptacja regulaminu jest spełniona niezależnie od tego, czy ktoś go przeczyta — to dwie różne sprawy.
 - FR-002: Użytkowniczka może zalogować się loginem i hasłem; odzyskiwanie dostępu jest częścią zakresu. Priority: must-have
   > Socrates: Kontrargument rozważony: "hasło pociąga za sobą reset hasła; stała sesja albo logowanie zewnętrzne byłyby prostsze". Rozstrzygnięcie: zostaje, świadomie, wraz z odzyskiwaniem dostępu w zakresie. Stała sesja odpada, bo docelowo dochodzą urządzenia mobilne. Login i hasło jest też najprostszą formą dla osób starszych, które są kierunkiem rozwoju produktu.
 
 ### Leki
+
 - FR-003: Użytkowniczka może dodać przyjmowany preparat, wybierając substancję czynną ze słownika. Priority: must-have
   > Socrates: Kontrargument rozważony: "preparaty wieloskładnikowe nie mieszczą się w założeniu jeden lek = jedna substancja". Rozstrzygnięcie: preparat od początku może mieć wiele substancji czynnych w strukturze danych, ale interfejs MVP przyjmuje jedną; dodawanie kolejnych dochodzi później, bez przeróbki reguł ani przeprowadzki danych. Zebranie słownika substancji uznane za wykonalne; odczyt substancji z ulotki to akceptowana, lekka uciążliwość. Nazwy handlowe — dalszy rozwój.
 - FR-004: Użytkowniczka może zmienić dawkowanie leku, co zamyka bieżący okres dawkowania i otwiera nowy; lek pozostaje jedną pozycją na liście z historią okresów od–do. Priority: must-have
+
   > Socrates: Kontrargument rozważony: "edycja bez historii niszczy zbieżności w czasie — podmiana leku lub dawki sprawia, że wcześniejsze zestawienia z objawami przestają być prawdziwe". Rozstrzygnięcie: przyjęte i rozszerzone przez użytkowniczkę — zmiana dawkowania jest zmianą istotną, bo może wpływać na objawy. Wybrany wariant: pełna historia okresów dawkowania (od–do plus dawka) już w MVP, mimo kosztu ~8–15h ponad wariant minimalny. Uzasadnienie użytkowniczki: to jest rdzeń produktu; dorobienie później oznaczałoby przeróbkę FR-010 i podsumowania na wizytę; struktura okresów jest gotową podstawą pod przyszłe wykresy w czasie.
   > Konsekwencja: zestawianie objawów (FR-010) i podsumowanie na wizytę (FR-011) operują na okresach dawkowania, nie na samym fakcie przyjmowania leku — co umożliwia zdanie "objaw pojawił się po zwiększeniu dawki". Substancja czynna pozostaje niemodyfikowalna: zmiana substancji to zakończenie leku i dodanie nowego.
 
@@ -133,23 +142,27 @@ Acknowledged on 2026-09-15: pierwsza wersja szacowana na 4–5 tygodni przy ~8h 
   > Socrates: Kontrargument rozważony: "trwałe usunięcie jest prostsze". Rozstrzygnięcie: odrzucone — usunięcie kasuje kontekst dla wcześniejszych objawów. Odstawiony lek znika z listy aktualnych, ale zostaje w historii i nadal tłumaczy dawne wpisy.
 
 ### Ostrzeżenia
+
 - FR-006: Użytkowniczka po dodaniu leku widzi przy nim dyskretny znacznik możliwej kolizji, a pełną treść informacji w szczegółach leku. Priority: must-have
   > Socrates: Kontrargumenty rozważone: informacja przychodzi po fakcie (lek jest już przepisany), niepełna tabela daje fałszywe poczucie kontroli, a powtarzane ostrzeżenia zlewają się w szum. Rozstrzygnięcie: forma ma być informacyjna, nie alarmowa — bez czerwieni, bez okna blokującego, język "może wchodzić w interakcję, w razie niepokoju skonsultuj z lekarzem lub farmaceutą" zamiast zakazu. Znacznik przy leku plus treść w szczegółach zamiast banera na liście.
 - FR-007: Użytkowniczka widzi notę o charakterze informacyjnym przy każdej informacji o kolizji. Priority: must-have
   > Socrates: Kontrargument rozważony: "powtarzana nota rozmywa treść, a regulamin już to załatwił". Rozstrzygnięcie: zostaje. Akceptacja regulaminu jest zapisem prawnym, a linijka przy informacji działa poznawczo — pada tam, gdzie pada twierdzenie o zdrowiu, także gdy ekran ogląda ktoś inny.
 
 ### Dzienniczek
+
 - FR-008: Użytkowniczka może dodać wpis o samopoczuciu z datą i godziną wypełnionymi domyślnie na "teraz" i możliwymi do cofnięcia, zaznaczając jeden lub więcej objawów z zamkniętej listy, opcjonalnie podając nasilenie i własną notatkę. Priority: must-have
   > Socrates: Kontrargumenty rozważone: zamknięta lista nie obejmie tego, co użytkowniczka faktycznie czuje; brakuje nasilenia; ręczne wpisywanie daty to zbędne tarcie. Rozstrzygnięcie: zamknięta lista zostaje jako realny wybór dla pierwszej wersji, ale problem języka rozwiązany dwojako — potoczne określenia jako słowa wyszukiwania przy pozycjach listy ("sraczka" podpowiada "biegunka"), a własne słowa użytkowniczki trafiają do notatki, która nie uczestniczy w regule. Nasilenie dodane jako pole opcjonalne, bo na wizycie odróżnia "mdłości raz, łagodne" od "mdłości codziennie, silne". Data i godzina wypełniane domyślnie, bo wpisy często powstają wieczorem o porannym objawie — zła godzina fałszowałaby zbieżność z okresem dawkowania.
 - FR-009: Użytkowniczka może poprawić wpis dzienniczka w oknie korekty, na tej samej zasadzie co wpis o leku (FR-004): po zamknięciu okna rdzeń wpisu — data, godzina, objawy, nasilenie — jest niemodyfikowalny, a edytowalna zostaje notatka. Usunięcie wpisu jest zarezerwowane dla pozycji dodanych przez pomyłkę, analogicznie do FR-005. Priority: must-have
   > Socrates: Kontrargument rozważony: "swobodna edycja i usuwanie po fakcie dają obraz ładniejszy niż prawdziwy — dzienniczek jest wart tyle, ile jego kompletność". Rozstrzygnięcie: przyjęte; wpisy dzienniczka obejmuje ta sama zasada co leki, dla spójności zachowania w całej aplikacji i dla ochrony obrazu pokazywanego lekarzowi. Warunek zamknięcia okna jest jedyną różnicą wymagającą doprecyzowania: przy leku jest zdarzeniowy ("dopóki nie istnieje wpis objawu po dacie rozpoczęcia"), a wpis dzienniczka zasila złożone pytanie natychmiast, więc potrzebny jest warunek czasowy — patrz ## Open Questions.
 - FR-010: Użytkowniczka po zapisaniu objawu widzi gotowe pytanie do lekarza, złożone z okresów dawkowania przyjmowanych leków i wpisów o tym objawie, z pierwszeństwem dla leków rozpoczętych lub zmienionych w oknie czasowym poprzedzającym objaw. Priority: must-have
+
   > Socrates: Kontrargumenty rozważone, wszystkie uznane za trafne: częste objawy występują wśród działań niepożądanych niemal każdego leku, więc zestawienie trafiające zawsze przestaje znaczyć cokolwiek; objaw może mieć przyczynę niezwiązaną z lekami (infekcja, stres, niewyspanie); pokazanie związku jest o krok od samodzielnego odstawienia leku, czego produkt ma nie sugerować. Rozstrzygnięcie: wszystkie trzy trafiają w różnicę między zbieżnością a przyczyną. Wynikiem nie jest lista podejrzanych leków, tylko zdanie do rozmowy z lekarzem ("od 12 marca przyjmuję X, od 20 marca zwiększona dawka, od 21 marca notuję mdłości — czy to może mieć związek?"). Okno czasowe oparte na okresach dawkowania z FR-004 usuwa większość szumu; leki spoza okna pozostają dostępne pod zwinięciem.
 
 - FR-012: Komunikaty produktu nigdy nie stwierdzają, że lek powoduje objaw (tylko "może mieć związek"), nigdy nie sugerują odstawienia leku ani zmiany dawki i nigdy nie porządkują leków według stopnia podejrzenia. Priority: must-have
   > Socrates: Zasada przyjęta wprost przez użytkowniczkę jako wymaganie, nie wytyczna — ma podlegać sprawdzeniu, bo dotyczy jedynego miejsca, w którym produkt mógłby wyrządzić szkodę.
 
 ### Podsumowanie
+
 - FR-011: Użytkowniczka może wyświetlić sekcję "Do omówienia z lekarzem", zbierającą wykryte możliwe kolizje i złożone pytania o zbieżność objawów z okresami dawkowania, jako podsumowanie na wizytę. Priority: must-have
   > Socrates: Kontrargumenty rozważone: sekcja duplikuje treść widoczną przy lekach; lekarz nie przeczyta długiego zestawienia. Rozstrzygnięcie: podniesiona z nice-to-have do must-have. Produkt istnieje dla momentu wizyty, a po zmianie kształtu FR-010 sekcja nie liczy niczego nowego — zbiera gotowe zdania, więc koszt jest mały w stosunku do tego, co domyka.
 
@@ -172,10 +185,12 @@ Reguła świadomie nie rozstrzyga przyczyny. Zbieżność w czasie nie jest przy
 - Produkt jest aplikacją webową, która pozostaje czytelna i w pełni używalna na ekranie telefonu — tam powstaje większość wpisów o samopoczuciu.
 
 ## Forward: tech-stack
+
 - Docelowo korzystanie również na urządzeniach mobilnych; MVP jest aplikacją webową działającą poprawnie na ekranie telefonu. Decyzja o formie (strona responsywna, aplikacja instalowalna, natywna) należy do etapu wyboru technologii.
 - Odrzucono stałą sesję jako formę utrzymania zalogowania, właśnie ze względu na przyszłe korzystanie z wielu urządzeń.
 
 ## Forward: technical-roadmap
+
 - Eksport własnych danych z aplikacji — uznany za potrzebny, świadomie odłożony poza pierwszą wersję.
 - Oś czasu: objawy i leki zestawione wizualnie lub jako raport; struktura okresów dawkowania przyjęta w FR-004 jest pod to gotowa.
 - Integracja z zewnętrznym źródłem danych o interakcjach — poza MVP.
@@ -186,6 +201,7 @@ Reguła świadomie nie rozstrzyga przyczyny. Zbieżność w czasie nie jest przy
 ## Non-Goals
 
 Funkcjonalne:
+
 - Brak integracji z zewnętrzną bazą interakcji — reguły pochodzą wyłącznie z tabeli dostarczonej razem z aplikacją.
 - Brak rozpoznawania nazw handlowych leków — użytkowniczka podaje substancję czynną odczytaną z ulotki.
 - Brak przypomnień o przyjęciu dawki — produkt służy rozumieniu zestawu leków, nie pilnowaniu rutyny.
@@ -193,6 +209,7 @@ Funkcjonalne:
 - Brak reguły niedoborów mikro- i makroskładników — przeniesiona do wersji drugiej.
 
 Niefunkcjonalne:
+
 - Brak trybu offline — wpis powstaje wyłącznie przy połączeniu z siecią.
 - Produkt nie jest kompletną bazą interakcji; tabela obejmuje kilkanaście par i leki faktycznie przyjmowane przez użytkowniczkę, a brak ostrzeżenia niczego nie dowodzi.
 - Brak formalnej zgodności ze standardami dostępności — czytelność na telefonie tak, certyfikowana dostępność nie w tej wersji.
@@ -201,6 +218,7 @@ Niefunkcjonalne:
 ## Quality cross-check
 
 Przeprowadzona 2026-09-15. Wszystkie elementy obecne, brak luk:
+
 - Kontrola dostępu — obecna (konto z logowaniem, płaski model ról).
 - Reguła biznesowa — obecna, jedno zdanie, z rozstrzygniętą domeną decyzji.
 - Artefakty projektu — obecne.
