@@ -562,12 +562,12 @@ Katalog (34 + 82 wiersze) ładowany raz ze stroną i filtrowany w przeglądarce.
 
 #### Automated
 
-- [x] 4.1 Migracje i sprawdzenia SQL z nowymi DOSAGE: `npx supabase db reset` + `npm run db:check`
-- [x] 4.2 `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`
-- [x] 4.3 Smoke z krokiem poprawy dawki przeciw lokalnej bazie: `npm run smoke`
+- [x] 4.1 Migracje i sprawdzenia SQL z nowymi DOSAGE: `npx supabase db reset` + `npm run db:check` — dd01073
+- [x] 4.2 `npm test`, `npm run lint`, `npm run typecheck`, `npm run build` — dd01073
+- [x] 4.3 Smoke z krokiem poprawy dawki przeciw lokalnej bazie: `npm run smoke` — dd01073
 
 #### Manual
 
-- [x] 4.4 Dodanie leku pokazuje „do kiedy” w komunikacie po zapisie
-- [x] 4.5 Pomyłka w zmianie dawki poprawiona w oknie; historia bez fałszywego okresu
-- [x] 4.6 Okres sprzed ponad 24 h bez odnośnika poprawy; ekran poprawy mówi, że okno zamknięte
+- [x] 4.4 Dodanie leku pokazuje „do kiedy” w komunikacie po zapisie — dd01073
+- [x] 4.5 Pomyłka w zmianie dawki poprawiona w oknie; historia bez fałszywego okresu — dd01073
+- [x] 4.6 Okres sprzed ponad 24 h bez odnośnika poprawy; ekran poprawy mówi, że okno zamknięte — dd01073
