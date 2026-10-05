@@ -508,6 +508,19 @@ Katalog (34 + 82 wiersze) ładowany raz ze stroną i filtrowany w przeglądarce.
 - Wzorce: `src/pages/api/medications/[id]/dosage.ts`, `src/components/medications/ChangeDosageForm.tsx`, `src/lib/copy/medications.ts:112-143`, `supabase/migrations/20260922120000_medication_schema.sql:106-216` (RLS), `:370-392` (strażnik usunięcia)
 - Checklista nowej tabeli: `context/foundation/test-plan.md` §6.4
 
+## Uzupełnienia po impl-review
+
+Zmiany wprowadzone w triage'u `reviews/impl-review.md` (2026-10-05). Mają pierwszeństwo przed brzmieniem faz powyżej.
+
+- **F1 (faza 1)**: przy zamkniętym oknie strażnik okresów przyjmuje zamknięcie trwającego okresu (`ended_on` z pustego na datę) i strażnik INSERT przyjmuje nowy okres tylko z datą w `[dziś − 14 dni, dziś]` czasu polskiego — te same granice co `change_dosage` (DP003, DP007). Przesądza za S-04: odstawienie zamyka okres najwyżej 14 dni wstecz. Sprawdzenie: WINDOW 6 w `correction_window_checks.sql`.
+- **F2 (faza 1)**: usunięcie okresu dawkowania pyta o okno leku, nie okresu. Świeży okres po zmianie dawki poprawia się przez `correct_dosage_period`, nie usuwa. Sprawdzenie: WINDOW 2.
+- **F3 (faza 4)**: DP010 porównuje z okresem bezpośrednio przed i bezpośrednio po. Klucz komunikatu: `sameAsAdjacentPeriod`.
+- **F5 (faza 3)**: przyciski nasilenia są w bloku „Wybrane objawy”, nie pod objawem na liście — zgodnie z brzmieniem fazy 3.
+- **F7 (faza 3)**: pole daty i godziny nie ma `max`; przyszłą godzinę odrzuca baza (`SE002`).
+- **F9 (fazy 3 i 4)**: `28000` w `/api/journal` daje 401 (nie 422), spójnie z brakiem sesji. Sukces poprawy dawki przekierowuje na `/leki/{id}?poprawiono=<periodId>` (nie `=1`) — uuid nie jest daną zdrowotną; baner i smoke z niego korzystają.
+- **F8**: stronicowanie listy dzienniczka odłożone do S-06 — `follow-ups/review-fixes.md`.
+- **Po triage'u (test ręczny)**: komunikat po zapisie wpisu wymienia jego objawy (`{objawy}` w `JOURNAL_COPY.list.saved*`, najwyżej trzy nazwy i „i jeszcze N”), bo przy kilku wpisach z rzędu nie było wiadomo, którego dotyczy — ten sam problem co przy lekach, gdzie komunikat podaje nazwę leku.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.

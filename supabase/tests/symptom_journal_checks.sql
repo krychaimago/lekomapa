@@ -175,8 +175,8 @@ exception when sqlstate 'P0001' then
 end;
 $$;
 
--- Runs one statement and returns 'ok' or '<code>: <message>' when it fails with exactly p_code. Any other error
--- stops the file.
+-- Runs one statement and returns 'ok' or '<code>: <message>' when it fails with exactly p_code. Only the codes the
+-- journal raises are caught, each by name; any other error, or a named one other than p_code, stops the file.
 create function pg_temp.try_code(p_sql text, p_code text)
 returns text
 language plpgsql
@@ -188,12 +188,14 @@ begin
   begin
     execute p_sql;
     return 'ok';
-  exception when others then
-    get stacked diagnostics v_state = returned_sqlstate, v_message = message_text;
-    if v_state is distinct from p_code then
-      raise;
-    end if;
-    return v_state || ': ' || v_message;
+  exception
+    when sqlstate '28000' or sqlstate 'SE001' or sqlstate 'SE002' or sqlstate 'SE003' or sqlstate 'SE004'
+         or sqlstate 'SE005' then
+      get stacked diagnostics v_state = returned_sqlstate, v_message = message_text;
+      if v_state is distinct from p_code then
+        raise;
+      end if;
+      return v_state || ': ' || v_message;
   end;
 end;
 $$;

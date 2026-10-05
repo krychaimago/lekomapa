@@ -20,10 +20,11 @@
 --   DP005  the variant belongs to another product or composition (assert_dosage_period_variant, the same rule as
 --          change_dosage and the trigger);
 --   DP004  the same dose (case and outer spaces ignored, as in change_dosage) and the same variant: nothing to correct;
---   DP010  the dose and variant equal those of the period directly before. Such a "correction" fixes no typo: it
---          leaves in the history a change that never happened (two consecutive periods with the same dose). That is
---          undoing a dose change, which the product does not support yet (debt "cofnięcie zmiany" at S-06 in the
---          roadmap). The first period of a medication has no predecessor, so DP010 never applies to it.
+--   DP010  the dose and variant equal those of the period directly before or directly after. Such a "correction"
+--          fixes no typo: it leaves in the history two consecutive periods with the same dose, so the dose change
+--          between them disappears. That is undoing a dose change, which the product does not support yet (debt
+--          "cofnięcie zmiany" at S-06 in the roadmap). Example for the period after: P1 "1 tabletka", P2 "2 tabletki",
+--          both within their windows; correcting P1 to "2 tabletki" is DP010 just as correcting P2 to "1 tabletka".
 --
 -- Why security invoker: the function reads and writes as the caller, so RLS and every guard on dosage_periods
 -- (history guard, variant trigger, check constraints) still apply to the update; the function adds named errors on
@@ -43,10 +44,10 @@ as $$
 declare
   v_user_id uuid := auth.uid();
   v_period record;
-  v_previous record;
+  v_neighbour record;
   v_current_variant uuid;
   v_variant uuid;
-  v_previous_variant uuid;
+  v_neighbour_variant uuid;
 begin
   if v_user_id is null then
     raise exception using
@@ -97,26 +98,36 @@ begin
       message = 'To dawkowanie jest już zapisane w tym okresie.';
   end if;
 
-  -- The period directly before: the latest start earlier than this period's start.
-  select dp.dose_text, dp.registry_product_id into v_previous
-    from public.dosage_periods dp
-   where dp.medication_id = v_period.medication_id
-     and dp.started_on < v_period.started_on
-   order by dp.started_on desc
-   limit 1;
-  if found then
-    v_previous_variant := case
+  -- The periods directly before and directly after: the latest start earlier and the earliest start later than this
+  -- period's start. The first period has no predecessor and the ongoing one no successor; a missing neighbour is
+  -- simply not compared.
+  for v_neighbour in
+    (select dp.dose_text, dp.registry_product_id
+       from public.dosage_periods dp
+      where dp.medication_id = v_period.medication_id
+        and dp.started_on < v_period.started_on
+      order by dp.started_on desc
+      limit 1)
+    union all
+    (select dp.dose_text, dp.registry_product_id
+       from public.dosage_periods dp
+      where dp.medication_id = v_period.medication_id
+        and dp.started_on > v_period.started_on
+      order by dp.started_on asc
+      limit 1)
+  loop
+    v_neighbour_variant := case
       when v_period.composition_source = 'registry'
-        then coalesce(v_previous.registry_product_id, v_period.registry_medication_id)
-      else v_previous.registry_product_id
+        then coalesce(v_neighbour.registry_product_id, v_period.registry_medication_id)
+      else v_neighbour.registry_product_id
     end;
-    if lower(btrim(p_dose_text)) = lower(btrim(v_previous.dose_text))
-       and v_variant is not distinct from v_previous_variant then
+    if lower(btrim(p_dose_text)) = lower(btrim(v_neighbour.dose_text))
+       and v_variant is not distinct from v_neighbour_variant then
       raise exception using
         errcode = 'DP010',
-        message = 'To dawkowanie jest takie samo jak w poprzednim okresie. Taka poprawa cofnęłaby zmianę dawkowania, a cofnięcia zmiany nie da się jeszcze zapisać.';
+        message = 'To dawkowanie jest takie samo jak w okresie bezpośrednio przed tym okresem albo po nim. Taka poprawa usunęłaby z historii zmianę dawkowania, a cofnięcia zmiany nie da się jeszcze zapisać.';
     end if;
-  end if;
+  end loop;
 
   -- Dates untouched: the period keeps its place in the history. An empty dose fails on dosage_periods_dose_text_check.
   update public.dosage_periods
@@ -127,7 +138,7 @@ end;
 $$;
 
 comment on function public.correct_dosage_period(uuid, text, uuid) is
-  'Corrects the dose (and the registry variant) of one of the caller''s dosage periods while its correction window is open (24 hours from saving the period). Example: a dose change saved on Friday 9:00 as "2 tabletki" by mistake can be corrected to "1 tabletka" until Saturday 9:00; the period keeps its dates and no new period appears. p_registry_product_id: another variant of the same registry product (assert_dosage_period_variant); null keeps the current variant; must be null for a medication from a leaflet. Errors, checked in this order: 28000 = no signed-in session, DP008 = no such period of this account, DP009 = correction window of the period closed, DP005 = variant of another product or composition, DP004 = same dose (case and outer spaces ignored) and same variant, DP010 = same dose and variant as the period directly before (undoing a change, not supported yet); an empty dose fails on dosage_periods_dose_text_check.';
+  'Corrects the dose (and the registry variant) of one of the caller''s dosage periods while its correction window is open (24 hours from saving the period). Example: a dose change saved on Friday 9:00 as "2 tabletki" by mistake can be corrected to "1 tabletka" until Saturday 9:00; the period keeps its dates and no new period appears. p_registry_product_id: another variant of the same registry product (assert_dosage_period_variant); null keeps the current variant; must be null for a medication from a leaflet. Errors, checked in this order: 28000 = no signed-in session, DP008 = no such period of this account, DP009 = correction window of the period closed, DP005 = variant of another product or composition, DP004 = same dose (case and outer spaces ignored) and same variant, DP010 = same dose and variant as the period directly before or directly after (undoing a change, not supported yet); an empty dose fails on dosage_periods_dose_text_check.';
 
 revoke execute on function public.correct_dosage_period(uuid, text, uuid) from public, anon;
 grant execute on function public.correct_dosage_period(uuid, text, uuid) to authenticated;

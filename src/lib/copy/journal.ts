@@ -9,8 +9,11 @@ export const JOURNAL_COPY = {
     title: "Dzienniczek",
     add: "Nowy wpis",
     empty: "Nie masz jeszcze żadnego wpisu. Zapisz pierwszy, gdy coś poczujesz.",
-    saved: "Zapisano wpis.",
-    savedWithDeadline: "Zapisano wpis. Możesz go poprawić do {do}.",
+    // `{objawy}` lists the symptoms of the saved entry ("ból głowy, nudności"), so the message says which entry it
+    // means when several were saved in a row. Past three names the rest is counted with savedMoreSymptoms.
+    saved: "Zapisano wpis: {objawy}.",
+    savedWithDeadline: "Zapisano wpis: {objawy}. Możesz go poprawić do {do}.",
+    savedMoreSymptoms: "i jeszcze {liczba}",
     correctableUntil: "Możesz poprawić do {do}",
     noteLabel: "Notatka",
     loadError: "Nie udało się wczytać dzienniczka. Odśwież stronę.",

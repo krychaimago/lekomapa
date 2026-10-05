@@ -2,7 +2,9 @@
 --   WINDOW 1: medication and its composition — 23 h 59 min after adding, a core change passes; 24 h after adding it
 --             is refused with the named guard message.
 --   WINDOW 2: dosage period — the same boundary measured on the period's own created_at; a period opened by a dose
---             change on a medication added 3 days ago can be corrected, the 3-day-old period cannot.
+--             change on a medication added 3 days ago can be corrected, the 3-day-old period cannot. Deleting a
+--             period follows the window of the medication: refused for the fresh period, allowed for a medication
+--             added by mistake.
 --   WINDOW 3: created_at is the server clock — a client cannot insert a row with created_at in the past, nor change
 --             created_at later (medications and dosage_periods).
 --   WINDOW 4: inserts follow the window — with the medication window 24 h old, adding a substance, a period before
@@ -11,6 +13,9 @@
 --             medication is refused, into an open one passes.
 --   WINDOW 5: correction_window_ends_at(row) read by authenticated is created_at + 24 h, for a medication and for
 --             a dosage period.
+--   WINDOW 6: with both windows closed, a direct write keeps the date bounds of change_dosage — closing the ongoing
+--             period or starting a new one more than 14 days back or in the future is refused; exactly 14 days back
+--             passes (the same pair of writes change_dosage makes).
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`), or this file alone:
 -- `node scripts/db-checks.mjs supabase/tests/correction_window_checks.sql`. The runner (scripts/db-checks.mjs) passes
@@ -242,6 +247,10 @@ begin
     pg_temp.try_exec('update public.dosage_periods set dose_text = ''2 tabletki rano'' where id = $1', v_new));
   perform pg_temp.assert_blocked('2', 'correcting dose_text of the period saved 3 days ago',
     pg_temp.try_exec('update public.dosage_periods set dose_text = ''1 tabletka wieczorem'' where id = $1', v_old), 'dose_text');
+  -- Deleting follows the window of the medication: the period saved today cannot be deleted, otherwise the medication
+  -- would be left with no ongoing period after the old one was closed.
+  perform pg_temp.assert_blocked('2', 'deleting the period saved today on a 3-day-old medication',
+    pg_temp.try_exec('delete from public.dosage_periods where id = $1', v_new), 'usunąć okresu dawkowania');
   perform pg_temp.act_as_postgres();
 
   -- The boundary on the period's own created_at.
@@ -259,7 +268,15 @@ begin
     raise exception 'WINDOW 2 FAILED: a refused change of a period was saved anyway';
   end if;
 
-  raise notice 'WINDOW 2 OK: a period saved today on a 3-day-old medication can be corrected, the 3-day-old period cannot; the period window passes at 23 h 59 min and refuses at 24 h';
+  -- Counterexample: a medication added by mistake (its window open) can have its period deleted.
+  perform pg_temp.act_as(v_a);
+  v_med := public.add_medication_from_leaflet('Window 2 mistaken medication', 'ibuprofen', false, '1 tabletka', v_today - 2);
+  perform pg_temp.assert_ok('2', 'deleting the period of a medication within its window',
+    pg_temp.try_exec(format('delete from public.dosage_periods where medication_id = %L and id = $1', v_med),
+      (select dp.id from public.dosage_periods dp where dp.medication_id = v_med)));
+  perform pg_temp.act_as_postgres();
+
+  raise notice 'WINDOW 2 OK: a period saved today on a 3-day-old medication can be corrected but not deleted, the 3-day-old period cannot be corrected; the period window passes at 23 h 59 min and refuses at 24 h; a period of a medication within its window can be deleted';
 end;
 $$;
 
@@ -435,6 +452,64 @@ begin
   end if;
 
   raise notice 'WINDOW 5 OK: correction_window_ends_at read by authenticated gives created_at + 24 h for a medication and a dosage period';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- WINDOW 6: direct writes with the windows closed keep the date bounds of change_dosage
+-- ---------------------------------------------------------------------------
+-- Medication ...0601 of account A (leaflet) with one ongoing period ...0602 since today-200; the medication and the
+-- period were saved 200 days ago. The refused inserts would also overlap the ongoing period; the refusals still come
+-- from the insert guard, a before trigger that runs before the no-overlap constraint is checked.
+
+do $$
+declare
+  v_a constant uuid := '00000000-0000-4000-9300-000000000a00';
+  v_med constant uuid := '00000000-0000-4000-9300-000000000601';
+  v_period constant uuid := '00000000-0000-4000-9300-000000000602';
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  c_end constant text := 'update public.dosage_periods set ended_on = %L where id = $1';
+  c_period constant text :=
+    'insert into public.dosage_periods (id, medication_id, dose_text, started_on) values ($1, ''00000000-0000-4000-9300-000000000601'', ''5 tabletek'', %L)';
+  v_end_old text;
+  v_end_future text;
+  v_start_old text;
+  v_start_future text;
+  v_end_bound text;
+  v_start_bound text;
+begin
+  insert into public.medications (id, user_id, product_name, composition_source)
+  values (v_med, v_a, 'Window 6 medication', 'leaflet');
+  insert into public.dosage_periods (id, medication_id, dose_text, started_on)
+  values (v_period, v_med, '1 tabletka', v_today - 200);
+  perform pg_temp.backdate('medications', v_med, interval '200 days');
+  perform pg_temp.backdate('dosage_periods', v_period, interval '200 days');
+
+  perform pg_temp.act_as(v_a);
+  v_end_old := pg_temp.try_exec(format(c_end, v_today - 120), v_period);
+  v_end_future := pg_temp.try_exec(format(c_end, v_today + 1), v_period);
+  v_start_old := pg_temp.try_exec(format(c_period, v_today - 15), '00000000-0000-4000-9300-000000000603');
+  v_start_future := pg_temp.try_exec(format(c_period, v_today + 1), '00000000-0000-4000-9300-000000000604');
+  perform pg_temp.act_as_postgres();
+
+  perform pg_temp.assert_blocked('6', 'closing the ongoing period 120 days back', v_end_old, 'ended_on');
+  perform pg_temp.assert_blocked('6', 'closing the ongoing period tomorrow', v_end_future, 'ended_on');
+  perform pg_temp.assert_blocked('6', 'adding a period starting 15 days back', v_start_old, 'dodać okresu dawkowania');
+  perform pg_temp.assert_blocked('6', 'adding a period starting tomorrow', v_start_future, 'dodać okresu dawkowania');
+  if (select count(*) from public.dosage_periods where medication_id = v_med) <> 1
+     or (select ended_on from public.dosage_periods where id = v_period) is not null then
+    raise exception 'WINDOW 6 FAILED: a refused write changed the history of the medication';
+  end if;
+
+  -- Counterexample: exactly 14 days back, the bound change_dosage allows, both writes pass.
+  perform pg_temp.act_as(v_a);
+  v_end_bound := pg_temp.try_exec(format(c_end, v_today - 14), v_period);
+  v_start_bound := pg_temp.try_exec(format(c_period, v_today - 14), '00000000-0000-4000-9300-000000000605');
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_ok('6', 'closing the ongoing period 14 days back', v_end_bound);
+  perform pg_temp.assert_ok('6', 'adding a period starting 14 days back', v_start_bound);
+
+  raise notice 'WINDOW 6 OK: with the windows closed, closing a period or starting one more than 14 days back or in the future is refused; exactly 14 days back passes';
 end;
 $$;
 

@@ -83,6 +83,19 @@ const deadlineOf = (entry: SymptomEntry): string | null =>
 
 const addedEntry = addedId === null ? undefined : entries.find((entry) => entry.id === addedId);
 const addedDeadline = addedEntry ? deadlineOf(addedEntry) : null;
+// At most three symptom names in the message; a longer entry is shown in full on its card, highlighted below.
+const SAVED_NAMES_SHOWN = 3;
+const addedSymptoms = addedEntry
+  ? [
+      addedEntry.items
+        .slice(0, SAVED_NAMES_SHOWN)
+        .map((item) => item.name)
+        .join(", "),
+      ...(addedEntry.items.length > SAVED_NAMES_SHOWN
+        ? [copy.savedMoreSymptoms.replace("{liczba}", String(addedEntry.items.length - SAVED_NAMES_SHOWN))]
+        : []),
+    ].join(" ")
+  : "";
 ---
 
 <AppLayout title={copy.title}>
@@ -96,7 +109,10 @@ const addedDeadline = addedEntry ? deadlineOf(addedEntry) : null;
 
     {addedEntry && (
       <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
-        {addedDeadline ? copy.savedWithDeadline.replace("{do}", addedDeadline) : copy.saved}
+        {(addedDeadline ? copy.savedWithDeadline.replace("{do}", addedDeadline) : copy.saved).replace(
+          "{objawy}",
+          addedSymptoms,
+        )}
       </p>
     )}
 

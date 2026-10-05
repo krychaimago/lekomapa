@@ -26,10 +26,11 @@
 --              medication was added with included); nothing for a leaflet medication or another account's medication.
 --   DOSAGE 16: correct_dosage_period (S-05, F6a) — a correction inside the period's window rewrites the dose and
 --              variant of the same period, keeps its dates and adds no period; the first period of a medication can
---              be corrected (no predecessor, so no DP010). 23 h 59 min after saving it passes; 24 h after saving it is
+--              be corrected (no predecessor). 23 h 59 min after saving it passes; 24 h after saving it is
 --              DP009 (also for the same dose: DP009 comes before DP004). DP008 for another account's period, DP005
 --              for a variant of another product, DP004 for the same dose and variant, DP010 for the dose and variant
---              of the period directly before (the same dose with another variant passes), 28000 without a session.
+--              of the period directly before or directly after (the same dose with another variant passes), 28000
+--              without a session.
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`), or this file alone:
 -- `node scripts/db-checks.mjs supabase/tests/dosage_change_checks.sql`. The runner (scripts/db-checks.mjs) passes it
@@ -1074,7 +1075,15 @@ begin
   perform pg_temp.assert_period_state('16', 'the previous dose with another variant', v_new,
     format('1 tabletka wieczorem | [%s, …) | %s | %s', v_today - 3, v_alpha_400, v_med));
 
-  raise notice 'DOSAGE 16 OK (window open): a correction rewrites the dose and variant of the same period, keeps its dates and adds no period, also for the first period; DP004, DP010, DP005, DP008 and 28000 change nothing; the previous dose with another variant passes';
+  -- DP010 for the period directly after: the first period corrected to the dose and variant of the next one would
+  -- erase the change between them, so it is refused too.
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_correct(v_first, ' 1 TABLETKA wieczorem ', v_alpha_400);
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('16', 'the dose and variant of the next period', v_result, 'DP010');
+  perform pg_temp.assert_period_state('16', 'the dose and variant of the next period (period before)', v_first, v_first_state);
+
+  raise notice 'DOSAGE 16 OK (window open): a correction rewrites the dose and variant of the same period, keeps its dates and adds no period, also for the first period; DP004, DP010 (previous and next period), DP005, DP008 and 28000 change nothing; the previous dose with another variant passes';
 end;
 $$;
 

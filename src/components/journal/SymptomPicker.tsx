@@ -26,9 +26,6 @@ interface Props {
   onSeverityChange: (symptomId: string, severity: SymptomSeverity | null) => void;
 }
 
-const severityLabel = (value: SymptomSeverity | null) =>
-  SYMPTOM_SEVERITIES.find((severity) => severity.value === value)?.label ?? null;
-
 const optionClass = cn(
   "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 text-card-foreground",
   "has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary",
@@ -49,8 +46,8 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
 
   const selectedById = new Map(selected.map((item) => [item.symptomId, item]));
 
-  // Severity sits right under the symptom it belongs to, so the order on screen follows the order of choice:
-  // symptom first, then how strong. The buttons wrap to a new row on a narrow screen instead of squeezing a word.
+  // Severity sits in the "selected" block, under the symptom it belongs to, so it stays reachable while a search hides
+  // that symptom from the list. The buttons wrap to a new row on a narrow screen instead of squeezing a word.
   const severityGroup = (item: SelectedSymptom, symptom: PickerSymptom) => (
     <div role="group" aria-label={`${copy.severityLegend}: ${symptom.name}`} className="flex flex-col gap-2 px-3 pb-3">
       <span className="text-muted-foreground text-sm">
@@ -81,13 +78,13 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
   );
 
   const option = (symptom: PickerSymptom) => {
-    const item = selectedById.get(symptom.id);
+    const checked = selectedById.has(symptom.id);
     return (
-      <li key={symptom.id} className={cn("rounded-lg", item && "border-primary bg-card border")}>
-        <label className={cn(optionClass, item && "border-0 ring-0 has-[:checked]:ring-0")}>
+      <li key={symptom.id}>
+        <label className={optionClass}>
           <input
             type="checkbox"
-            checked={item !== undefined}
+            checked={checked}
             onChange={() => {
               onToggle(symptom.id);
             }}
@@ -95,7 +92,6 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
           />
           <span className="first-letter:uppercase">{symptom.name}</span>
         </label>
-        {item && severityGroup(item, symptom)}
       </li>
     );
   };
@@ -120,27 +116,25 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
               return (
                 <li
                   key={item.symptomId}
-                  className="border-primary bg-card text-card-foreground flex items-center justify-between gap-3 rounded-lg border py-1 pr-1 pl-3"
+                  className="border-primary bg-card text-card-foreground flex flex-col rounded-lg border"
                 >
-                  <span className="font-medium first-letter:uppercase">
-                    {symptom.name}
-                    {severityLabel(item.severity) && (
-                      <span className="text-muted-foreground font-normal"> · {severityLabel(item.severity)}</span>
-                    )}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      onToggle(item.symptomId);
-                    }}
-                  >
-                    <X aria-hidden="true" />
-                    <span className="sr-only">
-                      {copy.removeSymptom}: {symptom.name}
-                    </span>
-                  </Button>
+                  <div className="flex items-center justify-between gap-3 py-1 pr-1 pl-3">
+                    <span className="font-medium first-letter:uppercase">{symptom.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        onToggle(item.symptomId);
+                      }}
+                    >
+                      <X aria-hidden="true" />
+                      <span className="sr-only">
+                        {copy.removeSymptom}: {symptom.name}
+                      </span>
+                    </Button>
+                  </div>
+                  {severityGroup(item, symptom)}
                 </li>
               );
             })}

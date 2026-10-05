@@ -109,7 +109,6 @@ export default function NewEntryForm({ symptoms, terms, defaultOccurred, minOccu
               type="datetime-local"
               defaultValue={defaultOccurred}
               min={minOccurred}
-              max={defaultOccurred}
               required
               aria-describedby="occurredLocal-hint"
               onChange={() => {

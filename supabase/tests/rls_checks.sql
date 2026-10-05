@@ -418,13 +418,14 @@ begin
   end if;
   perform pg_temp.assert_history_guard_message('5', '5c started_on change', v_message, 'started_on');
 
-  -- 5d: zamknięcie trwającego okresu musi przejść zawsze
+  -- 5d: zamknięcie trwającego okresu przechodzi z datą w granicach change_dosage (najwyżej 14 dni wstecz, nie w
+  -- przyszłości) — granice mierzy WINDOW 6 w correction_window_checks.sql
   update public.dosage_periods
-     set ended_on = date '2026-06-01'
+     set ended_on = (now() at time zone 'Europe/Warsaw')::date - 1
    where id = '00000000-0000-4000-8000-000000000004';
 
   if (select ended_on from public.dosage_periods where id = '00000000-0000-4000-8000-000000000004')
-     is distinct from date '2026-06-01' then
+     is distinct from (now() at time zone 'Europe/Warsaw')::date - 1 then
     raise exception 'SPRAWDZENIE 5 NIEUDANE: zamknięcie okresu datą końca nie zapisało się';
   end if;
 
@@ -555,8 +556,8 @@ $$;
 -- Uses its own medication (...0006) so its periods cannot collide with the
 -- periods of checks 3–7. Its rows are created after the savepoint and disappear
 -- with it. With the medication window closed, dosage_periods_guard_insert lets a
--- period through only at the end of the history: P1 is the first period and P2
--- starts after it, so both pass. A one-day period at the '[)' bound would be
+-- period through only at the end of the history and at most 14 days back: P1 is
+-- the first period and P2 starts after it, both within 14 days, so both pass. A one-day period at the '[)' bound would be
 -- started_on = d, ended_on = d + 1; here P2 starts on the day P1 ends.
 
 do $$
@@ -584,13 +585,13 @@ begin
     '00000000-0000-4000-8000-000000000007',
     '00000000-0000-4000-8000-000000000006',
     'check 19 dose A',
-    date '2026-01-01',
+    (now() at time zone 'Europe/Warsaw')::date - 10,
     null
   );
 
   -- 19b: closing P1 passes
   update public.dosage_periods
-     set ended_on = date '2026-04-01'
+     set ended_on = (now() at time zone 'Europe/Warsaw')::date - 5
    where id = '00000000-0000-4000-8000-000000000007';
   get diagnostics v_rows = row_count;
   if v_rows <> 1 then
@@ -603,7 +604,7 @@ begin
     '00000000-0000-4000-8000-000000000008',
     '00000000-0000-4000-8000-000000000006',
     'check 19 dose B',
-    date '2026-04-01',
+    (now() at time zone 'Europe/Warsaw')::date - 5,
     null
   );
 
@@ -627,15 +628,15 @@ begin
   select dose_text, started_on, ended_on into v_p2
     from public.dosage_periods where id = '00000000-0000-4000-8000-000000000008';
   if v_p1.dose_text is distinct from 'check 19 dose A'
-     or v_p1.started_on is distinct from date '2026-01-01'
-     or v_p1.ended_on is distinct from date '2026-04-01' then
-    raise exception 'CHECK 19 FAILED: period P1 changed (dose %, % – %), expected dose A, 2026-01-01 – 2026-04-01',
+     or v_p1.started_on is distinct from (now() at time zone 'Europe/Warsaw')::date - 10
+     or v_p1.ended_on is distinct from (now() at time zone 'Europe/Warsaw')::date - 5 then
+    raise exception 'CHECK 19 FAILED: period P1 changed (dose %, % – %), expected dose A, today-10 – today-5',
       v_p1.dose_text, v_p1.started_on, v_p1.ended_on;
   end if;
   if v_p2.dose_text is distinct from 'check 19 dose B'
-     or v_p2.started_on is distinct from date '2026-04-01'
+     or v_p2.started_on is distinct from (now() at time zone 'Europe/Warsaw')::date - 5
      or v_p2.ended_on is not null then
-    raise exception 'CHECK 19 FAILED: period P2 is missing or wrong (dose %, % – %), expected dose B from 2026-04-01, ongoing',
+    raise exception 'CHECK 19 FAILED: period P2 is missing or wrong (dose %, % – %), expected dose B from today-5, ongoing',
       v_p2.dose_text, v_p2.started_on, v_p2.ended_on;
   end if;
   if (select count(*) from public.dosage_periods where medication_id = '00000000-0000-4000-8000-000000000006') <> 2 then

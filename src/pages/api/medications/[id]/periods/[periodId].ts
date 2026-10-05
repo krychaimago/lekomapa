@@ -16,7 +16,7 @@ const DB_ERROR_CODES: Record<string, MedicationApiErrorCode> = {
   DP005: "variantNotAllowed",
   DP008: "periodNotFound",
   DP009: "correctionWindowClosed",
-  DP010: "sameAsPreviousPeriod",
+  DP010: "sameAsAdjacentPeriod",
 };
 
 // Every issue message is a MedicationApiErrorCode; the error redirect checks it against the copy before use. The

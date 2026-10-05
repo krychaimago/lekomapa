@@ -959,8 +959,8 @@ const journalFlowSteps = [
       if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
       const item = entryItemOf(page.body, journal.entryId);
       const named = item !== null && pageContains(item, journal.symptom.name);
-      // The message carries the deadline, so only its fixed start is compared.
-      const savedPrefix = JOURNAL_COPY.list.savedWithDeadline.split("{do}")[0];
+      // The message carries the entry's symptoms and the deadline, so only its fixed start is compared.
+      const savedPrefix = JOURNAL_COPY.list.savedWithDeadline.split(/\{(?:objawy|do)\}/)[0];
       const saved = pageContains(page.body, savedPrefix);
       return {
         ok: named && saved,

@@ -162,7 +162,7 @@ revoke execute on function public.dosage_period_correction_window_open(uuid) fro
 -- 3. Period guards ask about the period; re-pointing asks about the target medication too
 -- ---------------------------------------------------------------------------
 -- Same branches and messages as 20261004120000_dosage_change.sql, with the window of the period (old.id) in place of
--- the window of the medication, plus the re-pointing branch.
+-- the window of the medication, plus the re-pointing branch. The delete guard keeps asking about the medication.
 
 create or replace function public.dosage_periods_guard_core()
 returns trigger
@@ -203,11 +203,21 @@ begin
         'Nie można zmienić pola registry_product_id: okno korekty jest już zamknięte, a wariant preparatu przyjmowany w tym okresie jest częścią historii dawkowania. Zmiana mocy zamyka bieżący okres i otwiera nowy, zamiast nadpisywać poprzedni.';
     end if;
 
-    -- Setting ended_on from empty to a date always passes: that is how a period is closed on a dose change and
-    -- when the medication is stopped. Only replacing an end date that is already set is blocked.
+    -- Setting ended_on from empty to a date passes: that is how a period is closed on a dose change and when the
+    -- medication is stopped. Only replacing an end date that is already set is blocked.
     if old.ended_on is not null and new.ended_on is distinct from old.ended_on then
       raise exception
         'Nie można zmienić pola ended_on: okno korekty jest już zamknięte, a ten okres ma datę końca zapisaną w historii.';
+    end if;
+
+    -- The new end date obeys the same bounds as change_dosage (DP003, DP007): not in the future, at most 14 days
+    -- back, Polish time. Without them a direct write could close a period months back and rewrite the history
+    -- after it. Keep 14 equal to c_max_days_back in change_dosage and dosage_periods_guard_insert.
+    if old.ended_on is null and new.ended_on is not null
+       and (new.ended_on > (now() at time zone 'Europe/Warsaw')::date
+            or new.ended_on < (now() at time zone 'Europe/Warsaw')::date - 14) then
+      raise exception
+        'Nie można ustawić pola ended_on na tę datę: okno korekty jest już zamknięte, a okres można zakończyć najwyżej 14 dni wstecz i nie w przyszłości.';
     end if;
   end if;
 
@@ -227,9 +237,13 @@ begin
     return old;
   end if;
 
-  if not public.dosage_period_correction_window_open(old.id) then
+  -- Deleting asks about the window of the medication, not of the period: a period opened by a dose change is part of
+  -- a history whose previous period is already closed and frozen, so deleting it would leave the medication with no
+  -- ongoing dose and no stop date — a gap that never happened. Permanent delete stays for a medication added by
+  -- mistake; a fresh period is corrected with correct_dosage_period.
+  if not public.medication_correction_window_open(old.medication_id) then
     raise exception
-      'Nie można usunąć okresu dawkowania: okno korekty jest już zamknięte, a ten okres należy do historii. Zakończenie okresu zapisuje się datą w polu ended_on.';
+      'Nie można usunąć okresu dawkowania: okno korekty leku jest już zamknięte, a ten okres należy do historii. Pomyłkę w dawce świeżego okresu poprawia się w jego oknie korekty, a zakończenie okresu zapisuje się datą w polu ended_on.';
   end if;
 
   return old;
@@ -307,8 +321,16 @@ begin
     return new;
   end if;
 
-  -- Window of the medication closed: only a period at the end of the history passes (change_dosage). security
-  -- definer, so every period of the medication counts, not only those visible to the caller.
+  -- Window of the medication closed: only a period at the end of the history passes (change_dosage), starting
+  -- within the same bounds as change_dosage (DP003, DP007): not in the future, at most 14 days back, Polish time.
+  -- Keep 14 equal to c_max_days_back in change_dosage and dosage_periods_guard_core.
+  if new.started_on > (now() at time zone 'Europe/Warsaw')::date
+     or new.started_on < (now() at time zone 'Europe/Warsaw')::date - 14 then
+    raise exception
+      'Nie można dodać okresu dawkowania z tą datą rozpoczęcia: okno korekty dla tego leku jest już zamknięte, a nowy okres może zaczynać się najwyżej 14 dni wstecz i nie w przyszłości.';
+  end if;
+
+  -- security definer, so every period of the medication counts, not only those visible to the caller.
   if exists (
     select 1 from public.dosage_periods dp
      where dp.medication_id = new.medication_id
@@ -323,7 +345,7 @@ end;
 $$;
 
 comment on function public.dosage_periods_guard_insert() is
-  'Trigger: with the correction window of the medication closed, a period can be added only at the end of the history (started_on later than every existing started_on of that medication), which is what change_dosage does. A period before or between existing periods is refused. With the window open every insert passes to the other rules (no-overlap constraint, variant guard).';
+  'Trigger: with the correction window of the medication closed, a period can be added only at the end of the history (started_on later than every existing started_on of that medication, not in the future and at most 14 days back, Polish time), which is what change_dosage does. A period before or between existing periods is refused. With the window open every insert passes to the other rules (no-overlap constraint, variant guard).';
 
 revoke execute on function public.dosage_periods_guard_insert() from public, anon, authenticated;
 

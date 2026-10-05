@@ -165,8 +165,8 @@ export const MEDICATION_COPY = {
     correctionWindowClosed:
       "Okno korekty tego okresu jest już zamknięte. Nowe dawkowanie zapisuje się jako zmianę dawkowania.",
     sameDoseInPeriod: "To dawkowanie jest już zapisane w tym okresie.",
-    sameAsPreviousPeriod:
-      "To dawkowanie jest takie samo jak w poprzednim okresie. Taka poprawa cofnęłaby zmianę dawkowania, a cofnięcia zmiany nie da się jeszcze zapisać.",
+    sameAsAdjacentPeriod:
+      "To dawkowanie jest takie samo jak w okresie bezpośrednio przed tym okresem albo po nim. Taka poprawa usunęłaby z historii zmianę dawkowania, a cofnięcia zmiany nie da się jeszcze zapisać.",
     correctionGeneric: "Nie udało się zapisać poprawki. Spróbuj ponownie.",
     generic: "Nie udało się zapisać leku. Spróbuj ponownie.",
   },
