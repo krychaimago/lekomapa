@@ -1,7 +1,7 @@
 ---
 change_id: symptom-journal-entry
 title: Symptom journal entry
-status: plan_reviewed
+status: implementing
 created: 2026-10-05
 updated: 2026-10-05
 archived_at: null

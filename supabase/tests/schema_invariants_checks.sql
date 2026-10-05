@@ -350,7 +350,8 @@ $$;
 -- INVARIANT 7: anon and authenticated cannot execute security definer functions in public (trigger functions cannot
 -- be called directly). A security definer function runs with its owner's privileges, past RLS: callable by a
 -- signed-in account it answers about any account's rows unless it checks the owner itself. The history guards call
--- medication_correction_window_open as their own definer and need no EXECUTE for the caller. A function that must
+-- medication_correction_window_open and dosage_period_correction_window_open (S-05) as their own definer and need no
+-- EXECUTE for the caller. A function that must
 -- be callable from the browser checks auth.uid() and gets a deliberate exception here.
 -- Every security definer function, trigger functions included, sets search_path: without it an object created
 -- earlier on the caller's path (a table or operator of the same name) is resolved in place of the intended one and
@@ -369,6 +370,19 @@ begin
     and p.prorettype <> 'trigger'::regtype;
   if v_count = 0 then
     raise exception 'INVARIANT 7 FAILED: no security definer function in public found; expected at least medication_correction_window_open, so the rule would pass on an empty set';
+  end if;
+
+  -- The window functions answer about any account's rows by id, so they must stay in the set this rule measures.
+  select string_agg(f.signature, ', ' order by f.signature) into v_list
+  from unnest(array[
+    'public.medication_correction_window_open(uuid)',
+    'public.dosage_period_correction_window_open(uuid)'
+  ]) as f(signature)
+  where not exists (
+    select 1 from pg_proc p where p.oid = to_regprocedure(f.signature) and p.prosecdef
+  );
+  if v_list is not null then
+    raise exception 'INVARIANT 7 FAILED: correction window functions missing or not security definer, so this rule would not measure them: %', v_list;
   end if;
 
   select string_agg(p.oid::regprocedure::text, ', ' order by p.oid::regprocedure::text) into v_list
@@ -407,6 +421,7 @@ declare
   v_guard record;
   v_trigger record;
   v_expected_event integer;
+  v_guard_count integer := 0;
 begin
   for v_guard in
     select * from (values
@@ -416,7 +431,13 @@ begin
       ('medication_substances', 'medication_substances_guard_delete', 'DELETE'),
       ('dosage_periods', 'dosage_periods_guard_core', 'UPDATE'),
       ('dosage_periods', 'dosage_periods_guard_delete', 'DELETE'),
-      ('dosage_periods', 'dosage_periods_guard_variant', 'INSERT OR UPDATE')
+      ('dosage_periods', 'dosage_periods_guard_variant', 'INSERT OR UPDATE'),
+      -- S-05: the moment of saving opens the correction window, so it is set by the database and frozen.
+      ('medications', 'medications_freeze_created_at', 'INSERT OR UPDATE'),
+      ('dosage_periods', 'dosage_periods_freeze_created_at', 'INSERT OR UPDATE'),
+      -- S-05: inserts follow the correction window too (whole write path).
+      ('medication_substances', 'medication_substances_guard_insert', 'INSERT'),
+      ('dosage_periods', 'dosage_periods_guard_insert', 'INSERT')
     ) as g(table_name, trigger_name, event)
   loop
     v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 when 'INSERT OR UPDATE' then 20 end;
@@ -438,9 +459,10 @@ begin
     if v_trigger.tgtype & 60 <> v_expected_event then
       raise exception 'INVARIANT 8 FAILED: history guard % on % does not fire on exactly % (tgtype %)', v_guard.trigger_name, v_guard.table_name, v_guard.event, v_trigger.tgtype;
     end if;
+    v_guard_count := v_guard_count + 1;
   end loop;
 
-  raise notice 'INVARIANT 8 OK: 7 history guards exist, are enabled and fire BEFORE their event for each row';
+  raise notice 'INVARIANT 8 OK: % history guards exist, are enabled and fire BEFORE their event for each row', v_guard_count;
 end;
 $$;
 

@@ -635,10 +635,15 @@ $$;
 -- ---------------------------------------------------------------------------
 -- DOSAGE 13: with the correction window closed — a dose change passes, rewriting a period's variant is blocked
 -- ---------------------------------------------------------------------------
--- The window function is replaced inside a savepoint, as in rls_checks.sql, and restored by rolling back to it.
+-- Both window functions (medication and dosage period, S-05) are replaced inside a savepoint, as in rls_checks.sql,
+-- and restored by rolling back to it; their fingerprints are compared afterwards.
 -- The medication is created before the savepoint and survives it, for the open-window counterexample.
 
 create temporary table dosage_checks_state (medication_id uuid) on commit drop;
+
+create temporary table dosage_checks_window_fingerprint as
+select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint,
+       md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) as period_fingerprint;
 
 do $$
 declare
@@ -657,6 +662,18 @@ $$;
 savepoint before_window_closed;
 
 create or replace function public.medication_correction_window_open(p_medication_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return false;
+end;
+$$;
+
+create or replace function public.dosage_period_correction_window_open(p_period_id uuid)
 returns boolean
 language plpgsql
 stable
@@ -710,6 +727,22 @@ end;
 $$;
 
 rollback to savepoint before_window_closed;
+
+do $$
+declare
+  v_state record;
+begin
+  select * into v_state from dosage_checks_window_fingerprint;
+  if v_state.fingerprint is null
+     or md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) is distinct from v_state.fingerprint then
+    raise exception 'DOSAGE 13 FAILED: medication correction window function differs from migration state after rollback to savepoint';
+  end if;
+  if v_state.period_fingerprint is null
+     or md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) is distinct from v_state.period_fingerprint then
+    raise exception 'DOSAGE 13 FAILED: dosage period correction window function differs from migration state after rollback to savepoint';
+  end if;
+end;
+$$;
 
 -- Counterexample: with the window open again, the same update passes, so the guard branch is what blocked it.
 do $$

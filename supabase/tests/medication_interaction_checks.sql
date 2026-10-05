@@ -547,7 +547,10 @@ begin
     'public.coded_substance_names()',
     'public.change_dosage(uuid, text, date, uuid)',
     'public.assert_dosage_period_variant(uuid, uuid)',
-    'public.registry_variants_of(uuid)'
+    'public.registry_variants_of(uuid)',
+    'public.correction_window_end(timestamptz)',
+    'public.correction_window_ends_at(public.medications)',
+    'public.correction_window_ends_at(public.dosage_periods)'
   ] loop
     if has_function_privilege('anon', v_function, 'execute') then
       raise exception 'INTERACTION 11 FAILED: anon can execute %', v_function;
@@ -591,7 +594,7 @@ begin
     raise exception 'INTERACTION 11 FAILED: registry save of a missing product was not rejected with P0002';
   end if;
 
-  raise notice 'INTERACTION 11 OK: anon cannot execute the seven functions, authenticated can; no session is 28000; a missing product is P0002';
+  raise notice 'INTERACTION 11 OK: anon cannot execute the ten functions, authenticated can; no session is 28000; a missing product is P0002';
 end;
 $$;
 

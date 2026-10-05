@@ -516,15 +516,15 @@ Katalog (34 + 82 wiersze) ładowany raz ze stroną i filtrowany w przeglądarce.
 
 #### Automated
 
-- [ ] 1.1 Migracje wchodzą czysto: `npx supabase db reset`
-- [ ] 1.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy `correction_window_checks.sql`: `npm run db:check`
-- [ ] 1.3 Sondy schematu padają z oczekiwanym komunikatem, także nowa sonda funkcji okna okresu
-- [ ] 1.4 `npm test`, `npm run lint`, `npm run typecheck` przechodzą bez zmian w wynikach
+- [x] 1.1 Migracje wchodzą czysto: `npx supabase db reset`
+- [x] 1.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy `correction_window_checks.sql`: `npm run db:check`
+- [x] 1.3 Sondy schematu padają z oczekiwanym komunikatem, także nowa sonda funkcji okna okresu
+- [x] 1.4 `npm test`, `npm run lint`, `npm run typecheck` przechodzą bez zmian w wynikach
 
 #### Manual
 
-- [ ] 1.5 W lokalnym Studio: `correction_window_ends_at` = `created_at` + 24 h, ręczna zmiana `created_at` jako `authenticated` odrzucona
-- [ ] 1.6 Pomiar przez PostgREST: `select=id,correction_window_ends_at` na `medications` i `dosage_periods` zwraca godzinę końca okna dla zalogowanej
+- [x] 1.5 W lokalnym Studio: `correction_window_ends_at` = `created_at` + 24 h, ręczna zmiana `created_at` jako `authenticated` odrzucona
+- [x] 1.6 Pomiar przez PostgREST: `select=id,correction_window_ends_at` na `medications` i `dosage_periods` zwraca godzinę końca okna dla zalogowanej
 
 ### Phase 2: Schemat dzienniczka
 

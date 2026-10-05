@@ -83,6 +83,7 @@ jobs:
           expect_invariant_failure scripts/db-checks/probes/account-table-without-cascade-path.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 2 FAILED: account tables not reached"
           expect_invariant_failure scripts/db-checks/probes/unclassified-table.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 1 FAILED"
           expect_invariant_failure scripts/db-checks/probes/window-execute-for-authenticated.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 7 FAILED"
+          expect_invariant_failure scripts/db-checks/probes/period-window-execute-for-authenticated.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 7 FAILED: anon or authenticated can execute security definer functions"
           expect_invariant_failure scripts/db-checks/probes/definer-without-search-path.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 7 FAILED: security definer functions without a pinned search_path"
           expect_invariant_failure scripts/db-checks/probes/account-table-truncate-for-anon.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 6 FAILED"
           expect_invariant_failure scripts/db-checks/probes/view-without-security-invoker.sql supabase/tests/schema_invariants_checks.sql "INVARIANT 9 FAILED"

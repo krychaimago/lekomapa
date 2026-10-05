@@ -646,18 +646,31 @@ $$;
 -- ---------------------------------------------------------------------------
 -- ISOLATION 6: deleting account A with the correction window closed removes every row of A in every account table
 -- and leaves account B untouched (as postgres).
--- The window function is replaced by `return false` inside a savepoint and restored by rolling back to it, as in
--- rls_checks.sql; its fingerprint is compared afterwards, so this keeps working after S-05 replaces its body.
+-- Both window functions (medication and dosage period, S-05) are replaced by `return false` inside a savepoint and
+-- restored by rolling back to it, as in rls_checks.sql; their fingerprints are compared afterwards.
 -- Counterexample in two parts: deleting A's medication by hand with the window closed fails with the history guard
 -- (so the guards are active), and the rows of B stay (so the delete is not a blanket wipe).
 -- ---------------------------------------------------------------------------
 
 create temporary table isolation_window_fingerprint as
-select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint;
+select md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure)) as fingerprint,
+       md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure)) as period_fingerprint;
 
 savepoint before_account_deleted;
 
 create or replace function public.medication_correction_window_open(p_medication_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return false;
+end;
+$$;
+
+create or replace function public.dosage_period_correction_window_open(p_period_id uuid)
 returns boolean
 language plpgsql
 stable
@@ -744,6 +757,12 @@ begin
   v_now := md5(pg_get_functiondef('public.medication_correction_window_open(uuid)'::regprocedure));
   if v_before is null or v_now is distinct from v_before then
     raise exception 'ISOLATION 6 FAILED: correction window function differs from migration state after rollback to savepoint (fingerprint before %, now %)',
+      v_before, v_now;
+  end if;
+  select period_fingerprint into v_before from isolation_window_fingerprint;
+  v_now := md5(pg_get_functiondef('public.dosage_period_correction_window_open(uuid)'::regprocedure));
+  if v_before is null or v_now is distinct from v_before then
+    raise exception 'ISOLATION 6 FAILED: dosage period correction window function differs from migration state after rollback to savepoint (fingerprint before %, now %)',
       v_before, v_now;
   end if;
 end;
