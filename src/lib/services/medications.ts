@@ -82,6 +82,38 @@ export function formatIsoDate(iso: string): string {
   return `${day}.${month}.${year}`;
 }
 
+// How far back a dose change may be dated (mirrors DP007 in change_dosage,
+// supabase/migrations/20261004120000_dosage_change.sql).
+export const DOSAGE_CHANGE_MAX_DAYS_BACK = 14;
+
+const MS_PER_DAY = 86_400_000;
+
+// ISO `YYYY-MM-DD` shifted by whole days. Pinned to UTC midnight, so neither the local time zone nor a DST switch
+// moves the result; Date.UTC rolls over month ends, year ends and 29 February.
+function addDays(iso: string, days: number): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day) + days * MS_PER_DAY).toISOString().slice(0, 10);
+}
+
+// The day after an ISO date: the earliest possible dose change after a period starting that day.
+export function nextDay(iso: string): string {
+  return addDays(iso, 1);
+}
+
+// Periods are stored as `[started_on, ended_on)`: the saved end date is the first day of the next dose, so the last
+// day the period covers is one day earlier.
+export function lastDayOfPeriod(endedOn: string): string {
+  return addDays(endedOn, -1);
+}
+
+// Earliest date a dose change may carry: the day after the current period started, and no more than
+// DOSAGE_CHANGE_MAX_DAYS_BACK days before today — whichever is later. ISO dates compare correctly as strings.
+export function earliestChangeDate(startedOn: string, today: string): string {
+  const afterStart = nextDay(startedOn);
+  const limit = addDays(today, -DOSAGE_CHANGE_MAX_DAYS_BACK);
+  return afterStart > limit ? afterStart : limit;
+}
+
 const MIN_SHARED_PREFIX = 4;
 const MAX_SIMILAR = 5;
 

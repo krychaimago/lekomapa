@@ -415,10 +415,11 @@ begin
       ('medication_substances', 'medication_substances_guard_core', 'UPDATE'),
       ('medication_substances', 'medication_substances_guard_delete', 'DELETE'),
       ('dosage_periods', 'dosage_periods_guard_core', 'UPDATE'),
-      ('dosage_periods', 'dosage_periods_guard_delete', 'DELETE')
+      ('dosage_periods', 'dosage_periods_guard_delete', 'DELETE'),
+      ('dosage_periods', 'dosage_periods_guard_variant', 'INSERT OR UPDATE')
     ) as g(table_name, trigger_name, event)
   loop
-    v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 end;
+    v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 when 'INSERT OR UPDATE' then 20 end;
 
     select tg.tgenabled, tg.tgtype::integer as tgtype into v_trigger
     from pg_trigger tg
@@ -439,7 +440,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'INVARIANT 8 OK: 6 history guards exist, are enabled and fire BEFORE their event for each row';
+  raise notice 'INVARIANT 8 OK: 7 history guards exist, are enabled and fire BEFORE their event for each row';
 end;
 $$;
 

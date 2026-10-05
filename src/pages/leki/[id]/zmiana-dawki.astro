@@ -1,0 +1,235 @@
+---
+// Dose change of one medication (S-03, US-04, FR-004). Records a change already prescribed: the current period ends
+// the day before the change date and a new one starts on it, through change_dosage. Only the medication id travels in
+// the URL; the save route returns nothing but `?error=<key>`, looked up in MEDICATION_COPY.apiErrors. RLS limits
+// every read to the signed-in person, so another account's medication reads as missing and gets the same 404.
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import ChangeDosageForm from "@/components/medications/ChangeDosageForm";
+import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import {
+  type RegistrySubstanceRow,
+  earliestChangeDate,
+  formatIsoDate,
+  registryCompositionNames,
+  todayInWarsaw,
+} from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import type { DosagePeriod, Medication, RegistryProduct, RegistryVariantOption } from "@/types";
+
+type MedicationRow = Pick<
+  Medication,
+  "id" | "product_name" | "composition_source" | "registry_medication_id" | "discontinued_on"
+> & {
+  registry_products: Pick<RegistryProduct, "product_name"> | null;
+  dosage_periods: Pick<DosagePeriod, "id" | "dose_text" | "started_on" | "ended_on" | "registry_product_id">[];
+};
+
+type VariantRow = Pick<RegistryProduct, "id" | "strength" | "pharmaceutical_form"> & {
+  registry_substances: RegistrySubstanceRow[];
+};
+
+const copy = MEDICATION_COPY.dosageChange;
+const id = Astro.params.id ?? "";
+const error = apiErrorMessage(Astro.url.searchParams.get("error"));
+const today = todayInWarsaw();
+
+let medication: MedicationRow | null = null;
+let loadFailed = false;
+
+// A non-uuid id never reaches the database: it would be a 22P02 error there, here it is simply not found.
+const validId = z.uuid().safeParse(id).success;
+const supabase = validId ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validId && !supabase) loadFailed = true;
+
+if (supabase) {
+  const result = await supabase
+    .from("medications")
+    .select(
+      "id, product_name, composition_source, registry_medication_id, discontinued_on, registry_products(product_name), dosage_periods(id, dose_text, started_on, ended_on, registry_product_id)",
+    )
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<MedicationRow | null, { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading a medication for a dose change failed", { code: result.error.code });
+  } else {
+    medication = result.data;
+  }
+}
+
+// Same "current" rule as DP001 in change_dosage: not discontinued, or discontinued after today (Polish time).
+const isCurrent = medication !== null && (medication.discontinued_on === null || medication.discontinued_on > today);
+const currentPeriod = medication?.dosage_periods.find((period) => period.ended_on === null) ?? null;
+// A change on the day the period started would leave a period of zero days (DP002): possible from tomorrow.
+const startedToday = currentPeriod !== null && currentPeriod.started_on >= today;
+const isRegistry = medication?.composition_source === "registry";
+// Same fallback as change_dosage: a period without a variant takes the one the medication was added with.
+const currentVariantId = isRegistry
+  ? (currentPeriod?.registry_product_id ?? medication?.registry_medication_id ?? null)
+  : null;
+const showForm = isCurrent && currentPeriod !== null && !startedToday;
+
+// Variants offered: the database picks them (registry_variants_of) by the same DP005 rule change_dosage applies, so
+// the screen never offers a variant the database refuses. Only ids travel: the medication id in the RPC body, the
+// variant ids in the URL of the second read — never the product name.
+let variants: RegistryVariantOption[] = [];
+if (supabase && medication && showForm && isRegistry) {
+  const isIdList = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.every((item) => typeof item === "string");
+  const allowed = await supabase.rpc("registry_variants_of", { p_medication_id: medication.id });
+  const allowedIds: unknown = allowed.error ? null : allowed.data;
+  let rows: VariantRow[] | null = null;
+  if (isIdList(allowedIds)) {
+    const result = await supabase
+      .from("registry_products")
+      .select("id, strength, pharmaceutical_form, registry_substances(position, substance_name, atc_code)")
+      .in("id", allowedIds)
+      .overrideTypes<VariantRow[], { merge: false }>();
+    if (result.error) {
+      console.error("Reading registry variants for a dose change failed", { code: result.error.code });
+    } else {
+      rows = result.data;
+    }
+  } else {
+    console.error("Reading allowed registry variants for a dose change failed", { code: allowed.error?.code });
+  }
+  if (rows === null) {
+    loadFailed = true;
+  } else {
+    variants = rows
+      .map((row) => ({
+        id: row.id,
+        strength: row.strength,
+        form: row.pharmaceutical_form,
+        composition: registryCompositionNames(row.registry_substances),
+      }))
+      .sort(
+        (a, b) =>
+          (a.strength ?? "").localeCompare(b.strength ?? "", "pl", { numeric: true }) ||
+          (a.form ?? "").localeCompare(b.form ?? "", "pl"),
+      );
+    // Without the current variant on the list, no radio could be preselected: send none, which keeps the current one.
+    if (!variants.some((variant) => variant.id === currentVariantId)) variants = [];
+  }
+}
+
+const currentVariant = variants.find((variant) => variant.id === currentVariantId) ?? null;
+const currentVariantText = currentVariant
+  ? `${MEDICATION_COPY.add.strength}: ${currentVariant.strength ?? "—"} · ${MEDICATION_COPY.add.form}: ${currentVariant.form ?? "—"}`
+  : "";
+const minDate = currentPeriod ? earliestChangeDate(currentPeriod.started_on, today) : today;
+
+const notFound = !loadFailed && medication === null;
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+const detailsHref = `/leki/${id}`;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const noticeClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    {validId && medication ? (
+      <a href={detailsHref} class:list={linkClass}>
+        {copy.backToDetails}
+      </a>
+    ) : (
+      <a href="/leki" class:list={linkClass}>
+        {MEDICATION_COPY.details.backToList}
+      </a>
+    )}
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {MEDICATION_COPY.details.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class:list={noticeClass}>
+        <h1 class="text-2xl font-bold">{copy.title}</h1>
+        <p>{MEDICATION_COPY.details.notFound}</p>
+      </section>
+    )}
+
+    {medication && !loadFailed && (
+      <>
+        <div class="flex flex-col gap-1">
+          <h1 class="text-3xl font-bold">{copy.title}</h1>
+          <p class="text-lg break-words">{medication.product_name}</p>
+        </div>
+
+        {error && !showForm && (
+          <p
+            role="alert"
+            class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        {!isCurrent ? (
+          <section class:list={noticeClass}>
+            <p>{copy.discontinued}</p>
+            <a href={detailsHref} class:list={linkClass}>
+              {copy.backToDetails}
+            </a>
+          </section>
+        ) : currentPeriod === null ? (
+          <section class:list={noticeClass}>
+            <p>{MEDICATION_COPY.apiErrors.noCurrentPeriod}</p>
+            <a href={detailsHref} class:list={linkClass}>
+              {copy.backToDetails}
+            </a>
+          </section>
+        ) : (
+          <>
+            <section class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+              <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
+                <dt class="text-sm text-muted-foreground">{copy.currentDoseLabel}</dt>
+                <dd class="break-words">{currentPeriod.dose_text}</dd>
+                <dt class="text-sm text-muted-foreground">{copy.currentSinceLabel}</dt>
+                <dd>{formatIsoDate(currentPeriod.started_on)}</dd>
+                {currentVariantText && (
+                  <>
+                    <dt class="text-sm text-muted-foreground">{copy.currentVariantLabel}</dt>
+                    <dd>{currentVariantText}</dd>
+                  </>
+                )}
+              </dl>
+            </section>
+
+            {startedToday ? (
+              <section class:list={noticeClass}>
+                <p>{copy.startedToday}</p>
+                <a href={detailsHref} class:list={linkClass}>
+                  {copy.backToDetails}
+                </a>
+              </section>
+            ) : (
+              <>
+                <p class="text-sm text-muted-foreground">{copy.intro}</p>
+                <ChangeDosageForm
+                  medicationId={medication.id}
+                  variants={variants}
+                  currentVariantId={currentVariantId}
+                  today={today}
+                  minDate={minDate}
+                  minDateText={formatIsoDate(minDate)}
+                  serverError={error}
+                  client:load
+                />
+              </>
+            )}
+          </>
+        )}
+      </>
+    )}
+  </div>
+</AppLayout>

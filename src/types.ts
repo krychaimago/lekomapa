@@ -57,6 +57,12 @@ export interface DosagePeriod {
   /** Pusta wartość oznacza okres trwający. */
   ended_on: string | null;
   /**
+   * Registry variant (strength and form) taken in this period; null for a medication from a leaflet.
+   * A strength change of the same product opens a new period with the new variant (S-03).
+   * Foreign key to `registry_products.id` (on delete restrict).
+   */
+  registry_product_id: string | null;
+  /**
    * Kolumna wyliczana przez bazę (`daterange(started_on, ended_on, '[)')`),
    * dostępna wyłącznie przy odczycie. Obsługuje ograniczenie przeciw
    * nakładkom okresów.
@@ -93,6 +99,23 @@ export interface AddLeafletMedicationCommand {
   verified: boolean;
   doseText: string;
   startedOn: string;
+}
+
+/**
+ * Arguments of `change_dosage(p_medication_id, p_dose_text, p_changed_on, p_registry_product_id)` (S-03).
+ * Source of truth: supabase/migrations/20261004120000_dosage_change.sql. Closes the ongoing dosage period on
+ * `changedOn` and opens a new one from that date, atomically.
+ */
+export interface ChangeDosageCommand {
+  medicationId: string;
+  doseText: string;
+  /** First day of the new dose, ISO `YYYY-MM-DD`. */
+  changedOn: string;
+  /**
+   * Another variant of the same registry product (same name and composition). Omitted = keep the current variant.
+   * Must be omitted for a medication from a leaflet.
+   */
+  registryProductId?: string;
 }
 
 /**

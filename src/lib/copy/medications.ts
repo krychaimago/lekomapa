@@ -3,6 +3,10 @@
 // stem filter blocks. Nothing here may speak about an interaction or its absence — that belongs in interactions.ts.
 
 export const MEDICATION_COPY = {
+  // Shared by every medication form. Plain text inside the label, so a screen reader reads it with the field name.
+  form: {
+    requiredMark: "(obowiązkowe)",
+  },
   list: {
     title: "Leki",
     add: "Dodaj lek",
@@ -14,7 +18,8 @@ export const MEDICATION_COPY = {
   add: {
     title: "Dodaj lek",
     searchLabel: "Nazwa handlowa",
-    searchPlaceholder: "np. Ibuprom",
+    // Example value shown as a hint under the field, not inside it: an example inside the field reads as typed text.
+    searchHint: "Na przykład: Ibuprom",
     searchSubmit: "Szukaj",
     results: "Wyniki wyszukiwania",
     noResults: "Nie znaleziono leku o tej nazwie w rejestrze.",
@@ -31,7 +36,7 @@ export const MEDICATION_COPY = {
     composition: "Skład",
     compositionUnknown: "brak danych w rejestrze",
     doseLabel: "Dawkowanie",
-    dosePlaceholder: "np. 1 tabletka rano",
+    doseHint: "Na przykład: 1 tabletka rano",
     startedOnLabel: "Data rozpoczęcia",
     submit: "Zapisz lek",
     pending: "Zapisywanie...",
@@ -46,8 +51,7 @@ export const MEDICATION_COPY = {
     substanceHint: "Pierwsza wersja przyjmuje jedną substancję czynną na lek.",
     noMatch: "Nie znaleziono tej substancji na liście. Czy chodzi o jedną z poniższych?",
     confirmUnverified: "Zapisz bez sprawdzania — ta substancja nie będzie objęta żadną parą",
-    substancePlaceholder: "np. ibuprofenum",
-    substanceListHint: "Wybierz nazwę z podpowiedzi, jeśli ją widzisz.",
+    substanceListHint: "Na przykład: ibuprofenum. Wybierz nazwę z podpowiedzi, jeśli ją widzisz.",
     noSimilar: "Nie ma podobnych nazw na liście.",
     loadError: "Nie udało się wczytać listy substancji. Odśwież stronę.",
     registryInstead: "Wróć do wyszukiwania w rejestrze",
@@ -59,10 +63,40 @@ export const MEDICATION_COPY = {
     compositionHeading: "Skład",
     codeLabel: "kod ATC",
     variant: "Wariant",
+    // Dosage periods, newest first (S-03). A closed period shows its last day, the day before the saved end date.
+    historyHeading: "Historia dawkowania",
+    periodOngoing: "od {data}",
+    periodClosed: "{od} – {do}",
     leafletSource: "Skład wpisany z ulotki.",
     notFound: "Nie znaleziono takiego leku.",
     loadError: "Nie udało się wczytać leku. Odśwież stronę.",
     backToList: "Wróć do listy leków",
+  },
+  // Dose change screen (S-03). Nouns, not imperatives: the screen records a change already prescribed and never
+  // suggests that the dose should change (FR-012). A medication that ended is "zakończony".
+  dosageChange: {
+    title: "Zmiana dawkowania",
+    // Link on the details screen, shown only for a current medication.
+    open: "Zmiana dawkowania",
+    intro:
+      "Zapis zmiany dawkowania, która już obowiązuje. Bieżący okres kończy się dzień przed datą zmiany, a nowy zaczyna się od tej daty. Lek zostaje jedną pozycją na liście.",
+    currentDoseLabel: "Bieżące dawkowanie",
+    currentSinceLabel: "Obowiązuje od",
+    currentVariantLabel: "Bieżący wariant",
+    newDoseLabel: "Nowe dawkowanie",
+    changedOnLabel: "Data zmiany",
+    changedOnHint: "Pierwszy dzień nowego dawkowania: od {od} do dziś.",
+    variantLegend: "Wariant",
+    variantHint:
+      "Warianty tego samego preparatu o tym samym składzie. Preparat o innym składzie zapisuje się jako nowy lek.",
+    currentVariantMark: "(bieżący)",
+    submit: "Zapisz zmianę dawkowania",
+    // States without the form.
+    discontinued: "Ten lek jest zakończony, więc nie ma bieżącego dawkowania do zmiany.",
+    startedToday: "Bieżące dawkowanie zaczyna się dziś. Zmianę dawkowania można zapisać od jutra.",
+    backToDetails: "Wróć do szczegółów leku",
+    // Banner on the details screen after `?zmieniono=1`.
+    saved: "Zapisano zmianę dawkowania.",
   },
   // Hints next to the form (design-draft.md:196-199), reworded for a product chosen by its trade name.
   hints: {
@@ -85,6 +119,17 @@ export const MEDICATION_COPY = {
     productNameTooLong: "Nazwa leku może mieć najwyżej 200 znaków.",
     substanceRequired: "Wpisz substancję czynną.",
     substanceTooLong: "Nazwa substancji może mieć najwyżej 200 znaków.",
+    // Dose change (S-03): codes raised by change_dosage (supabase/migrations/20261004120000_dosage_change.sql).
+    medicationDiscontinued: "Ten lek jest zakończony, więc zmiany dawkowania nie da się zapisać.",
+    changeDateTooEarly: "Data zmiany musi być późniejsza niż początek bieżącego dawkowania.",
+    changeDateTooOld: "Datę zmiany można cofnąć najwyżej o 14 dni.",
+    changeDateInFuture: "Data zmiany nie może być późniejsza niż dziś.",
+    invalidChangeDate: "Wpisz poprawną datę zmiany.",
+    sameDose: "To dawkowanie jest już zapisane jako bieżące.",
+    variantNotAllowed:
+      "Ten wariant należy do innego preparatu albo ma inny skład. Taki preparat zapisuje się jako nowy lek.",
+    noCurrentPeriod: "Ten lek nie ma bieżącego okresu dawkowania, więc nie ma czego zmienić.",
+    medicationNotFound: "Nie znaleziono takiego leku.",
     generic: "Nie udało się zapisać leku. Spróbuj ponownie.",
   },
 } as const;

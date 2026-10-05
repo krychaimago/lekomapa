@@ -9,6 +9,7 @@ import { MEDICATION_COPY } from "@/lib/copy/medications";
 
 const copy = MEDICATION_COPY.add;
 const leafletCopy = MEDICATION_COPY.leaflet;
+const formCopy = MEDICATION_COPY.form;
 const SUBSTANCE_LIST_ID = "substance-names";
 const MAX_TEXT_LENGTH = 200;
 
@@ -46,7 +47,10 @@ export default function AddLeafletMedicationForm({
           <input type="hidden" name="source" value="leaflet" />
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="productName">{leafletCopy.productNameLabel}</Label>
+            <Label htmlFor="productName">
+              {leafletCopy.productNameLabel}{" "}
+              <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </Label>
             <Input
               id="productName"
               name="productName"
@@ -58,13 +62,15 @@ export default function AddLeafletMedicationForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="substanceName">{leafletCopy.substanceLabel}</Label>
+            <Label htmlFor="substanceName">
+              {leafletCopy.substanceLabel}{" "}
+              <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </Label>
             <Input
               id="substanceName"
               name="substanceName"
               list={SUBSTANCE_LIST_ID}
               defaultValue={substanceName}
-              placeholder={leafletCopy.substancePlaceholder}
               maxLength={MAX_TEXT_LENGTH}
               required
               autoComplete="off"
@@ -93,19 +99,26 @@ export default function AddLeafletMedicationForm({
           )}
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="doseText">{copy.doseLabel}</Label>
+            <Label htmlFor="doseText">
+              {copy.doseLabel} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </Label>
             <Input
               id="doseText"
               name="doseText"
-              placeholder={copy.dosePlaceholder}
               maxLength={MAX_TEXT_LENGTH}
               required
               autoComplete="off"
+              aria-describedby="doseText-hint"
             />
+            <p id="doseText-hint" className="text-muted-foreground text-sm">
+              {copy.doseHint}
+            </p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="startedOn">{copy.startedOnLabel}</Label>
+            <Label htmlFor="startedOn">
+              {copy.startedOnLabel} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
+            </Label>
             <Input id="startedOn" name="startedOn" type="date" defaultValue={startedOn} max={today} required />
           </div>
 

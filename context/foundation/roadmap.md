@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-10-01
+updated: 2026-10-04
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -54,7 +54,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | ready       |
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
 | S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done        |
-| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | proposed    |
+| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | in-progress |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | proposed    |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | ready       |
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed    |
@@ -225,7 +225,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Rdzeń produktu. Nadpisanie okresu zamiast zamknięcia go sprawia, że wcześniejsze zestawienia objawów przestają być prawdziwe, a błąd wychodzi dopiero przy S-06, gdy złożone pytanie zacznie mówić nieprawdę. Substancja czynna zostaje niemodyfikowalna — jej zmiana to zakończenie leku i dodanie nowego, nie zmiana dawkowania.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-04: Zakończenie przyjmowania leku z datą odstawienia
 
@@ -239,6 +239,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:** —
 - **Risk:** Pokusa zrobienia zwykłego usuwania, bo jest prostsze. Usunięcie kasuje kontekst dla wcześniejszych objawów i psuje S-06 tak samo jak nadpisanie okresu w S-03. Dwie ścieżki muszą być tu rozdzielone w interfejsie, żeby odstawienie nie wyglądało jak kasowanie.
   Dług z S-02: strażnik `medications_guard_core` przepuszcza dziś każdą zmianę `discontinued_on`, także po zamknięciu okna korekty. S-04 musi to domknąć: po zamknięciu okna raz ustawiona data odstawienia nie może zostać wyczyszczona ani przesunięta (z testem w `supabase/tests/`).
+  Dług z S-03 (impl-review F6b): `change_dosage` przyjmuje zmianę leku z datą odstawienia w przyszłości, a nowy okres zostaje otwarty (`ended_on` puste) i trwa dalej niż data odstawienia. Przykład: odstawienie ustawione na 20.10, zmiana dawki 10.10 — okres od 10.10 nie ma końca. S-04 musi przy ustawianiu daty odstawienia zamykać każdy okres otwarty po tej dacie, także ten powstały po ustawieniu daty (z testem w `supabase/tests/`).
 - **Status:** proposed
 
 ### S-05: Wpis o samopoczuciu z datą, godziną i objawami
@@ -254,6 +255,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Risk:** Wpisy powstają głównie na telefonie i często wieczorem o porannym objawie — zła godzina fałszowałaby zbieżność z okresem dawkowania w S-06, więc możliwość cofnięcia czasu jest wymogiem, nie udogodnieniem. Notatka własnymi słowami nie uczestniczy w regule; wciągnięcie jej do reguły byłoby zmianą zakresu.
 - **Wymogi projektowe:** katalog z F-03 liczy 34 pozycje, więc lista jest grupowana po ośmiu kategoriach układów, a wyszukiwanie po słowach potocznych jest główną drogą wyboru, nie udogodnieniem. Płaski scroll całego katalogu jest niedopuszczalny. Wyszukiwanie ignoruje wielkość liter i polskie znaki — „nudnosci” znajduje „nudności”, bo na telefonie często pisze się bez ogonków; słowa w bazie są zapisane małymi literami (F-03), więc przy wielkości liter wystarczy zmienić wpisany tekst, a polskie znaki trzeba pominąć po obu stronach porównania. Objaw nieujęty w katalogu użytkowniczka zapisuje w notatce — pozycji „inny objaw" na liście nie ma (Q-2, issue #3). Klucz obcy wpisu dzienniczka do `symptoms` musi być `on delete restrict` (jak `medications_registry_medication_id_fkey`), nie kaskadą: kaskada objaw → słowa wyszukiwania z F-03 dotyczy wyłącznie danych wspólnych, a usunięcie objawu z katalogu nie może skasować historii wpisów. Do rozstrzygnięcia przy planie: czy dawny wpis pokazuje bieżącą nazwę objawu (nazwy w F-03 mogą być dopracowywane), czy nazwę z chwili zapisu. Wyszukiwanie sprowadza wpisany tekst do postaci słów w bazie (małe litery, NFC, pojedyncze spacje) przed porównaniem. Lista kategorii istnieje dwa razy — `SymptomCategory` i `SYMPTOM_CATEGORIES` w `src/types.ts` oraz `symptoms_category_check` w bazie — i nic ich nie wiąże: kategoria spoza `SYMPTOM_CATEGORIES` odczytana z bazy ma dać widoczny błąd, nie objaw bez nagłówka kategorii.
 - **Dług przejęty z F-01:** migracja tego plasterka musi podmienić treść `public.medication_correction_window_open()` na sprawdzenie, czy dla danego leku istnieje wpis objawu po dacie rozpoczęcia. W F-01 funkcja jest zaślepką zwracającą `true`, więc wszystkie wyzwalacze niemodyfikowalności historii — na `medications`, `medication_substances` i `dosage_periods` — są do tego czasu bezczynne. Dopóki podmiana nie nastąpi, gwarancja „rdzeń wpisu niemodyfikowalny poza oknem korekty" nie obowiązuje, mimo że sprawdzenia w `supabase/tests/rls_checks.sql` przechodzą (podmieniają funkcję u siebie). Funkcja nie ma `EXECUTE` dla `anon` ani `authenticated` (testing-schema-invariants, INVARIANT 7), bo nie sprawdza właściciela leku — jeśli ekran potrzebuje stanu okna w przeglądarce, S-05 dodaje osobne RPC ze sprawdzeniem `auth.uid()`, a nie przywraca uprawnienia.
+- **Dług przejęty z S-03 (impl-review F6a):** pomyłki w zmianie dawki nie da się dziś cofnąć. Przykład: „2 tabletki” zapisane dziś zamiast „1 tabletka” — druga zmiana z dzisiejszą datą kończy się `DP002`, więc zostaje tylko zmiana od jutra, a w historii jednodniowy okres z dawką, której nikt nie brał. S-05 definiuje prawdziwe okno korekty; razem z nim musi powstać droga poprawy świeżo zapisanej zmiany (poprawa treści okresu w oknie albo cofnięcie zmiany), inaczej fałszywy okres trafi do zestawienia w S-06. Przy okazji wyrównać limit 14 dni wstecz (`c_max_days_back` w `change_dosage` i `DOSAGE_CHANGE_MAX_DAYS_BACK`) z oknem korekty i rozstrzygnąć drogę dla zmiany starszej niż 14 dni — dziś jej nie ma.
 - **Status:** ready
 
 ### S-06: Złożone pytanie do lekarza po zapisaniu objawu
