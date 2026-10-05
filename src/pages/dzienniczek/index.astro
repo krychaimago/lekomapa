@@ -1,0 +1,154 @@
+---
+// Symptom journal (S-05): the account's entries, newest occurred_at first, with their symptoms, severity and note.
+// An entry still in its correction window shows until when it can be corrected; the end comes from the database
+// (correction_window_ends_at), so the screen agrees with the guard that enforces it. RLS limits the read to the
+// signed-in person. Nothing here links a symptom to a medication (FR-012).
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { JOURNAL_COPY } from "@/lib/copy/journal";
+import { formatCorrectionDeadline, formatWarsawDateTime } from "@/lib/services/journal";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import { SYMPTOM_SEVERITIES, type Symptom, type SymptomEntry, type SymptomSeverity } from "@/types";
+
+interface EntryRow {
+  id: string;
+  occurred_at: string;
+  note: string | null;
+  correction_window_ends_at: string | null;
+  symptom_entry_items: {
+    symptom_id: string;
+    severity: SymptomSeverity | null;
+    symptoms: Pick<Symptom, "name" | "category"> | null;
+  }[];
+}
+
+const copy = JOURNAL_COPY.list;
+const severityLabel = new Map(SYMPTOM_SEVERITIES.map(({ value, label }) => [value, label]));
+
+// Only a well-formed uuid is looked up; anything else is ignored (no text from the URL reaches the screen).
+const addedParam = z.uuid().safeParse(Astro.url.searchParams.get("dodano"));
+const addedId = addedParam.success ? addedParam.data : null;
+
+let loadFailed = false;
+let entries: SymptomEntry[] = [];
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase) {
+  const result = await supabase
+    .from("symptom_entries")
+    .select(
+      "id, occurred_at, note, correction_window_ends_at, symptom_entry_items(symptom_id, severity, symptoms(name, category))",
+    )
+    .order("occurred_at", { ascending: false })
+    .overrideTypes<EntryRow[], { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading the symptom journal failed", { code: result.error.code });
+  } else {
+    entries = result.data.map((row) => ({
+      id: row.id,
+      occurredAt: row.occurred_at,
+      note: row.note,
+      correctionWindowEndsAt: row.correction_window_ends_at,
+      items: row.symptom_entry_items
+        .flatMap((item) =>
+          item.symptoms
+            ? [
+                {
+                  symptomId: item.symptom_id,
+                  name: item.symptoms.name,
+                  category: item.symptoms.category,
+                  severity: item.severity,
+                },
+              ]
+            : [],
+        )
+        .sort((a, b) => a.name.localeCompare(b.name, "pl")),
+    }));
+  }
+} else {
+  loadFailed = true;
+}
+
+if (loadFailed) Astro.response.status = 500;
+
+// One "now" for the whole page, from the server's clock.
+const nowIso = new Date().toISOString();
+const deadlineOf = (entry: SymptomEntry): string | null =>
+  entry.correctionWindowEndsAt !== null && Date.parse(entry.correctionWindowEndsAt) > Date.parse(nowIso)
+    ? formatCorrectionDeadline(entry.correctionWindowEndsAt, nowIso)
+    : null;
+
+const addedEntry = addedId === null ? undefined : entries.find((entry) => entry.id === addedId);
+const addedDeadline = addedEntry ? deadlineOf(addedEntry) : null;
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h1 class="text-3xl font-bold">{copy.title}</h1>
+      <a href="/dzienniczek/nowy" class:list={buttonVariants()}>
+        {copy.add}
+      </a>
+    </div>
+
+    {addedEntry && (
+      <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+        {addedDeadline ? copy.savedWithDeadline.replace("{do}", addedDeadline) : copy.saved}
+      </p>
+    )}
+
+    {loadFailed ? (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    ) : entries.length === 0 ? (
+      <section class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <p class="mb-4">{copy.empty}</p>
+        <a href="/dzienniczek/nowy" class:list={buttonVariants()}>
+          {copy.add}
+        </a>
+      </section>
+    ) : (
+      <ul class="flex flex-col gap-3">
+        {entries.map((entry) => {
+          const deadline = deadlineOf(entry);
+          return (
+            <li
+              data-entry-id={entry.id}
+              class:list={cn(
+                "flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm",
+                entry.id === addedId && "border-primary ring-2 ring-primary",
+              )}
+            >
+              <p class="text-lg font-semibold">
+                <time datetime={entry.occurredAt}>{formatWarsawDateTime(entry.occurredAt)}</time>
+              </p>
+              <ul class="flex flex-col gap-1">
+                {entry.items.map((item) => (
+                  <li>
+                    <span class="first-letter:uppercase">{item.name}</span>
+                    {item.severity && <span class="text-muted-foreground"> · {severityLabel.get(item.severity)}</span>}
+                  </li>
+                ))}
+              </ul>
+              {entry.note && (
+                <p class="break-words">
+                  <span class="text-sm text-muted-foreground">{copy.noteLabel}:</span> {entry.note}
+                </p>
+              )}
+              {deadline && (
+                <p class="text-sm text-muted-foreground">{copy.correctableUntil.replace("{do}", deadline)}</p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+</AppLayout>

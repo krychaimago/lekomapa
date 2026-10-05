@@ -25,6 +25,7 @@ import { createClient, isAuthApiError } from "@supabase/supabase-js";
 // Loaded as TypeScript (`--experimental-strip-types` in the npm script): the screens' own copy and "today" rule,
 // so the steps compare against what the app renders instead of a second copy of the text.
 import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
+import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
 import { todayInWarsaw } from "../src/lib/services/medications.ts";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
@@ -718,6 +719,181 @@ const medicationSteps = isolationSkipReason
   ? [["medication and interaction flag checks", null, { skip: isolationSkipReason }]]
   : medicationFlowSteps;
 
+// --- Symptom journal (S-05) ------------------------------------------------
+//
+// Saves an entry over HTTP the way the journal form does: fetch with a JSON body and the Origin a browser derives from
+// the referrer policy of /dzienniczek/nowy (formOrigin), Content-Type application/json, the session cookie, nothing
+// more. Writes a journal entry, so it runs in the same mode and behind the same gate as the isolation checks, signed
+// in as fixture account A in a jar of its own. Runs after the isolation checks: those count account A's rows.
+//
+// The symptom comes from the database by id, never typed in. Its name is used only to check the list and the URLs.
+
+const JOURNAL_NEW_PAGE = "/dzienniczek/nowy";
+const JOURNAL_LIST_PAGE = "/dzienniczek";
+const JOURNAL_ROUTE = "/api/journal";
+
+// Filled by the steps below and read by the later ones. `paths` holds every URL path the flow requested.
+const journal = { jar: new Map(), symptom: null, entryId: null, paths: [] };
+
+// A JSON POST like the form's fetch: the body never travels in the URL. Returns the status and the parsed body.
+async function postJson(path, body, { jar: cookieJar, origin }) {
+  journal.paths.push(path);
+  const response = await fetch(BASE_URL + path, {
+    method: "POST",
+    redirect: "manual",
+    headers: { Cookie: cookieHeader(cookieJar), Origin: origin, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  storeCookies(response, cookieJar);
+  const text = await response.text();
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // Not JSON: left null, the step reports the status.
+  }
+  return { status: response.status, json };
+}
+
+// The <li> of one journal entry on the list, so the symptom name is checked inside that entry.
+function entryItemOf(body, entryId) {
+  const start = body.indexOf(`data-entry-id="${entryId}"`);
+  if (start === -1) return null;
+  const end = body.indexOf("</ul>", start);
+  return end === -1 ? null : body.slice(start, end);
+}
+
+const journalFlowSteps = [
+  [
+    "journal: fixture account A signs in over HTTP and the new entry page renders",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const signIn = await request("/api/auth/signin", {
+        method: "POST",
+        jar: journal.jar,
+        form: { email: fixtures.a.address, password },
+      });
+      journal.paths.push(JOURNAL_NEW_PAGE);
+      const page = await requestPage(JOURNAL_NEW_PAGE, { jar: journal.jar });
+      return {
+        ok: signIn.status === 302 && signIn.location === "/" && page.status === 200,
+        detail: `sign-in ${signIn.status} ${signIn.location}; ${JOURNAL_NEW_PAGE} ${page.status} ${page.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: saving an entry returns 201 with its id, and the entry is in the database",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      // The second symptom by id: the isolation fixture already uses the first, so the list check below proves this
+      // entry and not the fixture.
+      const symptom = await fixtures.a.client.from("symptoms").select("id, name").order("id").range(1, 1).single();
+      if (symptom.error) return { ok: false, detail: `symptom lookup failed: ${symptom.error.message}` };
+      journal.symptom = symptom.data;
+
+      const response = await postJson(
+        JOURNAL_ROUTE,
+        {
+          occurredLocal: null,
+          items: [{ symptomId: journal.symptom.id, severity: "moderate" }],
+          note: "Smoke journal note",
+        },
+        { jar: journal.jar, origin: await formOrigin(JOURNAL_NEW_PAGE, journal.jar) },
+      );
+      const id = typeof response.json?.id === "string" ? response.json.id : null;
+      if (response.status !== 201 || !id) {
+        return { ok: false, detail: `${response.status} ${JSON.stringify(response.json)}` };
+      }
+      journal.entryId = id;
+
+      const items = await fixtures.a.client
+        .from("symptom_entry_items")
+        .select("symptom_id, severity")
+        .eq("entry_id", id);
+      if (items.error) return { ok: false, detail: `read-back failed: ${items.error.message}` };
+      const stored =
+        items.data.length === 1 &&
+        items.data[0].symptom_id === journal.symptom.id &&
+        items.data[0].severity === "moderate";
+      return {
+        ok: stored,
+        detail: `201; ${items.data.length} symptom row(s) stored ${stored ? "as sent" : "differently"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: an entry without symptoms gets 422 with its error key",
+    async () => {
+      const response = await postJson(
+        JOURNAL_ROUTE,
+        { occurredLocal: null, items: [], note: null },
+        { jar: journal.jar, origin: await formOrigin(JOURNAL_NEW_PAGE, journal.jar) },
+      );
+      const key = response.json?.error;
+      const ok = response.status === 422 && key === "noSymptoms" && Object.hasOwn(JOURNAL_COPY.apiErrors, key);
+      return { ok, detail: `${response.status} ${JSON.stringify(response.json)}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: no session gets 401",
+    async () => {
+      const response = await postJson(
+        JOURNAL_ROUTE,
+        { occurredLocal: null, items: [], note: null },
+        { jar: new Map(), origin: BASE_URL },
+      );
+      // Exactly 401: a redirect or a 422 would mean the route validated the body before deciding on the session.
+      return { ok: response.status === 401, detail: `${response.status} ${JSON.stringify(response.json)}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the list shows the saved entry with its symptom name and the saved message",
+    async () => {
+      if (!journal.entryId || !journal.symptom) return { ok: false, detail: "check did not run: no entry was saved" };
+      const path = `${JOURNAL_LIST_PAGE}?dodano=${journal.entryId}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      const item = entryItemOf(page.body, journal.entryId);
+      const named = item !== null && pageContains(item, journal.symptom.name);
+      // The message carries the deadline, so only its fixed start is compared.
+      const savedPrefix = JOURNAL_COPY.list.savedWithDeadline.split("{do}")[0];
+      const saved = pageContains(page.body, savedPrefix);
+      return {
+        ok: named && saved,
+        detail: `entry ${item ? "listed" : "missing"}; symptom name ${named ? "present" : "missing"}; saved message ${
+          saved ? "present" : "missing"
+        }`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: no URL on the way carries the symptom name or the note",
+    async () => {
+      if (!journal.symptom) return { ok: false, detail: "check did not run: no symptom was read" };
+      const forbidden = [journal.symptom.name, "Smoke journal note"].flatMap((text) => [
+        text.toLowerCase(),
+        encodeURIComponent(text).toLowerCase(),
+      ]);
+      const leaking = journal.paths.filter((path) => forbidden.some((text) => path.toLowerCase().includes(text)));
+      return {
+        ok: journal.paths.length > 0 && leaking.length === 0,
+        detail: `${journal.paths.length} path(s) checked; ${leaking.length ? `leaking: ${leaking.join(", ")}` : "none leaks"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+];
+
+const journalSteps = isolationSkipReason
+  ? [["symptom journal checks", null, { skip: isolationSkipReason }]]
+  : journalFlowSteps;
+
 // --- Password recovery -----------------------------------------------------
 //
 // Walks the whole reset path of S-10 over HTTP and reads the reset mail from the local mailpit. Every step asserts
@@ -1011,6 +1187,7 @@ const steps = [
   registrySuggestionsAnonymousStep,
   ...isolationSteps,
   ...medicationSteps,
+  ...journalSteps,
   ...passwordRecoverySteps,
 ];
 

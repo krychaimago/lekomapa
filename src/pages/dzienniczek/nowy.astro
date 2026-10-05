@@ -1,0 +1,83 @@
+---
+// New journal entry (S-05, US-02, FR-008). The symptom catalog (names and colloquial search terms) comes with the
+// page and is filtered in the browser, so nothing typed into the search ever leaves the page. The form posts JSON to
+// /api/journal; only the new entry's id travels back in the URL of the list.
+import AppLayout from "@/layouts/AppLayout.astro";
+import NewEntryForm from "@/components/journal/NewEntryForm";
+import { JOURNAL_COPY } from "@/lib/copy/journal";
+import { earliestEntryLocal, groupSymptomsByCategory, nowInWarsawLocal } from "@/lib/services/journal";
+import { createClient } from "@/lib/supabase";
+import type { Symptom, SymptomSearchTerm } from "@/types";
+
+type SymptomRow = Pick<Symptom, "id" | "name" | "category" | "sort_order">;
+type TermRow = Pick<SymptomSearchTerm, "symptom_id" | "term">;
+
+const copy = JOURNAL_COPY.form;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+
+let symptoms: SymptomRow[] = [];
+let terms: TermRow[] = [];
+let loadFailed = false;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase) {
+  const [symptomResult, termResult] = await Promise.all([
+    supabase.from("symptoms").select("id, name, category, sort_order").overrideTypes<SymptomRow[], { merge: false }>(),
+    supabase.from("symptom_search_terms").select("symptom_id, term").overrideTypes<TermRow[], { merge: false }>(),
+  ]);
+  if (symptomResult.error || termResult.error) {
+    loadFailed = true;
+    console.error("Loading the symptom catalog failed", {
+      symptomsCode: symptomResult.error?.code,
+      termsCode: termResult.error?.code,
+    });
+  } else {
+    symptoms = symptomResult.data;
+    terms = termResult.data;
+    try {
+      // A category without a heading would leave its symptoms out of the grouped view: fail visibly instead.
+      groupSymptomsByCategory(symptoms);
+    } catch (error) {
+      loadFailed = true;
+      console.error("The symptom catalog has a category the screen does not know", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+} else {
+  loadFailed = true;
+}
+
+if (!loadFailed && symptoms.length === 0) loadFailed = true;
+if (loadFailed) Astro.response.status = 500;
+
+// Polish time, computed on the server (the Worker runs in UTC; the helpers convert).
+const defaultOccurred = nowInWarsawLocal();
+const minOccurred = earliestEntryLocal();
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <a href="/dzienniczek" class:list={linkClass}>
+      {copy.backToList}
+    </a>
+    <h1 class="text-3xl font-bold">{copy.title}</h1>
+
+    {loadFailed ? (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    ) : (
+      <NewEntryForm
+        symptoms={symptoms}
+        terms={terms}
+        defaultOccurred={defaultOccurred}
+        minOccurred={minOccurred}
+        client:load
+      />
+    )}
+  </div>
+</AppLayout>

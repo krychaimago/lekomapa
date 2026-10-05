@@ -530,33 +530,33 @@ Katalog (34 + 82 wiersze) ładowany raz ze stroną i filtrowany w przeglądarce.
 
 #### Automated
 
-- [x] 2.1 Migracje wchodzą czysto: `npx supabase db reset`
-- [x] 2.2 Wszystkie sprawdzenia SQL przechodzą, w tym `symptom_journal_checks.sql`: `npm run db:check`
-- [x] 2.3 Sondy schematu w CI padają z oczekiwanym komunikatem
-- [x] 2.4 Smoke przechodzi przeciw lokalnej bazie, z nowymi krokami izolacji: `npm run smoke`
-- [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck`
+- [x] 2.1 Migracje wchodzą czysto: `npx supabase db reset` — 31a57f2
+- [x] 2.2 Wszystkie sprawdzenia SQL przechodzą, w tym `symptom_journal_checks.sql`: `npm run db:check` — 31a57f2
+- [x] 2.3 Sondy schematu w CI padają z oczekiwanym komunikatem — 31a57f2
+- [x] 2.4 Smoke przechodzi przeciw lokalnej bazie, z nowymi krokami izolacji: `npm run smoke` — 31a57f2
+- [x] 2.5 `npm test`, `npm run lint`, `npm run typecheck` — 31a57f2
 
 #### Manual
 
-- [x] 2.6 Przed smoke zmierzone, że bieg pisze do lokalnej bazy
+- [x] 2.6 Przed smoke zmierzone, że bieg pisze do lokalnej bazy — 31a57f2
 
 ### Phase 3: Ekran dzienniczka — nowy wpis i lista
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe i FR-012 przechodzą: `npm test`
-- [ ] 3.2 `npm run lint` i `npm run typecheck`
-- [ ] 3.3 Skaner kolorów nie zgłasza nowych plików
-- [ ] 3.4 Smoke z krokami dzienniczka przechodzi przeciw lokalnej bazie: `npm run smoke`
-- [ ] 3.5 Build przechodzi: `npm run build`
+- [x] 3.1 Testy jednostkowe i FR-012 przechodzą: `npm test`
+- [x] 3.2 `npm run lint` i `npm run typecheck`
+- [x] 3.3 Skaner kolorów nie zgłasza nowych plików
+- [x] 3.4 Smoke z krokami dzienniczka przechodzi przeciw lokalnej bazie: `npm run smoke`
+- [x] 3.5 Build przechodzi: `npm run build`
 
 #### Manual
 
-- [ ] 3.6 Na telefonie: wpis z dwoma objawami (bez polskich znaków, słowo potoczne), nasileniem, cofniętą godziną i notatką
-- [ ] 3.7 Lista pokazuje poprawną godzinę polską i „Możesz poprawić do jutra, HH:MM”
-- [ ] 3.8 Wymuszony błąd serwera zostawia zaznaczone objawy
-- [ ] 3.9 Pasek adresu i historia przeglądarki bez nazwy objawu i notatki
-- [ ] 3.10 Ekran czytelny na wąskim ekranie; brak płaskiej listy 34 pozycji bez wpisanego tekstu
+- [x] 3.6 Na telefonie: wpis z dwoma objawami (bez polskich znaków, słowo potoczne), nasileniem, cofniętą godziną i notatką
+- [x] 3.7 Lista pokazuje poprawną godzinę polską i „Możesz poprawić do jutra, HH:MM”
+- [x] 3.8 Wymuszony błąd serwera zostawia zaznaczone objawy
+- [x] 3.9 Pasek adresu i historia przeglądarki bez nazwy objawu i notatki
+- [x] 3.10 Ekran czytelny na wąskim ekranie; brak płaskiej listy 34 pozycji bez wpisanego tekstu
 
 ### Phase 4: Okno korekty w UI leków i poprawa dawki (F6a)
 

@@ -277,3 +277,47 @@ export interface SymptomSearchTerm {
   symptom_id: string;
   term: string;
 }
+
+// ---------------------------------------------------------------------------
+// Symptom journal (S-05).
+// Source of truth: supabase/migrations/20261005130000_symptom_journal.sql.
+// An entry is saved only through `add_symptom_entry(p_occurred_local, p_items, p_note)`, which writes the entry and
+// its symptoms atomically. The DTOs below are what the list screen renders, not raw table rows.
+// ---------------------------------------------------------------------------
+
+/** Optional severity of one symptom in an entry. Matches `symptom_entry_items_severity_check`. */
+export type SymptomSeverity = "mild" | "moderate" | "severe";
+
+/** A Record, so a severity added to the type without a label fails to compile. Written in display order. */
+const SYMPTOM_SEVERITY_LABELS: Record<SymptomSeverity, string> = {
+  mild: "łagodne",
+  moderate: "umiarkowane",
+  severe: "silne",
+};
+
+/** Severities in display order, with user-facing Polish labels. */
+export const SYMPTOM_SEVERITIES: readonly { value: SymptomSeverity; label: string }[] = (
+  Object.keys(SYMPTOM_SEVERITY_LABELS) as SymptomSeverity[]
+).map((value) => ({ value, label: SYMPTOM_SEVERITY_LABELS[value] }));
+
+/** One symptom of a journal entry, as the list shows it: the current catalog name, never a copy kept with the entry. */
+export interface SymptomEntryItem {
+  symptomId: string;
+  name: string;
+  category: SymptomCategory;
+  severity: SymptomSeverity | null;
+}
+
+/** One journal entry on the list. */
+export interface SymptomEntry {
+  id: string;
+  /** When the symptoms were felt, ISO timestamp (UTC); shown in Europe/Warsaw. */
+  occurredAt: string;
+  note: string | null;
+  /**
+   * End of the 24-hour correction window, ISO timestamp, from the computed field `correction_window_ends_at`.
+   * Null when the field could not be read; the screen then shows no deadline.
+   */
+  correctionWindowEndsAt: string | null;
+  items: SymptomEntryItem[];
+}
