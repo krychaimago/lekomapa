@@ -14,8 +14,9 @@
 --   INTERACTION 8:  a discontinued medication drops out; one with a future discontinuation date stays.
 --   INTERACTION 9:  isolation — another account's medications never pair with mine.
 --   INTERACTION 10: a medication without a code creates no rows.
---   INTERACTION 11: privileges — anon cannot execute the seven functions (change_dosage, assert_dosage_period_variant and registry_variants_of from S-03 included); a call
---                   without a session is a named error.
+--   INTERACTION 11: privileges — anon cannot execute the twelve functions the application calls (change_dosage,
+--                   assert_dosage_period_variant and registry_variants_of from S-03, the correction window fields and
+--                   add_symptom_entry from S-05 included), authenticated can; a call without a session is a named error.
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`). The runner (scripts/db-checks.mjs) passes this file
 -- only when it prints `GATE_COMPLETE medication_interaction_checks` at the end.
@@ -550,7 +551,9 @@ begin
     'public.registry_variants_of(uuid)',
     'public.correction_window_end(timestamptz)',
     'public.correction_window_ends_at(public.medications)',
-    'public.correction_window_ends_at(public.dosage_periods)'
+    'public.correction_window_ends_at(public.dosage_periods)',
+    'public.correction_window_ends_at(public.symptom_entries)',
+    'public.add_symptom_entry(timestamp, jsonb, text)'
   ] loop
     if has_function_privilege('anon', v_function, 'execute') then
       raise exception 'INTERACTION 11 FAILED: anon can execute %', v_function;
@@ -594,7 +597,7 @@ begin
     raise exception 'INTERACTION 11 FAILED: registry save of a missing product was not rejected with P0002';
   end if;
 
-  raise notice 'INTERACTION 11 OK: anon cannot execute the ten functions, authenticated can; no session is 28000; a missing product is P0002';
+  raise notice 'INTERACTION 11 OK: anon cannot execute the twelve functions, authenticated can; no session is 28000; a missing product is P0002';
 end;
 $$;
 

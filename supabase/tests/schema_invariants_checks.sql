@@ -350,7 +350,8 @@ $$;
 -- INVARIANT 7: anon and authenticated cannot execute security definer functions in public (trigger functions cannot
 -- be called directly). A security definer function runs with its owner's privileges, past RLS: callable by a
 -- signed-in account it answers about any account's rows unless it checks the owner itself. The history guards call
--- medication_correction_window_open and dosage_period_correction_window_open (S-05) as their own definer and need no
+-- medication_correction_window_open, dosage_period_correction_window_open and symptom_entry_correction_window_open
+-- (S-05) as their own definer and need no
 -- EXECUTE for the caller. A function that must
 -- be callable from the browser checks auth.uid() and gets a deliberate exception here.
 -- Every security definer function, trigger functions included, sets search_path: without it an object created
@@ -376,7 +377,8 @@ begin
   select string_agg(f.signature, ', ' order by f.signature) into v_list
   from unnest(array[
     'public.medication_correction_window_open(uuid)',
-    'public.dosage_period_correction_window_open(uuid)'
+    'public.dosage_period_correction_window_open(uuid)',
+    'public.symptom_entry_correction_window_open(uuid)'
   ]) as f(signature)
   where not exists (
     select 1 from pg_proc p where p.oid = to_regprocedure(f.signature) and p.prosecdef
@@ -437,7 +439,16 @@ begin
       ('dosage_periods', 'dosage_periods_freeze_created_at', 'INSERT OR UPDATE'),
       -- S-05: inserts follow the correction window too (whole write path).
       ('medication_substances', 'medication_substances_guard_insert', 'INSERT'),
-      ('dosage_periods', 'dosage_periods_guard_insert', 'INSERT')
+      ('dosage_periods', 'dosage_periods_guard_insert', 'INSERT'),
+      -- S-05 phase 2: the symptom journal — the entry and its symptoms on the whole write path, the frozen moment of
+      -- saving and the date bounds (SE002, SE003).
+      ('symptom_entries', 'symptom_entries_freeze_created_at', 'INSERT OR UPDATE'),
+      ('symptom_entries', 'symptom_entries_guard_core', 'UPDATE'),
+      ('symptom_entries', 'symptom_entries_guard_delete', 'DELETE'),
+      ('symptom_entries', 'symptom_entries_guard_occurred_at', 'INSERT OR UPDATE'),
+      ('symptom_entry_items', 'symptom_entry_items_guard_insert', 'INSERT'),
+      ('symptom_entry_items', 'symptom_entry_items_guard_core', 'UPDATE'),
+      ('symptom_entry_items', 'symptom_entry_items_guard_delete', 'DELETE')
     ) as g(table_name, trigger_name, event)
   loop
     v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 when 'INSERT OR UPDATE' then 20 end;

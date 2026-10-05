@@ -1,5 +1,5 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together,
-// and that row level security really isolates one account's medications from another's.
+// and that row level security really isolates one account's medications and journal entries from another's.
 // It also proves that the shared registry, interaction pairs and symptom catalog are readable after sign-in and
 // read-only.
 // Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
@@ -191,12 +191,34 @@ async function seedMedication(account, suffix) {
   return { ...account, medication, substance, dosagePeriod };
 }
 
+// One journal entry with one symptom, saved through add_symptom_entry. Two separate inserts would not do: an entry
+// without a symptom is refused when its own request commits (SE001, measured against the local Supabase). The
+// symptom is the first one on the shared list, read by id; no symptom name travels anywhere. The note is synthetic.
+async function seedSymptomEntry(account, suffix) {
+  const symptom = await account.client.from("symptoms").select("id").order("id").limit(1).single();
+  if (symptom.error) throw new Error(`symptom lookup failed: ${symptom.error.message}`);
+
+  const saved = await account.client.rpc("add_symptom_entry", {
+    p_occurred_local: null,
+    p_items: [{ symptom_id: symptom.data.id, severity: "mild" }],
+    p_note: `Smoke fixture ${suffix}`,
+  });
+  if (saved.error) throw new Error(`add_symptom_entry failed: ${saved.error.code} ${saved.error.message}`);
+
+  const entry = await account.client.from("symptom_entries").select().eq("id", saved.data).single();
+  if (entry.error) throw new Error(`read of symptom_entries failed: ${entry.error.message}`);
+  const item = await account.client.from("symptom_entry_items").select().eq("entry_id", saved.data).single();
+  if (item.error) throw new Error(`read of symptom_entry_items failed: ${item.error.message}`);
+
+  return { symptomEntry: entry.data, symptomEntryItem: item.data };
+}
+
 const fixtureStep = [
-  "isolation fixtures: two accounts, one medication each",
+  "isolation fixtures: two accounts, one medication and one journal entry each",
   async () => {
     const [a, b] = await Promise.all([createAccount("iso-a"), createAccount("iso-b")]);
-    fixtures.a = await seedMedication(a, "A");
-    fixtures.b = await seedMedication(b, "B");
+    fixtures.a = { ...(await seedMedication(a, "A")), ...(await seedSymptomEntry(a, "A")) };
+    fixtures.b = { ...(await seedMedication(b, "B")), ...(await seedSymptomEntry(b, "B")) };
     fixtures.anon = supabaseClient();
     return { ok: true, detail: `${fixtures.a.address}, ${fixtures.b.address}` };
   },
@@ -223,6 +245,19 @@ const isolationTargets = [
     rowOf: (fixture) => fixture.dosagePeriod,
     change: { dose_text: "Wpis z obcego konta" },
     guardedColumn: "dose_text",
+  },
+  {
+    table: "symptom_entries",
+    rowOf: (fixture) => fixture.symptomEntry,
+    change: { note: "Wpis z obcego konta" },
+    guardedColumn: "note",
+  },
+  {
+    // The fixture severity is "mild"; "severe" passes the column's check, so only RLS can stop the change.
+    table: "symptom_entry_items",
+    rowOf: (fixture) => fixture.symptomEntryItem,
+    change: { severity: "severe" },
+    guardedColumn: "severity",
   },
 ];
 
@@ -461,7 +496,7 @@ const isolationSkipReason = usesExistingAccount
 // The shared-table checks use the same fixture account, so they run in the same mode and skip for the same reason.
 const isolationSteps = isolationSkipReason
   ? [
-      ["medication isolation checks", null, { skip: isolationSkipReason }],
+      ["medication and journal isolation checks", null, { skip: isolationSkipReason }],
       ["shared read-only table checks", null, { skip: isolationSkipReason }],
     ]
   : [fixtureStep, ...isolationTargets.flatMap(isolationChecks), ...sharedTargets.flatMap(sharedTableChecks)];
