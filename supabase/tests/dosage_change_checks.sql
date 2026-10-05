@@ -1,6 +1,7 @@
 -- Dosage change checks (S-03): public.change_dosage closes the ongoing period and opens a new one, and refuses every
 -- case of its rule list with a named SQLSTATE; dosage periods remember their registry variant.
---   DOSAGE 1:  add_medication_from_registry writes the chosen variant into the first period; leaflet periods have none.
+--   DOSAGE 1:  add_medication_from_registry writes the chosen variant into the first period; leaflet periods have none;
+--              both functions save the dose without outer spaces.
 --   DOSAGE 2:  a successful change — old period ends on the change date, new one starts on it, exactly two periods,
 --              one ongoing, dose trimmed, variant carried over, the returned id is the new period.
 --   DOSAGE 3:  repeating the same call after a successful change is DP004 (not DP002) and adds no third period.
@@ -13,10 +14,16 @@
 --   DOSAGE 9:  DP005 for a variant of another name, of another ATC composition, of another composition without a
 --              code, a missing registry row, and any variant for a leaflet medication.
 --   DOSAGE 10: DP006 for a medication without an ongoing period.
---   DOSAGE 11: P0002 for another account's medication, its periods untouched.
+--   DOSAGE 11: DP008 for another account's medication, its periods untouched.
 --   DOSAGE 12: 28000 without a session.
 --   DOSAGE 13: with the correction window closed a dose change still passes, and changing registry_product_id of an
 --              existing period is blocked by the history guard; with the window open the same update passes.
+--   DOSAGE 14: the variant rule holds outside change_dosage too (trigger dosage_periods_guard_variant): a direct insert
+--              or update with a variant of another name or composition, and a direct insert with any variant for a
+--              leaflet medication, are DP005; a direct insert with a variant of the same product passes; an insert
+--              into another account's medication is refused by RLS (42501), not by DP005.
+--   DOSAGE 15: registry_variants_of returns exactly the variants of the same name and composition (the variant the
+--              medication was added with included); nothing for a leaflet medication or another account's medication.
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`), or this file alone:
 -- `node scripts/db-checks.mjs supabase/tests/dosage_change_checks.sql`. The runner (scripts/db-checks.mjs) passes it
@@ -29,7 +36,7 @@
 --   - Blocked cases catch a named SQLSTATE only, never `when others`: pg_temp.try_change lists every code the
 --     function may raise, and any other error stops the file.
 --   - Every blocked case leaves the number of periods unchanged, and has an owner counterexample that adds exactly
---     one period (pg_temp.assert_changed).
+--     one period (pg_temp.assert_period_count, pg_temp.assert_changed_on).
 --   - Registry fixtures are own rows (names starting with "Dosagecheck"), not the seed data, so the rules are
 --     measured on compositions chosen for them.
 --
@@ -114,7 +121,7 @@ begin
   return 'ok';
 exception
   when sqlstate '28000' then return '28000';
-  when sqlstate 'P0002' then return 'P0002';
+  when sqlstate 'DP008' then return 'DP008';
   when sqlstate 'DP001' then return 'DP001';
   when sqlstate 'DP002' then return 'DP002';
   when sqlstate 'DP003' then return 'DP003';
@@ -189,8 +196,8 @@ declare
   v_leaflet uuid;
 begin
   perform pg_temp.act_as(v_a);
-  v_registry := public.add_medication_from_registry(v_alpha_400, '1 tabletka', date '2026-09-01');
-  v_leaflet := public.add_medication_from_leaflet('Dosagecheck leaflet', 'ibuprofen', false, '1 tabletka', date '2026-09-01');
+  v_registry := public.add_medication_from_registry(v_alpha_400, '  1 tabletka ', date '2026-09-01');
+  v_leaflet := public.add_medication_from_leaflet('Dosagecheck leaflet', 'ibuprofen', false, '  1 tabletka ', date '2026-09-01');
   perform pg_temp.act_as_postgres();
 
   if (select registry_product_id from public.dosage_periods where medication_id = v_registry) is distinct from v_alpha_400 then
@@ -200,8 +207,14 @@ begin
   if (select registry_product_id from public.dosage_periods where medication_id = v_leaflet) is not null then
     raise exception 'DOSAGE 1 FAILED: first period of a leaflet medication has a registry variant';
   end if;
+  -- Same dose normalisation as change_dosage (impl-review F7): outer spaces removed.
+  if exists (select 1 from public.dosage_periods
+              where medication_id in (v_registry, v_leaflet) and dose_text is distinct from '1 tabletka') then
+    raise exception 'DOSAGE 1 FAILED: a first period kept the outer spaces of the dose (got %)',
+      (select string_agg(format('"%s"', dose_text), ', ') from public.dosage_periods where medication_id in (v_registry, v_leaflet));
+  end if;
 
-  raise notice 'DOSAGE 1 OK: add_medication_from_registry saves the chosen variant in the first period; a leaflet period has none';
+  raise notice 'DOSAGE 1 OK: add_medication_from_registry saves the chosen variant in the first period; a leaflet period has none; both save the dose without outer spaces';
 end;
 $$;
 
@@ -543,7 +556,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- DOSAGE 11: P0002 — another account's medication
+-- DOSAGE 11: DP008 — another account's medication
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -562,7 +575,7 @@ begin
   v_foreign := pg_temp.try_change(v_b_med, '2 tabletki', v_today - 1);
   perform pg_temp.act_as_postgres();
 
-  perform pg_temp.assert_result('11', 'account A changing account B''s medication', v_foreign, 'P0002');
+  perform pg_temp.assert_result('11', 'account A changing account B''s medication', v_foreign, 'DP008');
   perform pg_temp.assert_period_count('11', 'the refused foreign change', v_b_med, 1);
   if exists (select 1 from public.dosage_periods
               where medication_id = v_b_med
@@ -579,7 +592,7 @@ begin
   perform pg_temp.assert_period_count('11', 'the owner''s change', v_b_med, 2);
   perform pg_temp.assert_changed_on('11', 'the owner''s change', v_b_med, v_today - 1);
 
-  raise notice 'DOSAGE 11 OK: another account''s medication is P0002 and its periods stay untouched; the owner''s change passes';
+  raise notice 'DOSAGE 11 OK: another account''s medication is DP008 and its periods stay untouched; the owner''s change passes';
 end;
 $$;
 
@@ -718,6 +731,144 @@ begin
   end if;
 
   raise notice 'DOSAGE 13 OK (open window): the same variant update passes, so the closed-window refusal comes from the guard';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- DOSAGE 14: direct writes to dosage_periods follow the same variant rule (impl-review F1)
+-- ---------------------------------------------------------------------------
+-- The owner writes through the API as authenticated, so the insert policy lets the row through and only the trigger
+-- can refuse it. Each insert gets its own five days before the ongoing period, so without the trigger the inserts
+-- succeed and the check fails on its DP005 assertion, not on the no-overlap constraint.
+
+create function pg_temp.try_write(p_sql text, p_medication_id uuid, p_variant uuid, p_days_back integer default 0)
+returns text
+language plpgsql
+as $$
+begin
+  execute p_sql using p_medication_id, p_variant, p_days_back;
+  return 'ok';
+exception
+  when sqlstate 'DP005' then return 'DP005';
+  when sqlstate '42501' then return '42501';
+end;
+$$;
+
+do $$
+declare
+  v_a constant uuid := '00000000-0000-4000-9200-000000000a00';
+  v_b constant uuid := '00000000-0000-4000-9200-000000000b00';
+  v_alpha_200 constant uuid := '00000000-0000-4000-9200-0000000000a1';
+  v_alpha_400 constant uuid := '00000000-0000-4000-9200-0000000000a2';
+  v_alpha_combo constant uuid := '00000000-0000-4000-9200-0000000000a3';
+  v_beta_200 constant uuid := '00000000-0000-4000-9200-0000000000b1';
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  c_insert constant text :=
+    'insert into public.dosage_periods (medication_id, dose_text, started_on, ended_on, registry_product_id)
+     values ($1, ''1 tabletka'', current_date - $3, current_date - $3 + 5, $2)';
+  c_update constant text :=
+    'update public.dosage_periods set registry_product_id = $2 where medication_id = $1';
+  v_med uuid;
+  v_leaflet uuid;
+  v_b_med uuid;
+  v_other_name text;
+  v_other_codes text;
+  v_leaflet_variant text;
+  v_update_other text;
+  v_foreign text;
+  v_same_product text;
+  v_leaflet_plain text;
+begin
+  perform pg_temp.act_as(v_b);
+  v_b_med := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+
+  perform pg_temp.act_as(v_a);
+  v_med := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+  v_leaflet := public.add_medication_from_leaflet('Dosagecheck leaflet 14', 'ibuprofen', false, '1 tabletka', v_today - 30);
+  v_other_name := pg_temp.try_write(c_insert, v_med, v_beta_200, 300);
+  v_other_codes := pg_temp.try_write(c_insert, v_med, v_alpha_combo, 280);
+  v_leaflet_variant := pg_temp.try_write(c_insert, v_leaflet, v_alpha_200, 260);
+  v_update_other := pg_temp.try_write(c_update, v_med, v_alpha_combo);
+  v_foreign := pg_temp.try_write(c_insert, v_b_med, v_beta_200, 240);
+  perform pg_temp.act_as_postgres();
+
+  perform pg_temp.assert_result('14', 'a direct insert with a variant of another name', v_other_name, 'DP005');
+  perform pg_temp.assert_result('14', 'a direct insert with a variant of another composition', v_other_codes, 'DP005');
+  perform pg_temp.assert_result('14', 'a direct insert with a variant for a leaflet medication', v_leaflet_variant, 'DP005');
+  perform pg_temp.assert_result('14', 'a direct update to a variant of another composition', v_update_other, 'DP005');
+  -- RLS, not DP005: the rule must not answer about another account's medication.
+  perform pg_temp.assert_result('14', 'a direct insert into another account''s medication', v_foreign, '42501');
+  perform pg_temp.assert_period_count('14', 'the refused direct writes', v_med, 1);
+  perform pg_temp.assert_period_count('14', 'the refused leaflet insert', v_leaflet, 1);
+  perform pg_temp.assert_period_count('14', 'the refused foreign insert', v_b_med, 1);
+  if (select registry_product_id from public.dosage_periods where medication_id = v_med) is distinct from v_alpha_200 then
+    raise exception 'DOSAGE 14 FAILED: the refused update changed the variant of the period';
+  end if;
+
+  -- Owner counterexamples: the same statements with an allowed variant pass.
+  perform pg_temp.act_as(v_a);
+  v_same_product := pg_temp.try_write(c_insert, v_med, v_alpha_400, 200);
+  v_leaflet_plain := pg_temp.try_write(c_insert, v_leaflet, null, 180);
+  perform pg_temp.act_as_postgres();
+
+  perform pg_temp.assert_result('14', 'a direct insert with a variant of the same product', v_same_product, 'ok');
+  perform pg_temp.assert_result('14', 'a direct leaflet insert without a variant', v_leaflet_plain, 'ok');
+  perform pg_temp.assert_period_count('14', 'the allowed direct insert', v_med, 2);
+  perform pg_temp.assert_period_count('14', 'the allowed leaflet insert', v_leaflet, 2);
+
+  raise notice 'DOSAGE 14 OK: direct writes with a variant of another name or composition, or any variant for a leaflet medication, are DP005; an allowed variant passes; another account''s medication is refused by RLS';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- DOSAGE 15: the variants offered on the dose change screen (impl-review F3)
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_a constant uuid := '00000000-0000-4000-9200-000000000a00';
+  v_b constant uuid := '00000000-0000-4000-9200-000000000b00';
+  v_alpha_200 constant uuid := '00000000-0000-4000-9200-0000000000a1';
+  v_alpha_400 constant uuid := '00000000-0000-4000-9200-0000000000a2';
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  v_med uuid;
+  v_leaflet uuid;
+  v_b_med uuid;
+  v_own uuid[];
+  v_own_leaflet uuid[];
+  v_foreign uuid[];
+  v_owner_view uuid[];
+begin
+  perform pg_temp.act_as(v_b);
+  v_b_med := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+
+  perform pg_temp.act_as(v_a);
+  v_med := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+  v_leaflet := public.add_medication_from_leaflet('Dosagecheck leaflet 15', 'ibuprofen', false, '1 tabletka', v_today - 30);
+  v_own := array(select public.registry_variants_of(v_med) order by 1);
+  v_own_leaflet := array(select public.registry_variants_of(v_leaflet));
+  v_foreign := array(select public.registry_variants_of(v_b_med));
+
+  -- Owner counterexample for the foreign case: account B sees the variants of the same medication.
+  perform pg_temp.act_as(v_b);
+  v_owner_view := array(select public.registry_variants_of(v_b_med) order by 1);
+  perform pg_temp.act_as_postgres();
+
+  -- Alpha 200 mg: itself and DOSAGECHECK alpha 400 mg; not the other ATC set (a3), the other uncoded set (a4) or Beta.
+  if v_own is distinct from array[v_alpha_200, v_alpha_400] then
+    raise exception 'DOSAGE 15 FAILED: variants of Dosagecheck Alpha 200 mg are %, expected %', v_own, array[v_alpha_200, v_alpha_400];
+  end if;
+  if cardinality(v_own_leaflet) <> 0 then
+    raise exception 'DOSAGE 15 FAILED: a leaflet medication got variants %', v_own_leaflet;
+  end if;
+  if cardinality(v_foreign) <> 0 then
+    raise exception 'DOSAGE 15 FAILED: account A got variants % of account B''s medication', v_foreign;
+  end if;
+  if v_owner_view is distinct from array[v_alpha_200, v_alpha_400] then
+    raise exception 'DOSAGE 15 FAILED: account B sees variants % of its own medication, expected %', v_owner_view, array[v_alpha_200, v_alpha_400];
+  end if;
+
+  raise notice 'DOSAGE 15 OK: registry_variants_of gives the same-name, same-composition variants; nothing for a leaflet medication or another account''s medication';
 end;
 $$;
 

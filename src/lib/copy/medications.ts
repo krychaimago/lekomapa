@@ -122,8 +122,7 @@ export const MEDICATION_COPY = {
     // Dose change (S-03): codes raised by change_dosage (supabase/migrations/20261004120000_dosage_change.sql).
     medicationDiscontinued: "Ten lek jest zakończony, więc zmiany dawkowania nie da się zapisać.",
     changeDateTooEarly: "Data zmiany musi być późniejsza niż początek bieżącego dawkowania.",
-    changeDateTooOld:
-      "Datę zmiany można cofnąć najwyżej o 14 dni. Starszą zmianę zapisuje się przez zakończenie leku i dodanie go ponownie z nowym dawkowaniem.",
+    changeDateTooOld: "Datę zmiany można cofnąć najwyżej o 14 dni.",
     changeDateInFuture: "Data zmiany nie może być późniejsza niż dziś.",
     invalidChangeDate: "Wpisz poprawną datę zmiany.",
     sameDose: "To dawkowanie jest już zapisane jako bieżące.",

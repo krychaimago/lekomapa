@@ -10,8 +10,8 @@ const GENERIC: MedicationApiErrorCode = "generic";
 const MAX_TEXT_LENGTH = 200;
 
 // Database error codes raised by change_dosage (see its function comment in
-// supabase/migrations/20261004120000_dosage_change.sql). Anything else is `generic`. Measured: DP00x arrive as
-// `error.code`; P0002 arrives locally without a code (HTTP 500 body replaced), so in practice it falls to `generic`.
+// supabase/migrations/20261004130000_dosage_period_variant_guard.sql). Anything else is `generic`. Measured: DP00x
+// arrive as `error.code`, which is why a missing medication is DP008 and not P0002 (P0002 arrived without its code).
 const DB_ERROR_CODES: Record<string, MedicationApiErrorCode> = {
   DP001: "medicationDiscontinued",
   DP002: "changeDateTooEarly",
@@ -20,7 +20,7 @@ const DB_ERROR_CODES: Record<string, MedicationApiErrorCode> = {
   DP005: "variantNotAllowed",
   DP006: "noCurrentPeriod",
   DP007: "changeDateTooOld",
-  P0002: "medicationNotFound",
+  DP008: "medicationNotFound",
 };
 
 // Every issue message is a MedicationApiErrorCode; the error redirect checks it against the copy before use.

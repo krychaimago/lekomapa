@@ -114,30 +114,6 @@ export function earliestChangeDate(startedOn: string, today: string): string {
   return afterStart > limit ? afterStart : limit;
 }
 
-export interface CompositionRow {
-  substance_name: string;
-  atc_code: string | null;
-}
-
-// Set of distinct codes, and set of distinct names without a code (lower case, outer spaces removed), as sorted keys.
-function compositionKey(rows: readonly CompositionRow[]): string {
-  const codes = new Set<string>();
-  const uncoded = new Set<string>();
-  for (const row of rows) {
-    if (row.atc_code !== null) codes.add(row.atc_code);
-    else uncoded.add(row.substance_name.trim().toLowerCase());
-  }
-  return JSON.stringify([[...codes].sort(), [...uncoded].sort()]);
-}
-
-// Whether a registry variant has the composition saved with a medication: the same set of ATC codes and the same set
-// of substance names without a code. Mirrors the DP005 composition rule of change_dosage
-// (supabase/migrations/20261004120000_dosage_change.sql), so the dose change screen never offers a variant the
-// database refuses.
-export function sameComposition(variant: readonly CompositionRow[], medication: readonly CompositionRow[]): boolean {
-  return compositionKey(variant) === compositionKey(medication);
-}
-
 const MIN_SHARED_PREFIX = 4;
 const MAX_SIMILAR = 5;
 

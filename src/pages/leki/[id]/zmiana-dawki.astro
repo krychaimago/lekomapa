@@ -12,27 +12,22 @@ import {
   earliestChangeDate,
   formatIsoDate,
   registryCompositionNames,
-  sameComposition,
   todayInWarsaw,
 } from "@/lib/services/medications";
-import { likeLiteral } from "@/lib/services/registry-search";
 import { createClient } from "@/lib/supabase";
-import type { DosagePeriod, Medication, MedicationSubstance, RegistryProduct, RegistryVariantOption } from "@/types";
+import type { DosagePeriod, Medication, RegistryProduct, RegistryVariantOption } from "@/types";
 
 type MedicationRow = Pick<
   Medication,
   "id" | "product_name" | "composition_source" | "registry_medication_id" | "discontinued_on"
 > & {
   registry_products: Pick<RegistryProduct, "product_name"> | null;
-  medication_substances: Pick<MedicationSubstance, "substance_name" | "atc_code">[];
   dosage_periods: Pick<DosagePeriod, "id" | "dose_text" | "started_on" | "ended_on" | "registry_product_id">[];
 };
 
 type VariantRow = Pick<RegistryProduct, "id" | "strength" | "pharmaceutical_form"> & {
   registry_substances: RegistrySubstanceRow[];
 };
-
-const MAX_VARIANTS = 100;
 
 const copy = MEDICATION_COPY.dosageChange;
 const id = Astro.params.id ?? "";
@@ -51,7 +46,7 @@ if (supabase) {
   const result = await supabase
     .from("medications")
     .select(
-      "id, product_name, composition_source, registry_medication_id, discontinued_on, registry_products(product_name), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, registry_product_id)",
+      "id, product_name, composition_source, registry_medication_id, discontinued_on, registry_products(product_name), dosage_periods(id, dose_text, started_on, ended_on, registry_product_id)",
     )
     .eq("id", id)
     .maybeSingle()
@@ -76,24 +71,34 @@ const currentVariantId = isRegistry
   : null;
 const showForm = isCurrent && currentPeriod !== null && !startedToday;
 
-// Variants offered: the same product name (case ignored) and the same composition as the medication — the DP005
-// rule of change_dosage, so the screen never offers a variant the database refuses.
+// Variants offered: the database picks them (registry_variants_of) by the same DP005 rule change_dosage applies, so
+// the screen never offers a variant the database refuses. Only ids travel: the medication id in the RPC body, the
+// variant ids in the URL of the second read — never the product name.
 let variants: RegistryVariantOption[] = [];
-const baseName = medication?.registry_products?.product_name ?? "";
-if (supabase && medication && showForm && isRegistry && baseName) {
-  const { data, error: variantsError } = await supabase
-    .from("registry_products")
-    .select("id, strength, pharmaceutical_form, registry_substances(position, substance_name, atc_code)")
-    .ilike("product_name", likeLiteral(baseName))
-    .limit(MAX_VARIANTS)
-    .overrideTypes<VariantRow[], { merge: false }>();
-  if (variantsError) {
-    loadFailed = true;
-    console.error("Reading registry variants for a dose change failed", { code: variantsError.code });
+if (supabase && medication && showForm && isRegistry) {
+  const isIdList = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.every((item) => typeof item === "string");
+  const allowed = await supabase.rpc("registry_variants_of", { p_medication_id: medication.id });
+  const allowedIds: unknown = allowed.error ? null : allowed.data;
+  let rows: VariantRow[] | null = null;
+  if (isIdList(allowedIds)) {
+    const result = await supabase
+      .from("registry_products")
+      .select("id, strength, pharmaceutical_form, registry_substances(position, substance_name, atc_code)")
+      .in("id", allowedIds)
+      .overrideTypes<VariantRow[], { merge: false }>();
+    if (result.error) {
+      console.error("Reading registry variants for a dose change failed", { code: result.error.code });
+    } else {
+      rows = result.data;
+    }
   } else {
-    const savedComposition = medication.medication_substances;
-    variants = data
-      .filter((row) => row.id === currentVariantId || sameComposition(row.registry_substances, savedComposition))
+    console.error("Reading allowed registry variants for a dose change failed", { code: allowed.error?.code });
+  }
+  if (rows === null) {
+    loadFailed = true;
+  } else {
+    variants = rows
       .map((row) => ({
         id: row.id,
         strength: row.strength,
