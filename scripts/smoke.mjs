@@ -928,6 +928,86 @@ const medicationFlowSteps = [
     EXPECT_OK,
   ],
   [
+    "medications: an ended medication is on /leki/zakonczone and counted in the link on /leki",
+    async () => {
+      const id = flow.ids.discontinued;
+      if (!id) return { ok: false, detail: "check did not run: no medication was ended" };
+      // The end was cancelled above, so the medication is current again; ending it anew opens a new window.
+      const response = await request(`/api/medications/${id}/discontinuation`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zakonczenie`, flow.jarA),
+        form: { discontinuedOn: todayInWarsaw() },
+      });
+      // The expected number comes from the database, read as account A with the page's own filter: earlier steps
+      // may have ended other medications of this account.
+      const count = await fixtures.a.client
+        .from("medications")
+        .select("id", { count: "exact", head: true })
+        .not("discontinued_on", "is", null);
+      if (count.error) return { ok: false, detail: `counting ended medications failed: ${count.error.code}` };
+      const ended = await requestPage("/leki/zakonczone", { jar: flow.jarA });
+      const list = await requestPage("/leki", { jar: flow.jarA });
+      const onEnded = ended.status === 200 && listItemOf(ended.body, id) !== null;
+      const offList = list.status === 200 && listItemOf(list.body, id) === null;
+      const link = MEDICATION_COPY.list.endedLink.replace("{liczba}", String(count.count));
+      const counted = (count.count ?? 0) > 0 && list.status === 200 && pageContains(list.body, link);
+      return {
+        ok:
+          response.status === 302 &&
+          response.location === `/leki/${id}?zakonczenie=zapisane` &&
+          onEnded &&
+          offList &&
+          counted,
+        detail: `${response.status} ${response.location}; ended page ${ended.status} ${
+          onEnded ? "shows it" : "without it"
+        }; list ${offList ? "without it" : "still shows it"}; link "${link}" ${counted ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: deleting an item added by mistake over HTTP removes it from both lists",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const added = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do usunięcia",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = added.status === 302 ? addedIdFrom(added.location) : null;
+      if (!id) return { ok: false, detail: `add: ${added.status} ${added.location}` };
+      const response = await request(`/api/medications/${id}/delete`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/usun`, flow.jarA),
+        form: {},
+      });
+      // Gone from the database, not just hidden: no medication row and no periods left (on delete cascade).
+      const row = await fixtures.a.client.from("medications").select("id").eq("id", id);
+      if (row.error) return { ok: false, detail: `reading the medication failed: ${row.error.code}` };
+      const periods = await periodsOf(id);
+      const list = await requestPage("/leki?usunieto=1", { jar: flow.jarA });
+      const ended = await requestPage("/leki/zakonczone", { jar: flow.jarA });
+      const gone = row.data.length === 0 && periods.length === 0;
+      const offList = list.status === 200 && listItemOf(list.body, id) === null;
+      const offEnded = ended.status === 200 && listItemOf(ended.body, id) === null;
+      const banner = list.status === 200 && pageContains(list.body, MEDICATION_COPY.list.deleted);
+      return {
+        ok:
+          response.status === 302 && response.location === "/leki?usunieto=1" && gone && offList && offEnded && banner,
+        detail: `${response.status} ${response.location}; row ${gone ? "deleted" : "still there"}; list ${
+          offList ? "without it" : "still shows it"
+        }; ended page ${offEnded ? "without it" : "still shows it"}; banner ${banner ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
     "medications: another account gets 404 for the medication's details",
     async () => {
       const id = flow.ids[FLAG_GROUPS[0]];

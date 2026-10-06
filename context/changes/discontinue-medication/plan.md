@@ -348,28 +348,28 @@ Licznik zakończonych to jedno zapytanie `head` po indeksie `medications_user_id
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test`
-- [x] 2.2 Typy i lint czyste: `npm run typecheck` i `npm run lint`
-- [x] 2.3 Bramki SQL dalej zielone: `npm run db:check`
-- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
+- [x] 2.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test` — f522672
+- [x] 2.2 Typy i lint czyste: `npm run typecheck` i `npm run lint` — f522672
+- [x] 2.3 Bramki SQL dalej zielone: `npm run db:check` — f522672
+- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke` — f522672
 
 #### Manual
 
-- [x] 2.5 Na telefonie: zakończenie leku, poprawa daty i cofnięcie działają; teksty zrozumiałe i neutralne
-- [x] 2.6 Formularz nie pozwala wybrać daty w przyszłości ani wcześniejszej niż najwcześniejsza dopuszczalna; komunikat MD005 podaje konkretną datę
-- [x] 2.7 „Zakończ przyjmowanie” nie wygląda jak kasowanie
+- [x] 2.5 Na telefonie: zakończenie leku, poprawa daty i cofnięcie działają; teksty zrozumiałe i neutralne — f522672
+- [x] 2.6 Formularz nie pozwala wybrać daty w przyszłości ani wcześniejszej niż najwcześniejsza dopuszczalna; komunikat MD005 podaje konkretną datę — f522672
+- [x] 2.7 „Zakończ przyjmowanie” nie wygląda jak kasowanie — f522672
 
 ### Phase 3: Leki zakończone i usuwanie
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test`
-- [ ] 3.2 Typy i lint czyste: `npm run typecheck` i `npm run lint`
-- [ ] 3.3 Bramka kolorów przechodzi bez nowych wyjątków: `npm test` (`scripts/tokens/hardcoded-colors.mjs`)
-- [ ] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 3.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test`
+- [x] 3.2 Typy i lint czyste: `npm run typecheck` i `npm run lint`
+- [x] 3.3 Bramka kolorów przechodzi bez nowych wyjątków: `npm test` (`scripts/tokens/hardcoded-colors.mjs`)
+- [x] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Na telefonie `/leki` z kilkoma lekami: nota tuż pod listą, link do zakończonych pod notą, strona nie wydłuża się o zakończone
-- [ ] 3.6 `/leki/zakonczone` czytelna na telefonie i w przeglądarce
-- [ ] 3.7 Ścieżki zakończenia i usunięcia są wyraźnie rozdzielone; link usuwania znika po 24 h od dodania
+- [x] 3.5 Na telefonie `/leki` z kilkoma lekami: nota tuż pod listą, link do zakończonych pod notą, strona nie wydłuża się o zakończone
+- [x] 3.6 `/leki/zakonczone` czytelna na telefonie i w przeglądarce
+- [x] 3.7 Ścieżki zakończenia i usunięcia są wyraźnie rozdzielone; link usuwania znika po 24 h od dodania

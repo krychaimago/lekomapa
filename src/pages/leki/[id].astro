@@ -16,6 +16,8 @@ import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstan
 type VariantRow = Pick<RegistryProduct, "strength" | "pharmaceutical_form">;
 
 type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source" | "discontinued_on"> & {
+  // End of the medication's own correction window (S-05): until when an item added by mistake can be deleted (S-04).
+  correction_window_ends_at: string | null;
   // End of the window of the end (S-04): until when the end can be moved or cancelled; null for a current medication.
   discontinuation_correction_ends_at: string | null;
   registry_products: VariantRow | null;
@@ -57,7 +59,7 @@ if (supabase) {
     supabase
       .from("medications")
       .select(
-        "id, product_name, composition_source, discontinued_on, discontinuation_correction_ends_at, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
+        "id, product_name, composition_source, discontinued_on, correction_window_ends_at, discontinuation_correction_ends_at, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
       )
       .eq("id", id)
       .maybeSingle()
@@ -197,14 +199,22 @@ const discontinuationBannerText =
     ? discontinuationBanners[bannerParam]
     : null;
 
+// Deleting an item added by mistake: offered only while the medication's correction window is open, the same
+// comparison delete_medication makes. Shown apart from the other actions, at the bottom of the screen.
+const deletionDeadline = medication ? deadlineOf(medication) : null;
+
+// An ended medication leads back to the page of ended medications, a current one to the list.
+const backHref = medication && !isCurrent ? "/leki/zakonczone" : "/leki";
+const backText = medication && !isCurrent ? copy.backToEndedList : copy.backToList;
+
 const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
 
 <AppLayout title={medication?.product_name ?? copy.title}>
   <div class="mx-auto flex max-w-3xl flex-col gap-6">
-    <a href="/leki" class:list={linkClass}>
-      {copy.backToList}
+    <a href={backHref} class:list={linkClass}>
+      {backText}
     </a>
 
     {loadFailed && (
@@ -367,6 +377,14 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
             <p>{INTERACTION_COPY.noInteractionsForMedication}</p>
             <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
+          </section>
+        )}
+
+        {deletionDeadline && (
+          <section class="mt-6 flex flex-col gap-2 border-t border-border pt-6">
+            <a href={`/leki/${medication.id}/usun`} class:list={[linkClass, "text-sm"]}>
+              {MEDICATION_COPY.deletion.open.replace("{do}", deletionDeadline)}
+            </a>
           </section>
         )}
       </>

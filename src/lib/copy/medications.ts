@@ -19,6 +19,20 @@ export const MEDICATION_COPY = {
     // Under each medication whose dosage period is still in its correction window; the latest such window.
     correctableUntil: "Dawkowanie możesz poprawić do {do}",
     loadError: "Nie udało się wczytać listy leków. Odśwież stronę.",
+    // Under the note, shown only when at least one medication has ended (S-04). `{liczba}` is their number.
+    endedLink: "Zakończone leki ({liczba})",
+    // Banner after `?usunieto=1`: an item added by mistake was deleted.
+    deleted: "Usunięto pozycję dodaną przez pomyłkę.",
+  },
+  // Ended medications (S-04), on a page of their own so the list of current ones stays short. Newest end first.
+  endedList: {
+    title: "Zakończone leki",
+    intro: "Leki, których przyjmowanie zostało zakończone. Zostają w historii razem z datami przyjmowania.",
+    // `{od}` is the first day taken, `{do}` the last day taken (the day before the saved end date), DD.MM.YYYY.
+    takenRange: "przyjmowany od {od} do {do}",
+    empty: "Nie masz żadnego zakończonego leku.",
+    loadError: "Nie udało się wczytać listy zakończonych leków. Odśwież stronę.",
+    backToList: "Wróć do listy aktualnych leków",
   },
   add: {
     title: "Dodaj lek",
@@ -78,6 +92,8 @@ export const MEDICATION_COPY = {
     notFound: "Nie znaleziono takiego leku.",
     loadError: "Nie udało się wczytać leku. Odśwież stronę.",
     backToList: "Wróć do listy leków",
+    // Back link on the details of an ended medication (S-04).
+    backToEndedList: "Wróć do zakończonych leków",
   },
   // Dose change screen (S-03). Nouns, not imperatives: the screen records a change already prescribed and never
   // suggests that the dose should change (FR-012). A medication that ended is "zakończony".
@@ -170,6 +186,23 @@ export const MEDICATION_COPY = {
     movedWithDeadline: "Zmieniono datę zakończenia przyjmowania. Możesz ją poprawić lub cofnąć do {do}.",
     cancelled: "Cofnięto zakończenie przyjmowania. Lek jest znów na liście aktualnych leków.",
   },
+  // Deleting an item added by mistake (S-04, FR-005): only within the correction window of the medication (24 hours
+  // from adding it). Kept apart from ending: an end is part of the history, a deletion removes an item that never
+  // belonged there. Plain wording, no alarm: nothing here says a medication should end.
+  deletion: {
+    title: "Usunięcie pozycji dodanej przez pomyłkę",
+    // Link in a separate section at the bottom of the details screen. `{do}` as in list.addedWithDeadline.
+    open: "Usuń pozycję dodaną przez pomyłkę – do {do}",
+    explanation:
+      "Usunięcie kasuje tę pozycję razem z całą jej historią przyjmowania. Służy wyłącznie do poprawienia pomyłki przy dodawaniu.",
+    endInstead:
+      "Jeśli ten lek był przyjmowany, a przyjmowanie się zakończyło, zapisz to przez „Zakończ przyjmowanie” w szczegółach leku. Wtedy lek zostaje w historii.",
+    deadline: "Pozycję można usunąć do {do}.",
+    submit: "Usuń pozycję",
+    closed:
+      "Okno korekty tego leku jest już zamknięte, więc tej pozycji nie da się usunąć. Lek jest częścią historii; zakończenie przyjmowania zapisuje się datą.",
+    backToDetails: "Wróć do szczegółów leku",
+  },
   // Hints next to the form (design-draft.md:196-199), reworded for a product chosen by its trade name.
   hints: {
     doseHistoryTitle: "Dawkowanie ma historię",
@@ -225,6 +258,10 @@ export const MEDICATION_COPY = {
     sameDiscontinuedOn: "Ta data zakończenia jest już zapisana.",
     invalidDiscontinuedOn: "Wpisz poprawną datę pierwszego dnia bez leku.",
     discontinuationGeneric: "Nie udało się zapisać zakończenia przyjmowania. Spróbuj ponownie.",
+    // Deleting an item added by mistake (S-04): MD010 from delete_medication; MD001 is medicationNotFound.
+    deleteWindowClosed:
+      "Okno korekty tego leku jest już zamknięte, więc tej pozycji nie da się usunąć. Zakończenie przyjmowania zapisuje się datą.",
+    deleteGeneric: "Nie udało się usunąć pozycji. Spróbuj ponownie.",
     generic: "Nie udało się zapisać leku. Spróbuj ponownie.",
   },
 } as const;

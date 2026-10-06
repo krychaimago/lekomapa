@@ -12,5 +12,8 @@ export const INTERACTION_COPY = {
   withMedication: "z lekiem {nazwa}",
   noInteractionsForMedication: "Wśród Twoich bieżących leków nie znaleziono sprawdzanej pary z tym lekiem.",
   substanceNotCovered: "Ta substancja nie jest objęta żadną sprawdzaną parą.",
+  // On the page of ended medications (S-04): they carry no flag because they are not compared, not because they passed.
+  endedNotCompared:
+    "Zakończone leki nie są porównywane z listą par substancji, więc nie mają oznaczenia. Brak oznaczenia przy nich nie znaczy, że zostały sprawdzone.",
   rulesIncomplete: "Lekomapa sprawdza tylko wybrane pary substancji — ta lista nie obejmuje wszystkich interakcji.",
 } as const;

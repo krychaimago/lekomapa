@@ -1,0 +1,102 @@
+---
+// Ended medications (S-04, FR-005): every medication with an end date, newest end first, then the most recently
+// added. Kept off /leki so the list of current medications stays short. They carry no interaction flag: only current
+// medications are compared with the pairs, and the page says so. RLS limits the read to the signed-in person. The
+// route sits under /leki, so the middleware protects it with the rest of that menu item.
+import AppLayout from "@/layouts/AppLayout.astro";
+import { INTERACTION_COPY } from "@/lib/copy/interactions";
+import { MEDICATION_COPY } from "@/lib/copy/medications";
+import { formatIsoDate, lastDayOfPeriod } from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import type { DosagePeriod, Medication } from "@/types";
+
+type EndedRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
+  // Never null here: the query keeps only rows with an end date.
+  discontinued_on: string;
+  dosage_periods: Pick<DosagePeriod, "started_on">[];
+};
+
+const copy = MEDICATION_COPY.endedList;
+
+let loadFailed = false;
+let rows: EndedRow[] = [];
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase) {
+  const result = await supabase
+    .from("medications")
+    .select("id, product_name, created_at, discontinued_on, dosage_periods(started_on)")
+    .not("discontinued_on", "is", null)
+    .order("discontinued_on", { ascending: false })
+    .order("created_at", { ascending: false })
+    .overrideTypes<EndedRow[], { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading the ended medication list failed", { code: result.error.code });
+  } else {
+    rows = result.data;
+  }
+} else {
+  loadFailed = true;
+}
+
+// First day taken: the start of the first period. Last day taken: the day before the saved first day without it.
+const items = rows.map((row) => {
+  const firstStart = row.dosage_periods
+    .map((period) => period.started_on)
+    .sort()
+    .at(0);
+  const lastDay = formatIsoDate(lastDayOfPeriod(row.discontinued_on));
+  return {
+    id: row.id,
+    name: row.product_name,
+    dates: firstStart
+      ? copy.takenRange.replace("{od}", formatIsoDate(firstStart)).replace("{do}", lastDay)
+      : MEDICATION_COPY.discontinuation.takenUntil.replace("{data}", lastDay),
+  };
+});
+
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <a href="/leki" class:list={linkClass}>
+      {copy.backToList}
+    </a>
+
+    <div class="flex flex-col gap-2">
+      <h1 class="text-3xl font-bold">{copy.title}</h1>
+      <p class="text-muted-foreground">{copy.intro}</p>
+    </div>
+
+    {loadFailed ? (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    ) : items.length === 0 ? (
+      <section class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <p>{copy.empty}</p>
+      </section>
+    ) : (
+      <ul class="flex flex-col gap-3">
+        {items.map((item) => (
+          <li data-medication-id={item.id}>
+            <a
+              href={`/leki/${item.id}`}
+              class="flex min-h-12 flex-col gap-1 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm hover:border-primary"
+            >
+              <span class="text-lg font-semibold break-words">{item.name}</span>
+              <span class="text-sm text-muted-foreground">{item.dates}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <p class="text-sm text-muted-foreground">{INTERACTION_COPY.endedNotCompared}</p>
+  </div>
+</AppLayout>
