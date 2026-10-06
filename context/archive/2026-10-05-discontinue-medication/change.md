@@ -1,10 +1,10 @@
 ---
 change_id: discontinue-medication
 title: Discontinue medication
-status: impl_reviewed
+status: archived
 created: 2026-10-05
 updated: 2026-10-06
-archived_at: null
+archived_at: 2026-10-06T08:26:41Z
 ---
 
 ## Notes
