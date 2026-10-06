@@ -15,6 +15,7 @@ import {
   registryCompositionNames,
   similarSubstances,
   todayInWarsaw,
+  variantText,
 } from "../../src/lib/services/medications.ts";
 
 // Run in a zone other than Warsaw: on a machine already in Europe/Warsaw, todayInWarsaw would pass even without its
@@ -203,4 +204,13 @@ test("a dose change cannot fall on or before the day the current period started"
 
 test("the fourteen days back cross the end of February in a non-leap year", () => {
   assert.equal(earliestChangeDate("2026-01-01", "2026-03-05"), "2026-02-19");
+});
+
+// One label for a registry variant on every screen and in the question for the doctor (S-06), which shows it when a
+// dose change kept the same dose text.
+test("a registry variant reads 'Moc: … · Postać: …', skipping a missing part; no variant gives an empty label", () => {
+  assert.equal(variantText({ strength: "75 µg", pharmaceutical_form: "tabletki" }), "Moc: 75 µg · Postać: tabletki");
+  assert.equal(variantText({ strength: null, pharmaceutical_form: "syrop" }), "Postać: syrop");
+  assert.equal(variantText({ strength: "5 mg", pharmaceutical_form: null }), "Moc: 5 mg");
+  assert.equal(variantText(null), "");
 });

@@ -11,7 +11,7 @@ import AppLayout from "@/layouts/AppLayout.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { MEDICATION_COPY, apiErrorMessage, type MedicationApiErrorCode } from "@/lib/copy/medications";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
-import { formatIsoDate, lastDayOfPeriod } from "@/lib/services/medications";
+import { formatIsoDate, lastDayOfPeriod, variantText } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import type { DosagePeriod, Medication, RegistryProduct } from "@/types";
@@ -81,15 +81,6 @@ if (period) {
 const unavailableText = unavailable ? MEDICATION_COPY.apiErrors[unavailable] : null;
 
 const isRegistry = medication?.composition_source === "registry";
-// "Moc: … · Postać: …" for one registry variant; empty for none (same label as the details screen).
-function variantText(variant: VariantRow | null): string {
-  return [
-    variant?.strength && `${MEDICATION_COPY.add.strength}: ${variant.strength}`,
-    variant?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${variant.pharmaceutical_form}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
 // The dose with the variant when it has one: a change of the strength alone keeps the same dose text.
 function doseWithVariant(row: PeriodRow): string {
   const variant = isRegistry ? variantText(row.registry_products) : "";

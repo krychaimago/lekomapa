@@ -9,7 +9,7 @@ import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { buttonVariants } from "@/components/ui/button";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
-import { formatIsoDate, lastDayOfPeriod, todayInWarsaw } from "@/lib/services/medications";
+import { formatIsoDate, lastDayOfPeriod, todayInWarsaw, variantText } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstance, RegistryProduct } from "@/types";
 
@@ -127,16 +127,6 @@ for (const line of substanceLines) line.codes.sort();
 
 const isRegistry = medication?.composition_source === "registry";
 const registry = isRegistry ? (medication?.registry_products ?? null) : null;
-
-// "Moc: … · Postać: …" for one registry variant; empty for none.
-function variantText(variant: VariantRow | null): string {
-  return [
-    variant?.strength && `${MEDICATION_COPY.add.strength}: ${variant.strength}`,
-    variant?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${variant.pharmaceutical_form}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
 
 // The summary shows the variant of the current period; the medication's own variant only for a period without one.
 const summaryVariant = isRegistry ? variantText(currentPeriod?.registry_products ?? registry) : "";

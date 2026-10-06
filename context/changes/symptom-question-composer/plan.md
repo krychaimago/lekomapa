@@ -176,8 +176,9 @@ Czysta funkcja, która z wpisów objawu i historii leków składa pytanie, oraz 
 
 **Contract**:
 
-- `DoctorQuestionMedication`: `id`, `name` (`product_name`), `discontinuedOn: string | null`, `periods: { startedOn, endedOn: string | null, doseText, variantLabel: string }[]`.
-- `DoctorQuestionEvent`: `date`, `kind: "start" | "change" | "stop"`, `medicationName`, `dose?`, `previousDose?` (z etykietą wariantu, gdy sama dawka jest identyczna).
+- `DoctorQuestionMedication`: `id`, `name` (`product_name`), `discontinuedOn: string | null`, `periods: { startedOn, endedOn: string | null, doseText, strength: string | null, pharmaceuticalForm: string | null }[]`.
+- `DoctorQuestionEvent`: `date`, `kind: "start" | "change" | "stop"`, `medicationName`, `dose?`, `previousDose?` (gdy sama dawka jest identyczna — z tą częścią wariantu, która się zmieniła: „1 tabletka (Moc: 75 µg)”).
+- Ustalenia z autorką przy fazie 2 (06.10.2026): (1) odstawienie z datą równą `początekOkna` jest zdarzeniem w oknie i trafia na górę, nawet gdy w oknie nie było już ani jednego dnia z lekiem — pytanie wtedy powstaje; (2) w „Pozostałych lekach” `since` to początek okresu obowiązującego w `dataWpisu`, nie początek leku („od {data}, {ilość}” ma być prawdą); (3) przy zmianie samej mocy lub postaci zdanie pokazuje tylko zmienioną część wariantu, więc odczyt w fazie 3 przekazuje moc i postać osobno.
 - `DoctorQuestion`: `symptomName`, `firstEntryOn`, `entryOn`, `entryCount`, `windowStart`, `events: DoctorQuestionEvent[]`, `otherMedications: { name, since, dose }[]`.
 - Brak pola o kolizjach i jakiejkolwiek ocenie — typ wejścia nie zna par leków.
 
@@ -361,29 +362,29 @@ Brak danych do przeliczenia: migracja zmienia tylko funkcje i wyzwalacze. Okresy
 
 #### Automated
 
-- [x] 1.1 Migracje wchodzą czysto: `npx supabase db reset`
-- [x] 1.2 Bramki SQL przechodzą, w tym nowy plik z `GATE_COMPLETE`: `npm run db:check`
-- [x] 1.3 Testy jednostkowe i filtr FR-012 tekstów leków: `npm test`
-- [x] 1.4 Lint i typy: `npm run lint` i `npm run typecheck`
-- [x] 1.5 Smoke z krokiem cofnięcia przeciw lokalnej bazie: `npm run smoke`
+- [x] 1.1 Migracje wchodzą czysto: `npx supabase db reset` — 9ed5929
+- [x] 1.2 Bramki SQL przechodzą, w tym nowy plik z `GATE_COMPLETE`: `npm run db:check` — 9ed5929
+- [x] 1.3 Testy jednostkowe i filtr FR-012 tekstów leków: `npm test` — 9ed5929
+- [x] 1.4 Lint i typy: `npm run lint` i `npm run typecheck` — 9ed5929
+- [x] 1.5 Smoke z krokiem cofnięcia przeciw lokalnej bazie: `npm run smoke` — 9ed5929
 
 #### Manual
 
-- [x] 1.6 Na telefonie: zmiana dawki → „Cofnij zmianę dawki” → potwierdzenie → historia leku ma jeden trwający okres z poprzednią dawką
-- [x] 1.7 Przy leku zakończonym i przy pierwszym okresie odnośnika cofnięcia nie ma
-- [x] 1.8 Poprawa dawki na wartość z poprzedniego okresu pokazuje nowy komunikat wskazujący cofnięcie
+- [x] 1.6 Na telefonie: zmiana dawki → „Cofnij zmianę dawki” → potwierdzenie → historia leku ma jeden trwający okres z poprzednią dawką — 9ed5929
+- [x] 1.7 Przy leku zakończonym i przy pierwszym okresie odnośnika cofnięcia nie ma — 9ed5929
+- [x] 1.8 Poprawa dawki na wartość z poprzedniego okresu pokazuje nowy komunikat wskazujący cofnięcie — 9ed5929
 
 ### Phase 2: Składanie pytania
 
 #### Automated
 
-- [ ] 2.1 Testy składania pytania i filtr FR-012 przechodzą: `npm test`
-- [ ] 2.2 Lint i typy: `npm run lint` i `npm run typecheck`
+- [x] 2.1 Testy składania pytania i filtr FR-012 przechodzą: `npm test`
+- [x] 2.2 Lint i typy: `npm run lint` i `npm run typecheck`
 
 #### Manual
 
-- [ ] 2.3 Bieg mutacyjny na `doctor-question.ts` (`npm run test:mutation`) nie zostawia żywych mutantów w regule okna i kolejności; żywe mutanty opisane albo zabite testem
-- [ ] 2.4 Autorka czyta wygenerowane pytania z fixture'ów testu i potwierdza brzmienie
+- [x] 2.3 Bieg mutacyjny na `doctor-question.ts` (`npm run test:mutation`) nie zostawia żywych mutantów w regule okna i kolejności; żywe mutanty opisane albo zabite testem
+- [x] 2.4 Autorka czyta wygenerowane pytania z fixture'ów testu i potwierdza brzmienie
 
 ### Phase 3: Pytanie na ekranie po zapisie
 
