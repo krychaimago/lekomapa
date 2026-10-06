@@ -55,7 +55,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
 | S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done        |
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done        |
-| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | in-progress |
+| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed    |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | proposed    |
@@ -240,7 +240,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Risk:** Pokusa zrobienia zwykłego usuwania, bo jest prostsze. Usunięcie kasuje kontekst dla wcześniejszych objawów i psuje S-06 tak samo jak nadpisanie okresu w S-03. Dwie ścieżki muszą być tu rozdzielone w interfejsie, żeby odstawienie nie wyglądało jak kasowanie.
   Dług z S-02: strażnik `medications_guard_core` przepuszcza dziś każdą zmianę `discontinued_on`, także po zamknięciu okna korekty. S-04 musi to domknąć: po zamknięciu okna raz ustawiona data odstawienia nie może zostać wyczyszczona ani przesunięta (z testem w `supabase/tests/`).
   Dług z S-03 (impl-review F6b): `change_dosage` przyjmuje zmianę leku z datą odstawienia w przyszłości, a nowy okres zostaje otwarty (`ended_on` puste) i trwa dalej niż data odstawienia. Przykład: odstawienie ustawione na 20.10, zmiana dawki 10.10 — okres od 10.10 nie ma końca. S-04 musi przy ustawianiu daty odstawienia zamykać każdy okres otwarty po tej dacie, także ten powstały po ustawieniu daty (z testem w `supabase/tests/`).
-- **Status:** in-progress
+- **Status:** done
 
 ### S-05: Wpis o samopoczuciu z datą, godziną i objawami
 
@@ -400,3 +400,4 @@ Rozstrzygnięte:
 - **S-02: Użytkowniczka może dodać przyjmowany preparat, wpisując jego nazwę handlową i podając dawkowanie z datą rozpoczęcia; przy nowo dodanej pozycji widzi dyskretny znacznik możliwej kolizji, a w szczegółach leku pełną treść informacji wraz ze składem preparatu. Preparat spoza rejestru dodaje, wskazując substancję czynną z ulotki, i uczestniczy w regułach tak samo.** — Archived 2026-10-01 → `context/archive/2026-09-29-add-medication-with-interaction-flag/`. Lesson: —.
 - **S-03: Użytkowniczka może zmienić dawkowanie leku, przez co bieżący okres dawkowania zostaje zamknięty, a nowy otwarty; lek zostaje jedną pozycją na liście z historią okresów od–do.** — Archived 2026-10-05 → `context/archive/2026-10-04-dosage-period-history/`. Lesson: —.
 - **S-05: Użytkowniczka może dodać wpis o samopoczuciu z datą i godziną wypełnionymi domyślnie na moment zapisu i możliwymi do cofnięcia, zaznaczając jeden lub więcej objawów z zamkniętej listy, opcjonalnie podając nasilenie i własną notatkę.** — Archived 2026-10-05 → `context/archive/2026-10-05-symptom-journal-entry/`. Lesson: —.
+- **S-04: Użytkowniczka może zakończyć przyjmowanie leku z datą odstawienia — lek znika z listy aktualnych, ale zostaje w historii i nadal tłumaczy dawne wpisy; trwałe usunięcie pozycji zarezerwowane dla pozycji dodanych przez pomyłkę.** — Archived 2026-10-06 → `context/archive/2026-10-05-discontinue-medication/`. Lesson: —.
