@@ -335,29 +335,29 @@ Licznik zakończonych to jedno zapytanie `head` po indeksie `medications_user_id
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
-- [x] 1.2 Wszystkie bramki SQL przechodzą, w tym `discontinuation_checks`: `npm run db:check`
-- [x] 1.3 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.4 Typy i lint czyste: `npm run typecheck` i `npm run lint`
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — 8b83aec
+- [x] 1.2 Wszystkie bramki SQL przechodzą, w tym `discontinuation_checks`: `npm run db:check` — 8b83aec
+- [x] 1.3 Testy jednostkowe przechodzą: `npm test` — 8b83aec
+- [x] 1.4 Typy i lint czyste: `npm run typecheck` i `npm run lint` — 8b83aec
 
 #### Manual
 
-- [x] 1.5 Przegląd nagłówka migracji: przykład, kody i uwaga wdrożeniowa zrozumiałe bez czytania SQL
+- [x] 1.5 Przegląd nagłówka migracji: przykład, kody i uwaga wdrożeniowa zrozumiałe bez czytania SQL — 8b83aec
 
 ### Phase 2: Zakończenie i jego poprawa w interfejsie
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test`
-- [ ] 2.2 Typy i lint czyste: `npm run typecheck` i `npm run lint`
-- [ ] 2.3 Bramki SQL dalej zielone: `npm run db:check`
-- [ ] 2.4 Smoke przechodzi przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
+- [x] 2.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test`
+- [x] 2.2 Typy i lint czyste: `npm run typecheck` i `npm run lint`
+- [x] 2.3 Bramki SQL dalej zielone: `npm run db:check`
+- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Na telefonie: zakończenie leku, poprawa daty i cofnięcie działają; teksty zrozumiałe i neutralne
-- [ ] 2.6 Formularz nie pozwala wybrać daty w przyszłości ani wcześniejszej niż najwcześniejsza dopuszczalna; komunikat MD005 podaje konkretną datę
-- [ ] 2.7 „Zakończ przyjmowanie” nie wygląda jak kasowanie
+- [x] 2.5 Na telefonie: zakończenie leku, poprawa daty i cofnięcie działają; teksty zrozumiałe i neutralne
+- [x] 2.6 Formularz nie pozwala wybrać daty w przyszłości ani wcześniejszej niż najwcześniejsza dopuszczalna; komunikat MD005 podaje konkretną datę
+- [x] 2.7 „Zakończ przyjmowanie” nie wygląda jak kasowanie
 
 ### Phase 3: Leki zakończone i usuwanie
 
