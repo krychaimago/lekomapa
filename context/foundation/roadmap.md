@@ -57,8 +57,8 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done        |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | proposed    |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | proposed    |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | ready       |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | ready       |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed    |
 | S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
@@ -274,7 +274,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - Czy złożone pytanie przelicza się przy każdym wyświetleniu, czy zapisuje się w chwili złożenia? Przy przeliczaniu zmiana stałej okna albo poprawka wpisu w oknie korekty (S-07) przestawia kolejność leków także w starych pytaniach. — Owner: plan S-06. Block: no — do rozstrzygnięcia w `/10x-plan`.
 - **Risk:** Drugie miejsce, w którym produkt mógłby wyrządzić szkodę. Wynikiem ma być zdanie do rozmowy z lekarzem, nie lista podejrzanych leków ani ocena ryzyka. Zestawienie trafiające zawsze przestaje cokolwiek znaczyć — okno czasowe oparte na okresach dawkowania z S-03 usuwa większość szumu, dlatego S-03 jest wymaganiem wstępnym, a nie równoległym plasterkiem.
 - **Dług przejęty z S-05 (plan-review F5):** nie ma drogi cofnięcia zmiany dawki. Przykład: zmiana zapisana przy złym leku — poprawa w oknie korekty może tylko przywrócić poprzednią dawkę, a wtedy w historii zostają dwa kolejne okresy z tą samą dawką i data „zmiany”, której nie było. S-05 odrzuca taką poprawę kodem `DP010`, więc fałszywa zmiana zostaje widoczna jako zmiana. S-06 daje pierwszeństwo lekom zmienionym w oknie przed objawem, więc taki lek dostałby pierwszeństwo bez powodu. Przed wdrożeniem S-06 trzeba rozstrzygnąć cofnięcie zmiany (scalenie okresów w oknie korekty) albo pomijanie zmian bez różnicy dawki.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-07: Okno korekty wpisu dzienniczka
 
@@ -288,7 +288,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - ~~Jak długo trwa okno korekty wpisu dzienniczka?~~ — rozstrzygnięte 2026-10-05 (issue #4): 24 h od chwili zapisu, zegarem serwera, wspólne z lekami. Szczegóły: `prd.md`, `## Open Questions`, pytanie 5.
 - **Risk:** Swobodna edycja po fakcie daje obraz ładniejszy niż prawdziwy, a dzienniczek jest wart tyle, ile jego kompletność. Samo okno powstaje w S-05 (reguła w bazie i informacja „do kiedy” po zapisie i na liście); S-07 dokłada ekran poprawy i usunięcia wpisu w oknie oraz edycję notatki po jego zamknięciu. Poprawka w oknie zmienia wpis, który zasilił już złożone pytanie z S-06 — pytanie musi iść za poprawionym wpisem.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-08: Sekcja „Do omówienia z lekarzem"
 
@@ -333,24 +333,24 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                                    | Issue |
-| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | -------------------------------------------------------- | ----- |
-| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                                     | #9    |
-| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                                     | #10   |
-| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                                     | #11   |
-| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                                     | #35   |
-| F-05       | `email-sender-smtp`                    | Własny nadawca maili (SMTP na domenie lekomapa.pl)        | yes                   | Przed wpuszczeniem innych osób; praca w panelach i DNS   | #44   |
-| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup`           | #12   |
-| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | yes                   | Uruchom `/10x-plan password-recovery`                    | #36   |
-| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | yes                   | Uruchom `/10x-plan add-medication-with-interaction-flag` | #13   |
-| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | no                    | Wymaga S-02                                              | #14   |
-| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | no                    | Wymaga S-02                                              | #15   |
-| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | yes                   | Uruchom `/10x-plan symptom-journal-entry`                | #16   |
-| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | no                    | Wymaga S-03 i S-05                                       | #17   |
-| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | no                    | Wymaga S-05                                              | #18   |
-| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                          | no                    | Wymaga S-02 i S-06                                       | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                           | #20   |
-| S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                     | #37   |
+| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                                  | Issue |
+| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | ------------------------------------------------------ | ----- |
+| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                                   | #9    |
+| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                                   | #10   |
+| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                                   | #11   |
+| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                                   | #35   |
+| F-05       | `email-sender-smtp`                    | Własny nadawca maili (SMTP na domenie lekomapa.pl)        | yes                   | Przed wpuszczeniem innych osób; praca w panelach i DNS | #44   |
+| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup`         | #12   |
+| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | —                     | in-progress; zostały kroki ręczne 3.7–3.8              | #36   |
+| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | —                     | done                                                   | #13   |
+| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | —                     | done                                                   | #14   |
+| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | —                     | done                                                   | #15   |
+| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                                   | #16   |
+| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
+| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | yes                   | Uruchom `/10x-plan journal-correction-window`          | #18   |
+| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                          | no                    | Wymaga S-02 i S-06                                     | #19   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                         | #20   |
+| S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
 
 ## Open Roadmap Questions
 
