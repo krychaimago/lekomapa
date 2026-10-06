@@ -649,7 +649,8 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- Check 21 (S-02): with the correction window closed, the composition source, the registry product and the
--- owner of a medication cannot change; the name and the discontinuation date still can
+-- owner of a medication cannot change; the name still can. Since S-04 the discontinuation date has its own rule:
+-- a date outside [today - 14 days, today] is refused
 -- ---------------------------------------------------------------------------
 -- Uses its own registry medication (...0021) and a second account (...0022); both disappear with the savepoint.
 -- Every blocked case catches only P0001 and checks the message names the blocked field. Without the guard the
@@ -733,19 +734,33 @@ begin
   end if;
   perform pg_temp.assert_history_guard_message('21', '21c user_id change', v_message, 'user_id');
 
-  -- 21d: the name is a label and the discontinuation date ends the medication (S-04); both pass
+  -- 21d: the name is a label and passes. The discontinuation date (S-04) obeys its own rule, independent of this
+  -- window: a new date outside [today - 14 days, today] is refused by medications_guard_core.
   update public.medications
      set product_name = 'Check 21 medication renamed'
    where id = '00000000-0000-4000-8000-000000000021';
-  update public.medications
-     set discontinued_on = date '2026-06-01'
-   where id = '00000000-0000-4000-8000-000000000021';
+
+  v_message := null;
+  begin
+    update public.medications
+       set discontinued_on = date '2026-06-01'
+     where id = '00000000-0000-4000-8000-000000000021';
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_message = message_text;
+  end;
+  if v_message is null then
+    raise exception 'CHECK 21 FAILED: discontinued_on = 2026-06-01 (more than 14 days back) passed';
+  end if;
+  if v_message not like '%discontinued_on%' or v_message not like '%14 dni wstecz%' then
+    raise exception 'CHECK 21 FAILED: 21d discontinued_on was blocked by an unexpected P0001 error, expected the date bound of medications_guard_core (got %)',
+      v_message;
+  end if;
 
   select product_name, discontinued_on, composition_source, registry_medication_id, user_id into v_row
     from public.medications where id = '00000000-0000-4000-8000-000000000021';
   if v_row.product_name is distinct from 'Check 21 medication renamed'
-     or v_row.discontinued_on is distinct from date '2026-06-01' then
-    raise exception 'CHECK 21 FAILED: product_name / discontinued_on were not saved with the window closed (got %, %)',
+     or v_row.discontinued_on is not null then
+    raise exception 'CHECK 21 FAILED: product_name was not saved, or the refused discontinued_on was saved anyway (got %, %)',
       v_row.product_name, v_row.discontinued_on;
   end if;
   if v_row.composition_source is distinct from 'registry'
@@ -755,7 +770,7 @@ begin
       v_row.composition_source, v_row.registry_medication_id, v_row.user_id;
   end if;
 
-  raise notice 'CHECK 21 OK: with the correction window closed, composition_source, registry_medication_id and user_id are blocked by medications_guard_core; product_name and discontinued_on pass';
+  raise notice 'CHECK 21 OK: with the correction window closed, composition_source, registry_medication_id and user_id are blocked by medications_guard_core; product_name passes; discontinued_on outside [today - 14 days, today] is refused';
 end;
 $$;
 

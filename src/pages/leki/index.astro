@@ -1,7 +1,7 @@
 ---
 // List of current medications (S-02). Newest start date first; a medication in a checked pair carries the amber
 // flag, which never changes the order (FR-012). The note and the "no flag is not safe" sentence stay under the list
-// whatever it holds.
+// whatever it holds. Ended medications live on /leki/zakonczone; a link with their number sits under the note.
 import AppLayout from "@/layouts/AppLayout.astro";
 import { badgeVariants } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,17 +22,22 @@ type MedicationRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
 
 const copy = MEDICATION_COPY.list;
 const addedId = Astro.url.searchParams.get("dodano");
+// Banner after deleting an item added by mistake; the flag carries no data.
+const deleted = Astro.url.searchParams.get("usunieto") === "1";
 
 let loadFailed = false;
 let rows: MedicationRow[] = [];
 let flagged = new Set<string>();
+// Number of ended medications for the link under the note; null when unknown, and then the link is not shown.
+let endedCount: number | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (supabase) {
   const today = todayInWarsaw();
   // Same "current" rule as medication_interactions(): not discontinued, or discontinued after today (Polish time).
   // RLS limits both reads to the signed-in person.
-  const [medications, interactions] = await Promise.all([
+  // The ended count is a separate head-only query: its failure hides the link and never breaks the list.
+  const [medications, interactions, ended] = await Promise.all([
     supabase
       .from("medications")
       .select(
@@ -41,7 +46,13 @@ if (supabase) {
       .or(`discontinued_on.is.null,discontinued_on.gt.${today}`)
       .overrideTypes<MedicationRow[], { merge: false }>(),
     supabase.rpc("medication_interactions"),
+    supabase.from("medications").select("id", { count: "exact", head: true }).not("discontinued_on", "is", null),
   ]);
+  if (ended.error) {
+    console.error("Counting ended medications failed", { code: ended.error.code });
+  } else {
+    endedCount = ended.count;
+  }
   if (medications.error || interactions.error) {
     loadFailed = true;
     console.error("Loading the medication list failed", {
@@ -107,6 +118,12 @@ const addedDeadline =
       </a>
     </div>
 
+    {deleted && (
+      <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+        {copy.deleted}
+      </p>
+    )}
+
     {addedVisible && (
       <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
         {addedDeadline
@@ -168,5 +185,11 @@ const addedDeadline =
       <p>{INTERACTION_COPY.note}</p>
       <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
     </div>
+
+    {endedCount !== null && endedCount > 0 && (
+      <a href="/leki/zakonczone" class="text-primary underline underline-offset-4 hover:no-underline">
+        {copy.endedLink.replace("{liczba}", String(endedCount))}
+      </a>
+    )}
   </div>
 </AppLayout>

@@ -1,0 +1,140 @@
+---
+// Deleting an item added by mistake (S-04, FR-005): a confirmation screen, then a plain HTML form posting to
+// /api/medications/{id}/delete. Allowed only within the correction window of the medication (24 hours from adding
+// it); after that the screen only says so and offers no button. Kept apart from ending a medication, which keeps it in
+// the history. Only the medication id travels in the URL; the route returns nothing but `?error=<key>`, looked up in
+// MEDICATION_COPY.apiErrors. RLS limits every read to the signed-in person, so another account's medication reads as
+// missing and gets the same 404 as an unknown id.
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import { formatCorrectionDeadline } from "@/lib/services/journal";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import type { Medication } from "@/types";
+
+type MedicationRow = Pick<Medication, "id" | "product_name"> & {
+  // End of the medication's correction window (created_at + 24 h), read from the database so the screen agrees with
+  // delete_medication.
+  correction_window_ends_at: string | null;
+};
+
+const copy = MEDICATION_COPY.deletion;
+const id = Astro.params.id ?? "";
+
+let medication: MedicationRow | null = null;
+let loadFailed = false;
+
+// A non-uuid id never reaches the database: it would be a 22P02 error there, here it is simply not found.
+const validId = z.uuid().safeParse(id).success;
+const supabase = validId ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validId && !supabase) loadFailed = true;
+
+if (supabase) {
+  const result = await supabase
+    .from("medications")
+    .select("id, product_name, correction_window_ends_at")
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<MedicationRow | null, { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading a medication for deleting it failed", { code: result.error.code });
+  } else {
+    medication = result.data;
+  }
+}
+
+const notFound = !loadFailed && medication === null;
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+// The window of the medication, compared the way delete_medication does (now() < correction_window_end(created_at)).
+const nowIso = new Date().toISOString();
+const endsAt = medication?.correction_window_ends_at ?? null;
+const deadline =
+  endsAt !== null && Date.parse(endsAt) > Date.parse(nowIso) ? formatCorrectionDeadline(endsAt, nowIso) : null;
+
+const error = apiErrorMessage(Astro.url.searchParams.get("error"));
+
+const detailsHref = `/leki/${id}`;
+const formAction = `/api/medications/${id}/delete`;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const noticeClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    {validId && medication ? (
+      <a href={detailsHref} class:list={linkClass}>
+        {copy.backToDetails}
+      </a>
+    ) : (
+      <a href="/leki" class:list={linkClass}>
+        {MEDICATION_COPY.details.backToList}
+      </a>
+    )}
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {MEDICATION_COPY.details.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class:list={noticeClass}>
+        <h1 class="text-2xl font-bold">{copy.title}</h1>
+        <p>{MEDICATION_COPY.details.notFound}</p>
+      </section>
+    )}
+
+    {medication && !loadFailed && (
+      <>
+        <div class="flex flex-col gap-1">
+          <h1 class="text-3xl font-bold">{copy.title}</h1>
+          <p class="text-lg break-words">{medication.product_name}</p>
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        {deadline ? (
+          <section class:list={noticeClass}>
+            <p>{copy.explanation}</p>
+            <p>{copy.endInstead}</p>
+            <p class="text-sm text-muted-foreground">{copy.deadline.replace("{do}", deadline)}</p>
+            <form method="POST" action={formAction} class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {/* Outline, not destructive: destructive tokens are for form and technical errors only. */}
+              <button
+                type="submit"
+                class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto")}
+              >
+                {copy.submit}
+              </button>
+              <a href={detailsHref} class:list={linkClass}>
+                {copy.backToDetails}
+              </a>
+            </form>
+          </section>
+        ) : (
+          <section class:list={noticeClass}>
+            <p>{copy.closed}</p>
+            <a href={detailsHref} class:list={linkClass}>
+              {copy.backToDetails}
+            </a>
+          </section>
+        )}
+      </>
+    )}
+  </div>
+</AppLayout>

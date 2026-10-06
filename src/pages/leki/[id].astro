@@ -16,6 +16,10 @@ import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstan
 type VariantRow = Pick<RegistryProduct, "strength" | "pharmaceutical_form">;
 
 type MedicationDetailsRow = Pick<Medication, "id" | "product_name" | "composition_source" | "discontinued_on"> & {
+  // End of the medication's own correction window (S-05): until when an item added by mistake can be deleted (S-04).
+  correction_window_ends_at: string | null;
+  // End of the window of the end (S-04): until when the end can be moved or cancelled; null for a current medication.
+  discontinuation_correction_ends_at: string | null;
   registry_products: VariantRow | null;
   medication_substances: Pick<MedicationSubstance, "substance_name" | "atc_code">[];
   // Each period carries the variant taken in it (S-03); null for a leaflet medication. correction_window_ends_at is
@@ -55,7 +59,7 @@ if (supabase) {
     supabase
       .from("medications")
       .select(
-        "id, product_name, composition_source, discontinued_on, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
+        "id, product_name, composition_source, discontinued_on, correction_window_ends_at, discontinuation_correction_ends_at, registry_products(strength, pharmaceutical_form), medication_substances(substance_name, atc_code), dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
       )
       .eq("id", id)
       .maybeSingle()
@@ -173,14 +177,44 @@ const correctedPeriod = correctedParam.success
   : undefined;
 const correctedDeadline = deadlineOf(correctedPeriod);
 
+// An ended medication: its last day taken (the day before the saved first day without it) and, while the window of the
+// end is open, until when the end can be moved or cancelled — the same comparison correct_discontinuation makes.
+const discontinuedOn = isCurrent ? null : (medication?.discontinued_on ?? null);
+const takenUntil = discontinuedOn ? formatIsoDate(lastDayOfPeriod(discontinuedOn)) : null;
+const discontinuationDeadline = discontinuedOn
+  ? deadlineOf({ correction_window_ends_at: medication?.discontinuation_correction_ends_at ?? null })
+  : null;
+// Banner after ending, moving or cancelling the end: only these three values, the flag carries no data.
+const discontinuationCopy = MEDICATION_COPY.discontinuation;
+const withDeadline = (plain: string, timed: string): string =>
+  discontinuationDeadline ? timed.replace("{do}", discontinuationDeadline) : plain;
+const discontinuationBanners: Record<string, string> = {
+  zapisane: withDeadline(discontinuationCopy.saved, discontinuationCopy.savedWithDeadline),
+  poprawione: withDeadline(discontinuationCopy.moved, discontinuationCopy.movedWithDeadline),
+  cofniete: discontinuationCopy.cancelled,
+};
+const bannerParam = Astro.url.searchParams.get("zakonczenie");
+const discontinuationBannerText =
+  bannerParam !== null && Object.hasOwn(discontinuationBanners, bannerParam)
+    ? discontinuationBanners[bannerParam]
+    : null;
+
+// Deleting an item added by mistake: offered only while the medication's correction window is open, the same
+// comparison delete_medication makes. Shown apart from the other actions, at the bottom of the screen.
+const deletionDeadline = medication ? deadlineOf(medication) : null;
+
+// An ended medication leads back to the page of ended medications, a current one to the list.
+const backHref = medication && !isCurrent ? "/leki/zakonczone" : "/leki";
+const backText = medication && !isCurrent ? copy.backToEndedList : copy.backToList;
+
 const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
 
 <AppLayout title={medication?.product_name ?? copy.title}>
   <div class="mx-auto flex max-w-3xl flex-col gap-6">
-    <a href="/leki" class:list={linkClass}>
-      {copy.backToList}
+    <a href={backHref} class:list={linkClass}>
+      {backText}
     </a>
 
     {loadFailed && (
@@ -209,6 +243,12 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           </p>
         )}
 
+        {discontinuationBannerText && (
+          <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+            {discontinuationBannerText}
+          </p>
+        )}
+
         {correctedPeriod && (
           <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
             {correctedDeadline
@@ -220,11 +260,27 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
         <div class="flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-3xl font-bold break-words">{medication.product_name}</h1>
           {isCurrent && (
-            <a href={`/leki/${medication.id}/zmiana-dawki`} class:list={buttonVariants({ variant: "outline" })}>
-              {MEDICATION_COPY.dosageChange.open}
-            </a>
+            <div class="flex flex-wrap gap-2">
+              <a href={`/leki/${medication.id}/zmiana-dawki`} class:list={buttonVariants({ variant: "outline" })}>
+                {MEDICATION_COPY.dosageChange.open}
+              </a>
+              <a href={`/leki/${medication.id}/zakonczenie`} class:list={buttonVariants({ variant: "outline" })}>
+                {discontinuationCopy.open}
+              </a>
+            </div>
           )}
         </div>
+
+        {takenUntil && (
+          <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+            <p class="font-medium">{discontinuationCopy.takenUntil.replace("{data}", takenUntil)}</p>
+            {discontinuationDeadline && (
+              <a href={`/leki/${medication.id}/zakonczenie`} class:list={[linkClass, "text-sm"]}>
+                {discontinuationCopy.correctLink.replace("{do}", discontinuationDeadline)}
+              </a>
+            )}
+          </section>
+        )}
 
         <section class="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
           <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
@@ -319,8 +375,16 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           </section>
         ) : (
           <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
-            <p>{INTERACTION_COPY.noInteractionsForMedication}</p>
+            <p>{isCurrent ? INTERACTION_COPY.noInteractionsForMedication : INTERACTION_COPY.endedNotCompared}</p>
             <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
+          </section>
+        )}
+
+        {deletionDeadline && (
+          <section class="mt-6 flex flex-col gap-2 border-t border-border pt-6">
+            <a href={`/leki/${medication.id}/usun`} class:list={[linkClass, "text-sm"]}>
+              {MEDICATION_COPY.deletion.open.replace("{do}", deletionDeadline)}
+            </a>
           </section>
         )}
       </>

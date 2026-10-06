@@ -27,7 +27,7 @@ import { createClient, isAuthApiError } from "@supabase/supabase-js";
 import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
 import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
 import { MEDICATION_COPY } from "../src/lib/copy/medications.ts";
-import { todayInWarsaw } from "../src/lib/services/medications.ts";
+import { earliestChangeDate, formatIsoDate, todayInWarsaw } from "../src/lib/services/medications.ts";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const EXISTING_EMAIL = process.env.SMOKE_EMAIL;
@@ -797,6 +797,212 @@ const medicationFlowSteps = [
         detail: `${correction.status} ${correction.location}; periods ${before.length} -> ${after.length}; dose ${
           samePeriod ? "corrected in place" : "not corrected in place"
         }; banner ${banner ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: ending on the day the current period started is refused with the earliest date (MD005)",
+    async () => {
+      // The dose change above opened a period starting today, so today is not later than its start.
+      const id = flow.ids.corrected;
+      if (!id) return { ok: false, detail: "check did not run: no dose change was saved" };
+      const today = todayInWarsaw();
+      const before = await periodsOf(id);
+      const response = await request(`/api/medications/${id}/discontinuation`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zakonczenie`, flow.jarA),
+        form: { discontinuedOn: today },
+      });
+      const after = await periodsOf(id);
+      const expected = `/leki/${id}/zakonczenie?error=discontinuedOnTooEarly`;
+      const page = await requestPage(expected, { jar: flow.jarA });
+      const message = MEDICATION_COPY.apiErrors.discontinuedOnTooEarly.replace(
+        "{data}",
+        formatIsoDate(earliestChangeDate(today, today)),
+      );
+      const shown = page.status === 200 && pageContains(page.body, message);
+      const unchanged = JSON.stringify(before) === JSON.stringify(after);
+      return {
+        ok: response.status === 302 && response.location === expected && shown && unchanged,
+        detail: `${response.status} ${response.location}; message ${shown ? "present" : "missing"}; periods ${
+          unchanged ? "unchanged" : "changed"
+        }`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: ending a medication today over HTTP closes its period and removes it from the list",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const today = todayInWarsaw();
+      // Started three days ago, so both today and yesterday are later than the start (MD005 otherwise).
+      const added = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do zakończenia",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+          startedOn: isoDaysBefore(today, 3),
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = added.status === 302 ? addedIdFrom(added.location) : null;
+      if (!id) return { ok: false, detail: `add: ${added.status} ${added.location}` };
+      flow.ids.discontinued = id;
+      const response = await request(`/api/medications/${id}/discontinuation`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zakonczenie`, flow.jarA),
+        form: { discontinuedOn: today },
+      });
+      const periods = await periodsOf(id);
+      const list = await requestPage("/leki", { jar: flow.jarA });
+      const details = await requestPage(`/leki/${id}`, { jar: flow.jarA });
+      const takenUntil = MEDICATION_COPY.discontinuation.takenUntil.replace(
+        "{data}",
+        formatIsoDate(isoDaysBefore(today, 1)),
+      );
+      const closed = periods.length === 1 && periods[0].ended_on === today;
+      const offList = list.status === 200 && listItemOf(list.body, id) === null;
+      const shown = details.status === 200 && pageContains(details.body, takenUntil);
+      return {
+        ok:
+          response.status === 302 &&
+          response.location === `/leki/${id}?zakonczenie=zapisane` &&
+          closed &&
+          offList &&
+          shown,
+        detail: `${response.status} ${response.location}; period ${closed ? "closed today" : "not closed today"}; list ${
+          offList ? "without it" : "still shows it"
+        }; details ${shown ? "show" : "miss"} the last day`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: moving the end over HTTP moves the end of the last period",
+    async () => {
+      const id = flow.ids.discontinued;
+      if (!id) return { ok: false, detail: "check did not run: no medication was ended" };
+      const yesterday = isoDaysBefore(todayInWarsaw(), 1);
+      const response = await request(`/api/medications/${id}/discontinuation/correction`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zakonczenie`, flow.jarA),
+        form: { action: "move", discontinuedOn: yesterday },
+      });
+      const periods = await periodsOf(id);
+      const moved = periods.at(-1)?.ended_on === yesterday;
+      return {
+        ok: response.status === 302 && response.location === `/leki/${id}?zakonczenie=poprawione` && moved,
+        detail: `${response.status} ${response.location}; period end ${periods.at(-1)?.ended_on ?? "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: cancelling the end over HTTP reopens the last period and returns the medication to the list",
+    async () => {
+      const id = flow.ids.discontinued;
+      if (!id) return { ok: false, detail: "check did not run: no medication was ended" };
+      const response = await request(`/api/medications/${id}/discontinuation/correction`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zakonczenie`, flow.jarA),
+        form: { action: "cancel" },
+      });
+      const periods = await periodsOf(id);
+      const list = await requestPage("/leki", { jar: flow.jarA });
+      const reopened = periods.at(-1)?.ended_on === null;
+      const onList = list.status === 200 && listItemOf(list.body, id) !== null;
+      return {
+        ok: response.status === 302 && response.location === `/leki/${id}?zakonczenie=cofniete` && reopened && onList,
+        detail: `${response.status} ${response.location}; period ${reopened ? "ongoing" : "still closed"}; list ${
+          onList ? "shows it" : "without it"
+        }`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: an ended medication is on /leki/zakonczone and counted in the link on /leki",
+    async () => {
+      const id = flow.ids.discontinued;
+      if (!id) return { ok: false, detail: "check did not run: no medication was ended" };
+      // The end was cancelled above, so the medication is current again; ending it anew opens a new window.
+      const response = await request(`/api/medications/${id}/discontinuation`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zakonczenie`, flow.jarA),
+        form: { discontinuedOn: todayInWarsaw() },
+      });
+      // The expected number comes from the database, read as account A with the page's own filter: earlier steps
+      // may have ended other medications of this account.
+      const count = await fixtures.a.client
+        .from("medications")
+        .select("id", { count: "exact", head: true })
+        .not("discontinued_on", "is", null);
+      if (count.error) return { ok: false, detail: `counting ended medications failed: ${count.error.code}` };
+      const ended = await requestPage("/leki/zakonczone", { jar: flow.jarA });
+      const list = await requestPage("/leki", { jar: flow.jarA });
+      const onEnded = ended.status === 200 && listItemOf(ended.body, id) !== null;
+      const offList = list.status === 200 && listItemOf(list.body, id) === null;
+      const link = MEDICATION_COPY.list.endedLink.replace("{liczba}", String(count.count));
+      const counted = (count.count ?? 0) > 0 && list.status === 200 && pageContains(list.body, link);
+      return {
+        ok:
+          response.status === 302 &&
+          response.location === `/leki/${id}?zakonczenie=zapisane` &&
+          onEnded &&
+          offList &&
+          counted,
+        detail: `${response.status} ${response.location}; ended page ${ended.status} ${
+          onEnded ? "shows it" : "without it"
+        }; list ${offList ? "without it" : "still shows it"}; link "${link}" ${counted ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: deleting an item added by mistake over HTTP removes it from both lists",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const added = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do usunięcia",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = added.status === 302 ? addedIdFrom(added.location) : null;
+      if (!id) return { ok: false, detail: `add: ${added.status} ${added.location}` };
+      const response = await request(`/api/medications/${id}/delete`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/usun`, flow.jarA),
+        form: {},
+      });
+      // Gone from the database, not just hidden: no medication row and no periods left (on delete cascade).
+      const row = await fixtures.a.client.from("medications").select("id").eq("id", id);
+      if (row.error) return { ok: false, detail: `reading the medication failed: ${row.error.code}` };
+      const periods = await periodsOf(id);
+      const list = await requestPage("/leki?usunieto=1", { jar: flow.jarA });
+      const ended = await requestPage("/leki/zakonczone", { jar: flow.jarA });
+      const gone = row.data.length === 0 && periods.length === 0;
+      const offList = list.status === 200 && listItemOf(list.body, id) === null;
+      const offEnded = ended.status === 200 && listItemOf(ended.body, id) === null;
+      const banner = list.status === 200 && pageContains(list.body, MEDICATION_COPY.list.deleted);
+      return {
+        ok:
+          response.status === 302 && response.location === "/leki?usunieto=1" && gone && offList && offEnded && banner,
+        detail: `${response.status} ${response.location}; row ${gone ? "deleted" : "still there"}; list ${
+          offList ? "without it" : "still shows it"
+        }; ended page ${offEnded ? "without it" : "still shows it"}; banner ${banner ? "present" : "missing"}`,
       };
     },
     EXPECT_OK,

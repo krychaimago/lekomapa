@@ -11,7 +11,7 @@
 --   INTERACTION 5:  basic interaction — B01AA and M01AE give two rows (A->B, B->A) with the same pair.
 --   INTERACTION 6:  a group paired with itself (M01AE x M01AE) flags two medications, never one with itself.
 --   INTERACTION 7:  several substances in the same group give one row per (medication, other medication, pair).
---   INTERACTION 8:  a discontinued medication drops out; one with a future discontinuation date stays.
+--   INTERACTION 8:  a discontinued medication drops out, ended yesterday or today (a future end date cannot be saved).
 --   INTERACTION 9:  isolation — another account's medications never pair with mine.
 --   INTERACTION 10: a medication without a code creates no rows.
 --   INTERACTION 11: privileges — anon cannot execute the thirteen functions the application calls (change_dosage,
@@ -420,8 +420,10 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- INTERACTION 8: discontinued medications drop out; a future discontinuation date keeps them
+-- INTERACTION 8: discontinued medications drop out — ended yesterday and ended today
 -- ---------------------------------------------------------------------------
+-- Since S-04 an end date in the future cannot be saved, so the former case "tomorrow stays" is replaced by "today drops
+-- out". Both medications have an ongoing period since 2026-01-01, before either end date, so the end closes it.
 
 do $$
 declare
@@ -435,7 +437,12 @@ begin
   perform pg_temp.act_as(v_a);
   perform public.add_medication_from_registry(pg_temp.product('100002243'), '1 tabletka', date '2026-01-01');
   v_ibuprofen := public.add_medication_from_registry(pg_temp.product('100432660'), '1 tabletka', date '2026-01-01');
+  select count(*) into v_rows from public.medication_interactions();
   perform pg_temp.act_as_postgres();
+  -- Counterexample: before the end the pair is flagged, so the drops below are caused by the end date.
+  if v_rows <> 2 then
+    raise exception 'INTERACTION 8 FAILED: two current medications of the pair give % row(s), expected 2', v_rows;
+  end if;
 
   update public.medications set discontinued_on = v_today - 1 where id = v_ibuprofen;
   perform pg_temp.act_as(v_a);
@@ -445,15 +452,16 @@ begin
     raise exception 'INTERACTION 8 FAILED: a medication discontinued yesterday still gives % row(s)', v_rows;
   end if;
 
-  update public.medications set discontinued_on = v_today + 1 where id = v_ibuprofen;
+  -- Moved within the window of the end (saved a moment ago).
+  update public.medications set discontinued_on = v_today where id = v_ibuprofen;
   perform pg_temp.act_as(v_a);
   select count(*) into v_rows from public.medication_interactions();
   perform pg_temp.act_as_postgres();
-  if v_rows <> 2 then
-    raise exception 'INTERACTION 8 FAILED: a medication discontinued tomorrow gives % row(s), expected 2', v_rows;
+  if v_rows <> 0 then
+    raise exception 'INTERACTION 8 FAILED: a medication discontinued today still gives % row(s)', v_rows;
   end if;
 
-  raise notice 'INTERACTION 8 OK: discontinued yesterday drops out in both directions, discontinued tomorrow stays';
+  raise notice 'INTERACTION 8 OK: the pair is flagged before the end; discontinued yesterday and discontinued today drop out in both directions';
 end;
 $$;
 

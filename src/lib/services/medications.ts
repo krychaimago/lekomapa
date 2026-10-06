@@ -85,7 +85,7 @@ export function formatIsoDate(iso: string): string {
 }
 
 // How far back a dose change may be dated (mirrors DP007 in change_dosage,
-// supabase/migrations/20261004120000_dosage_change.sql).
+// supabase/migrations/20261004120000_dosage_change.sql), and an end date of a medication (MD004, S-04).
 export const DOSAGE_CHANGE_MAX_DAYS_BACK = 14;
 
 const MS_PER_DAY = 86_400_000;
@@ -110,6 +110,9 @@ export function lastDayOfPeriod(endedOn: string): string {
 
 // Earliest date a dose change may carry: the day after the current period started, and no more than
 // DOSAGE_CHANGE_MAX_DAYS_BACK days before today — whichever is later. ISO dates compare correctly as strings.
+// Also the earliest end date of a medication (S-04, MD004/MD005 in discontinue_medication and correct_discontinuation,
+// supabase/migrations/20261006120000_discontinue_medication.sql): the database applies the same formula and the same
+// 14 days to both. Do not split this function when one of the two rules changes — change the database first.
 export function earliestChangeDate(startedOn: string, today: string): string {
   const afterStart = nextDay(startedOn);
   const limit = addDays(today, -DOSAGE_CHANGE_MAX_DAYS_BACK);

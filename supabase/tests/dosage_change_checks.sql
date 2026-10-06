@@ -10,7 +10,7 @@
 --   DOSAGE 5:  DP004 for the same dose differing only in case and spaces; the same dose with another variant passes.
 --   DOSAGE 6:  DP002 for a date equal to the start of the period and earlier; DP003 for tomorrow.
 --   DOSAGE 7:  DP007 for today - 15 days; today - 14 days passes.
---   DOSAGE 8:  DP001 for a medication stopped today; one stopped tomorrow passes.
+--   DOSAGE 8:  DP001 for a medication stopped today; an end date tomorrow cannot be saved (S-04).
 --   DOSAGE 9:  DP005 for a variant of another name, of another ATC composition, of another composition without a
 --              code, a missing registry row, and any variant for a leaflet medication.
 --   DOSAGE 10: DP006 for a medication without an ongoing period.
@@ -430,6 +430,8 @@ $$;
 -- ---------------------------------------------------------------------------
 -- DOSAGE 8: DP001 — a stopped medication
 -- ---------------------------------------------------------------------------
+-- Since S-04 an end date in the future cannot be saved, so every stopped medication is refused: the former
+-- counterexample "stopped tomorrow still changes" is replaced by the refusal to save tomorrow as the end date.
 
 do $$
 declare
@@ -437,30 +439,38 @@ declare
   v_alpha_200 constant uuid := '00000000-0000-4000-9200-0000000000a1';
   v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
   v_stopped_today uuid;
-  v_stopped_tomorrow uuid;
+  v_not_stopped uuid;
   v_today_result text;
-  v_tomorrow_result text;
+  v_tomorrow_message text;
 begin
   perform pg_temp.act_as(v_a);
   v_stopped_today := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
-  v_stopped_tomorrow := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
+  v_not_stopped := public.add_medication_from_registry(v_alpha_200, '1 tabletka', v_today - 30);
   perform pg_temp.act_as_postgres();
 
   update public.medications set discontinued_on = v_today where id = v_stopped_today;
-  update public.medications set discontinued_on = v_today + 1 where id = v_stopped_tomorrow;
+
+  begin
+    update public.medications set discontinued_on = v_today + 1 where id = v_not_stopped;
+  exception when sqlstate 'P0001' then
+    get stacked diagnostics v_tomorrow_message = message_text;
+  end;
+  if v_tomorrow_message is null or v_tomorrow_message not like '%discontinued_on%' then
+    raise exception 'DOSAGE 8 FAILED: saving tomorrow as the end date gave "%", expected the P0001 date bound of medications_guard_core naming discontinued_on',
+      v_tomorrow_message;
+  end if;
+  if (select discontinued_on from public.medications where id = v_not_stopped) is not null then
+    raise exception 'DOSAGE 8 FAILED: the refused end date tomorrow was saved anyway';
+  end if;
 
   perform pg_temp.act_as(v_a);
   v_today_result := pg_temp.try_change(v_stopped_today, '2 tabletki', v_today - 1);
-  v_tomorrow_result := pg_temp.try_change(v_stopped_tomorrow, '2 tabletki', v_today - 1);
   perform pg_temp.act_as_postgres();
 
   perform pg_temp.assert_result('8', 'a medication stopped today', v_today_result, 'DP001');
   perform pg_temp.assert_period_count('8', 'a medication stopped today', v_stopped_today, 1);
-  perform pg_temp.assert_result('8', 'a medication stopped tomorrow', v_tomorrow_result, 'ok');
-  perform pg_temp.assert_period_count('8', 'a medication stopped tomorrow', v_stopped_tomorrow, 2);
-  perform pg_temp.assert_changed_on('8', 'a medication stopped tomorrow', v_stopped_tomorrow, v_today - 1);
 
-  raise notice 'DOSAGE 8 OK: a medication stopped today is DP001, one stopped tomorrow still changes';
+  raise notice 'DOSAGE 8 OK: a medication stopped today is DP001; an end date tomorrow cannot be saved';
 end;
 $$;
 

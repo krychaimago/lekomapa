@@ -448,7 +448,9 @@ begin
       ('symptom_entries', 'symptom_entries_guard_occurred_at', 'INSERT OR UPDATE'),
       ('symptom_entry_items', 'symptom_entry_items_guard_insert', 'INSERT'),
       ('symptom_entry_items', 'symptom_entry_items_guard_core', 'UPDATE'),
-      ('symptom_entry_items', 'symptom_entry_items_guard_delete', 'DELETE')
+      ('symptom_entry_items', 'symptom_entry_items_guard_delete', 'DELETE'),
+      -- S-04: the moment the end of a medication was saved opens its window, so it is set by the database.
+      ('medications', 'medications_stamp_discontinuation', 'INSERT OR UPDATE')
     ) as g(table_name, trigger_name, event)
   loop
     v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 when 'INSERT OR UPDATE' then 20 end;

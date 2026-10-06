@@ -1,0 +1,268 @@
+---
+// Ending one medication with a date (S-04, FR-005), and moving or cancelling that end inside its own correction
+// window (24 hours from saving it). Plain HTML forms: nothing here keeps state in the browser. The saved date is the
+// first day without the medication, like the end date of a dosage period. Only the medication id travels in the URL;
+// the save routes return nothing but `?error=<key>`, looked up in MEDICATION_COPY.apiErrors. RLS limits every read to
+// the signed-in person, so another account's medication reads as missing and gets the same 404 as an unknown id.
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { inputClassName } from "@/components/ui/input";
+import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import { formatCorrectionDeadline } from "@/lib/services/journal";
+import { earliestChangeDate, formatIsoDate, lastDayOfPeriod, todayInWarsaw } from "@/lib/services/medications";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import type { DosagePeriod, Medication } from "@/types";
+
+type MedicationRow = Pick<Medication, "id" | "product_name" | "discontinued_on"> & {
+  // End of the window of the end (discontinued_at + 24 h), read from the database so the screen agrees with
+  // correct_discontinuation; null for a current medication.
+  discontinuation_correction_ends_at: string | null;
+  dosage_periods: Pick<DosagePeriod, "started_on" | "ended_on">[];
+};
+
+const copy = MEDICATION_COPY.discontinuation;
+const id = Astro.params.id ?? "";
+const today = todayInWarsaw();
+
+let medication: MedicationRow | null = null;
+let loadFailed = false;
+
+// A non-uuid id never reaches the database: it would be a 22P02 error there, here it is simply not found.
+const validId = z.uuid().safeParse(id).success;
+const supabase = validId ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validId && !supabase) loadFailed = true;
+
+if (supabase) {
+  const result = await supabase
+    .from("medications")
+    .select(
+      "id, product_name, discontinued_on, discontinuation_correction_ends_at, dosage_periods(started_on, ended_on)",
+    )
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<MedicationRow | null, { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading a medication for ending it failed", { code: result.error.code });
+  } else {
+    medication = result.data;
+  }
+}
+
+const notFound = !loadFailed && medication === null;
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+// Same "current" rule as DP001 in change_dosage and the details screen.
+const isCurrent = medication !== null && (medication.discontinued_on === null || medication.discontinued_on > today);
+const periods = [...(medication?.dosage_periods ?? [])].sort((a, b) => a.started_on.localeCompare(b.started_on));
+const firstStart = periods.at(0)?.started_on ?? null;
+const currentPeriod = periods.find((period) => period.ended_on === null) ?? null;
+// The last period is the one the end closed; its start bounds a moved date (MD005 in correct_discontinuation).
+const lastPeriod = periods.at(-1) ?? null;
+// An end on the day the period started would leave a period of zero days (MD005): possible from tomorrow.
+const startedToday = currentPeriod !== null && currentPeriod.started_on >= today;
+// The item itself began today (one period, starting today): a mistake is deleted rather than ended.
+const addedToday = startedToday && periods.length === 1;
+
+// The window of the end, compared the way correct_discontinuation does (now() < correction_window_end(...)).
+const nowIso = new Date().toISOString();
+const endsAt = isCurrent ? null : (medication?.discontinuation_correction_ends_at ?? null);
+const deadline =
+  endsAt !== null && Date.parse(endsAt) > Date.parse(nowIso) ? formatCorrectionDeadline(endsAt, nowIso) : null;
+const windowOpen = deadline !== null;
+
+// Earliest date the database accepts: the day after the start of the period being closed, at most 14 days back.
+const boundPeriod = isCurrent ? currentPeriod : lastPeriod;
+const minDate = boundPeriod ? earliestChangeDate(boundPeriod.started_on, today) : today;
+const showForm = isCurrent && currentPeriod !== null && !startedToday;
+
+// MD004 and MD005 name the earliest date; it is computed here, because the URL carries only the error key.
+const error = apiErrorMessage(Astro.url.searchParams.get("error"))?.replace("{data}", formatIsoDate(minDate)) ?? null;
+
+const detailsHref = `/leki/${id}`;
+const formAction = `/api/medications/${id}/discontinuation`;
+const correctionAction = `/api/medications/${id}/discontinuation/correction`;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const noticeClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+const fieldLabelClass = "text-sm leading-none font-medium";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    {validId && medication ? (
+      <a href={detailsHref} class:list={linkClass}>
+        {copy.backToDetails}
+      </a>
+    ) : (
+      <a href="/leki" class:list={linkClass}>
+        {MEDICATION_COPY.details.backToList}
+      </a>
+    )}
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {MEDICATION_COPY.details.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class:list={noticeClass}>
+        <h1 class="text-2xl font-bold">{copy.title}</h1>
+        <p>{MEDICATION_COPY.details.notFound}</p>
+      </section>
+    )}
+
+    {medication && !loadFailed && (
+      <>
+        <div class="flex flex-col gap-1">
+          <h1 class="text-3xl font-bold">{copy.title}</h1>
+          <p class="text-lg break-words">{medication.product_name}</p>
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        {isCurrent ? (
+          currentPeriod === null ? (
+            <section class:list={noticeClass}>
+              <p>{copy.noCurrentPeriod}</p>
+              <a href={detailsHref} class:list={linkClass}>
+                {copy.backToDetails}
+              </a>
+            </section>
+          ) : (
+            <>
+              {firstStart && (
+                <section class:list={noticeClass}>
+                  <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
+                    <dt class="text-sm text-muted-foreground">{copy.takenSinceLabel}</dt>
+                    <dd>{formatIsoDate(firstStart)}</dd>
+                  </dl>
+                </section>
+              )}
+
+              <p class="text-sm text-muted-foreground">{copy.intro}</p>
+
+              {showForm ? (
+                <section class:list={noticeClass}>
+                  <form method="POST" action={formAction} class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-2">
+                      <label for="discontinuedOn" class:list={fieldLabelClass}>
+                        {copy.discontinuedOnLabel}{" "}
+                        <span class="font-normal text-muted-foreground">{MEDICATION_COPY.form.requiredMark}</span>
+                      </label>
+                      <input
+                        id="discontinuedOn"
+                        name="discontinuedOn"
+                        type="date"
+                        value={today}
+                        min={minDate}
+                        max={today}
+                        required
+                        aria-describedby="discontinuedOn-hint"
+                        class:list={inputClassName}
+                      />
+                      <p id="discontinuedOn-hint" class="text-sm text-muted-foreground">
+                        {copy.discontinuedOnHint.replace("{od}", formatIsoDate(minDate))}
+                      </p>
+                    </div>
+                    <button type="submit" class:list={cn(buttonVariants(), "w-full rounded-lg text-base sm:w-auto")}>
+                      {copy.submit}
+                    </button>
+                  </form>
+                </section>
+              ) : (
+                <section class:list={noticeClass}>
+                  <p>{copy.startedToday}</p>
+                  {addedToday && <p>{copy.addedTodayHint}</p>}
+                  <a href={detailsHref} class:list={linkClass}>
+                    {copy.backToDetails}
+                  </a>
+                </section>
+              )}
+
+              <p class="text-sm text-muted-foreground">{copy.notDeleting}</p>
+            </>
+          )
+        ) : (
+          <>
+            {medication.discontinued_on && (
+              <section class:list={noticeClass}>
+                <p class="font-medium">
+                  {copy.takenUntil.replace("{data}", formatIsoDate(lastDayOfPeriod(medication.discontinued_on)))}
+                </p>
+                {deadline ? <p>{copy.deadline.replace("{do}", deadline)}</p> : <p>{copy.closed}</p>}
+              </section>
+            )}
+
+            {windowOpen && (
+              <>
+                <section class:list={noticeClass}>
+                  <h2 class="text-xl font-semibold">{copy.moveHeading}</h2>
+                  <form method="POST" action={correctionAction} class="flex flex-col gap-6">
+                    <input type="hidden" name="action" value="move" />
+                    <div class="flex flex-col gap-2">
+                      <label for="discontinuedOn" class:list={fieldLabelClass}>
+                        {copy.discontinuedOnLabel}{" "}
+                        <span class="font-normal text-muted-foreground">{MEDICATION_COPY.form.requiredMark}</span>
+                      </label>
+                      <input
+                        id="discontinuedOn"
+                        name="discontinuedOn"
+                        type="date"
+                        value={medication.discontinued_on ?? today}
+                        min={minDate}
+                        max={today}
+                        required
+                        aria-describedby="discontinuedOn-hint"
+                        class:list={inputClassName}
+                      />
+                      <p id="discontinuedOn-hint" class="text-sm text-muted-foreground">
+                        {copy.discontinuedOnHint.replace("{od}", formatIsoDate(minDate))}
+                      </p>
+                    </div>
+                    <button type="submit" class:list={cn(buttonVariants(), "w-full rounded-lg text-base sm:w-auto")}>
+                      {copy.moveSubmit}
+                    </button>
+                  </form>
+                </section>
+
+                <section class:list={noticeClass}>
+                  <h2 class="text-xl font-semibold">{copy.cancelHeading}</h2>
+                  <p>{copy.cancelHint}</p>
+                  <form method="POST" action={correctionAction}>
+                    <input type="hidden" name="action" value="cancel" />
+                    <button
+                      type="submit"
+                      class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto")}
+                    >
+                      {copy.cancelSubmit}
+                    </button>
+                  </form>
+                </section>
+              </>
+            )}
+
+            {!windowOpen && (
+              <a href={detailsHref} class:list={linkClass}>
+                {copy.backToDetails}
+              </a>
+            )}
+          </>
+        )}
+      </>
+    )}
+  </div>
+</AppLayout>
