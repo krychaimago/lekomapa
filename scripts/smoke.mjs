@@ -802,6 +802,89 @@ const medicationFlowSteps = [
     EXPECT_OK,
   ],
   [
+    "medications: undoing a dose change over HTTP removes the new period and reopens the previous one",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      const today = todayInWarsaw();
+      // Started three days ago, so a change dated today is later than the start (DP002 otherwise).
+      const added = await addMedication(
+        {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do cofnięcia",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+          startedOn: isoDaysBefore(today, 3),
+        },
+        LEAFLET_ADD_PAGE,
+      );
+      const id = added.status === 302 ? addedIdFrom(added.location) : null;
+      if (!id) return { ok: false, detail: `add: ${added.status} ${added.location}` };
+      flow.ids.undone = id;
+      const change = await request(`/api/medications/${id}/dosage`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/zmiana-dawki`, flow.jarA),
+        form: { doseText: SMOKE_MISTAKEN_DOSE, changedOn: today },
+      });
+      const before = await periodsOf(id);
+      const changed = before.find((period) => period.ended_on === null);
+      if (change.status !== 302 || before.length !== 2 || !changed) {
+        return { ok: false, detail: `change: ${change.status} ${change.location}; periods: ${before.length}` };
+      }
+      const undo = await request(`/api/medications/${id}/periods/${changed.id}/undo`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/okresy/${changed.id}/cofniecie`, flow.jarA),
+        form: {},
+      });
+      const after = await periodsOf(id);
+      const reopened =
+        after.length === 1 &&
+        after[0].id === before[0].id &&
+        after[0].ended_on === null &&
+        after[0].dose_text === before[0].dose_text &&
+        after[0].started_on === before[0].started_on;
+      const page = await requestPage(`/leki/${id}?cofnieto=1`, { jar: flow.jarA });
+      const banner = page.status === 200 && pageContains(page.body, MEDICATION_COPY.undo.saved);
+      return {
+        ok: undo.status === 302 && undo.location === `/leki/${id}?cofnieto=1` && reopened && banner,
+        detail: `${undo.status} ${undo.location}; periods ${before.length} -> ${after.length}; previous period ${
+          reopened ? "ongoing again" : "not reopened"
+        }; banner ${banner ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: undoing the first period over HTTP is refused with its message (DP011), not a server error",
+    async () => {
+      const id = flow.ids.undone;
+      if (!id) return { ok: false, detail: "check did not run: no dose change was undone" };
+      const before = await periodsOf(id);
+      const first = before.at(0);
+      if (before.length !== 1 || !first) return { ok: false, detail: `expected one period, got ${before.length}` };
+      const response = await request(`/api/medications/${id}/periods/${first.id}/undo`, {
+        method: "POST",
+        jar: flow.jarA,
+        origin: await formOrigin(`/leki/${id}/okresy/${first.id}/cofniecie`, flow.jarA),
+        form: {},
+      });
+      const after = await periodsOf(id);
+      const expected = `/leki/${id}/okresy/${first.id}/cofniecie?error=undoFirstPeriod`;
+      const page = await requestPage(expected, { jar: flow.jarA });
+      const shown = page.status === 200 && pageContains(page.body, MEDICATION_COPY.apiErrors.undoFirstPeriod);
+      const unchanged = JSON.stringify(before) === JSON.stringify(after);
+      const noDoseInUrl = !response.location.includes("smoke") && !response.location.includes("tablet");
+      return {
+        ok: response.status === 302 && response.location === expected && shown && unchanged && noDoseInUrl,
+        detail: `${response.status} ${response.location}; page ${page.status}, message ${
+          shown ? "present" : "missing"
+        }; periods ${unchanged ? "unchanged" : "changed"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
     "medications: ending on the day the current period started is refused with the earliest date (MD005)",
     async () => {
       // The dose change above opened a period starting today, so today is not later than its start.

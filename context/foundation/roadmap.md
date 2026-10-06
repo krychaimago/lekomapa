@@ -58,7 +58,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done        |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | ready       |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | in-progress |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | ready       |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed    |
 | S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
@@ -292,7 +292,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - Czy złożone pytanie przelicza się przy każdym wyświetleniu, czy zapisuje się w chwili złożenia? Przy przeliczaniu zmiana stałej okna albo poprawka wpisu w oknie korekty (S-07) przestawia kolejność leków także w starych pytaniach. — Owner: plan S-06. Block: no — do rozstrzygnięcia w `/10x-plan`.
 - **Risk:** Drugie miejsce, w którym produkt mógłby wyrządzić szkodę. Wynikiem ma być zdanie do rozmowy z lekarzem, nie lista podejrzanych leków ani ocena ryzyka. Zestawienie trafiające zawsze przestaje cokolwiek znaczyć — okno czasowe oparte na okresach dawkowania z S-03 usuwa większość szumu, dlatego S-03 jest wymaganiem wstępnym, a nie równoległym plasterkiem.
 - **Dług przejęty z S-05 (plan-review F5):** nie ma drogi cofnięcia zmiany dawki. Przykład: zmiana zapisana przy złym leku — poprawa w oknie korekty może tylko przywrócić poprzednią dawkę, a wtedy w historii zostają dwa kolejne okresy z tą samą dawką i data „zmiany”, której nie było. S-05 odrzuca taką poprawę kodem `DP010`, więc fałszywa zmiana zostaje widoczna jako zmiana. S-06 daje pierwszeństwo lekom zmienionym w oknie przed objawem, więc taki lek dostałby pierwszeństwo bez powodu. Przed wdrożeniem S-06 trzeba rozstrzygnąć cofnięcie zmiany (scalenie okresów w oknie korekty) albo pomijanie zmian bez różnicy dawki.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-07: Okno korekty wpisu dzienniczka
 
