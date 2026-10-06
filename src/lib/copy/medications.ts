@@ -150,7 +150,7 @@ export const MEDICATION_COPY = {
   discontinuation: {
     title: "Zakończenie przyjmowania",
     // Link on the details screen, shown only for a current medication, next to the dose change.
-    open: "Zakończ przyjmowanie",
+    open: "Zakończenie przyjmowania",
     intro:
       "Zapis zakończenia przyjmowania, które już nastąpiło. Lek znika z listy aktualnych leków, ale zostaje w historii razem z wpisami z czasu, gdy był przyjmowany. Nic nie jest usuwane.",
     // The difference between ending and deleting, shown next to the form.
@@ -196,7 +196,7 @@ export const MEDICATION_COPY = {
     explanation:
       "Usunięcie kasuje tę pozycję razem z całą jej historią przyjmowania. Służy wyłącznie do poprawienia pomyłki przy dodawaniu.",
     endInstead:
-      "Jeśli ten lek był przyjmowany, a przyjmowanie się zakończyło, zapisz to przez „Zakończ przyjmowanie” w szczegółach leku. Wtedy lek zostaje w historii.",
+      "Jeśli ten lek był przyjmowany, a przyjmowanie się zakończyło, zapisz to przez „Zakończenie przyjmowania” w szczegółach leku. Wtedy lek zostaje w historii.",
     deadline: "Pozycję można usunąć do {do}.",
     submit: "Usuń pozycję",
     closed:

@@ -25,12 +25,16 @@
 --   DISCONTINUATION 7:  a period inserted into an ended medication is P0001 with the medication window open;
 --                       change_dosage of an ended medication is DP001 — F6b debt.
 --   DISCONTINUATION 8:  a medication added a moment ago (window of the period open) and ended: a direct update of
---                       the period to ended_on = null or to the day after the end date is P0001.
+--                       the period to ended_on = null, to the day after the end date or to the day before it (the
+--                       last period ends exactly on the end date, impl-review F6) is P0001.
 --   DISCONTINUATION 9:  delete_medication: within the window of the medication it deletes with the composition and
 --                       periods; at 24 h it is MD010 and the rows stay; another account's medication is MD001; 28000.
 --   DISCONTINUATION 10: the trigger medications_sync_discontinuation exists, is enabled and fires AFTER UPDATE OF
 --                       discontinued_on for each row.
 --   DISCONTINUATION 11: anon cannot execute the three functions and the computed field, authenticated can.
+--   DISCONTINUATION 12: re-pointing a period away from a medication whose window is closed, or which is ended, is
+--                       P0001 even when the target's window is open; cancelling the end afterwards keeps the end of
+--                       the period closed by a dose change (impl-review F1).
 --
 -- How to run: `npm run db:check` (needs `npx supabase start`), or this file alone:
 -- `node scripts/db-checks.mjs supabase/tests/discontinuation_checks.sql`. The runner (scripts/db-checks.mjs) passes it
@@ -800,6 +804,7 @@ declare
   v_period uuid;
   v_reopen text;
   v_after_end text;
+  v_before_end text;
 begin
   perform pg_temp.act_as(v_a);
   v_med := public.add_medication_from_leaflet('Discontinuation 8 medication', 'ibuprofen', false, '1 tabletka', v_today - 5);
@@ -813,15 +818,18 @@ begin
   perform pg_temp.act_as(v_a);
   v_reopen := pg_temp.try_exec('update public.dosage_periods set ended_on = null where id = $1', v_period);
   v_after_end := pg_temp.try_exec(format('update public.dosage_periods set ended_on = %L where id = $1', v_today), v_period);
+  v_before_end := pg_temp.try_exec(format('update public.dosage_periods set ended_on = %L where id = $1', v_today - 2), v_period);
   perform pg_temp.act_as_postgres();
 
   perform pg_temp.assert_refused('8', 'reopening the period of an ended medication', v_reopen,
     '%ended_on%przyjmowanie tego leku jest zakończone%');
   perform pg_temp.assert_refused('8', 'ending the period the day after the end date', v_after_end,
     '%ended_on%przyjmowanie tego leku jest zakończone%');
+  perform pg_temp.assert_refused('8', 'ending the last period the day before the end date', v_before_end,
+    '%ended_on%ostatni okres dawkowania kończy się w dniu zakończenia%');
   perform pg_temp.assert_state('8', 'the refused writes', v_med, v_today - 1, now());
 
-  raise notice 'DISCONTINUATION 8 OK: with the period window open, ended_on = null and ended_on after the end date are P0001 for an ended medication';
+  raise notice 'DISCONTINUATION 8 OK: with the period window open, ended_on = null, after the end date and before it (last period) are P0001 for an ended medication';
 end;
 $$;
 
@@ -946,6 +954,74 @@ begin
   end loop;
 
   raise notice 'DISCONTINUATION 11 OK: anon cannot execute the three discontinuation functions and the computed field, authenticated can';
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- DISCONTINUATION 12: a period cannot be re-pointed away from a medication with a closed window or an end date
+-- ---------------------------------------------------------------------------
+-- The sequence from impl-review F1: an aged medication with P1 [today-30, today-2) closed by a dose change and a fresh
+-- P2 from today-2, ended today. Moving P2 to another medication and then cancelling the end would reopen P1.
+
+do $$
+declare
+  v_a constant uuid := '00000000-0000-4000-9500-000000000a00';
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  v_aged uuid;
+  v_p1 uuid;
+  v_p2 uuid;
+  v_fresh uuid;
+  v_fresh_period uuid;
+  v_target uuid;
+  v_target_2 uuid;
+  v_from_closed text;
+  v_from_ended text;
+  v_cancel text;
+begin
+  perform pg_temp.act_as(v_a);
+  v_aged := public.add_medication_from_leaflet('Discontinuation 12 aged', 'ibuprofen', false, '1 tabletka', v_today - 30);
+  v_p2 := public.change_dosage(v_aged, '2 tabletki', v_today - 2);
+  v_fresh := public.add_medication_from_leaflet('Discontinuation 12 fresh', 'ibuprofen', false, '1 tabletka', v_today - 5);
+  v_target := public.add_medication_from_leaflet('Discontinuation 12 target', 'ibuprofen', false, '1 tabletka', v_today - 60);
+  -- Each target's only period ends long before P2 and the fresh period, so without the source rule both re-pointings
+  -- would pass (no dosage_periods_no_overlap conflict) and the check measures the rule, not the constraint.
+  -- Two targets, so the two re-pointed periods never land under one medication and overlap each other.
+  v_target_2 := public.add_medication_from_leaflet('Discontinuation 12 target 2', 'ibuprofen', false, '1 tabletka', v_today - 60);
+  update public.dosage_periods set ended_on = v_today - 50 where medication_id in (v_target, v_target_2);
+  perform pg_temp.act_as_postgres();
+  select id into v_p1 from public.dosage_periods where medication_id = v_aged and started_on = v_today - 30;
+  select id into v_fresh_period from public.dosage_periods where medication_id = v_fresh;
+  perform pg_temp.backdate('medications', v_aged, interval '3 days');
+  perform pg_temp.backdate('dosage_periods', v_p1, interval '3 days');
+
+  perform pg_temp.act_as(v_a);
+  perform public.discontinue_medication(v_aged, v_today);
+  perform public.discontinue_medication(v_fresh, v_today);
+  -- The targets' windows are open, so only the rule on the source medication can refuse these writes.
+  v_from_closed := pg_temp.try_exec(format('update public.dosage_periods set medication_id = %L where id = $1', v_target), v_p2);
+  v_from_ended := pg_temp.try_exec(format('update public.dosage_periods set medication_id = %L where id = $1', v_target_2), v_fresh_period);
+  v_cancel := pg_temp.try_correct(v_aged, null);
+  perform pg_temp.act_as_postgres();
+
+  if public.dosage_period_correction_window_open(v_p2) is not true
+     or public.medication_correction_window_open(v_fresh) is not true then
+    raise exception 'DISCONTINUATION 12 FAILED: P2 or the fresh medication is outside its window, so the check would not isolate the source rule';
+  end if;
+  perform pg_temp.assert_refused('12', 're-pointing the fresh last period of an aged ended medication', v_from_closed,
+    '%medication_id%okno korekty leku, z którego pochodzi ten okres%');
+  perform pg_temp.assert_refused('12', 're-pointing the period of an ended medication within its window', v_from_ended,
+    '%medication_id%przyjmowanie leku, z którego pochodzi ten okres, jest zakończone%');
+  perform pg_temp.assert_result('12', 'cancelling the end after the refused re-pointing', v_cancel, 'ok');
+
+  if (select ended_on from public.dosage_periods where id = v_p1) is distinct from v_today - 2
+     or (select medication_id from public.dosage_periods where id = v_p2) is distinct from v_aged
+     or (select ended_on from public.dosage_periods where id = v_p2) is not null
+     or (select medication_id from public.dosage_periods where id = v_fresh_period) is distinct from v_fresh then
+    raise exception 'DISCONTINUATION 12 FAILED: a refused re-pointing changed the history (aged: %; fresh: %)',
+      pg_temp.state(v_aged), pg_temp.state(v_fresh);
+  end if;
+
+  raise notice 'DISCONTINUATION 12 OK: re-pointing a period away from a medication with a closed window or an end date is P0001; cancelling the end afterwards reopens only the last period and P1 keeps its end';
 end;
 $$;
 

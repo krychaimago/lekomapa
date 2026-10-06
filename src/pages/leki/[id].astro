@@ -375,7 +375,7 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           </section>
         ) : (
           <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
-            <p>{INTERACTION_COPY.noInteractionsForMedication}</p>
+            <p>{isCurrent ? INTERACTION_COPY.noInteractionsForMedication : INTERACTION_COPY.endedNotCompared}</p>
             <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
           </section>
         )}

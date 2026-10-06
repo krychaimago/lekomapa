@@ -245,6 +245,8 @@ Osobna strona leków zakończonych z linkiem i licznikiem na `/leki`, oraz ście
 
 **Contract**: przez `AppLayout`; trasa chroniona automatycznie pod `/leki`; nowa sekcja `endedList` w copy.
 
+> **Adnotacja po impl-review (F3)**: zdanie o braku porównania trafiło do `INTERACTION_COPY.endedNotCompared` w `src/lib/copy/interactions.ts`, nie do `endedList` — `scripts/fr012/interaction-copy.test.mjs` wymaga, żeby każdy tekst o (braku) interakcji był w `interactions.ts`. Używa go też strona szczegółów leku zakończonego (F2).
+
 #### 2. Link na liście aktualnych
 
 **File**: `src/pages/leki/index.astro`

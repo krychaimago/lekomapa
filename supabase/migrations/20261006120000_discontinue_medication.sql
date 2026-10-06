@@ -302,6 +302,25 @@ begin
       'Nie można zmienić pola medication_id: okno korekty leku, do którego miałby trafić ten okres, jest już zamknięte, a jego historia dawkowania jest już zapisana.';
   end if;
 
+  -- Re-pointing a period away from a medication removes it from that medication's history: refused when the window
+  -- of the source medication is closed (the same rule as dosage_periods_guard_delete) or the source is ended. Without
+  -- this, moving away the last period of an ended medication makes the period before it the "last" one, and
+  -- correcting or cancelling the end would then rewrite the end of a period closed by a dose change.
+  if new.medication_id is distinct from old.medication_id then
+    if not public.medication_correction_window_open(old.medication_id) then
+      raise exception
+        'Nie można zmienić pola medication_id: okno korekty leku, z którego pochodzi ten okres, jest już zamknięte, a jego historia dawkowania jest już zapisana.';
+    end if;
+    if exists (
+      select 1 from public.medications m
+       where m.id = old.medication_id
+         and m.discontinued_on is not null
+    ) then
+      raise exception
+        'Nie można zmienić pola medication_id: przyjmowanie leku, z którego pochodzi ten okres, jest zakończone, a jego historia dawkowania jest już zapisana.';
+    end if;
+  end if;
+
   if not public.dosage_period_correction_window_open(old.id) then
     if new.dose_text is distinct from old.dose_text then
       raise exception
@@ -374,6 +393,20 @@ begin
      and (new.ended_on is null or new.ended_on > v_discontinued_on) then
     raise exception
       'Nie można zmienić pola ended_on: przyjmowanie tego leku jest zakończone, więc jego okres dawkowania nie może trwać dalej ani kończyć się po dacie zakończenia.';
+  end if;
+
+  -- The last period of an ended medication ends exactly on the end date, otherwise the details ("taken until") and
+  -- the period history tell two different stories. Earlier periods only must not run past it (above).
+  if v_discontinued_on is not null
+     and new.ended_on is distinct from v_discontinued_on
+     and not exists (
+       select 1 from public.dosage_periods dp
+        where dp.medication_id = new.medication_id
+          and dp.id <> new.id
+          and dp.started_on > new.started_on
+     ) then
+    raise exception
+      'Nie można zmienić pola ended_on: przyjmowanie tego leku jest zakończone, a ostatni okres dawkowania kończy się w dniu zakończenia.';
   end if;
 
   return new;
