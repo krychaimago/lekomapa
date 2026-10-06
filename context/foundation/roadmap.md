@@ -262,7 +262,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ### S-06: Złożone pytanie do lekarza po zapisaniu objawu
 
-- **Outcome:** Użytkowniczka po zapisaniu objawu widzi gotowe pytanie do lekarza, zestawiające ten objaw z okresami dawkowania przyjmowanych leków, z pierwszeństwem dla leków rozpoczętych lub zmienionych w oknie czasowym poprzedzającym objaw; pozostałe leki zostają dostępne pod zwinięciem.
+- **Outcome:** Użytkowniczka po zapisaniu objawu widzi gotowe pytanie do lekarza, zestawiające ten objaw z okresami dawkowania przyjmowanych leków, z pierwszeństwem dla leków rozpoczętych, zmienionych lub odstawionych w oknie czasowym objawu (od 90 dni przed pierwszym wpisem tego objawu do bieżącego wpisu); pozostałe leki zostają dostępne pod zwinięciem.
 - **Change ID:** `symptom-question-composer`
 - **Issue:** #17
 - **PRD refs:** US-02, FR-010, FR-012
@@ -270,7 +270,8 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Parallel with:** S-07
 - **Blockers:** —
 - **Unknowns:**
-  - Jak długie jest okno czasowe poprzedzające objaw? Przyjęto roboczo około 30 dni, wartość do potwierdzenia. — Owner: użytkowniczka. Block: no — wartość robocza wystarcza do zaplanowania i jest nastawialna. Issue: #5.
+  - ~~Jak długie jest okno czasowe poprzedzające objaw?~~ — Rozstrzygnięte 2026-10-06 (#5). Wymogi dla tego plasterka: okno od 90 dni przed pierwszym wpisem danego objawu do bieżącego wpisu; 90 dni jako jedna stała w kodzie, nie ustawienie użytkowniczki; zdarzeniem w oknie jest rozpoczęcie, zmiana dawki i odstawienie (`discontinued_on`), nie usunięcie pozycji dodanej przez pomyłkę; leki w oknie ułożone według dat zdarzeń, nigdy według podejrzenia; zdanie o odstawieniu wyłącznie informuje („od 3 marca nie przyjmuję X”). Szczegóły: `prd.md`, `## Open Questions`, pytanie 4.
+  - Czy złożone pytanie przelicza się przy każdym wyświetleniu, czy zapisuje się w chwili złożenia? Przy przeliczaniu zmiana stałej okna albo poprawka wpisu w oknie korekty (S-07) przestawia kolejność leków także w starych pytaniach. — Owner: plan S-06. Block: no — do rozstrzygnięcia w `/10x-plan`.
 - **Risk:** Drugie miejsce, w którym produkt mógłby wyrządzić szkodę. Wynikiem ma być zdanie do rozmowy z lekarzem, nie lista podejrzanych leków ani ocena ryzyka. Zestawienie trafiające zawsze przestaje cokolwiek znaczyć — okno czasowe oparte na okresach dawkowania z S-03 usuwa większość szumu, dlatego S-03 jest wymaganiem wstępnym, a nie równoległym plasterkiem.
 - **Dług przejęty z S-05 (plan-review F5):** nie ma drogi cofnięcia zmiany dawki. Przykład: zmiana zapisana przy złym leku — poprawa w oknie korekty może tylko przywrócić poprzednią dawkę, a wtedy w historii zostają dwa kolejne okresy z tą samą dawką i data „zmiany”, której nie było. S-05 odrzuca taką poprawę kodem `DP010`, więc fałszywa zmiana zostaje widoczna jako zmiana. S-06 daje pierwszeństwo lekom zmienionym w oknie przed objawem, więc taki lek dostałby pierwszeństwo bez powodu. Przed wdrożeniem S-06 trzeba rozstrzygnąć cofnięcie zmiany (scalenie okresów w oknie korekty) albo pomijanie zmian bez różnicy dawki.
 - **Status:** proposed
@@ -353,12 +354,12 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ## Open Roadmap Questions
 
-1. (#5) **Jak długie jest okno czasowe poprzedzające objaw (około 30 dni roboczo)?** — Owner: użytkowniczka. Block: nie blokuje planowania S-06; wartość do potwierdzenia przed wdrożeniem.
-2. (#6) **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?** — Owner: użytkowniczka. Block: roadmap-wide w tym sensie, że bez progów nie da się zakresować obserwowalności (patrz `## Parked`).
-3. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
+1. (#6) **Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?** — Owner: użytkowniczka. Block: roadmap-wide w tym sensie, że bez progów nie da się zakresować obserwowalności (patrz `## Parked`).
+2. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
 
 Rozstrzygnięte:
 
+- (#5) ~~**Jak długie jest okno czasowe poprzedzające objaw?**~~ — 2026-10-06: od 90 dni przed pierwszym wpisem danego objawu do bieżącego wpisu, stała w kodzie; zdarzeniem jest rozpoczęcie, zmiana dawki i odstawienie leku. Powód punktu odniesienia: przy długim czekaniu na wizytę okno liczone od bieżącego wpisu spychałoby pod zwinięcie lek, po którym objaw się zaczął. Wymogi dopisane do S-06; zmienia brzmienie US-02 i FR-010 w PRD.
 - (#33) ~~**Gdzie leżą prawdziwe dane autorki?**~~ — 2026-10-06: autorka korzysta z publicznej instancji demonstracyjnej z danymi przykładowymi, jak wszyscy. Nie przyjmuje leków, więc nie ma prawdziwych danych do ochrony; osobna instancja odrzucona jako koszt bez potrzeby. Bez nowych pozycji w roadmapie.
 - (#8) ~~**Jak brzmi treść warunków korzystania?**~~ — 2026-10-06: treść wersji 1 w `context/foundation/terms-of-use-v1.md`, z podziałem na część stałą i blok „Na czas prototypu”, żeby wyjście z prototypu kosztowało nową treść, a nie przebudowę. Rozszerza zakres S-01: wersje warunków niezmienne, porównanie wersji przy logowaniu z ekranem ponownej akceptacji, warunki na osobnej stronie z odnośnikiem przy polu akceptacji (PRD `## Access Control`).
 - (#34) ~~**Czy komunikaty ekranów wejściowych zdradzają, że konto o danym adresie istnieje?**~~ — 2026-10-06: wariant bezpieczniejszy. Rejestracja zawsze kończy się ekranem „sprawdź skrzynkę” z podpowiedzią o odzyskaniu dostępu, prośba o odzyskanie zawsze „jeśli konto istnieje, wysłaliśmy wiadomość”, nieudane logowanie zawsze „nieprawidłowy e-mail lub hasło”; surowe komunikaty Supabase nie trafiają na ekran. Powód: fakt prowadzenia dzienniczka leków jest daną o zdrowiu. Wymogi dopisane do S-01 i S-10; wariant z mailem do właściciela adresu w `## Parked` (po F-05).
