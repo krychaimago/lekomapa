@@ -363,13 +363,13 @@ Licznik zakończonych to jedno zapytanie `head` po indeksie `medications_user_id
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test`
-- [x] 3.2 Typy i lint czyste: `npm run typecheck` i `npm run lint`
-- [x] 3.3 Bramka kolorów przechodzi bez nowych wyjątków: `npm test` (`scripts/tokens/hardcoded-colors.mjs`)
-- [x] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 3.1 Testy jednostkowe i filtr FR-012 przechodzą: `npm test` — 892a2e5
+- [x] 3.2 Typy i lint czyste: `npm run typecheck` i `npm run lint` — 892a2e5
+- [x] 3.3 Bramka kolorów przechodzi bez nowych wyjątków: `npm test` (`scripts/tokens/hardcoded-colors.mjs`) — 892a2e5
+- [x] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke` — 892a2e5
 
 #### Manual
 
-- [x] 3.5 Na telefonie `/leki` z kilkoma lekami: nota tuż pod listą, link do zakończonych pod notą, strona nie wydłuża się o zakończone
-- [x] 3.6 `/leki/zakonczone` czytelna na telefonie i w przeglądarce
-- [x] 3.7 Ścieżki zakończenia i usunięcia są wyraźnie rozdzielone; link usuwania znika po 24 h od dodania
+- [x] 3.5 Na telefonie `/leki` z kilkoma lekami: nota tuż pod listą, link do zakończonych pod notą, strona nie wydłuża się o zakończone — 892a2e5
+- [x] 3.6 `/leki/zakonczone` czytelna na telefonie i w przeglądarce — 892a2e5
+- [x] 3.7 Ścieżki zakończenia i usunięcia są wyraźnie rozdzielone; link usuwania znika po 24 h od dodania — 892a2e5
