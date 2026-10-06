@@ -288,6 +288,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:**
   - ~~Jak długie jest okno czasowe poprzedzające objaw?~~ — Rozstrzygnięte 2026-10-06 (#5). Wymogi dla tego plasterka: okno od 90 dni przed pierwszym wpisem danego objawu do bieżącego wpisu; 90 dni jako jedna stała w kodzie, nie ustawienie użytkowniczki; zdarzeniem w oknie jest rozpoczęcie, zmiana dawki i odstawienie (`discontinued_on`), nie usunięcie pozycji dodanej przez pomyłkę; leki w oknie ułożone według dat zdarzeń, nigdy według podejrzenia; zdanie o odstawieniu wyłącznie informuje („od 3 marca nie przyjmuję X”). Szczegóły: `prd.md`, `## Open Questions`, pytanie 4.
+  - ~~Co daje wpis z kilkoma objawami?~~ — Rozstrzygnięte 2026-10-06 (#7): osobne pytanie dla każdego objawu, bo każdy ma własne okno czasowe; objawy nie są łączone we wspólne pytanie. Na ekranie po zapisie pierwsze pytanie rozwinięte, pozostałe zwinięte pod nazwą objawu. Wpis bez leków zapisuje się, ale pytanie nie powstaje.
   - Czy złożone pytanie przelicza się przy każdym wyświetleniu, czy zapisuje się w chwili złożenia? Przy przeliczaniu zmiana stałej okna albo poprawka wpisu w oknie korekty (S-07) przestawia kolejność leków także w starych pytaniach. — Owner: plan S-06. Block: no — do rozstrzygnięcia w `/10x-plan`.
 - **Risk:** Drugie miejsce, w którym produkt mógłby wyrządzić szkodę. Wynikiem ma być zdanie do rozmowy z lekarzem, nie lista podejrzanych leków ani ocena ryzyka. Zestawienie trafiające zawsze przestaje cokolwiek znaczyć — okno czasowe oparte na okresach dawkowania z S-03 usuwa większość szumu, dlatego S-03 jest wymaganiem wstępnym, a nie równoległym plasterkiem.
 - **Dług przejęty z S-05 (plan-review F5):** nie ma drogi cofnięcia zmiany dawki. Przykład: zmiana zapisana przy złym leku — poprawa w oknie korekty może tylko przywrócić poprzednią dawkę, a wtedy w historii zostają dwa kolejne okresy z tą samą dawką i data „zmiany”, której nie było. S-05 odrzuca taką poprawę kodem `DP010`, więc fałszywa zmiana zostaje widoczna jako zmiana. S-06 daje pierwszeństwo lekom zmienionym w oknie przed objawem, więc taki lek dostałby pierwszeństwo bez powodu. Przed wdrożeniem S-06 trzeba rozstrzygnąć cofnięcie zmiany (scalenie okresów w oknie korekty) albo pomijanie zmian bez różnicy dawki.
@@ -316,7 +317,9 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Prerequisites:** S-02, S-06
 - **Parallel with:** S-07, S-09
 - **Blockers:** —
-- **Unknowns:** —
+- **Unknowns:**
+  - ~~Ile pytań pokazuje sekcja dla objawu zapisanego wiele razy?~~ — Rozstrzygnięte 2026-10-06 (#7): jedno aktualne pytanie na objaw, złożone z najnowszego wpisu tego objawu. Bez tego objaw zapisany 30 razy dałby 30 prawie identycznych pytań. Zależy od rozstrzygnięcia w S-06, czy pytanie jest zapisywane, czy przeliczane.
+  - ~~Co pokazuje pusta sekcja?~~ — Rozstrzygnięte 2026-10-06 (#7): bez leków i bez wpisów — jedno wprowadzenie zamiast dwóch pustych części („tu zbiorą się możliwe kolizje i pytania do lekarza”) z przyciskami „Dodaj lek” i „Zapisz objaw”. W pozostałych przypadkach każda część ma własny pusty stan. Kolizje zależnie od liczby bieżących leków: 0 — brak leków i odnośnik do dodania; 1 — pary sprawdzane są przy co najmniej dwóch lekach; 2+ — „wśród bieżących leków nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze par (teksty istnieją w `src/lib/copy/interactions.ts`). Rozróżnienie jest konieczne, bo „nie znaleziono pary” przy zerze lub jednym leku jest nieprawdą. Pytania: pojawiają się po zapisaniu objawu, z odnośnikiem do dzienniczka. Zawsze widoczna zachęta, że o każdy lek i objaw można zapytać lekarza lub farmaceutę. Nowe teksty przechodzą filtr FR-012.
 - **Risk:** Sekcja nie wylicza niczego ponad to, co powstało w S-02 i S-06 — zbiera gotowe treści. Przeliczanie czegokolwiek od nowa rozjechałoby ją z treściami widocznymi przy lekach. To jednocześnie moment odbioru wartości całego produktu, więc język informacyjny musi się tu utrzymać bez wyjątku. Próg szybkości z PRD (#6): główna treść sekcji widoczna w ≤ 2,5 s (Lighthouse Mobile, LCP) — pomiar należy do tego plasterka.
 - **Status:** proposed
 
@@ -372,9 +375,11 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ## Open Roadmap Questions
 
-1. (#7) **Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?** — Owner: użytkowniczka. Block: nie blokuje sekwencji; kryteria wymagają przeglądu, zanim posłużą za podstawę testów.
+Brak otwartych pytań.
 
 Rozstrzygnięte:
+
+- (#7) ~~**Czy kryteria akceptacji historii US-01…US-04 zostały zaakceptowane?**~~ — 2026-10-06: przejrzane i zestawione z kodem S-02…S-05. Do historii przeniesione reguły, które kod już miał (znacznik przy obu lekach z pary, daty najwyżej 14 dni wstecz i nie z przyszłości, wpis dzienniczka bez wymogu leków). Kryterium US-01 o leku z ulotki poprawione do stanu kodu: substancja nierozpoznana nie jest objęta żadną parą i produkt to mówi. Wymogi dopisane do S-06 (osobne pytanie na każdy objaw wpisu) i S-08 (jedno aktualne pytanie na objaw, pusty stan zależny od liczby leków, wprowadzenie przy braku leków i objawów); stała lista bieżących leków w sekcji w `## Parked`. Zmienia US-01…US-04, FR-008, FR-010 i FR-011 w PRD.
 
 - (#6) ~~**Jakie mierzalne progi obowiązują dla czasu odpowiedzi i dostępności?**~~ — 2026-10-06: trzy progi zamiast procentu dostępności. Szybkość: LCP ≤ 2,5 s (Lighthouse Mobile) na liście leków, zapisie objawu i sekcji „Do omówienia z lekarzem”. Błędy: każdy 5xx i 1102 dociera do autorki mailem przez Sentry, wyłącznie po stronie serwera. Dostępność: przerwa dociera mailem w ciągu 15 minut, a monitor Sentry odpytujący stronę kontrolną utrzymuje darmowy Supabase przy życiu. Nowa pozycja F-06 (#74); wymogi dopisane do S-01 (Sentry na stronie prywatności) i S-08 (pomiar szybkości). Zmienia `## Non-Functional Requirements` w PRD.
 - (#5) ~~**Jak długie jest okno czasowe poprzedzające objaw?**~~ — 2026-10-06: od 90 dni przed pierwszym wpisem danego objawu do bieżącego wpisu, stała w kodzie; zdarzeniem jest rozpoczęcie, zmiana dawki i odstawienie leku. Powód punktu odniesienia: przy długim czekaniu na wizytę okno liczone od bieżącego wpisu spychałoby pod zwinięcie lek, po którym objaw się zaczął. Wymogi dopisane do S-06; zmienia brzmienie US-02 i FR-010 w PRD.
@@ -388,6 +393,7 @@ Rozstrzygnięte:
 
 ## Parked
 
+- **Lista bieżących leków z dawkami w sekcji „Do omówienia z lekarzem”** — Why parked: sekcja nigdy nie byłaby pusta, a lista „biorę X, Y, Z” to dokładnie to, co pada na wizycie. Rozszerza jednak FR-011 poza zbieranie gotowych treści, więc wymaga zmiany PRD. Odłożone 2026-10-06 przy przeglądzie kryteriów (#7).
 - **Eksport własnych danych z aplikacji** — Why parked: uznany za potrzebny, świadomie odłożony poza pierwszą wersję (`shape-notes.md`, `## Forward: technical-roadmap`).
 - **Oś czasu: objawy i leki zestawione wizualnie lub jako raport** — Why parked: Kryterium sukcesu drugorzędne, a cel sekwencjonowania to `speed`; struktura okresów dawkowania z S-03 jest pod to gotowa.
 - **Integracja z zewnętrzną bazą interakcji** — Why parked: PRD `## Non-Goals`; reguły pochodzą wyłącznie ze zbioru dostarczonego z produktem.
