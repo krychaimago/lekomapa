@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-10-06
+updated: 2026-10-07
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -58,7 +58,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done        |
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | in-progress |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | ready       |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed    |
 | S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
@@ -292,7 +292,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - ~~Czy złożone pytanie przelicza się przy każdym wyświetleniu, czy zapisuje się w chwili złożenia?~~ — Rozstrzygnięte 2026-10-07 (plan S-06): przeliczane przy każdym wyświetleniu z bieżących danych, bez tabeli w bazie. Poprawka wpisu w oknie korekty (S-07) i cofnięcie zmiany dawki trafiają do pytania same, a S-09 nie ma czego dodatkowo kasować. Koszt przyjęty świadomie: zmiana stałej okna przestawia kolejność leków także w starych pytaniach.
 - **Risk:** Drugie miejsce, w którym produkt mógłby wyrządzić szkodę. Wynikiem ma być zdanie do rozmowy z lekarzem, nie lista podejrzanych leków ani ocena ryzyka. Zestawienie trafiające zawsze przestaje cokolwiek znaczyć — okno czasowe oparte na okresach dawkowania z S-03 usuwa większość szumu, dlatego S-03 jest wymaganiem wstępnym, a nie równoległym plasterkiem.
 - **Dług przejęty z S-05 (plan-review F5):** nie ma drogi cofnięcia zmiany dawki. Przykład: zmiana zapisana przy złym leku — poprawa w oknie korekty może tylko przywrócić poprzednią dawkę, a wtedy w historii zostają dwa kolejne okresy z tą samą dawką i data „zmiany”, której nie było. S-05 odrzuca taką poprawę kodem `DP010`, więc fałszywa zmiana zostaje widoczna jako zmiana. S-06 daje pierwszeństwo lekom zmienionym w oknie przed objawem, więc taki lek dostałby pierwszeństwo bez powodu. Przed wdrożeniem S-06 trzeba rozstrzygnąć cofnięcie zmiany (scalenie okresów w oknie korekty) albo pomijanie zmian bez różnicy dawki. **Zamknięty 2026-10-07 w S-06 (faza 1):** najnowszy okres powstały ze zmiany dawki da się cofnąć w jego oknie korekty (`undo_dosage_change`); poprzedni okres trwa dalej bez daty końca. `DP010` zostaje i wskazuje cofnięcie zmiany.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-07: Okno korekty wpisu dzienniczka
 
@@ -429,3 +429,4 @@ Rozstrzygnięte:
 - **S-03: Użytkowniczka może zmienić dawkowanie leku, przez co bieżący okres dawkowania zostaje zamknięty, a nowy otwarty; lek zostaje jedną pozycją na liście z historią okresów od–do.** — Archived 2026-10-05 → `context/archive/2026-10-04-dosage-period-history/`. Lesson: —.
 - **S-05: Użytkowniczka może dodać wpis o samopoczuciu z datą i godziną wypełnionymi domyślnie na moment zapisu i możliwymi do cofnięcia, zaznaczając jeden lub więcej objawów z zamkniętej listy, opcjonalnie podając nasilenie i własną notatkę.** — Archived 2026-10-05 → `context/archive/2026-10-05-symptom-journal-entry/`. Lesson: —.
 - **S-04: Użytkowniczka może zakończyć przyjmowanie leku z datą odstawienia — lek znika z listy aktualnych, ale zostaje w historii i nadal tłumaczy dawne wpisy; trwałe usunięcie pozycji zarezerwowane dla pozycji dodanych przez pomyłkę.** — Archived 2026-10-06 → `context/archive/2026-10-05-discontinue-medication/`. Lesson: —.
+- **S-06: Użytkowniczka po zapisaniu objawu widzi gotowe pytanie do lekarza, zestawiające ten objaw z okresami dawkowania przyjmowanych leków, z pierwszeństwem dla leków rozpoczętych, zmienionych lub odstawionych w oknie czasowym objawu (od 90 dni przed pierwszym wpisem tego objawu do bieżącego wpisu); pozostałe leki zostają dostępne pod zwinięciem.** — Archived 2026-10-07 → `context/archive/2026-10-06-symptom-question-composer/`. Lesson: —.
