@@ -9,6 +9,22 @@ import { addDays, formatIsoDate, todayInWarsaw, variantText } from "./medication
 // How far before the first entry with the symptom the window reaches (PRD, open question 4).
 export const QUESTION_WINDOW_DAYS = 90;
 
+// Catalog names (20260926120100_symptom_catalog_seed.sql) that are grammatically plural, so the question reads
+// "mogą mieć związek". A name added to the catalog in the plural must be added here too, or the question falls back
+// to "może"; scripts/doctor-question/doctor-question.test.mjs checks every name here exists in the catalog.
+export const PLURAL_SYMPTOM_NAMES: ReadonlySet<string> = new Set([
+  "bóle mięśni",
+  "kłopoty z koncentracją",
+  "mdłości",
+  "mrowienie i drętwienie",
+  "obrzęki",
+  "skurcze mięśni",
+  "wymioty",
+  "zaburzenia widzenia",
+  "zaparcia",
+  "zawroty głowy",
+]);
+
 export interface ComposeDoctorQuestionInput {
   symptomName: string;
   /** `occurred_at` of the current entry. */
@@ -162,13 +178,14 @@ export function doctorQuestionText(question: DoctorQuestion): DoctorQuestionText
   );
   const hasEvents = question.events.length > 0;
   const changedCount = new Set(question.events.map((event) => event.medicationName)).size;
-  const questionTemplate = hasEvents
+  const questionKey = hasEvents
     ? changedCount > 1
-      ? copy.questionMany
-      : copy.questionOne
+      ? "questionMany"
+      : "questionOne"
     : others.length > 1
-      ? copy.questionTakenMany
-      : copy.questionTakenOne;
+      ? "questionTakenMany"
+      : "questionTakenOne";
+  const questionTemplate = PLURAL_SYMPTOM_NAMES.has(name) ? copy[`${questionKey}Plural` as const] : copy[questionKey];
 
   return {
     heading: name.charAt(0).toLocaleUpperCase("pl") + name.slice(1),

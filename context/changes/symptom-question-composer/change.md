@@ -3,7 +3,7 @@ change_id: symptom-question-composer
 title: Symptom question composer
 status: implementing
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-10-07
 ---
 
 ## Notes

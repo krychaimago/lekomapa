@@ -4,10 +4,15 @@
 // Polish time; events after the current entry do not count; nothing is ordered by suspicion.
 
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
-import { composeDoctorQuestion, doctorQuestionText } from "../../src/lib/services/doctor-question.ts";
-import { REQUIRED_PHRASE } from "../fr012/corpus.mjs";
+import {
+  PLURAL_SYMPTOM_NAMES,
+  composeDoctorQuestion,
+  doctorQuestionText,
+} from "../../src/lib/services/doctor-question.ts";
+import { REQUIRED_PHRASE, REQUIRED_PHRASE_PLURAL } from "../fr012/corpus.mjs";
 import { forbiddenWordsIn } from "../rpl/pairs.mjs";
 
 // Run in a zone other than Warsaw: on a machine already in Europe/Warsaw the day of an entry would come out right even
@@ -337,5 +342,34 @@ test("every composed text passes the FR-012 filter and the question carries the 
     }
     assert.ok(text.question.includes(REQUIRED_PHRASE), text.question);
     assert.ok(text.note.length > 0);
+  }
+});
+
+// A symptom name in the plural takes "mogą": "Czy mdłości może mieć związek…" was reported on the phone (S-06, 3.5).
+test("the verb of the question agrees with the number of the symptom name", () => {
+  const medications = [med("Apap", [["2026-07-01", null, "1 tabletka"]])];
+  const singular = doctorQuestionText(compose(medications));
+  assert.equal(singular.question, "Czy ból głowy może mieć związek z tym lekiem?");
+  const plural = doctorQuestionText(compose(medications, { symptomName: "mdłości" }));
+  assert.equal(plural.question, "Czy mdłości mogą mieć związek z tym lekiem?");
+  assert.deepEqual(forbiddenWordsIn(plural.question), []);
+  assert.ok(plural.question.includes(REQUIRED_PHRASE_PLURAL));
+
+  // Without changes in the window the question is about the medicines taken, in the plural as well.
+  const taken = doctorQuestionText(
+    compose([med("Apap", [["2026-01-01", null, "1 tabletka"]])], { symptomName: "zawroty głowy" }),
+  );
+  assert.equal(taken.question, "Czy zawroty głowy mogą mieć związek z lekiem, który biorę?");
+});
+
+// A typo here would silently leave that symptom with "może"; every name must be a name the catalog seeds.
+test("every plural symptom name is a name in the symptom catalog", async () => {
+  const seed = await readFile(
+    new URL("../../supabase/migrations/20260926120100_symptom_catalog_seed.sql", import.meta.url),
+    "utf8",
+  );
+  assert.ok(PLURAL_SYMPTOM_NAMES.size > 0);
+  for (const name of PLURAL_SYMPTOM_NAMES) {
+    assert.ok(seed.includes(`', '${name}', '`), `"${name}" is not in the catalog seed`);
   }
 });

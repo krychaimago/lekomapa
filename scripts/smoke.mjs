@@ -24,10 +24,13 @@ import { createClient, isAuthApiError } from "@supabase/supabase-js";
 
 // Loaded as TypeScript (`--experimental-strip-types` in the npm script): the screens' own copy and "today" rule,
 // so the steps compare against what the app renders instead of a second copy of the text.
+import { DOCTOR_QUESTION_COPY } from "../src/lib/copy/doctor-question.ts";
 import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
 import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
 import { MEDICATION_COPY } from "../src/lib/copy/medications.ts";
+import { PLURAL_SYMPTOM_NAMES } from "../src/lib/services/doctor-question.ts";
 import { earliestChangeDate, formatIsoDate, todayInWarsaw } from "../src/lib/services/medications.ts";
+import { REQUIRED_PHRASE, REQUIRED_PHRASE_PLURAL } from "./fr012/corpus.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const EXISTING_EMAIL = process.env.SMOKE_EMAIL;
@@ -1261,13 +1264,40 @@ const journalFlowSteps = [
     EXPECT_OK,
   ],
   [
-    "journal: no URL on the way carries the symptom name or the note",
+    "journal: the saved entry's page shows the question for the doctor with the smoke medication and the phrase",
     async () => {
-      if (!journal.symptom) return { ok: false, detail: "check did not run: no symptom was read" };
-      const forbidden = [journal.symptom.name, "Smoke journal note"].flatMap((text) => [
-        text.toLowerCase(),
-        encodeURIComponent(text).toLowerCase(),
-      ]);
+      if (!journal.entryId || !fixtures.a) return { ok: false, detail: "check did not run: no entry was saved" };
+      const path = `${JOURNAL_LIST_PAGE}?dodano=${journal.entryId}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // The section alone, so the medication name and the phrase are proven inside the question, not elsewhere.
+      const start = page.body.indexOf("data-doctor-question");
+      const end = start === -1 ? -1 : page.body.indexOf("</section>", start);
+      const section = end === -1 ? null : page.body.slice(start, end);
+      // The fixture medication of account A (ongoing since 2026-01-05) is taken in the window of an entry saved today.
+      const medicationName = fixtures.a.medication.product_name;
+      const title = section !== null && pageContains(section, DOCTOR_QUESTION_COPY.sectionTitle);
+      const medication = section !== null && pageContains(section, medicationName);
+      // The symptom is picked by id, so it may be one with a plural name; the verb then agrees with it.
+      const requiredPhrase = PLURAL_SYMPTOM_NAMES.has(journal.symptom.name) ? REQUIRED_PHRASE_PLURAL : REQUIRED_PHRASE;
+      const phrase = section !== null && pageContains(section, requiredPhrase);
+      return {
+        ok: title && medication && phrase,
+        detail: `section ${section ? "present" : "missing"}; title ${title ? "present" : "missing"}; ${medicationName} ${
+          medication ? "present" : "missing"
+        }; phrase ${phrase ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: no URL on the way carries the symptom name, the medication name or the note",
+    async () => {
+      if (!journal.symptom || !fixtures.a) return { ok: false, detail: "check did not run: no symptom was read" };
+      const forbidden = [journal.symptom.name, fixtures.a.medication.product_name, "Smoke journal note"].flatMap(
+        (text) => [text.toLowerCase(), encodeURIComponent(text).toLowerCase()],
+      );
       const leaking = journal.paths.filter((path) => forbidden.some((text) => path.toLowerCase().includes(text)));
       return {
         ok: journal.paths.length > 0 && leaking.length === 0,

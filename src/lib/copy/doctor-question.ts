@@ -4,7 +4,7 @@
 // because text built in a function would bypass the filter. The dose marker is `{ilość}`, not a word with the dose stem,
 // and an end reads "nie biorę leku": "nie przyjmuję" hits the stem `nie przyjmuj`. The word "lek" before a name takes
 // the case ending, because product names are never declined. These texts link a medicine to a symptom, so every
-// question uses "może mieć związek" and never states a cause.
+// question uses "może mieć związek" ("mogą mieć związek" for a symptom name in the plural) and never states a cause.
 
 export const DOCTOR_QUESTION_COPY = {
   sectionTitle: "Pytanie do lekarza",
@@ -22,6 +22,11 @@ export const DOCTOR_QUESTION_COPY = {
   questionMany: "Czy {objaw} może mieć związek z którymś z tych leków?",
   questionTakenOne: "Czy {objaw} może mieć związek z lekiem, który biorę?",
   questionTakenMany: "Czy {objaw} może mieć związek z którymś z leków, które biorę?",
+  // The same questions for a symptom name in the plural ("mdłości", "zawroty głowy"): the verb agrees with it.
+  questionOnePlural: "Czy {objaw} mogą mieć związek z tym lekiem?",
+  questionManyPlural: "Czy {objaw} mogą mieć związek z którymś z tych leków?",
+  questionTakenOnePlural: "Czy {objaw} mogą mieć związek z lekiem, który biorę?",
+  questionTakenManyPlural: "Czy {objaw} mogą mieć związek z którymś z leków, które biorę?",
   othersLabel: "Pozostałe leki ({liczba})",
   takenLabel: "Przyjmowane leki:",
   otherItem: "{lek} — od {data}, {ilość}",

@@ -8,7 +8,7 @@ import { test } from "node:test";
 
 import { DOCTOR_QUESTION_COPY } from "../../src/lib/copy/doctor-question.ts";
 import { QUESTION_WINDOW_DAYS } from "../../src/lib/services/doctor-question.ts";
-import { REQUIRED_PHRASE } from "./corpus.mjs";
+import { REQUIRED_PHRASE, REQUIRED_PHRASE_PLURAL } from "./corpus.mjs";
 import { forbiddenWordsIn } from "../rpl/pairs.mjs";
 
 // → [[path, text]] for every string in the module. Any other value type fails loudly: a function or number
@@ -33,6 +33,10 @@ test("no text of the question for the doctor hits a forbidden stem", () => {
 test("every question template carries the required wording", () => {
   for (const key of ["questionOne", "questionMany", "questionTakenOne", "questionTakenMany"]) {
     assert.ok(DOCTOR_QUESTION_COPY[key].includes(REQUIRED_PHRASE), `${key}: "${DOCTOR_QUESTION_COPY[key]}"`);
+    const plural = DOCTOR_QUESTION_COPY[`${key}Plural`];
+    assert.ok(plural.includes(REQUIRED_PHRASE_PLURAL), `${key}Plural: "${plural}"`);
+    // The plural template differs only in the verb, so it says nothing the singular one does not.
+    assert.equal(plural.replace(REQUIRED_PHRASE_PLURAL, REQUIRED_PHRASE), DOCTOR_QUESTION_COPY[key], `${key}Plural`);
   }
 });
 
