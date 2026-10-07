@@ -11,6 +11,8 @@
 --   ISOLATION 4: UPDATE that re-points a row of account B under account A (user_id / medication_id / entry_id),
 --                with the owner counterexample: account A re-points its own row.
 --   ISOLATION 5: DELETE.
+--   Append-only tables (pg_temp.append_only_tables()) get the owner counterexamples of ISOLATION 3, 4 and 5 reversed:
+--   the owner changes, re-points and deletes 0 rows of her own, and the row stays as it was.
 --   ISOLATION 6: deleting account A with the correction window closed removes every row of A in every account
 --                table and leaves account B untouched.
 --
@@ -93,7 +95,23 @@ as $$
     'registry_substances',
     'interaction_pairs',
     'symptoms',
-    'symptom_search_terms'
+    'symptom_search_terms',
+    'terms_versions'
+  ]::name[])
+$$;
+
+-- Append-only account tables: history does not lie, so not even the owner may change, re-point or delete a row; it
+-- disappears only with the account (ISOLATION 6). For these tables the owner counterexamples of ISOLATION 3, 4 and 5
+-- are reversed: 0 rows touched, no error, the row unchanged. A table goes here only by a deliberate decision, with its
+-- reason; every other account table must still pass the owner counterexamples.
+--   - terms_acceptances (S-01): the date and version of accepting the terms of use are a fact in the account history.
+create function pg_temp.append_only_tables()
+returns table (table_name name)
+language sql
+immutable
+as $$
+  select unnest(array[
+    'terms_acceptances'
   ]::name[])
 $$;
 
@@ -107,7 +125,9 @@ $$;
 --              substance 0a12 and period 0a13 under medication 0a01
 --              journal entry 0a04 with symptoms 0a05 and 0a15 (extra row for the owner DELETE counterexample);
 --              extra journal entry 0a14 with symptom 0a25 (target of the owner re-pointing in ISOLATION 4)
---   account B: 0b00; medication 0b01, substance 0b02, period 0b03; journal entry 0b04 with symptom 0b05
+--              terms acceptances 0a06 (version 1) and 0a16 (version 2)
+--   account B: 0b00; medication 0b01, substance 0b02, period 0b03; journal entry 0b04 with symptom 0b05;
+--              terms acceptance 0b06 (version 1)
 --   row inserted by account A in ISOLATION 2 (every table): c002
 -- Columns:
 --   a_row, a_extra_row, b_row  rows of A, the extra row of A deleted by its owner in ISOLATION 5, row of B
@@ -180,6 +200,18 @@ select 'symptom_entry_items',
        'entry_id', '00000000-0000-4000-9000-000000000a04', '00000000-0000-4000-9000-000000000b04',
        '00000000-0000-4000-9000-000000000a14';
 
+-- Terms acceptances (S-01), append-only. unique (user_id, version) allows one row per version, and account A has three
+-- (a_row, a_extra_row and c002 from ISOLATION 2), so ISOLATION 0 adds test versions 2 and 3 to terms_versions and each
+-- row of A gets its own version. The table has no text column: ISOLATION 3 changes accepted_at, whose value as
+-- inserted is now() of this transaction (set by the database).
+insert into isolation_fixtures values
+  ('terms_acceptances',
+   '00000000-0000-4000-9000-000000000a06', '00000000-0000-4000-9000-000000000a16', '00000000-0000-4000-9000-000000000b06',
+   'accepted_at', now()::text, '2000-01-01 00:00:00+00',
+   'insert into public.terms_acceptances (id, user_id, version) values ($1, ''00000000-0000-4000-9000-000000000a00'', 3)',
+   'user_id', '00000000-0000-4000-9000-000000000a00', '00000000-0000-4000-9000-000000000b00',
+   '00000000-0000-4000-9000-000000000a00');
+
 -- ---------------------------------------------------------------------------
 -- ISOLATION 0: partition, fixture map, test data (as postgres) and preconditions
 -- ---------------------------------------------------------------------------
@@ -223,6 +255,13 @@ begin
     and t.relname not in (select s.table_name from pg_temp.shared_tables() s);
   if v_list is not null then
     raise exception 'ISOLATION 0 FAILED: tables are neither account data nor shared: %. A table with account data needs a foreign key to auth.users or to an account table (on delete cascade); a shared read-only table must be added deliberately to the shared list here and in schema_invariants_checks.sql', v_list;
+  end if;
+
+  select string_agg(o.table_name, ', ' order by o.table_name) into v_list
+  from pg_temp.append_only_tables() o
+  where not exists (select 1 from pg_temp.account_data_tables() a where a.table_name = o.table_name);
+  if v_list is not null then
+    raise exception 'ISOLATION 0 FAILED: append-only list names tables outside the foreign key closure of auth.users: %', v_list;
   end if;
 
   -- The fixture map covers exactly the closure.
@@ -281,6 +320,14 @@ begin
     ('00000000-0000-4000-9000-000000000a15', '00000000-0000-4000-9000-000000000a04', (select id from public.symptoms where key = 'headache'), null),
     ('00000000-0000-4000-9000-000000000a25', '00000000-0000-4000-9000-000000000a14', (select id from public.symptoms where key = 'fatigue'), null),
     ('00000000-0000-4000-9000-000000000b05', '00000000-0000-4000-9000-000000000b04', (select id from public.symptoms where key = 'vomiting'), 'moderate');
+
+  -- Terms acceptances. Test versions 2 and 3 exist only in this transaction (rollback at the end).
+  insert into public.terms_versions (version) values (2), (3);
+  insert into public.terms_acceptances (id, user_id, version)
+  values
+    ('00000000-0000-4000-9000-000000000a06', '00000000-0000-4000-9000-000000000a00', 1),
+    ('00000000-0000-4000-9000-000000000a16', '00000000-0000-4000-9000-000000000a00', 2),
+    ('00000000-0000-4000-9000-000000000b06', '00000000-0000-4000-9000-000000000b00', 1);
 
   -- Every row named in the fixture map exists in its table.
   for v_fixture in select * from isolation_fixtures order by table_name loop
@@ -473,12 +520,21 @@ declare
   v_actor record;
   v_count integer;
   v_value text;
+  v_type text;
+  v_append_only boolean;
 begin
   -- Read as postgres before any role switch (see the header).
   select array_agg(f order by a.depth, f.table_name) into v_cases
   from isolation_fixtures f join pg_temp.account_data_tables() a on a.table_name = f.table_name;
 
   foreach v_case in array v_cases loop
+    -- The new value is passed as text and cast to the column type, so a table without a text column can be measured.
+    -- Append-only tables get update_value from every actor: 'changed by ...' would not cast to a non-text type.
+    select format_type(att.atttypid, att.atttypmod) into v_type
+    from pg_attribute att
+    where att.attrelid = format('public.%I', v_case.table_name)::regclass and att.attname = v_case.update_column;
+    v_append_only := v_case.table_name in (select o.table_name from pg_temp.append_only_tables() o);
+
     for v_actor in
       select * from (values ('account B', 'authenticated', v_b), ('anon', 'anon', null::uuid)) as a(label, role_name, uid)
     loop
@@ -492,8 +548,8 @@ begin
         raise exception 'ISOLATION 3 FAILED: switch to % did not take effect (current_user %, auth.uid %)', v_actor.label, current_user, auth.uid();
       end if;
 
-      execute format('update public.%I set %I = $1 where id = $2', v_case.table_name, v_case.update_column)
-        using 'changed by ' || v_actor.label, v_case.a_row;
+      execute format('update public.%I set %I = $1::%s where id = $2', v_case.table_name, v_case.update_column, v_type)
+        using case when v_append_only then v_case.update_value else 'changed by ' || v_actor.label end, v_case.a_row;
       get diagnostics v_count = row_count;
       execute 'reset role';
 
@@ -512,10 +568,22 @@ begin
     if current_user <> 'authenticated' or auth.uid() is distinct from v_a then
       raise exception 'ISOLATION 3 FAILED: switch to account A did not take effect (current_user %, auth.uid %)', current_user, auth.uid();
     end if;
-    execute format('update public.%I set %I = $1 where id = $2', v_case.table_name, v_case.update_column)
+    execute format('update public.%I set %I = $1::%s where id = $2', v_case.table_name, v_case.update_column, v_type)
       using v_case.update_value, v_case.a_row;
     get diagnostics v_count = row_count;
     execute 'reset role';
+
+    -- Append-only: the owner changes nothing either. RLS gives no error and zero rows (measured).
+    if v_append_only then
+      if v_count <> 0 then
+        raise exception 'ISOLATION 3 FAILED: account A updated % row(s) of its own in append-only %, expected 0', v_count, v_case.table_name;
+      end if;
+      execute format('select %I::text from public.%I where id = $1', v_case.update_column, v_case.table_name) into v_value using v_case.a_row;
+      if v_value is distinct from v_case.update_original then
+        raise exception 'ISOLATION 3 FAILED: row of account A in append-only % changed after update by its owner (now %)', v_case.table_name, v_value;
+      end if;
+      continue;
+    end if;
 
     if v_count <> 1 then
       raise exception 'ISOLATION 3 FAILED: account A update of its own row in % touched % row(s), expected 1', v_case.table_name, v_count;
@@ -526,7 +594,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'ISOLATION 3 OK: UPDATE — B and anon touch 0 rows of A and leave them unchanged in all % account tables; A updates its own', cardinality(v_cases);
+  raise notice 'ISOLATION 3 OK: UPDATE — B and anon touch 0 rows of A and leave them unchanged in all % account tables; A updates its own, except in append-only tables (0 rows, unchanged)', cardinality(v_cases);
 end;
 $$;
 
@@ -546,12 +614,15 @@ declare
   v_owner uuid;
   v_original uuid;
   v_count integer;
+  v_append_only boolean;
 begin
   -- Read as postgres before any role switch (see the header).
   select array_agg(f order by a.depth, f.table_name) into v_cases
   from isolation_fixtures f join pg_temp.account_data_tables() a on a.table_name = f.table_name;
 
   foreach v_case in array v_cases loop
+    v_append_only := v_case.table_name in (select o.table_name from pg_temp.append_only_tables() o);
+
     perform set_config('request.jwt.claims', json_build_object('sub', v_b, 'role', 'authenticated')::text, true);
     execute 'set local role authenticated';
     if current_user <> 'authenticated' or auth.uid() is distinct from v_b then
@@ -563,16 +634,22 @@ begin
     begin
       execute format('update public.%I set %I = $1 where id = $2', v_case.table_name, v_case.repoint_column)
         using v_case.repoint_a_target, v_case.b_row;
+      get diagnostics v_count = row_count;
     exception when sqlstate '42501' then
       v_state := '42501';
       get stacked diagnostics v_message = message_text;
     end;
     execute 'reset role';
 
-    if v_state <> '42501' then
+    -- Append-only: `using (false)` hides every row from UPDATE, so RLS gives no error and zero rows instead of 42501.
+    -- Any error, 42501 included, means the update reached a policy that lets rows through, and fails the step.
+    if v_append_only then
+      if v_state <> 'no error' or v_count <> 0 then
+        raise exception 'ISOLATION 4 FAILED: account B re-pointing its row in append-only % under account A gave % and % row(s), expected no error and 0 rows', v_case.table_name, v_state, v_count;
+      end if;
+    elsif v_state <> '42501' then
       raise exception 'ISOLATION 4 FAILED: account B re-pointed its row in % under account A without an error', v_case.table_name;
-    end if;
-    if v_message not like '%row-level security%' and v_message not like '%permission denied%' then
+    elsif v_message not like '%row-level security%' and v_message not like '%permission denied%' then
       raise exception 'ISOLATION 4 FAILED: re-pointing in % blocked by 42501 with an unexpected message (got %)', v_case.table_name, v_message;
     end if;
     execute format('select %I from public.%I where id = $1', v_case.repoint_column, v_case.table_name) into v_owner using v_case.b_row;
@@ -595,6 +672,19 @@ begin
     get diagnostics v_count = row_count;
     execute 'reset role';
 
+    -- Append-only: the owner re-points nothing either, and there is nothing to restore (the guard would refuse every
+    -- UPDATE as postgres, even one writing the same value).
+    if v_append_only then
+      if v_count <> 0 then
+        raise exception 'ISOLATION 4 FAILED: account A re-pointed % row(s) of its own in append-only %, expected 0', v_count, v_case.table_name;
+      end if;
+      execute format('select %I from public.%I where id = $1', v_case.repoint_column, v_case.table_name) into v_owner using v_case.a_row;
+      if v_owner is distinct from v_original then
+        raise exception 'ISOLATION 4 FAILED: row of account A in append-only % was re-pointed by its owner (now %)', v_case.table_name, v_owner;
+      end if;
+      continue;
+    end if;
+
     if v_count <> 1 then
       raise exception 'ISOLATION 4 FAILED: account A re-pointing its own row in % touched % row(s), expected 1', v_case.table_name, v_count;
     end if;
@@ -612,7 +702,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'ISOLATION 4 OK: re-pointing B''s rows under A rejected with 42501 in all % account tables; A re-points its own rows', cardinality(v_cases);
+  raise notice 'ISOLATION 4 OK: re-pointing B''s rows under A rejected with 42501 in all % account tables (append-only: 0 rows, no error); A re-points its own rows, except in append-only tables (0 rows)', cardinality(v_cases);
 end;
 $$;
 
@@ -672,6 +762,18 @@ begin
     get diagnostics v_count = row_count;
     execute 'reset role';
 
+    -- Append-only: the owner deletes nothing either; the row goes only with the account (ISOLATION 6).
+    if v_case.table_name in (select o.table_name from pg_temp.append_only_tables() o) then
+      if v_count <> 0 then
+        raise exception 'ISOLATION 5 FAILED: account A deleted % row(s) of its own in append-only %, expected 0', v_count, v_case.table_name;
+      end if;
+      execute format('select count(*) from public.%I where id = $1', v_case.table_name) into v_count using v_case.a_extra_row;
+      if v_count <> 1 then
+        raise exception 'ISOLATION 5 FAILED: row of account A in append-only % is gone after delete by its owner', v_case.table_name;
+      end if;
+      continue;
+    end if;
+
     if v_count <> 1 then
       raise exception 'ISOLATION 5 FAILED: account A delete of its own row in % touched % row(s), expected 1', v_case.table_name, v_count;
     end if;
@@ -681,7 +783,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'ISOLATION 5 OK: DELETE — B and anon touch 0 rows of A and leave them in place in all % account tables; A deletes its own', cardinality(v_cases);
+  raise notice 'ISOLATION 5 OK: DELETE — B and anon touch 0 rows of A and leave them in place in all % account tables; A deletes its own, except in append-only tables (0 rows, row kept)', cardinality(v_cases);
 end;
 $$;
 

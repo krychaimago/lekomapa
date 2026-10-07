@@ -86,7 +86,8 @@ as $$
     'registry_substances',
     'interaction_pairs',
     'symptoms',
-    'symptom_search_terms'
+    'symptom_search_terms',
+    'terms_versions'
   ]::name[])
 $$;
 
@@ -450,10 +451,12 @@ begin
       ('symptom_entry_items', 'symptom_entry_items_guard_core', 'UPDATE'),
       ('symptom_entry_items', 'symptom_entry_items_guard_delete', 'DELETE'),
       -- S-04: the moment the end of a medication was saved opens its window, so it is set by the database.
-      ('medications', 'medications_stamp_discontinuation', 'INSERT OR UPDATE')
+      ('medications', 'medications_stamp_discontinuation', 'INSERT OR UPDATE'),
+      -- S-01: an acceptance of the terms is append-only history, changed or deleted never (only with the account).
+      ('terms_acceptances', 'terms_acceptances_guard', 'UPDATE OR DELETE')
     ) as g(table_name, trigger_name, event)
   loop
-    v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 when 'INSERT OR UPDATE' then 20 end;
+    v_expected_event := case v_guard.event when 'INSERT' then 4 when 'DELETE' then 8 when 'UPDATE' then 16 when 'INSERT OR UPDATE' then 20 when 'UPDATE OR DELETE' then 24 end;
 
     select tg.tgenabled, tg.tgtype::integer as tgtype into v_trigger
     from pg_trigger tg
