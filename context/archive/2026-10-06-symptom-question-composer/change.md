@@ -1,9 +1,10 @@
 ---
 change_id: symptom-question-composer
 title: Symptom question composer
-status: impl_reviewed
+status: archived
 created: 2026-10-06
 updated: 2026-10-07
+archived_at: 2026-10-07T18:21:48Z
 ---
 
 ## Notes
