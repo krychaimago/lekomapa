@@ -390,17 +390,17 @@ Brak danych do przeliczenia: migracja zmienia tylko funkcje i wyzwalacze. Okresy
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe: `npm test`
-- [x] 3.2 Lint i typy: `npm run lint` i `npm run typecheck`
-- [x] 3.3 Build: `npm run build`
-- [x] 3.4 Smoke z krokiem pytania przeciw lokalnej bazie (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
+- [x] 3.1 Testy jednostkowe: `npm test` — 7989eb0
+- [x] 3.2 Lint i typy: `npm run lint` i `npm run typecheck` — 7989eb0
+- [x] 3.3 Build: `npm run build` — 7989eb0
+- [x] 3.4 Smoke z krokiem pytania przeciw lokalnej bazie (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke` — 7989eb0
 
 #### Manual
 
-- [x] 3.5 Na telefonie: wpis z jednym objawem przy lekach ze zmianą w oknie — pytanie zgodne z podglądem z planu
-- [x] 3.6 Wpis z trzema objawami: trzy pytania, pierwsze rozwinięte, pozostałe zwinięte pod nazwą objawu
-- [x] 3.7 Konto bez leków w oknie: wpis zapisuje się, widać linijkę `noQuestion`, pytania brak
-- [x] 3.8 Leki bez zmian w oknie: zdanie o braku zmian i rozwinięta lista przyjmowanych leków
-- [x] 3.9 Cofnięcie zmiany dawki (faza 1), potem ponowne otwarcie strony wpisu: zmiana znika z pytania
-- [x] 3.10 Tryb ciemny: sekcja czytelna, nic nie wygląda jak alarm
-- [x] 3.11 Autorka czyta pytania na ekranie i potwierdza, że żadne nie stwierdza przyczyny ani nie porządkuje leków według podejrzenia
+- [x] 3.5 Na telefonie: wpis z jednym objawem przy lekach ze zmianą w oknie — pytanie zgodne z podglądem z planu — 7989eb0
+- [x] 3.6 Wpis z trzema objawami: trzy pytania, pierwsze rozwinięte, pozostałe zwinięte pod nazwą objawu — 7989eb0
+- [x] 3.7 Konto bez leków w oknie: wpis zapisuje się, widać linijkę `noQuestion`, pytania brak — 7989eb0
+- [x] 3.8 Leki bez zmian w oknie: zdanie o braku zmian i rozwinięta lista przyjmowanych leków — 7989eb0
+- [x] 3.9 Cofnięcie zmiany dawki (faza 1), potem ponowne otwarcie strony wpisu: zmiana znika z pytania — 7989eb0
+- [x] 3.10 Tryb ciemny: sekcja czytelna, nic nie wygląda jak alarm — 7989eb0
+- [x] 3.11 Autorka czyta pytania na ekranie i potwierdza, że żadne nie stwierdza przyczyny ani nie porządkuje leków według podejrzenia — 7989eb0
