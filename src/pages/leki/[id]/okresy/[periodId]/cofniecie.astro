@@ -24,6 +24,7 @@ type PeriodRow = Pick<DosagePeriod, "id" | "dose_text" | "started_on" | "ended_o
 };
 
 type MedicationRow = Pick<Medication, "id" | "product_name" | "composition_source" | "discontinued_on"> & {
+  registry_products: VariantRow | null;
   dosage_periods: PeriodRow[];
 };
 
@@ -44,7 +45,7 @@ if (supabase) {
   const result = await supabase
     .from("medications")
     .select(
-      "id, product_name, composition_source, discontinued_on, dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
+      "id, product_name, composition_source, discontinued_on, registry_products(strength, pharmaceutical_form), dosage_periods(id, dose_text, started_on, ended_on, correction_window_ends_at, registry_products(strength, pharmaceutical_form))",
     )
     .eq("id", id)
     .maybeSingle()
@@ -81,9 +82,10 @@ if (period) {
 const unavailableText = unavailable ? MEDICATION_COPY.apiErrors[unavailable] : null;
 
 const isRegistry = medication?.composition_source === "registry";
-// The dose with the variant when it has one: a change of the strength alone keeps the same dose text.
+// The dose with the variant when it has one: a change of the strength alone keeps the same dose text. A period saved
+// without a variant reads the variant of the medication.
 function doseWithVariant(row: PeriodRow): string {
-  const variant = isRegistry ? variantText(row.registry_products) : "";
+  const variant = isRegistry ? variantText(row.registry_products ?? medication?.registry_products ?? null) : "";
   return variant ? `${row.dose_text} (${variant})` : row.dose_text;
 }
 

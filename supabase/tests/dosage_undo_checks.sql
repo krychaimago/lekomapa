@@ -5,12 +5,12 @@
 --           has exactly one ongoing period.
 --   UNDO 2: every refusal of undo_dosage_change by its named SQLSTATE, each leaving the periods unchanged: DP011 for
 --           the first period (also with its window closed: DP011 comes before DP009), DP012 for a period that is not
---           the newest, DP013 for an ended medication, DP009 when the period was saved 25 h ago, DP008 for another
+--           the newest, DP014 for a period with a gap before it, DP013 for an ended medication, DP009 when the period was saved 25 h ago, DP008 for another
 --           account's period and for an unknown id, 28000 without a session.
 --   UNDO 3: a direct delete as the owner follows the same rule — the newest period inside its window passes and
 --           reopens the period before; the same delete 25 h after saving the period, the delete of a period that is
---           not the newest, of the only period, and of the newest period of an ended medication are refused with the
---           guard's message.
+--           not the newest, of the only period, of a period with a gap before it and of the newest period of an ended
+--           medication are refused with the guard's message.
 --   UNDO 4: a direct `update ... set ended_on = null` on a closed period, without any delete, is refused by the
 --           history guard: the reopening is reachable only as an effect of the delete.
 --   UNDO 5: deleting a medication inside its window still removes all its periods (the cascade does not reopen
@@ -122,6 +122,7 @@ exception
   when sqlstate 'DP011' then return 'DP011';
   when sqlstate 'DP012' then return 'DP012';
   when sqlstate 'DP013' then return 'DP013';
+  when sqlstate 'DP014' then return 'DP014';
   when sqlstate 'DP009' then return 'DP009';
 end;
 $$;
@@ -216,6 +217,30 @@ begin
 end;
 $$;
 
+-- A medication of account A whose first period was closed 10 days ago and whose second period, saved now, started
+-- 5 days ago: a gap no screen creates, written directly as the owner. Returns the id of the second period.
+create function pg_temp.gap_medication(p_name text)
+returns uuid
+language plpgsql
+as $$
+declare
+  v_today constant date := (now() at time zone 'Europe/Warsaw')::date;
+  v_med uuid;
+  v_first uuid;
+  v_second uuid;
+begin
+  v_med := pg_temp.old_medication(p_name, 30, interval '3 days');
+  select id into v_first from public.dosage_periods where medication_id = v_med;
+  perform pg_temp.act_as('00000000-0000-4000-9600-000000000a00');
+  update public.dosage_periods set ended_on = v_today - 10 where id = v_first;
+  insert into public.dosage_periods (medication_id, dose_text, started_on)
+    values (v_med, '2 tabletki', v_today - 5)
+    returning id into v_second;
+  perform pg_temp.act_as_postgres();
+  return v_second;
+end;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- UNDO 1: undoing a fresh dose change removes the period and reopens the one before
 -- ---------------------------------------------------------------------------
@@ -287,8 +312,11 @@ declare
   v_middle uuid;
   v_last uuid;
   v_ended_last uuid;
+  v_gap uuid;
+  v_gap_last uuid;
   v_before text;
   v_ended_before text;
+  v_gap_before text;
   v_result text;
 begin
   -- Medication with three periods: first (saved 3 days ago), middle and last (both saved now).
@@ -353,7 +381,17 @@ begin
   perform pg_temp.assert_result('2', 'undoing the newest period of an ended medication', v_result, 'DP013');
   perform pg_temp.assert_unchanged('2', 'DP013', v_ended, v_ended_before);
 
-  raise notice 'UNDO 2 OK: DP011 (also with the window closed), DP012, DP008 (another account, unknown id), 28000, DP009 and DP013 refuse the undo and leave the periods unchanged';
+  -- DP014: the newest period inside its window, with a gap before it: nothing would be reopened.
+  v_gap_last := pg_temp.gap_medication('Undo 2 gap medication');
+  select medication_id into v_gap from public.dosage_periods where id = v_gap_last;
+  v_gap_before := pg_temp.periods_state(v_gap);
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_undo(v_gap_last);
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_result('2', 'undoing a period with a gap before it', v_result, 'DP014');
+  perform pg_temp.assert_unchanged('2', 'DP014', v_gap, v_gap_before);
+
+  raise notice 'UNDO 2 OK: DP011 (also with the window closed), DP012, DP008 (another account, unknown id), 28000, DP009, DP013 and DP014 refuse the undo and leave the periods unchanged';
 end;
 $$;
 
@@ -374,6 +412,8 @@ declare
   v_middle uuid;
   v_single_period uuid;
   v_ended_last uuid;
+  v_gap uuid;
+  v_gap_last uuid;
   v_before text;
   v_result text;
 begin
@@ -444,7 +484,18 @@ begin
     'usunąć okresu dawkowania');
   perform pg_temp.assert_unchanged('3', 'the refused delete on an ended medication', v_ended, v_before);
 
-  raise notice 'UNDO 3 OK: a direct delete of the newest period inside its window passes and reopens the period before; after 25 h, for a period that is not the newest, for the only period and on an ended medication it is refused by the guard';
+  -- The newest period inside its window, with a gap before it: refused (nothing would be reopened).
+  v_gap_last := pg_temp.gap_medication('Undo 3 gap medication');
+  select medication_id into v_gap from public.dosage_periods where id = v_gap_last;
+  v_before := pg_temp.periods_state(v_gap);
+  perform pg_temp.act_as(v_a);
+  v_result := pg_temp.try_exec(c_delete, v_gap_last);
+  perform pg_temp.act_as_postgres();
+  perform pg_temp.assert_blocked('3', 'a direct delete of a period with a gap before it', v_result,
+    'usunąć okresu dawkowania');
+  perform pg_temp.assert_unchanged('3', 'the refused delete with a gap before it', v_gap, v_before);
+
+  raise notice 'UNDO 3 OK: a direct delete of the newest period inside its window passes and reopens the period before; after 25 h, for a period that is not the newest, for the only period, with a gap before it and on an ended medication it is refused by the guard';
 end;
 $$;
 

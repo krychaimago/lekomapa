@@ -18,9 +18,12 @@ interface OccurrenceRow {
   symptom_entries: { occurred_at: string };
 }
 
+type VariantRow = Pick<RegistryProduct, "strength" | "pharmaceutical_form">;
+
 type MedicationRow = Pick<Medication, "id" | "product_name" | "discontinued_on"> & {
+  registry_products: VariantRow | null;
   dosage_periods: (Pick<DosagePeriod, "started_on" | "ended_on" | "dose_text"> & {
-    registry_products: Pick<RegistryProduct, "strength" | "pharmaceutical_form"> | null;
+    registry_products: VariantRow | null;
   })[];
 };
 
@@ -58,7 +61,7 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
     supabase
       .from("medications")
       .select(
-        "id, product_name, discontinued_on, dosage_periods(started_on, ended_on, dose_text, registry_products(strength, pharmaceutical_form))",
+        "id, product_name, discontinued_on, registry_products(strength, pharmaceutical_form), dosage_periods(started_on, ended_on, dose_text, registry_products(strength, pharmaceutical_form))",
       )
       .overrideTypes<MedicationRow[], { merge: false }>(),
   ]);
@@ -74,13 +77,17 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
     id: row.id,
     name: row.product_name,
     discontinuedOn: row.discontinued_on,
-    periods: row.dosage_periods.map((period) => ({
-      startedOn: period.started_on,
-      endedOn: period.ended_on,
-      doseText: period.dose_text,
-      strength: period.registry_products?.strength ?? null,
-      pharmaceuticalForm: period.registry_products?.pharmaceutical_form ?? null,
-    })),
+    periods: row.dosage_periods.map((period) => {
+      // A period saved without a variant reads the variant of the medication, as the undo screen does.
+      const variant = period.registry_products ?? row.registry_products;
+      return {
+        startedOn: period.started_on,
+        endedOn: period.ended_on,
+        doseText: period.dose_text,
+        strength: variant?.strength ?? null,
+        pharmaceuticalForm: variant?.pharmaceutical_form ?? null,
+      };
+    }),
   }));
 
   const questions: DoctorQuestion[] = [];

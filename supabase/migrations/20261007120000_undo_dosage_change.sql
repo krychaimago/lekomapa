@@ -15,8 +15,8 @@
 --
 -- What changes, technical names in brackets:
 --   A. Deleting a period (dosage_periods_guard_delete) passes in one more case: the window of THIS period is open
---      (dosage_period_correction_window_open), it is the newest period of its medication, it has a period before it,
---      and the medication is not ended. The rule lives in the guard, so a direct delete through the API follows it
+--      (dosage_period_correction_window_open), it is the newest period of its medication, the period before it ended
+--      on its start, and the medication is not ended. The rule lives in the guard, so a direct delete through the API follows it
 --      too (lesson "Ograniczenie na tabeli podrzędnej nie chroni, dopóki rodzic go nie ma").
 --   B. The period before is reopened by a trigger (dosage_periods_reopen_previous, AFTER DELETE), only as an effect
 --      of that delete: when the deleted period was the newest one and the period before it ended on its start. On a
@@ -34,6 +34,7 @@
 --   DP008  no such period among the caller's medications (another account's period, or none at all);
 --   DP011  the period is the first period of its medication: the start of the medication, not a change;
 --   DP012  the period is not the newest one of its medication;
+--   DP014  no period ends on the start of this one (a gap before it), so nothing would become ongoing again;
 --   DP013  the medication is ended;
 --   DP009  the correction window of the period is closed.
 --
@@ -61,17 +62,23 @@ begin
     return old;
   end if;
 
+  -- Locks the medication before the undo checks, in the same order as undo_dosage_change, so a direct delete cannot
+  -- interleave with an end date or a dose change saved at the same moment: the checks below then read the committed
+  -- state of the medication and its periods.
+  perform 1 from public.medications m where m.id = old.medication_id for update;
+
   -- Undoing a dose change (S-06): the period opened by the change, while its own window is open, if it is still the
-  -- newest period of a current medication and has a period before it (dosage_periods_reopen_previous reopens that
-  -- one). Example: medication added in September, dose changed on Friday 9:00 by mistake — the Friday period can be
-  -- deleted until Saturday 9:00, and only while no later change and no end date have been saved after it. The first
+  -- newest period of a current medication and the period before it ended on its start (dosage_periods_reopen_previous
+  -- reopens exactly that one; with a gap before the period nothing would be reopened and the medication would be left
+  -- with no ongoing dose and no stop date). Example: medication added in September, dose changed on Friday 9:00 by
+  -- mistake — the Friday period can be deleted until Saturday 9:00, and only while no later change and no end date have been saved after it. The first
   -- period is the start of the medication, not a change; an older period would leave a gap in the history.
   -- security definer, so every period of the medication counts, not only those visible to the caller.
   if public.dosage_period_correction_window_open(old.id)
      and exists (
        select 1 from public.dosage_periods dp
         where dp.medication_id = old.medication_id
-          and dp.started_on < old.started_on
+          and dp.ended_on = old.started_on
      )
      and not exists (
        select 1 from public.dosage_periods dp
@@ -343,6 +350,18 @@ begin
       message = 'Cofnąć można tylko najnowszą zmianę dawkowania tego leku.';
   end if;
 
+  -- The trigger reopens only the period that ended on the start of this one. A gap before it (possible only through
+  -- direct writes, never from the screen) would leave the medication with no ongoing dose and no stop date.
+  if not exists (
+    select 1 from public.dosage_periods dp
+     where dp.medication_id = v_period.medication_id
+       and dp.ended_on = v_period.started_on
+  ) then
+    raise exception using
+      errcode = 'DP014',
+      message = 'Okres przed tą zmianą dawkowania nie kończy się w dniu jej rozpoczęcia, więc po cofnięciu lek nie miałby trwającego dawkowania.';
+  end if;
+
   if v_period.discontinued_on is not null then
     raise exception using
       errcode = 'DP013',
@@ -362,7 +381,7 @@ end;
 $$;
 
 comment on function public.undo_dosage_change(uuid) is
-  'Undoes a dose change of the caller''s medication saved by mistake: deletes the newest dosage period while its correction window is open (24 hours from saving it), and the period before it becomes ongoing again (trigger dosage_periods_reopen_previous). Example: 50 µg since 2026-09-01, a change to 75 µg saved on Friday 9:00 by mistake; until Saturday 9:00 the 75 µg period can be undone and 50 µg is ongoing again with no end date. Errors, checked in this order: 28000 = no signed-in session, DP008 = no such period of this account, DP011 = the first period of the medication (its start, not a change), DP012 = not the newest period, DP013 = the medication is ended, DP009 = correction window of the period closed.';
+  'Undoes a dose change of the caller''s medication saved by mistake: deletes the newest dosage period while its correction window is open (24 hours from saving it), and the period before it becomes ongoing again (trigger dosage_periods_reopen_previous). Example: 50 µg since 2026-09-01, a change to 75 µg saved on Friday 9:00 by mistake; until Saturday 9:00 the 75 µg period can be undone and 50 µg is ongoing again with no end date. Errors, checked in this order: 28000 = no signed-in session, DP008 = no such period of this account, DP011 = the first period of the medication (its start, not a change), DP012 = not the newest period, DP014 = no period ends on its start (a gap before it), DP013 = the medication is ended, DP009 = correction window of the period closed.';
 
 -- The Supabase default privileges grant anon and authenticated EXECUTE on every new function in public; revoking
 -- from public alone would not remove those direct grants.

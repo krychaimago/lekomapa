@@ -1,7 +1,7 @@
 ---
 change_id: symptom-question-composer
 title: Symptom question composer
-status: implemented
+status: impl_reviewed
 created: 2026-10-06
 updated: 2026-10-07
 ---

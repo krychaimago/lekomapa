@@ -41,8 +41,12 @@ const byName = (a: string, b: string) => a.localeCompare(b, "pl");
 // The dose of a change. When the dose text is the same on both sides, the part of the variant that changed is added —
 // strength, form or both — otherwise a change of the strength alone would read "1 tabletka, zamiast 1 tabletka".
 // Only the changed part, so the sentence stays short (decided with the author, 06.10.2026).
+// Dose texts compare like the database (DP004): case and outer spaces ignored, so "1 Tabletka" and "1 tabletka" are
+// the same dose and a change of the strength alongside still shows the strength.
+const sameDoseText = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
 function changeDoses(previous: Period, next: Period): { dose: string; previousDose: string } {
-  if (previous.doseText !== next.doseText) return { dose: next.doseText, previousDose: previous.doseText };
+  if (!sameDoseText(previous.doseText, next.doseText)) return { dose: next.doseText, previousDose: previous.doseText };
   const strengthChanged = previous.strength !== next.strength;
   const formChanged = previous.pharmaceuticalForm !== next.pharmaceuticalForm;
   const withChange = (period: Period) => {
@@ -140,9 +144,12 @@ export interface DoctorQuestionText {
   note: string;
 }
 
-// Each `{marker}` replaced once; markers are unique within a template.
+// Every `{marker}` of the template in one pass, so a value is inserted as it is: "$&" or "{po}" in a typed name is
+// neither a replacement pattern nor a marker. A marker without a value stays as it is.
 function fill(template: string, values: Record<string, string | number>): string {
-  return Object.entries(values).reduce((text, [marker, value]) => text.replace(`{${marker}}`, String(value)), template);
+  return template.replace(/\{([^}]+)\}/gu, (marker, key: string) =>
+    Object.hasOwn(values, key) ? String(values[key]) : marker,
+  );
 }
 
 // 2–4 (but not 12–14), 22–24, …: "wpisy"; every other count above one: "wpisów".

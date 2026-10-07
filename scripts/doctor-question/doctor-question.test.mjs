@@ -189,6 +189,18 @@ test("a change of the form alone shows the form with both doses, not the unchang
   assert.equal(question.events[0].previousDose, "1 sztuka (Postać: tabletki)");
 });
 
+// The database treats dose texts differing only in case as the same dose (DP004), so this is a change of the strength.
+test("a dose text differing only in case, with a new strength, shows the strength with both doses", () => {
+  const question = compose([
+    med("Euthyrox", [
+      ["2026-01-01", "2026-09-20", "1 Tabletka", "50 µg", "tabletki"],
+      ["2026-09-20", null, "1 tabletka", "100 µg", "tabletki"],
+    ]),
+  ]);
+  assert.equal(question.events[0].dose, "1 tabletka (Moc: 100 µg)");
+  assert.equal(question.events[0].previousDose, "1 Tabletka (Moc: 50 µg)");
+});
+
 test("a change of the dose text shows the doses alone, without the variant", () => {
   const question = compose([
     med("Euthyrox", [
@@ -281,6 +293,19 @@ test("one medication on top asks about that medication; a single entry is summed
   assert.equal(text.summary, "wpis 06.10.2026");
   assert.equal(text.question, "Czy ból głowy może mieć związek z tym lekiem?");
   assert.deepEqual(text.others, []);
+});
+
+// A name typed from a leaflet is free text: "$&" and "{po}" in it must stay as typed, not act as replacement patterns.
+test("a medication name with $& and a marker in it is written as typed", () => {
+  const text = doctorQuestionText(
+    compose([
+      med("Krople $& {po}", [
+        ["2026-01-01", "2026-09-20", "1 kropla"],
+        ["2026-09-20", null, "2 krople"],
+      ]),
+    ]),
+  );
+  assert.deepEqual(text.events, ["Od 20.09.2026 biorę lek Krople $& {po} 2 krople, zamiast 1 kropla."]);
 });
 
 test("without events in the window the question is about the medications taken, listed in full", () => {
