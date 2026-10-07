@@ -1,0 +1,42 @@
+---
+// Frame of the S-01 entry screens: the "spread" from the mockup (context/changes/auth-login-design/design-draft.md,
+// "Logowanie na dużym ekranie: Rozkładówka"). Large screens: the left page on the sidebar color with the product
+// and the privacy note, the right page on the card with the form. Phones: the colored zone above the white one,
+// without the three sentences. The left page uses the sidebar role, so its text is sidebar-foreground only.
+import Layout from "@/layouts/Layout.astro";
+import { AUTH_COPY } from "@/lib/copy/auth";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const copy = AUTH_COPY.spread;
+---
+
+<Layout title={title}>
+  <div class="flex flex-col lg:min-h-[calc(100dvh-3rem)] lg:flex-row">
+    <section class="flex flex-col gap-3 border-b border-sidebar-border bg-sidebar px-4 py-6 text-sidebar-foreground lg:w-1/2 lg:gap-8 lg:border-r lg:border-b-0 lg:p-12">
+      <p class="text-2xl font-bold lg:text-3xl">{copy.productName}</p>
+      <p class="text-lg font-semibold lg:text-2xl">{copy.heading}</p>
+      <ul class="hidden flex-1 flex-col gap-4 lg:flex">
+        {copy.points.map((point) => (
+          <li>{point}</li>
+        ))}
+      </ul>
+      <p>
+        {copy.privacyNote}{" "}
+        <a href="/prywatnosc" class="underline underline-offset-4 hover:no-underline">
+          {copy.privacyLink}
+        </a>
+      </p>
+    </section>
+
+    <!-- The fold: an inset shadow in the sidebar border color along the inner edge of the right page. -->
+    <section class="flex flex-1 justify-center bg-card px-4 py-8 text-card-foreground lg:items-center lg:p-12 lg:shadow-[inset_16px_0_16px_-16px_var(--sidebar-border)]">
+      <div class="w-full max-w-sm">
+        <slot />
+      </div>
+    </section>
+  </div>
+</Layout>

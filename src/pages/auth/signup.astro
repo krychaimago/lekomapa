@@ -1,23 +1,21 @@
 ---
-import Layout from "@/layouts/Layout.astro";
+import AuthSpreadLayout from "@/layouts/AuthSpreadLayout.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { AUTH_COPY, authErrorMessage } from "@/lib/copy/auth";
 
-const error = Astro.url.searchParams.get("error");
+const copy = AUTH_COPY.signUp;
+// Only a known code from the sign-up route shows text; anything else in `?error=` shows nothing.
+const error = authErrorMessage(Astro.url.searchParams.get("error"));
 ---
 
-<Layout title="Sign up">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
-      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Sign up
-      </h1>
-      <SignUpForm serverError={error} client:load />
-      <p class="mt-4 text-center text-sm text-blue-100/60">
-        Already have an account?{" "}
-        <a href="/auth/signin" class="text-purple-300 hover:underline">
-          Sign in
-        </a>
-      </p>
-    </div>
-  </div>
-</Layout>
+<AuthSpreadLayout title={copy.pageTitle}>
+  <h1 class="mb-2 text-2xl font-bold">{copy.heading}</h1>
+  <p class="mb-6">{copy.intro}</p>
+  <SignUpForm serverError={error} client:load />
+  <p class="mt-6">
+    {copy.signInPrompt}{" "}
+    <a href="/auth/signin" class="text-primary underline underline-offset-4 hover:no-underline">
+      {copy.signInLink}
+    </a>
+  </p>
+</AuthSpreadLayout>

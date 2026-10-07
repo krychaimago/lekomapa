@@ -725,13 +725,15 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 ### A.3 Lewa kartka Rozkładówki (wszystkie ekrany wejściowe)
 
+> Zmiana 2026-10-07 (faza 3): zdanie 1 przeredagowane, bo trafiało w rdzeń filtra FR-012 (`dawk`); nota na dole zmieniona na prośbę autorki.
+
 - Nazwa: „lekomapa”
 - Nagłówek: „Dzienniczek leków i samopoczucia”
 - Trzy zdania (tylko duży ekran):
-  1. „Zapisuj leki, które przyjmujesz, i zmiany dawkowania.”
+  1. „Zapisuj leki, które przyjmujesz, i okresy ich przyjmowania.”
   2. „Notuj samopoczucie z datą i godziną.”
   3. „Przygotuj pytania na rozmowę z lekarzem.”
-- Nota na dole: „Twoje wpisy widzi tylko twoje konto.” + odnośnik „Prywatność” → `/prywatnosc`
+- Nota na dole: „Swoje wpisy widzisz tylko Ty.” + odnośnik „Prywatność” → `/prywatnosc`
 
 ### A.4 Logowanie i rejestracja
 
@@ -766,7 +768,9 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 - Nagłówek: „Sprawdź skrzynkę”
 - Treść: „Wysłaliśmy wiadomość z odnośnikiem potwierdzającym adres. Kliknij go, a potem zaloguj się.”
-- Podpowiedź: „Nie widzisz wiadomości? Sprawdź folder ze spamem. Jeśli masz już konto na ten adres, [odzyskaj dostęp].” (→ `/auth/forgot-password`)
+- Podpowiedź (zmiana 2026-10-07, faza 3 — dwie sytuacje rozdzielone, bo jedno zdanie sugerowało związek między nimi):
+  - „Nie widzisz wiadomości? Sprawdź folder ze spamem.”
+  - „Ten adres ma już konto? Zaloguj się albo [ustaw nowe hasło].” (→ `/auth/forgot-password`)
 - Odnośnik: „Wróć do logowania”
 
 ### A.6 Ponowna akceptacja (`acceptance`, `/warunki/akceptacja`)
@@ -818,31 +822,31 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą, w tym nowe testy tekstów i języka: `npm test`
-- [x] 2.2 Typy i lint: `npm run typecheck && npm run lint`
-- [x] 2.3 Build: `npm run build`
+- [x] 2.1 Testy przechodzą, w tym nowe testy tekstów i języka: `npm test` — 718e6c4
+- [x] 2.2 Typy i lint: `npm run typecheck && npm run lint` — 718e6c4
+- [x] 2.3 Build: `npm run build` — 718e6c4
 
 #### Manual
 
-- [x] 2.4 Autorka odczytuje region projektu w panelu Supabase i region na stronie prywatności się z nim zgadza
-- [x] 2.5 `/warunki` i `/prywatnosc` otwierają się bez logowania, na telefonie i na dużym ekranie, a odnośnik na pasku prowadzi do `/prywatnosc`
-- [x] 2.6 Treść `/warunki` odpowiada słowo w słowo plikowi `terms-of-use-v1.md`
+- [x] 2.4 Autorka odczytuje region projektu w panelu Supabase i region na stronie prywatności się z nim zgadza — 718e6c4
+- [x] 2.5 `/warunki` i `/prywatnosc` otwierają się bez logowania, na telefonie i na dużym ekranie, a odnośnik na pasku prowadzi do `/prywatnosc` — 718e6c4
+- [x] 2.6 Treść `/warunki` odpowiada słowo w słowo plikowi `terms-of-use-v1.md` — 718e6c4
 
 ### Phase 3: Logowanie i rejestracja w Rozkładówce
 
 #### Automated
 
-- [ ] 3.1 Testy przechodzą, w tym skaner kolorów bez pięciu wyjątków, kontrast i teksty: `npm test`
-- [ ] 3.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [ ] 3.3 Smoke przeciw lokalnemu Supabase, po zatrzymaniu starego podglądu i odsunięciu `.env`: `npm run smoke`
+- [x] 3.1 Testy przechodzą, w tym skaner kolorów bez pięciu wyjątków, kontrast i teksty: `npm test`
+- [x] 3.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
+- [x] 3.3 Smoke przeciw lokalnemu Supabase, po zatrzymaniu starego podglądu i odsunięciu `.env`: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.4 Logowanie i rejestracja wyglądają jak Rozkładówka na dużym ekranie i na telefonie
-- [ ] 3.5 Rejestracja bez zaznaczonego pola pokazuje komunikat przy polu, a odnośnik przy polu otwiera `/warunki`
-- [ ] 3.6 Rejestracja na adres, który ma już konto, kończy się tym samym ekranem co nowa
-- [ ] 3.7 Złe hasło i nieistniejący adres dają ten sam komunikat
-- [ ] 3.8 Żaden ekran wejściowy nie pokazuje przykładowego leku, objawu, daty ani godziny
+- [x] 3.4 Logowanie i rejestracja wyglądają jak Rozkładówka na dużym ekranie i na telefonie
+- [x] 3.5 Rejestracja bez zaznaczonego pola pokazuje komunikat przy polu, a odnośnik przy polu otwiera `/warunki`
+- [x] 3.6 Rejestracja na adres, który ma już konto, kończy się tym samym ekranem co nowa
+- [x] 3.7 Złe hasło i nieistniejący adres dają ten sam komunikat
+- [x] 3.8 Żaden ekran wejściowy nie pokazuje przykładowego leku, objawu, daty ani godziny
 
 ### Phase 4: Kontrola wersji i ponowna akceptacja
 

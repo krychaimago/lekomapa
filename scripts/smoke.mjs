@@ -1573,10 +1573,53 @@ const registrySuggestionsAnonymousStep = [
 
 // --- Steps -----------------------------------------------------------------
 
-const signupStep = [
-  "signup creates account",
-  () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-  { status: 302, location: "/auth/confirm-email" },
+// The sign-up form as a browser sends it with the terms box ticked (S-01).
+const signupForm = (address) => ({ email: address, password, confirmPassword: password, terms: "accepted" });
+const noTermsEmail = `smoke-noterms-${Date.now()}@${emailDomain}`;
+
+const signupSteps = [
+  [
+    "signup without accepted terms is rejected",
+    () => {
+      const { terms: _terms, ...form } = signupForm(noTermsEmail);
+      return request("/api/auth/signup", { method: "POST", form });
+    },
+    { status: 302, location: "/auth/signup?error=terms", exact: true },
+  ],
+  [
+    "signup without accepted terms creates no account",
+    async () => {
+      // Local Supabase confirms addresses on its own, so an account created by the rejected form would sign in.
+      // Only the measured answer for an unknown address counts; any other error proves nothing about the account.
+      const { error } = await supabaseClient().auth.signInWithPassword({ email: noTermsEmail, password });
+      const absent = isAuthApiError(error) && error.code === "invalid_credentials";
+      return { ok: absent, detail: describeError(error) };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "signup creates account",
+    () => request("/api/auth/signup", { method: "POST", form: signupForm(email) }),
+    { status: 302, location: "/auth/confirm-email", exact: true },
+  ],
+  [
+    "signup to an existing address ends on the same screen",
+    () => request("/api/auth/signup", { method: "POST", form: signupForm(email) }),
+    { status: 302, location: "/auth/confirm-email", exact: true },
+  ],
+  [
+    "account from the signup form has accepted terms version 1",
+    async () => {
+      const client = supabaseClient();
+      const { error: signInError } = await client.auth.signInWithPassword({ email, password });
+      if (signInError) return { ok: false, detail: `sign-in failed: ${describeError(signInError)}` };
+      const { data, error } = await client.from("terms_acceptances").select("version, accepted_at");
+      if (error) return { ok: false, detail: describeError(error) };
+      const accepted = data.length === 1 && data[0].version === 1 && Boolean(data[0].accepted_at);
+      return { ok: accepted, detail: JSON.stringify(data) };
+    },
+    EXPECT_OK,
+  ],
 ];
 
 const steps = [
@@ -1587,11 +1630,11 @@ const steps = [
     () => request("/dashboard.html"),
     { status: 302, location: "/auth/signin" },
   ],
-  ...(usesExistingAccount ? [] : [signupStep]),
+  ...(usesExistingAccount ? [] : signupSteps),
   [
     "signin rejects wrong password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong" } }),
-    { status: 302, location: "/auth/signin?error=" },
+    { status: 302, location: "/auth/signin?error=credentials", exact: true },
   ],
   [
     "signin accepts correct password",

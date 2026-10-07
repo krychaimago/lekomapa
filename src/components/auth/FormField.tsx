@@ -3,7 +3,7 @@ import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // The label has no color class: it inherits the text color of the card it sits on
-// (the product card or the starter bg-cosmic card). The input and the error carry their own background.
+// (the card of the spread layout or of AuthCard). The input and the error carry their own background.
 const inputBase =
   "h-12 w-full rounded-lg border bg-background px-3 pl-10 text-base text-foreground placeholder:text-muted-foreground transition-colors";
 
