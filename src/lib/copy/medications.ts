@@ -88,6 +88,8 @@ export const MEDICATION_COPY = {
     periodClosed: "{od} – {do}",
     // Link next to a period still in its correction window (S-05); `{do}` as in list.addedWithDeadline.
     correctPeriod: "Popraw dawkę – do {do}",
+    // Link next to the newest period opened by a dose change, while its window is open (S-06); `{do}` as above.
+    undoChange: "Cofnij zmianę dawki – do {do}",
     leafletSource: "Skład wpisany z ulotki.",
     notFound: "Nie znaleziono takiego leku.",
     loadError: "Nie udało się wczytać leku. Odśwież stronę.",
@@ -142,6 +144,24 @@ export const MEDICATION_COPY = {
     // Banner on the details screen after `?poprawiono=<period id>`.
     saved: "Poprawiono dawkowanie.",
     savedWithDeadline: "Poprawiono dawkowanie. Możesz je poprawić jeszcze do {do}.",
+  },
+  // Undoing a dose change saved by mistake (S-06): the newest period disappears and the dose before it is ongoing
+  // again. Only within the correction window of that period. Records a correction of the record, never a suggestion
+  // that the dose should be different (FR-012).
+  undo: {
+    title: "Cofnięcie zmiany dawki",
+    // `{data}` is the start of the undone period (DD.MM.YYYY); `{nowa}` and `{poprzednia}` are the saved doses.
+    explanation:
+      "Okres od {data} z dawkowaniem „{nowa}” zniknie z historii. Dawkowanie „{poprzednia}” będzie obowiązywać dalej, bez daty końca.",
+    purpose: "Cofnięcie służy wyłącznie do poprawienia zmiany dawki zapisanej przez pomyłkę.",
+    undoneLabel: "Cofana zmiana",
+    previousLabel: "Dawkowanie, które zostanie",
+    // `{do}` is formatCorrectionDeadline, as in list.addedWithDeadline.
+    deadline: "Zmianę możesz cofnąć do {do}.",
+    submit: "Cofnij zmianę dawki",
+    notFound: "Nie znaleziono takiego okresu dawkowania.",
+    // Banner on the details screen after `?cofnieto=1`.
+    saved: "Cofnięto zmianę dawki. Poprzednie dawkowanie obowiązuje dalej.",
   },
   // Ending a medication with a date (S-04, FR-005), and moving or cancelling that end inside its own correction window.
   // Records an end that has already happened; never a suggestion that a medication should end (FR-012). Only
@@ -242,8 +262,17 @@ export const MEDICATION_COPY = {
       "Okno korekty tego okresu jest już zamknięte. Nowe dawkowanie zapisuje się jako zmianę dawkowania.",
     sameDoseInPeriod: "To dawkowanie jest już zapisane w tym okresie.",
     sameAsAdjacentPeriod:
-      "To dawkowanie jest takie samo jak w okresie bezpośrednio przed tym okresem albo po nim. Taka poprawa usunęłaby z historii zmianę dawkowania, a cofnięcia zmiany nie da się jeszcze zapisać.",
+      "To dawkowanie jest takie samo jak w okresie bezpośrednio przed tym okresem albo po nim. Taka poprawa usunęłaby z historii zmianę dawkowania. Zmianę dawki zapisaną przez pomyłkę cofa się przez „Cofnij zmianę dawki” w szczegółach leku, w oknie korekty najnowszego okresu.",
     correctionGeneric: "Nie udało się zapisać poprawki. Spróbuj ponownie.",
+    // Undoing a dose change (S-06): codes raised by undo_dosage_change
+    // (supabase/migrations/20261007120000_undo_dosage_change.sql). DP008 is periodNotFound.
+    undoFirstPeriod:
+      "To pierwszy okres dawkowania tego leku, czyli jego początek, a nie zmiana dawki. Pozycję dodaną przez pomyłkę usuwa się w szczegółach leku, przez 24 godziny od jej dodania.",
+    undoNotLatest: "Cofnąć można tylko najnowszą zmianę dawki tego leku.",
+    undoDiscontinued:
+      "Przyjmowanie tego leku jest zakończone. Zmianę dawki można cofnąć dopiero po cofnięciu zakończenia przyjmowania.",
+    undoWindowClosed: "Okno korekty tej zmiany dawki jest już zamknięte. Zmiana jest częścią historii.",
+    undoGeneric: "Nie udało się cofnąć zmiany dawki. Spróbuj ponownie.",
     // Ending a medication (S-04): codes raised by discontinue_medication and correct_discontinuation
     // (supabase/migrations/20261006120000_discontinue_medication.sql). MD001 is medicationNotFound. `{data}` is the
     // earliest allowed date (DD.MM.YYYY), filled in by the screen: the URL carries only the key, never a date.

@@ -2,11 +2,17 @@
 // Symptom journal (S-05): the account's entries, newest occurred_at first, with their symptoms, severity and note.
 // An entry still in its correction window shows until when it can be corrected; the end comes from the database
 // (correction_window_ends_at), so the screen agrees with the guard that enforces it. RLS limits the read to the
-// signed-in person. Nothing here links a symptom to a medication (FR-012).
+// signed-in person. Right after saving, the saved entry gets the question for the doctor (S-06): each symptom lined up
+// with the medication dates of its window, rebuilt from current data on every visit. The page only puts in place the
+// strings of doctorQuestionText; it never says a medication causes a symptom, never suggests stopping or changing a
+// dose and never orders medications by suspicion (FR-012) — events go by date, other medications by name.
 import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import { buttonVariants } from "@/components/ui/button";
+import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
 import { JOURNAL_COPY } from "@/lib/copy/journal";
+import { doctorQuestionText } from "@/lib/services/doctor-question";
+import { type DoctorQuestionsResult, loadDoctorQuestions } from "@/lib/services/doctor-question-data";
 import { formatCorrectionDeadline, formatWarsawDateTime } from "@/lib/services/journal";
 import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -96,6 +102,12 @@ const addedSymptoms = addedEntry
         : []),
     ].join(" ")
   : "";
+
+// The question for the doctor only for an entry that is on the list; a failed read leaves the saved message in place.
+const doctorQuestions: DoctorQuestionsResult | null =
+  addedEntry && supabase ? await loadDoctorQuestions(supabase, addedEntry.id) : null;
+const questionTexts =
+  doctorQuestions && !("error" in doctorQuestions) ? doctorQuestions.questions.map(doctorQuestionText) : [];
 ---
 
 <AppLayout title={copy.title}>
@@ -114,6 +126,66 @@ const addedSymptoms = addedEntry
           addedSymptoms,
         )}
       </p>
+    )}
+
+    {doctorQuestions && (
+      <section
+        data-doctor-question
+        aria-labelledby="doctor-question-title"
+        class="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm"
+      >
+        <h2 id="doctor-question-title" class="text-xl font-semibold">
+          {DOCTOR_QUESTION_COPY.sectionTitle}
+        </h2>
+        {"error" in doctorQuestions ? (
+          <p class="text-muted-foreground">{DOCTOR_QUESTION_COPY.loadError}</p>
+        ) : questionTexts.length === 0 ? (
+          <p class="text-muted-foreground">{DOCTOR_QUESTION_COPY.noQuestion}</p>
+        ) : (
+          <>
+            {questionTexts.map((text, index) => (
+              <details open={index === 0} class="rounded-lg border border-border px-4 py-3">
+                <summary class="cursor-pointer text-lg font-semibold">{text.heading}</summary>
+                <div class="mt-2 flex flex-col gap-3">
+                  <p class="text-sm text-muted-foreground">{text.summary}</p>
+                  <p>{text.eventsIntro}</p>
+                  {text.events.length > 0 ? (
+                    <>
+                      <ul class="flex list-disc flex-col gap-1 pl-5">
+                        {text.events.map((event) => (
+                          <li>{event}</li>
+                        ))}
+                      </ul>
+                      <p class="font-medium">{text.question}</p>
+                      {text.others.length > 0 && (
+                        <details>
+                          <summary class="cursor-pointer text-muted-foreground">{text.othersLabel}</summary>
+                          <ul class="mt-2 flex list-disc flex-col gap-1 pl-5">
+                            {text.others.map((other) => (
+                              <li>{other}</li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p>{text.othersLabel}</p>
+                      <ul class="flex list-disc flex-col gap-1 pl-5">
+                        {text.others.map((other) => (
+                          <li>{other}</li>
+                        ))}
+                      </ul>
+                      <p class="font-medium">{text.question}</p>
+                    </>
+                  )}
+                </div>
+              </details>
+            ))}
+            <p class="text-sm text-muted-foreground">{DOCTOR_QUESTION_COPY.note}</p>
+          </>
+        )}
+      </section>
     )}
 
     {loadFailed ? (

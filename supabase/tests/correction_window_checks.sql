@@ -2,9 +2,10 @@
 --   WINDOW 1: medication and its composition — 23 h 59 min after adding, a core change passes; 24 h after adding it
 --             is refused with the named guard message.
 --   WINDOW 2: dosage period — the same boundary measured on the period's own created_at; a period opened by a dose
---             change on a medication added 3 days ago can be corrected, the 3-day-old period cannot. Deleting a
---             period follows the window of the medication: refused for the fresh period, allowed for a medication
---             added by mistake.
+--             change on a medication added 3 days ago can be corrected, the 3-day-old period cannot. Deleting the
+--             period is refused once its own window is closed and allowed for a medication added by mistake. Deleting
+--             the fresh period inside its window is undoing the dose change (S-06), checked in
+--             dosage_undo_checks.sql.
 --   WINDOW 3: created_at is the server clock — a client cannot insert a row with created_at in the past, nor change
 --             created_at later (medications and dosage_periods).
 --   WINDOW 4: inserts follow the window — with the medication window 24 h old, adding a substance, a period before
@@ -247,10 +248,8 @@ begin
     pg_temp.try_exec('update public.dosage_periods set dose_text = ''2 tabletki rano'' where id = $1', v_new));
   perform pg_temp.assert_blocked('2', 'correcting dose_text of the period saved 3 days ago',
     pg_temp.try_exec('update public.dosage_periods set dose_text = ''1 tabletka wieczorem'' where id = $1', v_old), 'dose_text');
-  -- Deleting follows the window of the medication: the period saved today cannot be deleted, otherwise the medication
-  -- would be left with no ongoing period after the old one was closed.
-  perform pg_temp.assert_blocked('2', 'deleting the period saved today on a 3-day-old medication',
-    pg_temp.try_exec('delete from public.dosage_periods where id = $1', v_new), 'usunąć okresu dawkowania');
+  -- Deleting the period saved today inside its window is undoing the dose change (S-06): it passes and reopens the old
+  -- period. That rule is measured in dosage_undo_checks.sql; here the period stays for the boundary checks below.
   perform pg_temp.act_as_postgres();
 
   -- The boundary on the period's own created_at.
@@ -276,7 +275,7 @@ begin
       (select dp.id from public.dosage_periods dp where dp.medication_id = v_med)));
   perform pg_temp.act_as_postgres();
 
-  raise notice 'WINDOW 2 OK: a period saved today on a 3-day-old medication can be corrected but not deleted, the 3-day-old period cannot be corrected; the period window passes at 23 h 59 min and refuses at 24 h; a period of a medication within its window can be deleted';
+  raise notice 'WINDOW 2 OK: a period saved today on a 3-day-old medication can be corrected, the 3-day-old period cannot; the period window passes at 23 h 59 min and refuses a correction and a delete at 24 h; a period of a medication within its window can be deleted';
 end;
 $$;
 

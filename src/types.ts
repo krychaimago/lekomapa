@@ -321,3 +321,54 @@ export interface SymptomEntry {
   correctionWindowEndsAt: string | null;
   items: SymptomEntryItem[];
 }
+
+// ---------------------------------------------------------------------------
+// Question for the doctor (S-06, US-02, FR-010), composed by src/lib/services/doctor-question.ts and reused by S-08.
+// Dates are ISO `YYYY-MM-DD` in Polish time. Neither the input nor the result carries interaction pairs or any rating:
+// the order of medicines cannot depend on suspicion when the composer never sees it (FR-012).
+
+/** One medication with its dosage history, as the composer reads it. */
+export interface DoctorQuestionMedication {
+  id: string;
+  /** `medications.product_name`. */
+  name: string;
+  /** First day without the medication; null while it is taken. */
+  discontinuedOn: string | null;
+  periods: {
+    startedOn: string;
+    /** Exclusive, as in `dosage_periods.ended_on`; null for the ongoing period. */
+    endedOn: string | null;
+    doseText: string;
+    /** Registry variant (`registry_products.strength`, `.pharmaceutical_form`); null for a leaflet medication. */
+    strength: string | null;
+    pharmaceuticalForm: string | null;
+  }[];
+}
+
+/** A start, dose change or end of a medication inside the symptom's window. */
+export interface DoctorQuestionEvent {
+  date: string;
+  kind: "start" | "change" | "stop";
+  medicationName: string;
+  /** Dose from this date on; absent for a stop. When the dose text did not change, carries the part of the variant that did. */
+  dose?: string;
+  /** Dose before a change; only for a change. */
+  previousDose?: string;
+}
+
+/** The question for one symptom of an entry. */
+export interface DoctorQuestion {
+  symptomName: string;
+  /** Day of the earliest entry with the symptom, up to and including the current entry. */
+  firstEntryOn: string;
+  /** Day of the current entry. */
+  entryOn: string;
+  /** Entries with the symptom up to and including the current one. */
+  entryCount: number;
+  /** First day of the window: firstEntryOn minus QUESTION_WINDOW_DAYS. */
+  windowStart: string;
+  /** Events in the window, by date, then by medication name. */
+  events: DoctorQuestionEvent[];
+  /** Medications taken in the window without any event in it, by name; dose and its start as on the entry day. */
+  otherMedications: { name: string; since: string; dose: string }[];
+}

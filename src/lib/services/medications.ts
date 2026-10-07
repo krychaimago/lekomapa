@@ -1,6 +1,7 @@
 // Pure helpers for the medication screens (S-02). No `@/` imports and no Supabase client, so
 // scripts/medications/medications.test.mjs can load this file directly under `node --experimental-strip-types`.
 
+import { MEDICATION_COPY } from "../copy/medications.ts";
 import { foldForSearch } from "./text-fold.ts";
 
 export interface OrderableMedication {
@@ -78,6 +79,19 @@ export function registryCompositionNames(rows: readonly RegistrySubstanceRow[]):
   return names;
 }
 
+// "Moc: … · Postać: …" for one registry variant; empty for none. The one label of a variant on the medication screens
+// and in the question for the doctor (S-06).
+export function variantText(
+  variant: { strength: string | null; pharmaceutical_form: string | null } | null | undefined,
+): string {
+  return [
+    variant?.strength && `${MEDICATION_COPY.add.strength}: ${variant.strength}`,
+    variant?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${variant.pharmaceutical_form}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 // ISO `YYYY-MM-DD` as the Polish `DD.MM.YYYY`, without a Date object (no time zone shift).
 export function formatIsoDate(iso: string): string {
   const [year, month, day] = iso.split("-");
@@ -92,7 +106,7 @@ const MS_PER_DAY = 86_400_000;
 
 // ISO `YYYY-MM-DD` shifted by whole days. Pinned to UTC midnight, so neither the local time zone nor a DST switch
 // moves the result; Date.UTC rolls over month ends, year ends and 29 February.
-function addDays(iso: string, days: number): string {
+export function addDays(iso: string, days: number): string {
   const [year, month, day] = iso.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day) + days * MS_PER_DAY).toISOString().slice(0, 10);
 }

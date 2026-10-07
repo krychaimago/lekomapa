@@ -9,7 +9,7 @@ import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { buttonVariants } from "@/components/ui/button";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
-import { formatIsoDate, lastDayOfPeriod, todayInWarsaw } from "@/lib/services/medications";
+import { formatIsoDate, lastDayOfPeriod, todayInWarsaw, variantText } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import type { DosagePeriod, Medication, MedicationInteraction, MedicationSubstance, RegistryProduct } from "@/types";
 
@@ -128,16 +128,6 @@ for (const line of substanceLines) line.codes.sort();
 const isRegistry = medication?.composition_source === "registry";
 const registry = isRegistry ? (medication?.registry_products ?? null) : null;
 
-// "Moc: … · Postać: …" for one registry variant; empty for none.
-function variantText(variant: VariantRow | null): string {
-  return [
-    variant?.strength && `${MEDICATION_COPY.add.strength}: ${variant.strength}`,
-    variant?.pharmaceutical_form && `${MEDICATION_COPY.add.form}: ${variant.pharmaceutical_form}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 // The summary shows the variant of the current period; the medication's own variant only for a period without one.
 const summaryVariant = isRegistry ? variantText(currentPeriod?.registry_products ?? registry) : "";
 
@@ -149,10 +139,17 @@ const deadlineOf = (period: { correction_window_ends_at: string | null } | undef
     ? formatCorrectionDeadline(period.correction_window_ends_at, nowIso)
     : null;
 
+// Undoing a dose change (S-06): offered for the newest period when it is not the first one (the first is the start of
+// the medication, not a change), the medication is not ended and the period's own window is open — the same rule as
+// undo_dosage_change.
+const undoPeriodId =
+  medication !== null && medication.discontinued_on === null && periods.length > 1 ? periods.at(-1)?.id : undefined;
+
 // Every dosage period, newest first. A leaflet medication has no registry variant, so its periods show none.
 const history = [...periods].reverse().map((period) => ({
   id: period.id,
   deadline: deadlineOf(period),
+  undoable: period.id === undoPeriodId,
   dose: period.dose_text,
   variant: isRegistry ? variantText(period.registry_products) : "",
   dates:
@@ -176,6 +173,8 @@ const correctedPeriod = correctedParam.success
   ? periods.find((period) => period.id === correctedParam.data)
   : undefined;
 const correctedDeadline = deadlineOf(correctedPeriod);
+// Banner after an undone dose change; the flag carries no data.
+const changeUndone = Astro.url.searchParams.get("cofnieto") === "1";
 
 // An ended medication: its last day taken (the day before the saved first day without it) and, while the window of the
 // end is open, until when the end can be moved or cancelled — the same comparison correct_discontinuation makes.
@@ -240,6 +239,12 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
             {changedDeadline
               ? MEDICATION_COPY.dosageChange.savedWithDeadline.replace("{do}", changedDeadline)
               : MEDICATION_COPY.dosageChange.saved}
+          </p>
+        )}
+
+        {changeUndone && (
+          <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
+            {MEDICATION_COPY.undo.saved}
           </p>
         )}
 
@@ -318,9 +323,19 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
                   <span class="font-medium break-words">{item.dose}</span>
                   {item.variant && <span class="text-sm break-words text-muted-foreground">{item.variant}</span>}
                   {item.deadline && (
-                    <a href={`/leki/${medication.id}/okresy/${item.id}/poprawa`} class:list={[linkClass, "text-sm"]}>
-                      {copy.correctPeriod.replace("{do}", item.deadline)}
-                    </a>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1">
+                      <a href={`/leki/${medication.id}/okresy/${item.id}/poprawa`} class:list={[linkClass, "text-sm"]}>
+                        {copy.correctPeriod.replace("{do}", item.deadline)}
+                      </a>
+                      {item.undoable && (
+                        <a
+                          href={`/leki/${medication.id}/okresy/${item.id}/cofniecie`}
+                          class:list={[linkClass, "text-sm"]}
+                        >
+                          {copy.undoChange.replace("{do}", item.deadline)}
+                        </a>
+                      )}
+                    </div>
                   )}
                 </li>
               ))}

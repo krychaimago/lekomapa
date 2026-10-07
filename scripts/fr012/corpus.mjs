@@ -5,6 +5,8 @@
 
 // FR-012 (prd.md:144): the only wording allowed for a link between medicines and a symptom.
 export const REQUIRED_PHRASE = "może mieć związek";
+// The same wording for a symptom name in the plural ("Czy mdłości mogą mieć związek…?"), allowed by FR-012 since S-06.
+export const REQUIRED_PHRASE_PLURAL = "mogą mieć związek";
 
 // Sentences a product text must never contain, grouped by the PRD rule they break. Each one must be rejected
 // even when the same text also carries REQUIRED_PHRASE.
