@@ -270,7 +270,10 @@ Publiczne strony `/warunki` i `/prywatnosc`, odnośnik na pasku, teksty w module
 **Contract**:
 
 - `terms-copy.test.mjs`: każdy napis z `terms.ts` bez rdzeni zakazanych (wzorzec `journal-copy.test.mjs`).
-- Dwie linie warunków dopisane do `ACCEPTED_FALSE_POSITIVES` z powodem: zdania wymagane przez PRD (`odstaw` w „podstawą”, `dawk`, `bezpieczn` w zaprzeczeniu bezpieczeństwa).
+- Dwie linie warunków jako nazwane wyjątki `ACCEPTED_TERMS_LINES` w `terms-copy.test.mjs` (dokładny tekst, dokładne rdzenie, powód): zdania wymagane przez PRD (`odstaw` w „podstawą”, `dawk`, `bezpieczn` w zaprzeczeniu bezpieczeństwa). Zmiana jednego słowa linii zdejmuje wyjątek.
+  - Odstępstwo od pierwszej wersji planu (2026-10-07): `ACCEPTED_FALSE_POSITIVES` w `corpus.mjs` należy do opisów par i jego test wymaga frazy „może mieć związek”, więc linie warunków tam nie pasują.
+  - Wyjątki wyłącznie dla warunków (v1 niezmienna). Teksty prywatności przeredagowane tak, żeby przeszły filtr — patrz A.2.
+  - Wariant odłożony: wspólna lista zastrzeżeń FR-012 w `corpus.mjs` i test, że warunki każde z nich zawierają. Dokładany przy pisaniu wersji 2.
 - `terms-text.test.mjs`:
   - punkty i nagłówki z `TERMS_V1` po podstawieniu znaczników są identyczne z blokiem między `---` w `terms-of-use-v1.md`;
   - plik `terms-of-use-v${CURRENT_TERMS_VERSION}.md` istnieje;
@@ -693,23 +696,25 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 ### A.2 Strona prywatności (`/prywatnosc`)
 
+> Zmiana 2026-10-07 (faza 2): trzy sformułowania przeredagowane, bo trafiały w rdzenie filtra FR-012 (`prowadz`, `dawk`); region wpisany z panelu Supabase.
+
 - Tytuł: „Prywatność w lekomapie”
 - Wstęp: „Lekomapa jest prototypem w wersji demonstracyjnej. Wpisuj wyłącznie dane przykładowe.”
-- **Kto prowadzi serwis**
+- **Kto odpowiada za serwis**
   - „testFit Anna Kryśko.”
   - „Kontakt: krysko.anna@gmail.com”
 - **Jakie dane zbieramy**
   - „Adres e-mail i hasło konta. Hasło zapisujemy w postaci, z której nie da się go odczytać.”
   - „Datę i wersję zaakceptowanych warunków korzystania.”
-  - „Wpisy, które sama lub sam dodajesz: leki, okresy dawkowania i wpisy o samopoczuciu.”
+  - „Wpisy, które sama lub sam dodajesz: leki, okresy ich przyjmowania i wpisy o samopoczuciu.”
   - „Adres e-mail jest daną osobową niezależnie od tego, że to prototyp.”
 - **Gdzie leżą dane**
-  - „Konta i wpisy przechowuje Supabase, w regionie [region z panelu Supabase — wpisuje faza 2].”
+  - „Konta i wpisy przechowuje Supabase, w regionie Frankfurt nad Menem (Niemcy).”
   - „Aplikację uruchamia Cloudflare. Przy każdym połączeniu Cloudflare przetwarza dane techniczne, takie jak adres IP.”
   - „Maile z odnośnikami wysyła Supabase.”
 - **Kto widzi twoje wpisy**
   - „Inne konta nie widzą twoich wpisów, a ty nie widzisz cudzych.”
-  - „Prowadząca serwis ma techniczny dostęp do bazy danych.”
+  - „Osoba odpowiedzialna za serwis ma techniczny dostęp do bazy danych.”
 - **Ciasteczka**
   - „Używamy wyłącznie ciasteczek potrzebnych do logowania. Nie ma reklam ani statystyk odwiedzin.”
 - **Jak usunąć konto**
@@ -800,28 +805,28 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Automated
 
-- [x] 1.1 Migracja stosuje się na czystej bazie: `npx supabase db reset`
-- [x] 1.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowe `terms_checks.sql`: `npm run db:check`
-- [x] 1.3 Nowa próbka wywraca `account_isolation_checks.sql`, a istniejące próbki dalej ją wywracają
-- [x] 1.4 Typy i lint: `npm run typecheck && npm run lint`
+- [x] 1.1 Migracja stosuje się na czystej bazie: `npx supabase db reset` — aab040b
+- [x] 1.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowe `terms_checks.sql`: `npm run db:check` — aab040b
+- [x] 1.3 Nowa próbka wywraca `account_isolation_checks.sql`, a istniejące próbki dalej ją wywracają — aab040b
+- [x] 1.4 Typy i lint: `npm run typecheck && npm run lint` — aab040b
 
 #### Manual
 
-- [x] 1.5 W Studio konto założone z `terms_version: 1` w metadanych ma wiersz akceptacji z datą równą chwili utworzenia konta
+- [x] 1.5 W Studio konto założone z `terms_version: 1` w metadanych ma wiersz akceptacji z datą równą chwili utworzenia konta — aab040b
 
 ### Phase 2: Warunki i prywatność
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą, w tym nowe testy tekstów i języka: `npm test`
-- [ ] 2.2 Typy i lint: `npm run typecheck && npm run lint`
-- [ ] 2.3 Build: `npm run build`
+- [x] 2.1 Testy przechodzą, w tym nowe testy tekstów i języka: `npm test`
+- [x] 2.2 Typy i lint: `npm run typecheck && npm run lint`
+- [x] 2.3 Build: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 Autorka odczytuje region projektu w panelu Supabase i region na stronie prywatności się z nim zgadza
-- [ ] 2.5 `/warunki` i `/prywatnosc` otwierają się bez logowania, na telefonie i na dużym ekranie, a odnośnik na pasku prowadzi do `/prywatnosc`
-- [ ] 2.6 Treść `/warunki` odpowiada słowo w słowo plikowi `terms-of-use-v1.md`
+- [x] 2.4 Autorka odczytuje region projektu w panelu Supabase i region na stronie prywatności się z nim zgadza
+- [x] 2.5 `/warunki` i `/prywatnosc` otwierają się bez logowania, na telefonie i na dużym ekranie, a odnośnik na pasku prowadzi do `/prywatnosc`
+- [x] 2.6 Treść `/warunki` odpowiada słowo w słowo plikowi `terms-of-use-v1.md`
 
 ### Phase 3: Logowanie i rejestracja w Rozkładówce
 
