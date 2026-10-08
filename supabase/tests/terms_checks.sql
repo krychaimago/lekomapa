@@ -117,7 +117,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- TERMS 2: missing, non-numeric or unknown version -> no row and no error
+-- TERMS 2: missing, non-numeric, unknown or oversized version -> no row and no error
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -129,7 +129,9 @@ begin
     select * from (values
       ('00000000-0000-4000-9500-000000000a02'::uuid, 'terms-2a@example.test', '{}'::jsonb),
       ('00000000-0000-4000-9500-000000000a03'::uuid, 'terms-2b@example.test', '{"terms_version":"abc"}'::jsonb),
-      ('00000000-0000-4000-9500-000000000a04'::uuid, 'terms-2c@example.test', '{"terms_version":"99"}'::jsonb)
+      ('00000000-0000-4000-9500-000000000a04'::uuid, 'terms-2c@example.test', '{"terms_version":"99"}'::jsonb),
+      -- Beyond smallint: without the length limit in the trigger the cast overflows and the signup fails with 500.
+      ('00000000-0000-4000-9500-000000000a2d'::uuid, 'terms-2d@example.test', '{"terms_version":"99999999999"}'::jsonb)
     ) as c(id, email, meta)
   loop
     -- Any error here stops the file: a trigger that raises would make the signup fail with 500.
@@ -145,7 +147,7 @@ begin
     end if;
   end loop;
 
-  raise notice 'TERMS 2 OK: missing, non-numeric and unknown terms_version create the account without an acceptance';
+  raise notice 'TERMS 2 OK: missing, non-numeric, unknown and oversized terms_version create the account without an acceptance';
 end;
 $$;
 

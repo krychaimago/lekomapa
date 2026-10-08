@@ -12,7 +12,12 @@ interface TermsCheckboxProps {
 
 // Native checkbox, so the form posts `terms=accepted` without JavaScript; the sign-up route rejects the form
 // without it. The label is the hit area: the box and the text together stay above 44 px.
-export function TermsCheckbox({ checked, onChange, error, errorLabel = "Uwaga:" }: TermsCheckboxProps) {
+export function TermsCheckbox({
+  checked,
+  onChange,
+  error,
+  errorLabel = AUTH_COPY.signUp.termsErrorLabel,
+}: TermsCheckboxProps) {
   const copy = AUTH_COPY.signUp;
   const errorId = "terms-error";
 

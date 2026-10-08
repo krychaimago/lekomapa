@@ -85,3 +85,10 @@ test("lookalike paths do not borrow an exemption", () => {
   }
   assert.equal(termsGateAction("/leki-archiwum", null, CURRENT), "allow");
 });
+
+test("only the acceptance endpoint is exempt under /api/terms/", () => {
+  assert.equal(termsGateAction("/api/terms/accept/", null, CURRENT), "allow");
+  for (const path of ["/api/terms/history", "/api/terms/accept/extra"]) {
+    assert.equal(termsGateAction(path, null, CURRENT), "forbid", path);
+  }
+});

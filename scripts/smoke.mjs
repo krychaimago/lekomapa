@@ -1814,14 +1814,14 @@ const signupSteps = [
     { status: 302, location: "/auth/confirm-email", exact: true },
   ],
   [
-    "account from the signup form has accepted terms version 1",
+    "account from the signup form has accepted the current terms version",
     async () => {
       const client = supabaseClient();
       const { error: signInError } = await client.auth.signInWithPassword({ email, password });
       if (signInError) return { ok: false, detail: `sign-in failed: ${describeError(signInError)}` };
       const { data, error } = await client.from("terms_acceptances").select("version, accepted_at");
       if (error) return { ok: false, detail: describeError(error) };
-      const accepted = data.length === 1 && data[0].version === 1 && Boolean(data[0].accepted_at);
+      const accepted = data.length === 1 && data[0].version === CURRENT_TERMS_VERSION && Boolean(data[0].accepted_at);
       return { ok: accepted, detail: JSON.stringify(data) };
     },
     EXPECT_OK,

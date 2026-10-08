@@ -37,6 +37,9 @@ export const POST: APIRoute = async (context) => {
   // verifyOtp leaves a session whose amr is `otp`, which the app treats as a password-reset session
   // (src/lib/auth/recovery-session.ts). Sign it out and let the person sign in with the password instead of
   // adding `otp` to NORMAL_SESSION_METHODS, which would open the interior to reset-link sessions too.
-  await supabase.auth.signOut();
+  const { error: signOutError } = await supabase.auth.signOut();
+  if (signOutError) {
+    console.error("Sign-out after email confirmation failed", { code: signOutError.code, status: signOutError.status });
+  }
   return context.redirect(CONFIRMED_PATH);
 };

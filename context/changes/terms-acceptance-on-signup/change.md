@@ -1,7 +1,7 @@
 ---
 change_id: terms-acceptance-on-signup
 title: Terms acceptance on signup
-status: implementing
+status: impl_reviewed
 created: 2026-10-07
 updated: 2026-10-08
 archived_at: null

@@ -8,8 +8,10 @@ export type TermsGateAction = "allow" | "redirect" | "forbid";
 
 // Reachable without acceptance: the terms and privacy pages, the acceptance screen and its endpoint, the auth screens
 // and endpoints (sign-out in particular). Gating any of them loops the redirect or locks the account in.
-const EXEMPT_PATHS: readonly string[] = ["/", "/warunki", "/prywatnosc", TERMS_ACCEPTANCE_PATH];
-const EXEMPT_PREFIXES: readonly string[] = ["/api/terms/", "/api/auth/", "/auth/"];
+// The acceptance endpoint is an exact path: a later route under /api/terms/ that reads or writes account data
+// must stay gated.
+const EXEMPT_PATHS: readonly string[] = ["/", "/warunki", "/prywatnosc", TERMS_ACCEPTANCE_PATH, "/api/terms/accept"];
+const EXEMPT_PREFIXES: readonly string[] = ["/api/auth/", "/auth/"];
 
 function isExempt(path: string): boolean {
   return EXEMPT_PATHS.includes(path) || EXEMPT_PREFIXES.some((prefix) => path.startsWith(prefix));

@@ -46,6 +46,8 @@ export const AUTH_COPY = {
     pending: "Zakładanie konta...",
     signInPrompt: "Masz już konto?",
     signInLink: "Zaloguj się",
+    // Word before the terms checkbox error, so the error is recognisable without color.
+    termsErrorLabel: "Uwaga:",
   },
   // Client-side validation in the sign-in and sign-up forms, before the form is sent.
   validation: {

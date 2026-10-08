@@ -159,7 +159,7 @@ Tabela wersji warunków, tabela akceptacji tylko do dopisywania, zapis akceptacj
   Druga warstwa za politykami `false` — chroni też przed rolą z obejściem RLS.
 
 - Funkcja `public.record_terms_acceptance_on_signup()` + wyzwalacz `after insert on auth.users`:
-  - gdy `new.raw_user_meta_data->>'terms_version'` pasuje do `^[0-9]+$` i istnieje w `terms_versions`, wstawia wiersz `(new.id, version)`;
+  - gdy `new.raw_user_meta_data->>'terms_version'` pasuje do `^[0-9]{1,4}$` (limit długości chroni rzutowanie na `smallint` przed przepełnieniem — bez niego rejestracja z wartością typu `"99999999999"` kończy się błędem 500) i istnieje w `terms_versions`, wstawia wiersz `(new.id, version)`;
   - w każdym innym przypadku nic nie robi;
   - `security definer`, `set search_path = ''`, `revoke execute … from public, anon, authenticated`.
 
@@ -675,6 +675,7 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 - Istniejące konta (autorki, testowe na produkcji) nie mają wiersza akceptacji. Po wdrożeniu przy pierwszym wejściu do wnętrza trafiają na ekran akceptacji — to zamierzone zachowanie, bez uzupełniania danych wstecz.
 - Migracja nie usuwa ani nie zmienia istniejących danych. Wycofanie wymaga usunięcia wyzwalacza z `auth.users` przed tabelami.
 - `npx supabase db push` dopiero po zielonym `smoke` w CI dla commita z migracją (README).
+- Wiersz akceptacji zapisany przy rejestracji dowodzi, że konto założono z `terms_version` w metadanych, a nie że zaznaczono pole w formularzu lekomapy: rejestracja wprost przez API Supabase kluczem publicznym też go zapisze. Zgoda dotyczy wyłącznie własnego konta. Mocniejszy dowód wymagałby zapisu akceptacji po stronie serwera, a `signUp` na produkcji nie daje sesji (impl-review F7, 2026-10-08).
 
 ## References
 
@@ -801,6 +802,26 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
   - przycisk „Wyślij nowy odnośnik”;
   - odnośnik „Wróć do logowania”.
 
+### A.8 Napisy uzupełniające (zmiana 2026-10-08)
+
+> Zmiana 2026-10-08 (impl-review F3): napisy dodane w implementacji poza A.1–A.7, przeczytane i zaakceptowane przez autorkę bez zmian.
+
+- Tytuły stron (karta przeglądarki):
+  - logowanie: „Logowanie”;
+  - rejestracja: „Rejestracja”;
+  - sprawdź skrzynkę: „Sprawdź skrzynkę”;
+  - ekran z tokenem: „Potwierdź adres e-mail”;
+  - wygasły odnośnik: „Odnośnik nie działa”;
+  - ponowna akceptacja: „Warunki korzystania”.
+- Podpowiedź w polu e-mail (logowanie, rejestracja): „twoj@adres.pl”
+- Walidacja przed wysłaniem formularza (`validation`):
+  - puste pole e-mail: „Wpisz adres e-mail.”;
+  - zły format: „Wpisz poprawny adres e-mail.”;
+  - puste hasło: „Wpisz hasło.”;
+  - za krótkie hasło: „Hasło musi mieć co najmniej 6 znaków.”;
+  - puste powtórzenie: „Powtórz hasło.”
+- Słowo przed błędem pola akceptacji (`signUp.termsErrorLabel`): „Uwaga:”
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
@@ -868,10 +889,10 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Automated
 
-- [x] 5.1 Testy: `npm test`
-- [x] 5.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [x] 5.3 Smoke przeciw lokalnemu Supabase: `npm run smoke`
-- [x] 5.4 Sprawdzenia SQL: `npm run db:check`
+- [x] 5.1 Testy: `npm test` — c5d77a3
+- [x] 5.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build` — c5d77a3
+- [x] 5.3 Smoke przeciw lokalnemu Supabase: `npm run smoke` — c5d77a3
+- [x] 5.4 Sprawdzenia SQL: `npm run db:check` — c5d77a3
 
 #### Manual
 
