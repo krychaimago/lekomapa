@@ -10,6 +10,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dzienniczek", label: "Dzienniczek" },
 ];
 
+// Every interior screen: signed-out visitors are sent to sign-in, accounts without the current terms version to
+// the acceptance screen (src/lib/auth/terms-gate.ts). Menu screens are included automatically; an interior route
+// outside the menu must be listed here, otherwise it is neither protected nor gated.
+export const INTERIOR_ROUTES: readonly string[] = ["/dashboard", ...NAV_ITEMS.map((item) => item.href)];
+
 // A path matches an href when it is equal to it or lies below it:
 // "/leki" matches "/leki" and "/leki/nowe", but not "/leki-archiwum".
 // "/leki.html" matches too: astro dev (and build.format "file") serves the same page under it.

@@ -836,33 +836,33 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Automated
 
-- [x] 3.1 Testy przechodzą, w tym skaner kolorów bez pięciu wyjątków, kontrast i teksty: `npm test`
-- [x] 3.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [x] 3.3 Smoke przeciw lokalnemu Supabase, po zatrzymaniu starego podglądu i odsunięciu `.env`: `npm run smoke`
+- [x] 3.1 Testy przechodzą, w tym skaner kolorów bez pięciu wyjątków, kontrast i teksty: `npm test` — a350394
+- [x] 3.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build` — a350394
+- [x] 3.3 Smoke przeciw lokalnemu Supabase, po zatrzymaniu starego podglądu i odsunięciu `.env`: `npm run smoke` — a350394
 
 #### Manual
 
-- [x] 3.4 Logowanie i rejestracja wyglądają jak Rozkładówka na dużym ekranie i na telefonie
-- [x] 3.5 Rejestracja bez zaznaczonego pola pokazuje komunikat przy polu, a odnośnik przy polu otwiera `/warunki`
-- [x] 3.6 Rejestracja na adres, który ma już konto, kończy się tym samym ekranem co nowa
-- [x] 3.7 Złe hasło i nieistniejący adres dają ten sam komunikat
-- [x] 3.8 Żaden ekran wejściowy nie pokazuje przykładowego leku, objawu, daty ani godziny
+- [x] 3.4 Logowanie i rejestracja wyglądają jak Rozkładówka na dużym ekranie i na telefonie — a350394
+- [x] 3.5 Rejestracja bez zaznaczonego pola pokazuje komunikat przy polu, a odnośnik przy polu otwiera `/warunki` — a350394
+- [x] 3.6 Rejestracja na adres, który ma już konto, kończy się tym samym ekranem co nowa — a350394
+- [x] 3.7 Złe hasło i nieistniejący adres dają ten sam komunikat — a350394
+- [x] 3.8 Żaden ekran wejściowy nie pokazuje przykładowego leku, objawu, daty ani godziny — a350394
 
 ### Phase 4: Kontrola wersji i ponowna akceptacja
 
 #### Automated
 
-- [ ] 4.1 Testy reguły kontroli i całość: `npm test`
-- [ ] 4.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [ ] 4.3 Smoke przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
-- [ ] 4.4 Sprawdzenia SQL: `npm run db:check`
+- [x] 4.1 Testy reguły kontroli i całość: `npm test`
+- [x] 4.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
+- [x] 4.3 Smoke przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
+- [x] 4.4 Sprawdzenia SQL: `npm run db:check`
 
 #### Manual
 
-- [ ] 4.5 Konto bez akceptacji trafia na ekran akceptacji z każdego ekranu wnętrza, a pasek i `/prywatnosc` dalej działają
-- [ ] 4.6 „Akceptuję” otwiera wnętrze, a w Studio jest nowy wiersz z bieżącą datą
-- [ ] 4.7 „Wyloguj się” z ekranu akceptacji wylogowuje i nie zapisuje akceptacji
-- [ ] 4.8 Konto z akceptacją nie widzi ekranu akceptacji i nie odczuwa spowolnienia ekranów wnętrza
+- [x] 4.5 Konto bez akceptacji trafia na ekran akceptacji z każdego ekranu wnętrza, a pasek i `/prywatnosc` dalej działają
+- [x] 4.6 „Akceptuję” otwiera wnętrze, a w Studio jest nowy wiersz z bieżącą datą
+- [x] 4.7 „Wyloguj się” z ekranu akceptacji wylogowuje i nie zapisuje akceptacji
+- [x] 4.8 Konto z akceptacją nie widzi ekranu akceptacji i nie odczuwa spowolnienia ekranów wnętrza
 
 ### Phase 5: Odnośnik potwierdzający adres
 
