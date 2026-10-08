@@ -1828,6 +1828,78 @@ const signupSteps = [
   ],
 ];
 
+// --- Address confirmation link (S-01, phase 5) ------------------------------
+//
+// Local Supabase confirms addresses on its own and sends no confirmation mail, so a real token never exists here.
+// The steps cover the branches that need none: opening the link consumes nothing, a bad token lands on the expired
+// screen, and asking for a new link answers the same for an unknown and an existing address. The full mail path is
+// a manual check on production. A separate cookie jar keeps the main session out of it.
+
+const CONFIRM_PATH = "/auth/confirm";
+const CONFIRM_EXPIRED_PATH = "/auth/confirm?expired=1";
+const confirmJar = new Map();
+
+const emailConfirmLinkSteps = [
+  [
+    "email confirm: opening the link renders the confirm form and consumes nothing",
+    async () => {
+      const page = await requestPage(`${CONFIRM_PATH}?token_hash=smoke-not-a-token&type=email`, { jar: confirmJar });
+      const ok =
+        page.status === 200 &&
+        page.body.includes('action="/api/auth/email-confirm"') &&
+        page.body.includes('value="smoke-not-a-token"') &&
+        confirmJar.size === 0;
+      return { ok, detail: `${page.status}, ${confirmJar.size} cookie(s) set` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "email confirm: a bad token lands on the expired-link screen",
+    async () =>
+      request("/api/auth/email-confirm", {
+        method: "POST",
+        jar: confirmJar,
+        form: { token_hash: "smoke-not-a-token", type: "email" },
+        origin: await formOrigin(`${CONFIRM_PATH}?token_hash=smoke-not-a-token&type=email`, confirmJar),
+      }),
+    { status: 302, location: CONFIRM_EXPIRED_PATH, exact: true },
+  ],
+  [
+    "email confirm: the expired-link screen offers a new link",
+    async () => {
+      const page = await requestPage(CONFIRM_EXPIRED_PATH, { jar: confirmJar });
+      const ok = page.status === 200 && page.body.includes('action="/api/auth/email-resend"');
+      return { ok, detail: `${page.status}` };
+    },
+    EXPECT_OK,
+  ],
+];
+
+// The resend route makes Supabase send mail, so it runs only against a local Supabase, like the recovery steps.
+const emailResendSteps = [
+  [
+    "email resend: unknown and existing address end on the same check-inbox screen",
+    async () => {
+      const origin = await formOrigin(CONFIRM_EXPIRED_PATH, confirmJar);
+      const send = (address) =>
+        request("/api/auth/email-resend", { method: "POST", jar: confirmJar, form: { email: address }, origin });
+      const unknown = await send(`smoke-nobody-confirm-${Date.now()}@${emailDomain}`);
+      const existing = await send(email);
+      const same = (r) => r.status === 302 && r.location === "/auth/confirm-email";
+      return {
+        ok: same(unknown) && same(existing),
+        detail: `unknown ${unknown.status} ${unknown.location}, existing ${existing.status} ${existing.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+];
+
+const emailConfirmSteps = [
+  ...emailConfirmLinkSteps,
+  ...(recoverySkipReason ? [["email resend check", null, { skip: recoverySkipReason }]] : emailResendSteps),
+];
+
 const steps = [
   ["home redirects anonymous user", () => request("/"), { status: 302, location: "/auth/signin" }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
@@ -1842,6 +1914,7 @@ const steps = [
     { status: 302, location: "/auth/signin", exact: true },
   ],
   ...(usesExistingAccount ? [existingAccountTermsStep] : signupSteps),
+  ...emailConfirmSteps,
   [
     "signin rejects wrong password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong" } }),

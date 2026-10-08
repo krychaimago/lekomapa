@@ -48,7 +48,11 @@ export const POST: APIRoute = async (context) => {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { terms_version: CURRENT_TERMS_VERSION } },
+    options: {
+      data: { terms_version: CURRENT_TERMS_VERSION },
+      // The confirmation mail links here (supabase/templates/confirmation.html); the page consumes the token on POST.
+      emailRedirectTo: `${context.url.origin}/auth/confirm`,
+    },
   });
 
   if (error) {

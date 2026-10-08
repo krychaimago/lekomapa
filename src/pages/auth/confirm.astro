@@ -1,0 +1,83 @@
+---
+// Landing page of the address confirmation link (S-01). Opening it (GET) consumes nothing: mail scanners prefetch
+// links. The one-time token is used only by the explicit POST to /api/auth/email-confirm, which signs the resulting
+// session out and comes back with ?confirmed=1, or with ?expired=1 when the token no longer works.
+import AuthSpreadLayout from "@/layouts/AuthSpreadLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { AUTH_COPY } from "@/lib/copy/auth";
+import { cn } from "@/lib/utils";
+
+// The URL carries a one-time token: keep it out of caches and Referer headers.
+Astro.response.headers.set("Cache-Control", "no-store");
+// same-origin, not no-referrer: under no-referrer the browser posts the form with `Origin: null`, which
+// Astro's checkOrigin rejects with 403. same-origin still sends nothing to any other site.
+Astro.response.headers.set("Referrer-Policy", "same-origin");
+
+const params = Astro.url.searchParams;
+const tokenHash = params.get("token_hash");
+const confirmed = params.get("confirmed") === "1";
+const hasToken = !confirmed && params.get("expired") !== "1" && Boolean(tokenHash) && params.get("type") === "email";
+
+const confirmCopy = AUTH_COPY.confirm;
+const expiredCopy = AUTH_COPY.confirmExpired;
+const title = hasToken || confirmed ? confirmCopy.pageTitle : expiredCopy.pageTitle;
+const buttonClass = cn(buttonVariants(), "w-full rounded-lg text-base");
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+<AuthSpreadLayout title={title}>
+  {hasToken ? (
+    <>
+      <h1 class="mb-4 text-2xl font-bold">{confirmCopy.heading}</h1>
+      <p class="mb-6">{confirmCopy.body}</p>
+      <form method="POST" action="/api/auth/email-confirm">
+        <input type="hidden" name="token_hash" value={tokenHash} />
+        <input type="hidden" name="type" value="email" />
+        <button type="submit" class:list={buttonClass}>
+          {confirmCopy.submit}
+        </button>
+      </form>
+    </>
+  ) : confirmed ? (
+    <>
+      <h1 class="mb-4 text-2xl font-bold">{confirmCopy.doneHeading}</h1>
+      <p class="mb-6" role="status">
+        {confirmCopy.doneBody}
+      </p>
+      <a href="/auth/signin" class:list={buttonClass}>
+        {confirmCopy.doneSignIn}
+      </a>
+    </>
+  ) : (
+    <>
+      <h1 class="mb-4 text-2xl font-bold">{expiredCopy.heading}</h1>
+      {/* A state, not a form error: no destructive colors. */}
+      <p class="mb-6" role="status">
+        {expiredCopy.body}
+      </p>
+      <form method="POST" action="/api/auth/email-resend" class="flex flex-col gap-4">
+        <div>
+          <label for="email" class="mb-2 block font-medium">
+            {expiredCopy.emailLabel}
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            class="h-12 w-full rounded-lg border bg-background px-3 text-base text-foreground"
+          />
+        </div>
+        <button type="submit" class:list={buttonClass}>
+          {expiredCopy.submit}
+        </button>
+      </form>
+      <p class="mt-6">
+        <a href="/auth/signin" class:list={linkClass}>
+          {expiredCopy.backToSignIn}
+        </a>
+      </p>
+    </>
+  )}
+</AuthSpreadLayout>

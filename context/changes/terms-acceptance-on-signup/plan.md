@@ -852,26 +852,26 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Automated
 
-- [x] 4.1 Testy reguły kontroli i całość: `npm test`
-- [x] 4.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [x] 4.3 Smoke przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke`
-- [x] 4.4 Sprawdzenia SQL: `npm run db:check`
+- [x] 4.1 Testy reguły kontroli i całość: `npm test` — 34315ba
+- [x] 4.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build` — 34315ba
+- [x] 4.3 Smoke przeciw lokalnemu Supabase (stary podgląd zatrzymany, `.env` odsunięty): `npm run smoke` — 34315ba
+- [x] 4.4 Sprawdzenia SQL: `npm run db:check` — 34315ba
 
 #### Manual
 
-- [x] 4.5 Konto bez akceptacji trafia na ekran akceptacji z każdego ekranu wnętrza, a pasek i `/prywatnosc` dalej działają
-- [x] 4.6 „Akceptuję” otwiera wnętrze, a w Studio jest nowy wiersz z bieżącą datą
-- [x] 4.7 „Wyloguj się” z ekranu akceptacji wylogowuje i nie zapisuje akceptacji
-- [x] 4.8 Konto z akceptacją nie widzi ekranu akceptacji i nie odczuwa spowolnienia ekranów wnętrza
+- [x] 4.5 Konto bez akceptacji trafia na ekran akceptacji z każdego ekranu wnętrza, a pasek i `/prywatnosc` dalej działają — 34315ba
+- [x] 4.6 „Akceptuję” otwiera wnętrze, a w Studio jest nowy wiersz z bieżącą datą — 34315ba
+- [x] 4.7 „Wyloguj się” z ekranu akceptacji wylogowuje i nie zapisuje akceptacji — 34315ba
+- [x] 4.8 Konto z akceptacją nie widzi ekranu akceptacji i nie odczuwa spowolnienia ekranów wnętrza — 34315ba
 
 ### Phase 5: Odnośnik potwierdzający adres
 
 #### Automated
 
-- [ ] 5.1 Testy: `npm test`
-- [ ] 5.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [ ] 5.3 Smoke przeciw lokalnemu Supabase: `npm run smoke`
-- [ ] 5.4 Sprawdzenia SQL: `npm run db:check`
+- [x] 5.1 Testy: `npm test`
+- [x] 5.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
+- [x] 5.3 Smoke przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 5.4 Sprawdzenia SQL: `npm run db:check`
 
 #### Manual
 

@@ -69,7 +69,7 @@ SUPABASE_KEY=<anon key z wyjścia CLI>
 
 Studio: `http://localhost:54323`. Zatrzymanie stosu: `npx supabase stop`.
 
-Aby logować się od razu po rejestracji, bez klikania linku potwierdzającego: **Authentication → Email → Confirm email → off**.
+Potwierdzanie adresu e-mail jest lokalnie wyłączone (`enable_confirmations = false` w `[auth.email]` w `config.toml`): rejestracja od razu daje sesję, a smoke i konta testowe na tym polegają. Na produkcji potwierdzanie jest włączone — po rejestracji przychodzi mail z odnośnikiem do `/auth/confirm` (kroki panelu niżej).
 
 ### Projekt w chmurze
 
@@ -82,6 +82,16 @@ Lokalnie szablon maila i adres przekierowania ustawia `supabase/config.toml`. Na
 1. **Authentication → Email Templates → Reset Password**: temat `Lekomapa: ustaw nowe hasło` (jak `subject` w `[auth.email.template.recovery]` w `config.toml`), treść skopiowana z `supabase/templates/recovery.html`.
 2. **Authentication → URL Configuration → Redirect URLs**: dodaj `https://<adres produkcji>/auth/reset-password/confirm`.
 3. Po zapisie otwórz szablon w panelu jeszcze raz i sprawdź, że odnośnik zawiera `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery`. Sama obecność szablonu nie dowodzi jego treści.
+
+#### Potwierdzenie adresu (mail po rejestracji)
+
+Ten sam układ co przy odzyskiwaniu dostępu: lokalnie szablon i adres przekierowania ustawia `supabase/config.toml`, na produkcji trzeba je wpisać ręcznie w panelu — i powtórzyć przy każdej zmianie `supabase/templates/confirmation.html`. Bez tego produkcja wysyła domyślny odnośnik, który nie trafia do trasy `/auth/confirm`.
+
+1. **Authentication → Email Templates → Confirm signup**: temat `Lekomapa: potwierdź adres e-mail` (jak `subject` w `[auth.email.template.confirmation]` w `config.toml`), treść skopiowana z `supabase/templates/confirmation.html`.
+2. **Authentication → URL Configuration → Redirect URLs**: dodaj `https://<adres produkcji>/auth/confirm`.
+3. Po zapisie otwórz szablon w panelu jeszcze raz i sprawdź, że odnośnik zawiera `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+
+Odnośnik zużywa dopiero przycisk „Potwierdź adres” na `/auth/confirm` (skanery poczty otwierają odnośniki same). Po potwierdzeniu aplikacja wylogowuje powstałą sesję i prosi o zalogowanie hasłem.
 
 Do czasu własnego nadawcy maili (F-05) mail dochodzi na produkcji tylko na adresy członków zespołu projektu Supabase.
 
