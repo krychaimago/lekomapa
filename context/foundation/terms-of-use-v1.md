@@ -5,7 +5,7 @@
 ---
 
 **Warunki korzystania z lekomapy**
-Wersja 1 · obowiązuje od [data wdrożenia S-01]
+Wersja 1 · obowiązuje od 08.10.2026
 
 **Do czego służy lekomapa**
 

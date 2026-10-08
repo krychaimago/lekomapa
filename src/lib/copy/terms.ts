@@ -7,7 +7,7 @@ export const CURRENT_TERMS_VERSION = 1;
 
 // Day version 1 takes effect (ISO, YYYY-MM-DD). Set by a separate commit right before the merge to main, together
 // with the same day in terms-of-use-v1.md; until then the page shows the version without a date.
-export const TERMS_V1_EFFECTIVE_ON: string | null = null;
+export const TERMS_V1_EFFECTIVE_ON: string | null = "2026-10-08";
 
 // Markers filled by the page: {effectiveOn} with the date, {privacyLink} with a link to /prywatnosc.
 export const TERMS_V1 = {

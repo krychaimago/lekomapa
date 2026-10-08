@@ -948,9 +948,9 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Automated
 
-- [ ] 6.1 Testy: `npm test`
-- [ ] 6.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
-- [ ] 6.3 Smoke przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 6.1 Testy: `npm test` — ff10a83
+- [x] 6.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build` — ff10a83
+- [x] 6.3 Smoke przeciw lokalnemu Supabase: `npm run smoke` — ff10a83
 
 #### Manual
 
