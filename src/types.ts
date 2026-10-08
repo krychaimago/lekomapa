@@ -372,3 +372,14 @@ export interface DoctorQuestion {
   /** Medications taken in the window without any event in it, by name; dose and its start as on the entry day. */
   otherMedications: { name: string; since: string; dose: string }[];
 }
+
+/**
+ * Acceptance of one version of the terms of use (table terms_acceptances). Append-only history: never changed or
+ * deleted, disappears only with the account. accepted_at is set by the database.
+ */
+export interface TermsAcceptance {
+  id: string;
+  user_id: string;
+  version: number;
+  accepted_at: string;
+}

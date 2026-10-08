@@ -1,0 +1,69 @@
+---
+// Terms acceptance (S-01): where the middleware sends a signed-in account without acceptance of the current terms
+// version (src/lib/auth/terms-gate.ts). The account accepts them or signs out; signed-out visitors never get here
+// (PROTECTED_ROUTES in src/middleware.ts). An account that already accepted the current version goes back to the app.
+import AuthSpreadLayout from "@/layouts/AuthSpreadLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { AUTH_COPY, authErrorMessage } from "@/lib/copy/auth";
+import { CURRENT_TERMS_VERSION } from "@/lib/copy/terms";
+import { latestAcceptedTermsVersion } from "@/lib/services/terms-acceptance";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+
+const user = Astro.locals.user;
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+const latest = user && supabase ? await latestAcceptedTermsVersion(supabase, user.id) : null;
+const alreadyAccepted = latest !== null && latest >= CURRENT_TERMS_VERSION;
+// Set on Astro.response instead of `return Astro.redirect(...)`: a top-level return in frontmatter
+// crashes @typescript-eslint/no-misused-promises in astro-eslint-parser (see src/pages/index.astro).
+if (alreadyAccepted) {
+  Astro.response.status = 302;
+  Astro.response.headers.set("Location", "/");
+}
+
+const copy = AUTH_COPY.acceptance;
+// Only the unknown code comes from /api/terms/accept; anything else in `?error=` shows nothing.
+const errorCode = Astro.url.searchParams.get("error");
+const error = errorCode === "unknown" ? authErrorMessage(errorCode) : null;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+{!alreadyAccepted && (
+  <AuthSpreadLayout title={copy.pageTitle}>
+    <h1 class="mb-4 text-2xl font-bold">{copy.heading}</h1>
+    {error && (
+      <p
+        role="alert"
+        class="mb-4 rounded-lg border border-destructive-border bg-destructive-surface px-3 py-2 text-destructive"
+      >
+        {error}
+      </p>
+    )}
+    <p class="mb-6">
+      {copy.bodyBefore}
+      <a href="/warunki" class:list={linkClass}>
+        {copy.bodyLink}
+      </a>
+      {copy.bodyAfter.replace("{version}", String(CURRENT_TERMS_VERSION))}
+    </p>
+    <div class="flex flex-col gap-3">
+      <form method="POST" action="/api/terms/accept">
+        <button type="submit" class:list={cn(buttonVariants(), "w-full rounded-lg text-base")}>
+          {copy.accept}
+        </button>
+      </form>
+      <form method="POST" action="/api/auth/signout">
+        <button type="submit" class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base")}>
+          {copy.signOut}
+        </button>
+      </form>
+    </div>
+    <p class="mt-6">
+      {copy.deleteBefore}
+      <a href="/prywatnosc" class:list={linkClass}>
+        {copy.deleteLink}
+      </a>
+      {copy.deleteAfter}
+    </p>
+  </AuthSpreadLayout>
+)}

@@ -1,6 +1,0 @@
-/* Starter background for the auth screens and dashboard inherited from 10x-astro-starter.
-   Kept outside global.css so the token file holds no colors besides token declarations.
-   Temporary: removed by S-01 / S-10 when those screens move to the product palette. */
-@utility bg-cosmic {
-  background-image: linear-gradient(to bottom, #0a0e1a, #0f1529, #0a0e1a);
-}

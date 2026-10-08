@@ -1,0 +1,28 @@
+---
+// Privacy page (S-01, MS-02). Public: the demo bar links here from every screen, signed in or not.
+import Layout from "@/layouts/Layout.astro";
+import LegalDocument from "@/components/legal/LegalDocument.astro";
+import { LEGAL_LINKS_COPY, PRIVACY_COPY } from "@/lib/copy/terms";
+---
+
+<Layout title={PRIVACY_COPY.title}>
+  <LegalDocument
+    title={PRIVACY_COPY.title}
+    lead={PRIVACY_COPY.intro}
+    links={[
+      { href: "/warunki", label: LEGAL_LINKS_COPY.terms },
+      { href: "/auth/signin", label: LEGAL_LINKS_COPY.backToSignIn },
+    ]}
+  >
+    {PRIVACY_COPY.sections.map(({ heading, points }) => (
+      <section class="mt-8">
+        <h2 class="text-xl font-semibold">{heading}</h2>
+        <ul class="mt-3 list-disc space-y-2 pl-5">
+          {points.map((point) => (
+            <li>{point}</li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </LegalDocument>
+</Layout>

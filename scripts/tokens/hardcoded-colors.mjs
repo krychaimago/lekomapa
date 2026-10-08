@@ -14,23 +14,7 @@ export const SCANNED_EXTENSIONS = new Set([".astro", ".ts", ".tsx", ".js", ".jsx
 // remove it from this list; a stale entry (missing file or no violation left) fails hardcoded-colors.test.mjs.
 // `violations` pins the exact count, so a color added to an excepted file fails the test instead of hiding
 // behind the exception. Removing one lowers the count; update it in the same change.
-export const EXCEPTIONS = [
-  { path: "src/pages/auth/signin.astro", reason: "starter auth screen", removedBy: "S-01", violations: 7 },
-  { path: "src/pages/auth/signup.astro", reason: "starter auth screen", removedBy: "S-01", violations: 7 },
-  { path: "src/pages/auth/confirm-email.astro", reason: "starter auth screen", removedBy: "S-01", violations: 7 },
-  {
-    path: "src/components/auth/SignUpForm.tsx",
-    reason: "starter auth form component",
-    removedBy: "S-01",
-    violations: 1,
-  },
-  {
-    path: "src/styles/starter-auth.css",
-    reason: "bg-cosmic background of the starter auth screens",
-    removedBy: "S-01",
-    violations: 3,
-  },
-];
+export const EXCEPTIONS = [];
 
 export const TAILWIND_PALETTES = [
   "slate",

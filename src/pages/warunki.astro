@@ -1,0 +1,43 @@
+---
+// Terms of use, current version (S-01). Public: linked from signup before an account exists.
+import Layout from "@/layouts/Layout.astro";
+import LegalDocument from "@/components/legal/LegalDocument.astro";
+import { LEGAL_LINKS_COPY, TERMS_V1, TERMS_V1_EFFECTIVE_ON, formatEffectiveOn } from "@/lib/copy/terms";
+
+const versionLine =
+  TERMS_V1_EFFECTIVE_ON === null
+    ? TERMS_V1.versionLineUndated
+    : TERMS_V1.versionLine.replace("{effectiveOn}", formatEffectiveOn(TERMS_V1_EFFECTIVE_ON));
+---
+
+<Layout title={TERMS_V1.title}>
+  <LegalDocument
+    title={TERMS_V1.title}
+    lead={versionLine}
+    links={[
+      { href: "/prywatnosc", label: LEGAL_LINKS_COPY.privacy },
+      { href: "/auth/signin", label: LEGAL_LINKS_COPY.backToSignIn },
+    ]}
+  >
+    {TERMS_V1.sections.map(({ heading, points }) => (
+      <section class="mt-8">
+        <h2 class="text-xl font-semibold">{heading}</h2>
+        <ul class="mt-3 list-disc space-y-2 pl-5">
+          {points.map((point) => {
+            if (!point.includes("{privacyLink}")) return <li>{point}</li>;
+            const [before, after] = point.split("{privacyLink}");
+            return (
+              <li>
+                {before}
+                <a href="/prywatnosc" class="text-primary underline underline-offset-4 hover:no-underline">
+                  {TERMS_V1.privacyLinkText}
+                </a>
+                {after}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    ))}
+  </LegalDocument>
+</Layout>

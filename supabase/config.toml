@@ -157,6 +157,8 @@ additional_redirect_urls = [
   "https://127.0.0.1:3000",
   "http://localhost:4321/auth/reset-password/confirm",
   "http://127.0.0.1:4321/auth/reset-password/confirm",
+  "http://localhost:4321/auth/confirm",
+  "http://127.0.0.1:4321/auth/confirm",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -239,6 +241,12 @@ otp_expiry = 3600
 [auth.email.template.recovery]
 subject = "Lekomapa: ustaw nowe hasło"
 content_path = "./supabase/templates/recovery.html"
+
+# Address confirmation mail: a token_hash link to /auth/confirm, where a button (POST) consumes the token.
+# Confirmations stay off locally (enable_confirmations in [auth.email]), so this mail only goes out on production.
+[auth.email.template.confirmation]
+subject = "Lekomapa: potwierdź adres e-mail"
+content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

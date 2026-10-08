@@ -28,6 +28,8 @@ import { DOCTOR_QUESTION_COPY } from "../src/lib/copy/doctor-question.ts";
 import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
 import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
 import { MEDICATION_COPY } from "../src/lib/copy/medications.ts";
+import { CURRENT_TERMS_VERSION } from "../src/lib/copy/terms.ts";
+import { TERMS_ACCEPTANCE_PATH } from "../src/lib/auth/terms-gate.ts";
 import { PLURAL_SYMPTOM_NAMES } from "../src/lib/services/doctor-question.ts";
 import { earliestChangeDate, formatIsoDate, todayInWarsaw } from "../src/lib/services/medications.ts";
 import { REQUIRED_PHRASE, REQUIRED_PHRASE_PLURAL } from "./fr012/corpus.mjs";
@@ -156,10 +158,13 @@ function supabaseClient() {
   });
 }
 
-async function createAccount(label) {
+// Accounts carry the terms version in their metadata, like the sign-up form, so the database records the acceptance
+// and the terms gate lets them in. `acceptTerms: false` makes an account without it, for the gate steps.
+async function createAccount(label, { acceptTerms = true } = {}) {
   const client = supabaseClient();
   const address = `smoke-${label}-${Date.now()}@${emailDomain}`;
-  const { data, error } = await client.auth.signUp({ email: address, password });
+  const options = acceptTerms ? { data: { terms_version: CURRENT_TERMS_VERSION } } : undefined;
+  const { data, error } = await client.auth.signUp({ email: address, password, options });
   if (error) throw new Error(`sign-up of account ${label} failed: ${error.message}`);
   if (!data.session) {
     throw new Error(`sign-up of account ${label} returned no session — e-mail confirmation must be off here`);
@@ -224,6 +229,12 @@ const fixtureStep = [
     const [a, b] = await Promise.all([createAccount("iso-a"), createAccount("iso-b")]);
     fixtures.a = { ...(await seedMedication(a, "A")), ...(await seedSymptomEntry(a, "A")) };
     fixtures.b = { ...(await seedMedication(b, "B")), ...(await seedSymptomEntry(b, "B")) };
+    for (const fixture of [fixtures.a, fixtures.b]) {
+      // Written by the database when the account was created, from the terms version in its metadata.
+      const accepted = await fixture.client.from("terms_acceptances").select().single();
+      if (accepted.error) throw new Error(`read of terms_acceptances failed: ${describeError(accepted.error)}`);
+      fixture.termsAcceptance = accepted.data;
+    }
     fixtures.anon = supabaseClient();
     return { ok: true, detail: `${fixtures.a.address}, ${fixtures.b.address}` };
   },
@@ -264,6 +275,41 @@ const isolationTargets = [
     change: { severity: "severe" },
     guardedColumn: "severity",
   },
+  {
+    // Append-only: the owner cannot change or delete its own row either (termsAcceptanceOwnRowCheck below).
+    table: "terms_acceptances",
+    rowOf: (fixture) => fixture.termsAcceptance,
+    change: { accepted_at: "2020-01-01T00:00:00+00:00" },
+    guardedColumn: "accepted_at",
+  },
+];
+
+// The account tables above let the owner change its own rows; terms_acceptances does not. Same measured shape as
+// a blocked foreign write: zero rows and no error, so any error means the check never ran.
+const termsAcceptanceOwnRowCheck = [
+  "terms_acceptances: account A cannot change or delete its own row",
+  async () => {
+    const own = fixtures.a.termsAcceptance;
+    const table = fixtures.a.client.from("terms_acceptances");
+    const updated = await table.update({ accepted_at: "2020-01-01T00:00:00+00:00" }).eq("id", own.id).select("id");
+    const deleted = await fixtures.a.client.from("terms_acceptances").delete().eq("id", own.id).select("id");
+    const { data: after, error } = await fixtures.a.client
+      .from("terms_acceptances")
+      .select("id, accepted_at")
+      .eq("id", own.id)
+      .maybeSingle();
+    if (error) return { ok: false, detail: `read-back failed: ${describeError(error)}` };
+    const notes = [updated.error, deleted.error].filter(Boolean).map(describeError);
+    if (notes.length) return { ok: false, detail: `check did not run: ${notes.join("; ")}` };
+    const changedRows = (updated.data ?? []).length;
+    const deletedRows = (deleted.data ?? []).length;
+    const intact = after !== null && after.accepted_at === own.accepted_at;
+    return {
+      ok: changedRows === 0 && deletedRows === 0 && intact,
+      detail: `${changedRows} row(s) changed, ${deletedRows} row(s) deleted, row ${intact ? "intact" : "altered"}`,
+    };
+  },
+  EXPECT_OK,
 ];
 
 function isolationChecks({ table, rowOf, change, guardedColumn }) {
@@ -504,7 +550,12 @@ const isolationSteps = isolationSkipReason
       ["medication and journal isolation checks", null, { skip: isolationSkipReason }],
       ["shared read-only table checks", null, { skip: isolationSkipReason }],
     ]
-  : [fixtureStep, ...isolationTargets.flatMap(isolationChecks), ...sharedTargets.flatMap(sharedTableChecks)];
+  : [
+      fixtureStep,
+      ...isolationTargets.flatMap(isolationChecks),
+      termsAcceptanceOwnRowCheck,
+      ...sharedTargets.flatMap(sharedTableChecks),
+    ];
 
 // --- Medications and the interaction flag (S-02) ---------------------------
 //
@@ -1312,6 +1363,161 @@ const journalSteps = isolationSkipReason
   ? [["symptom journal checks", null, { skip: isolationSkipReason }]]
   : journalFlowSteps;
 
+// --- Terms gate (S-01) -----------------------------------------------------
+//
+// An account without acceptance of the current terms version (created without the metadata the sign-up form sends)
+// is held on the acceptance screen: interior screens redirect there, API routes answer 403, the privacy page and
+// sign-out stay open. Accepting opens the interior. Creates an account, so it runs behind the isolation gate.
+
+const termsGate = { jar: new Map(), account: null };
+
+async function acceptedVersionsOf(account) {
+  const { data, error } = await account.client.from("terms_acceptances").select("version");
+  if (error) throw new Error(`read of terms_acceptances failed: ${describeError(error)}`);
+  return data.map((row) => row.version);
+}
+
+const signInTermsGateAccount = () =>
+  request("/api/auth/signin", {
+    method: "POST",
+    jar: termsGate.jar,
+    form: { email: termsGate.account.address, password },
+  });
+
+const termsGateFlowSteps = [
+  [
+    "terms gate: an account without accepted terms signs in",
+    async () => {
+      termsGate.account = await createAccount("noterms-gate", { acceptTerms: false });
+      const versions = await acceptedVersionsOf(termsGate.account);
+      const signIn = await signInTermsGateAccount();
+      return {
+        ok: versions.length === 0 && signIn.status === 302 && signIn.location === "/",
+        detail: `accepted versions [${versions}], sign-in ${signIn.status} ${signIn.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  ...["/leki", "/dashboard", "/dzienniczek/nowy"].map((path) => [
+    `terms gate: ${path} redirects to the acceptance screen`,
+    () => request(path, { jar: termsGate.jar }),
+    { status: 302, location: TERMS_ACCEPTANCE_PATH, exact: true },
+  ]),
+  [
+    "terms gate: POST /api/journal answers 403 termsNotAccepted",
+    async () => {
+      const response = await fetch(BASE_URL + "/api/journal", {
+        method: "POST",
+        redirect: "manual",
+        headers: { Cookie: cookieHeader(termsGate.jar), Origin: BASE_URL, "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const text = await response.text();
+      const ok = response.status === 403 && text === JSON.stringify({ error: "termsNotAccepted" });
+      return { ok, detail: `${response.status} ${text}` };
+    },
+    EXPECT_OK,
+  ],
+  ["terms gate: /prywatnosc stays open", () => request("/prywatnosc", { jar: termsGate.jar }), { status: 200 }],
+  [
+    "terms gate: the acceptance screen renders both forms",
+    async () => {
+      const page = await requestPage(TERMS_ACCEPTANCE_PATH, { jar: termsGate.jar });
+      const ok =
+        page.status === 200 &&
+        page.body.includes('action="/api/terms/accept"') &&
+        page.body.includes('action="/api/auth/signout"');
+      return { ok, detail: `${page.status}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "terms gate: signing out from the acceptance screen works and records no acceptance",
+    async () => {
+      const signOut = await request("/api/auth/signout", {
+        method: "POST",
+        jar: termsGate.jar,
+        origin: await formOrigin(TERMS_ACCEPTANCE_PATH, termsGate.jar),
+      });
+      const after = await request("/leki", { jar: termsGate.jar });
+      const versions = await acceptedVersionsOf(termsGate.account);
+      return {
+        ok: signOut.status === 302 && after.location === "/auth/signin" && versions.length === 0,
+        detail: `sign-out ${signOut.status}, /leki ${after.status} ${after.location}, accepted versions [${versions}]`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "terms gate: accepting redirects to / and opens the interior",
+    async () => {
+      await signInTermsGateAccount();
+      const accept = await request("/api/terms/accept", {
+        method: "POST",
+        jar: termsGate.jar,
+        origin: await formOrigin(TERMS_ACCEPTANCE_PATH, termsGate.jar),
+      });
+      const leki = await request("/leki", { jar: termsGate.jar });
+      const versions = await acceptedVersionsOf(termsGate.account);
+      return {
+        ok:
+          accept.status === 303 &&
+          accept.location === "/" &&
+          leki.status === 200 &&
+          versions.length === 1 &&
+          versions[0] === CURRENT_TERMS_VERSION,
+        detail: `accept ${accept.status} ${accept.location}, /leki ${leki.status}, accepted versions [${versions}]`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "terms gate: accepting again (second tab) ends the same way and adds no row",
+    async () => {
+      const accept = await request("/api/terms/accept", {
+        method: "POST",
+        jar: termsGate.jar,
+        origin: await formOrigin("/", termsGate.jar),
+      });
+      const versions = await acceptedVersionsOf(termsGate.account);
+      return {
+        ok: accept.status === 303 && accept.location === "/" && versions.length === 1,
+        detail: `accept ${accept.status} ${accept.location}, accepted versions [${versions}]`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "terms gate: the acceptance screen sends an account with accepted terms back to /",
+    () => request(TERMS_ACCEPTANCE_PATH, { jar: termsGate.jar }),
+    { status: 302, location: "/", exact: true },
+  ],
+];
+
+const termsGateSteps = isolationSkipReason
+  ? [["terms gate checks", null, { skip: isolationSkipReason }]]
+  : termsGateFlowSteps;
+
+// Existing-account mode signs in to a real account: without acceptance of the current version every interior step
+// would fail on the redirect. The run never accepts on its behalf — a person accepts the terms, not a script.
+const existingAccountTermsStep = [
+  "existing account has accepted the current terms version",
+  async () => {
+    const client = supabaseClient();
+    const { error: signInError } = await client.auth.signInWithPassword({ email, password });
+    if (signInError) return { ok: false, detail: `sign-in failed: ${describeError(signInError)}` };
+    const versions = await acceptedVersionsOf({ client });
+    const ok = versions.some((version) => version >= CURRENT_TERMS_VERSION);
+    return {
+      ok,
+      detail: ok
+        ? `accepted versions [${versions}]`
+        : `accepted versions [${versions}] — sign in to this account in a browser, accept the terms on ${TERMS_ACCEPTANCE_PATH}, then run again`,
+    };
+  },
+  EXPECT_OK,
+];
+
 // --- Password recovery -----------------------------------------------------
 //
 // Walks the whole reset path of S-10 over HTTP and reads the reset mail from the local mailpit. Every step asserts
@@ -1573,10 +1779,125 @@ const registrySuggestionsAnonymousStep = [
 
 // --- Steps -----------------------------------------------------------------
 
-const signupStep = [
-  "signup creates account",
-  () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-  { status: 302, location: "/auth/confirm-email" },
+// The sign-up form as a browser sends it with the terms box ticked (S-01).
+const signupForm = (address) => ({ email: address, password, confirmPassword: password, terms: "accepted" });
+const noTermsEmail = `smoke-noterms-${Date.now()}@${emailDomain}`;
+
+const signupSteps = [
+  [
+    "signup without accepted terms is rejected",
+    () => {
+      const { terms: _terms, ...form } = signupForm(noTermsEmail);
+      return request("/api/auth/signup", { method: "POST", form });
+    },
+    { status: 302, location: "/auth/signup?error=terms", exact: true },
+  ],
+  [
+    "signup without accepted terms creates no account",
+    async () => {
+      // Local Supabase confirms addresses on its own, so an account created by the rejected form would sign in.
+      // Only the measured answer for an unknown address counts; any other error proves nothing about the account.
+      const { error } = await supabaseClient().auth.signInWithPassword({ email: noTermsEmail, password });
+      const absent = isAuthApiError(error) && error.code === "invalid_credentials";
+      return { ok: absent, detail: describeError(error) };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "signup creates account",
+    () => request("/api/auth/signup", { method: "POST", form: signupForm(email) }),
+    { status: 302, location: "/auth/confirm-email", exact: true },
+  ],
+  [
+    "signup to an existing address ends on the same screen",
+    () => request("/api/auth/signup", { method: "POST", form: signupForm(email) }),
+    { status: 302, location: "/auth/confirm-email", exact: true },
+  ],
+  [
+    "account from the signup form has accepted the current terms version",
+    async () => {
+      const client = supabaseClient();
+      const { error: signInError } = await client.auth.signInWithPassword({ email, password });
+      if (signInError) return { ok: false, detail: `sign-in failed: ${describeError(signInError)}` };
+      const { data, error } = await client.from("terms_acceptances").select("version, accepted_at");
+      if (error) return { ok: false, detail: describeError(error) };
+      const accepted = data.length === 1 && data[0].version === CURRENT_TERMS_VERSION && Boolean(data[0].accepted_at);
+      return { ok: accepted, detail: JSON.stringify(data) };
+    },
+    EXPECT_OK,
+  ],
+];
+
+// --- Address confirmation link (S-01, phase 5) ------------------------------
+//
+// Local Supabase confirms addresses on its own and sends no confirmation mail, so a real token never exists here.
+// The steps cover the branches that need none: opening the link consumes nothing, a bad token lands on the expired
+// screen, and asking for a new link answers the same for an unknown and an existing address. The full mail path is
+// a manual check on production. A separate cookie jar keeps the main session out of it.
+
+const CONFIRM_PATH = "/auth/confirm";
+const CONFIRM_EXPIRED_PATH = "/auth/confirm?expired=1";
+const confirmJar = new Map();
+
+const emailConfirmLinkSteps = [
+  [
+    "email confirm: opening the link renders the confirm form and consumes nothing",
+    async () => {
+      const page = await requestPage(`${CONFIRM_PATH}?token_hash=smoke-not-a-token&type=email`, { jar: confirmJar });
+      const ok =
+        page.status === 200 &&
+        page.body.includes('action="/api/auth/email-confirm"') &&
+        page.body.includes('value="smoke-not-a-token"') &&
+        confirmJar.size === 0;
+      return { ok, detail: `${page.status}, ${confirmJar.size} cookie(s) set` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "email confirm: a bad token lands on the expired-link screen",
+    async () =>
+      request("/api/auth/email-confirm", {
+        method: "POST",
+        jar: confirmJar,
+        form: { token_hash: "smoke-not-a-token", type: "email" },
+        origin: await formOrigin(`${CONFIRM_PATH}?token_hash=smoke-not-a-token&type=email`, confirmJar),
+      }),
+    { status: 302, location: CONFIRM_EXPIRED_PATH, exact: true },
+  ],
+  [
+    "email confirm: the expired-link screen offers a new link",
+    async () => {
+      const page = await requestPage(CONFIRM_EXPIRED_PATH, { jar: confirmJar });
+      const ok = page.status === 200 && page.body.includes('action="/api/auth/email-resend"');
+      return { ok, detail: `${page.status}` };
+    },
+    EXPECT_OK,
+  ],
+];
+
+// The resend route makes Supabase send mail, so it runs only against a local Supabase, like the recovery steps.
+const emailResendSteps = [
+  [
+    "email resend: unknown and existing address end on the same check-inbox screen",
+    async () => {
+      const origin = await formOrigin(CONFIRM_EXPIRED_PATH, confirmJar);
+      const send = (address) =>
+        request("/api/auth/email-resend", { method: "POST", jar: confirmJar, form: { email: address }, origin });
+      const unknown = await send(`smoke-nobody-confirm-${Date.now()}@${emailDomain}`);
+      const existing = await send(email);
+      const same = (r) => r.status === 302 && r.location === "/auth/confirm-email";
+      return {
+        ok: same(unknown) && same(existing),
+        detail: `unknown ${unknown.status} ${unknown.location}, existing ${existing.status} ${existing.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+];
+
+const emailConfirmSteps = [
+  ...emailConfirmLinkSteps,
+  ...(recoverySkipReason ? [["email resend check", null, { skip: recoverySkipReason }]] : emailResendSteps),
 ];
 
 const steps = [
@@ -1587,11 +1908,17 @@ const steps = [
     () => request("/dashboard.html"),
     { status: 302, location: "/auth/signin" },
   ],
-  ...(usesExistingAccount ? [] : [signupStep]),
+  [
+    "acceptance screen redirects anonymous user",
+    () => request(TERMS_ACCEPTANCE_PATH),
+    { status: 302, location: "/auth/signin", exact: true },
+  ],
+  ...(usesExistingAccount ? [existingAccountTermsStep] : signupSteps),
+  ...emailConfirmSteps,
   [
     "signin rejects wrong password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong" } }),
-    { status: 302, location: "/auth/signin?error=" },
+    { status: 302, location: "/auth/signin?error=credentials", exact: true },
   ],
   [
     "signin accepts correct password",
@@ -1606,6 +1933,7 @@ const steps = [
   ...isolationSteps,
   ...medicationSteps,
   ...journalSteps,
+  ...termsGateSteps,
   ...passwordRecoverySteps,
 ];
 

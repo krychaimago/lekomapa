@@ -1,35 +1,32 @@
 ---
-import Layout from "@/layouts/Layout.astro";
+import AuthSpreadLayout from "@/layouts/AuthSpreadLayout.astro";
 import SignInForm from "@/components/auth/SignInForm";
+import { AUTH_COPY, authErrorMessage } from "@/lib/copy/auth";
 import { PASSWORD_RECOVERY_COPY } from "@/lib/copy/password-recovery";
 
-const error = Astro.url.searchParams.get("error");
+const copy = AUTH_COPY.signIn;
+// Only a known code from the sign-in route shows text; anything else in `?error=` shows nothing.
+const error = authErrorMessage(Astro.url.searchParams.get("error"));
 const resetDone = Astro.url.searchParams.get("reset") === "done";
 ---
 
-<Layout title="Sign in">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
-      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Sign in
-      </h1>
-      {resetDone && (
-        <p role="status" class="mb-4 rounded-lg border px-3 py-2 text-center text-sm">
-          {PASSWORD_RECOVERY_COPY.signIn.resetDone}
-        </p>
-      )}
-      <SignInForm serverError={error} client:load />
-      <p class="mt-4 text-center text-sm">
-        <a href="/auth/forgot-password" class="underline underline-offset-4 hover:no-underline">
-          {PASSWORD_RECOVERY_COPY.signIn.forgotPasswordLink}
-        </a>
-      </p>
-      <p class="mt-4 text-center text-sm text-blue-100/60">
-        Don't have an account?{" "}
-        <a href="/auth/signup" class="text-purple-300 hover:underline">
-          Sign up
-        </a>
-      </p>
-    </div>
-  </div>
-</Layout>
+<AuthSpreadLayout title={copy.pageTitle}>
+  <h1 class="mb-6 text-2xl font-bold">{copy.heading}</h1>
+  {resetDone && (
+    <p role="status" class="mb-4 rounded-lg border border-accent-border bg-accent px-3 py-2 text-accent-foreground">
+      {PASSWORD_RECOVERY_COPY.signIn.resetDone}
+    </p>
+  )}
+  <SignInForm serverError={error} client:load />
+  <p class="mt-6">
+    <a href="/auth/forgot-password" class="text-primary underline underline-offset-4 hover:no-underline">
+      {PASSWORD_RECOVERY_COPY.signIn.forgotPasswordLink}
+    </a>
+  </p>
+  <p class="mt-3">
+    {copy.signUpPrompt}{" "}
+    <a href="/auth/signup" class="text-primary underline underline-offset-4 hover:no-underline">
+      {copy.signUpLink}
+    </a>
+  </p>
+</AuthSpreadLayout>

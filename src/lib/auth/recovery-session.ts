@@ -1,5 +1,7 @@
 import type { JwtPayload } from "@supabase/supabase-js";
 
+import { normalizePath } from "../normalize-path.ts";
+
 // Screen where a session opened from a password reset link sets the new password.
 export const RESET_PASSWORD_PATH = "/auth/reset-password";
 
@@ -39,12 +41,6 @@ export function isRecoverySession(claims: JwtPayload | null | undefined): boolea
     const method = methodName(entry);
     return method === undefined || !NORMAL_SESSION_METHODS.has(method);
   });
-}
-
-// Astro dev also serves a page under "<path>.html" and may keep a trailing slash; normalize both.
-function normalizePath(path: string): string {
-  const withoutHtml = path.endsWith(".html") ? path.slice(0, -".html".length) : path;
-  return withoutHtml.length > 1 && withoutHtml.endsWith("/") ? withoutHtml.slice(0, -1) : withoutHtml;
 }
 
 export function isRecoveryAllowedPath(path: string): boolean {

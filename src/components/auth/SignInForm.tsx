@@ -4,6 +4,10 @@ import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { AUTH_COPY } from "@/lib/copy/auth";
+
+const copy = AUTH_COPY.signIn;
+const validation = AUTH_COPY.validation;
 
 interface Props {
   serverError?: string | null;
@@ -18,12 +22,12 @@ export default function SignInForm({ serverError }: Props) {
   function validate() {
     const next: typeof errors = {};
     if (!email.trim()) {
-      next.email = "Email is required";
+      next.email = validation.emailRequired;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = "Enter a valid email address";
+      next.email = validation.emailInvalid;
     }
     if (!password) {
-      next.password = "Password is required";
+      next.password = validation.passwordRequired;
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -44,27 +48,28 @@ export default function SignInForm({ serverError }: Props) {
       <FormField
         id="email"
         type="email"
-        label="Email"
+        label={copy.emailLabel}
         value={email}
         onChange={(v) => {
           setEmail(v);
           clearError("email");
         }}
-        placeholder="you@example.com"
+        placeholder={copy.emailPlaceholder}
+        autoComplete="email"
         error={errors.email}
         icon={<Mail className="size-4" />}
       />
 
       <FormField
         id="password"
-        label="Password"
+        label={copy.passwordLabel}
         type={showPassword ? "text" : "password"}
         value={password}
         onChange={(v) => {
           setPassword(v);
           clearError("password");
         }}
-        placeholder="Your password"
+        autoComplete="current-password"
         error={errors.password}
         icon={<Lock className="size-4" />}
         endContent={
@@ -79,8 +84,8 @@ export default function SignInForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText="Signing in..." icon={<LogIn className="size-4" />}>
-        Sign in
+      <SubmitButton pendingText={copy.pending} icon={<LogIn className="size-4" />}>
+        {copy.submit}
       </SubmitButton>
     </form>
   );
