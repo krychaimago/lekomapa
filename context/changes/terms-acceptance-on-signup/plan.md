@@ -633,13 +633,55 @@ Mail potwierdzający prowadzi do aplikacji, która potwierdza adres przyciskiem,
 
 #### Manual Verification:
 
-- Szablon potwierdzenia i Redirect URL wpisane w panelu produkcji, a ponownie otwarty szablon zawiera `token_hash` i `type=email`
-- Po wdrożeniu pełna ścieżka maila na produkcji kończy się logowaniem do wnętrza bez ekranu akceptacji (rejestracja adresem członka zespołu Supabase, mail, przycisk, „adres potwierdzony”, logowanie)
+- Redirect URL `/auth/confirm` wpisany w panelu produkcji. Szablonu nie da się edytować bez własnego SMTP (zmiana 2026-10-08, faza 6) — produkcja wysyła szablon domyślny
+- Po wdrożeniu pełna ścieżka maila na produkcji kończy się logowaniem do wnętrza bez ekranu akceptacji (rejestracja adresem członka zespołu Supabase, mail z szablonu domyślnego, odnośnik, „adres potwierdzony”, logowanie)
 - Ten sam odnośnik użyty drugi raz pokazuje ekran wygasłego odnośnika, a zamówienie nowego kończy się ekranem „sprawdź skrzynkę”
 - Konto autorki na produkcji (bez wiersza akceptacji) po zalogowaniu trafia na ekran akceptacji, a „Akceptuję” zapisuje wersję 1 z datą
 - `/warunki` na produkcji pokazuje datę wejścia w życie równą dniowi wdrożenia (data ostatniego biegu joba `deploy` w CI)
 
 **Implementation Note**: Kroki w panelu produkcji wykonuje autorka ręcznie (infrastructure.md: operacje na produkcji wykonuje człowiek). Agent podaje dokładną treść do wklejenia.
+
+---
+
+## Phase 6: Odnośnik z domyślnego szablonu Supabase
+
+> Dodana 2026-10-08 po impl-review. Panel produkcji nie pozwala edytować szablonów maili bez własnego SMTP („Set up custom SMTP to edit templates. Emails will be sent using the default templates.”), więc krok 5.5 w pierwotnym brzmieniu jest niewykonalny do F-05.
+
+### Overview
+
+Produkcja wysyła domyślny mail Supabase. Odnośnik z niego prowadzi na `/auth/confirm` innym formatem niż nasz szablon, a ekran pokazywał wtedy „Odnośnik wygasł” przy adresie, który Supabase już potwierdził.
+
+### Pomiar (2026-10-08, lokalnie, szablon domyślny, potwierdzanie włączone, rejestracja przez `/api/auth/signup`)
+
+- Mail: temat „Confirm your email address”, odnośnik `…/auth/v1/verify?token=…&type=signup&redirect_to=…/auth/confirm`.
+- Pierwsze kliknięcie: Supabase ustawia `email_confirmed_at` i przekierowuje 303 na `/auth/confirm?code=<uuid>` (przepływ PKCE: rejestracja ustawia ciasteczko `code-verifier`).
+- Drugie kliknięcie: 303 na `/auth/confirm?error=access_denied&error_code=otp_expired&error_description=…`.
+
+### Changes Required:
+
+#### 1. Wybór ekranu
+
+**File**: `src/lib/auth/confirm-link.ts` (nowy), `src/pages/auth/confirm.astro`
+
+**Contract**: `confirmLinkScreen(params)` zwraca `token` (z `tokenHash`), `confirmed` albo `expired`. Kolejność: `confirmed=1` → confirmed; `expired=1` albo dowolny `error` → expired; `token_hash` z `type=email` → token; niepusty `code` → confirmed; reszta → expired. Ekran „Adres potwierdzony” bez nowych napisów.
+
+Kod nie jest wymieniany na sesję (decyzja autorki 2026-10-08): wymiana wymaga ciasteczka `code-verifier` z przeglądarki, w której założono konto, więc odnośnik otwarty na innym urządzeniu pokazałby „wygasł” przy potwierdzonym adresie. Koszt: ręcznie wpisany `?code=cokolwiek` pokazuje „Adres potwierdzony”, nie dając sesji ani dostępu.
+
+#### 2. Test
+
+**File**: `scripts/auth/confirm-link.test.mjs` (nowy) — zmierzone adresy przekierowań jako przypadki.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- Testy: `npm test`
+- Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
+- Smoke przeciw lokalnemu Supabase: `npm run smoke`
+
+#### Manual Verification:
+
+- Po wdrożeniu odnośnik z domyślnego maila na produkcji pokazuje „Adres potwierdzony”, a użyty drugi raz — ekran wygasłego odnośnika (łącznie z 5.6 i 5.7)
 
 ---
 
@@ -896,8 +938,20 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Manual
 
-- [ ] 5.5 Szablon potwierdzenia i Redirect URL wpisane w panelu produkcji, a ponownie otwarty szablon zawiera `token_hash` i `type=email`
+- [ ] 5.5 Redirect URL `/auth/confirm` wpisany w panelu produkcji (szablon bez własnego SMTP nieedytowalny — faza 6)
 - [ ] 5.6 Po wdrożeniu pełna ścieżka maila na produkcji kończy się logowaniem do wnętrza bez ekranu akceptacji
 - [ ] 5.7 Ten sam odnośnik użyty drugi raz pokazuje ekran wygasłego odnośnika, a zamówienie nowego kończy się ekranem „sprawdź skrzynkę”
 - [ ] 5.8 Konto autorki na produkcji trafia na ekran akceptacji, a „Akceptuję” zapisuje wersję 1 z datą
 - [ ] 5.9 `/warunki` na produkcji pokazuje datę wejścia w życie równą dniowi wdrożenia
+
+### Phase 6: Odnośnik z domyślnego szablonu Supabase
+
+#### Automated
+
+- [ ] 6.1 Testy: `npm test`
+- [ ] 6.2 Typy, lint i build: `npm run typecheck && npm run lint && npm run build`
+- [ ] 6.3 Smoke przeciw lokalnemu Supabase: `npm run smoke`
+
+#### Manual
+
+- [ ] 6.4 Po wdrożeniu odnośnik z domyślnego maila na produkcji pokazuje „Adres potwierdzony”, a użyty drugi raz — ekran wygasłego odnośnika
