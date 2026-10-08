@@ -938,11 +938,11 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Manual
 
-- [ ] 5.5 Redirect URL `/auth/confirm` wpisany w panelu produkcji (szablon bez własnego SMTP nieedytowalny — faza 6)
-- [ ] 5.6 Po wdrożeniu pełna ścieżka maila na produkcji kończy się logowaniem do wnętrza bez ekranu akceptacji
-- [ ] 5.7 Ten sam odnośnik użyty drugi raz pokazuje ekran wygasłego odnośnika, a zamówienie nowego kończy się ekranem „sprawdź skrzynkę”
-- [ ] 5.8 Konto autorki na produkcji trafia na ekran akceptacji, a „Akceptuję” zapisuje wersję 1 z datą
-- [ ] 5.9 `/warunki` na produkcji pokazuje datę wejścia w życie równą dniowi wdrożenia
+- [x] 5.5 Redirect URL `/auth/confirm` wpisany w panelu produkcji (szablon bez własnego SMTP nieedytowalny — faza 6) — wpisane przez autorkę 2026-10-08 (workers.dev i lekomapa.pl)
+- [x] 5.6 Po wdrożeniu pełna ścieżka maila na produkcji kończy się logowaniem do wnętrza bez ekranu akceptacji — sprawdzone przez autorkę na produkcji 2026-10-08
+- [x] 5.7 Ten sam odnośnik użyty drugi raz pokazuje ekran wygasłego odnośnika, a zamówienie nowego kończy się ekranem „sprawdź skrzynkę” — sprawdzone przez autorkę na produkcji 2026-10-08 (mail nie przychodzi, bo adres był już potwierdzony — oczekiwane)
+- [x] 5.8 Konto autorki na produkcji trafia na ekran akceptacji, a „Akceptuję” zapisuje wersję 1 z datą — sprawdzone przez autorkę na produkcji 2026-10-08
+- [x] 5.9 `/warunki` na produkcji pokazuje datę wejścia w życie równą dniowi wdrożenia — sprawdzone na produkcji 2026-10-08 („obowiązuje od 08.10.2026”)
 
 ### Phase 6: Odnośnik z domyślnego szablonu Supabase
 
@@ -954,4 +954,4 @@ Kontrola wersji dokłada jedno zapytanie PostgREST na każdy ekran wnętrza i ka
 
 #### Manual
 
-- [ ] 6.4 Po wdrożeniu odnośnik z domyślnego maila na produkcji pokazuje „Adres potwierdzony”, a użyty drugi raz — ekran wygasłego odnośnika
+- [x] 6.4 Po wdrożeniu odnośnik z domyślnego maila na produkcji pokazuje „Adres potwierdzony”, a użyty drugi raz — ekran wygasłego odnośnika — sprawdzone przez autorkę na produkcji 2026-10-08
