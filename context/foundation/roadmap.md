@@ -369,7 +369,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 | S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | —                     | done                                                   | #15   |
 | S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                                   | #16   |
 | S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
-| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | yes                   | Uruchom `/10x-plan journal-correction-window`          | #18   |
+| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | —                     | done                                                   | #18   |
 | S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | no                    | Wymaga S-02 i S-06                                     | #19   |
 | S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | yes                   | Uruchom `/10x-plan account-deletion-cascade`           | #20   |
 | S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
