@@ -1,5 +1,5 @@
 -- Symptom occurrences (S-08): one row per symptom of the signed-in person with the complete set of dates of the
--- entries that logged it. The "Do omówienia z lekarzem" section composes one doctor question per symptom from these
+-- entries that logged it. The "Wizyta" section composes one doctor question per symptom from these
 -- dates (composeDoctorQuestion in src/lib/services/doctor-question.ts needs every date: the first one opens the
 -- window, the count goes into the summary).
 --

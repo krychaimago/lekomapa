@@ -1,7 +1,7 @@
 ---
 change_id: doctor-visit-summary
 title: Doctor visit summary
-status: implementing
+status: impl_reviewed
 created: 2026-10-08
 updated: 2026-10-09
 archived_at: null

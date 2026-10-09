@@ -1,4 +1,4 @@
--- Symptom occurrences checks (S-08): public.symptom_occurrences(), the read behind the "Do omówienia z lekarzem"
+-- Symptom occurrences checks (S-08): public.symptom_occurrences(), the read behind the "Wizyta"
 -- section, run as a signed-in account (role authenticated, RLS applies).
 --   OCCURRENCES 1: account A with three entries of one symptom (inserted out of order) and one entry of another gets
 --                  two rows; each row carries the complete set of its dates in ascending order and the catalog name.

@@ -32,6 +32,8 @@ export function composeVisitQuestions(
   const composed: { question: DoctorQuestion; latest: number }[] = [];
   const withoutQuestion: string[] = [];
   for (const symptom of symptoms) {
+    // No entry, nothing to ask about; Math.max of no dates would be -Infinity and break toISOString.
+    if (symptom.occurrences.length === 0) continue;
     const latest = Math.max(...symptom.occurrences.map((occurredAt) => Date.parse(occurredAt)));
     const question = composeDoctorQuestion({
       symptomName: symptom.name,

@@ -32,6 +32,7 @@ export async function loadVisitSummary(supabase: SupabaseClient): Promise<VisitS
   if (symptoms.error || interactions.error || "error" in medications) {
     console.error("Loading the doctor visit section failed", {
       symptomsCode: symptoms.error?.code,
+      medicationsFailed: "error" in medications,
       interactionsCode: interactions.error?.code,
     });
     return { error: true };

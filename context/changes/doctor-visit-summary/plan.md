@@ -187,7 +187,7 @@ Odczyt danych, strona `/wizyta`, wspólny komponent pytania, pozycja menu, krok 
 
 **Intent**: Jedno miejsce czytające dane sekcji równolegle przez RLS.
 
-**Contract**: `loadVisitSummary(supabase): Promise<VisitSummary | { error: true }>`; `Promise.all` z `rpc("symptom_occurrences")`, `loadQuestionMedications`, `rpc("medication_interactions")`. `VisitSummary` (w `src/types.ts`) = `{ showIntro, interactions, interactionsEmptyState, questions: DoctorQuestionText[], withoutQuestion: string[] }`. Błąd dowolnego odczytu → `{ error: true }`, log tylko z kodem błędu, nigdy z danymi.
+**Contract**: `loadVisitSummary(supabase): Promise<VisitSummary | { error: true }>`; `Promise.all` z `rpc("symptom_occurrences")`, `loadQuestionMedications`, `rpc("medication_interactions")`. `VisitSummary` (w `src/types.ts`) = `{ showIntro, interactions, interactionsEmptyState, questions: DoctorQuestion[], withoutQuestion: string[] }`; tekst pytania (`doctorQuestionText`) składa strona, jak w dzienniczku (addendum po impl-review F2). Błąd dowolnego odczytu → `{ error: true }`, log tylko z kodem błędu, nigdy z danymi.
 
 #### 3. Komponent pytania
 
@@ -203,7 +203,7 @@ Odczyt danych, strona `/wizyta`, wspólny komponent pytania, pozycja menu, krok 
 
 **Intent**: Ekran sekcji przez `AppLayout`, bez parametrów w URL.
 
-**Contract**: `.astro`, bez React. Wprowadzenie albo dwie części (`<section aria-labelledby>` z atrybutami `data-visit-interactions`, `data-visit-questions`); interakcje w stylu `bg-interaction`/`border-interaction-border` jak `leki/[id].astro:367-389`, nota przy każdej parze; pod listą `rulesIncomplete` i `noWarningIsNotSafe`; `questionsNote` raz pod nagłówkiem pytań (bez `DOCTOR_QUESTION_COPY.note`); zachęta `askDoctorOrPharmacist` zawsze na dole. Błąd odczytu → status 500 i `loadError` (jak `leki/index.astro:56-66`). Odnośniki wyłącznie do `/leki/nowy`, `/dzienniczek/nowy`, `/dzienniczek`. Kolory tylko z tokenów.
+**Contract**: `.astro`, bez React. Wprowadzenie albo dwie części (`<section aria-labelledby>` z atrybutami `data-visit-interactions`, `data-visit-questions`); interakcje w stylu `bg-interaction`/`border-interaction-border` jak `leki/[id].astro:367-389`, nota przy każdej parze; pod listą `rulesIncomplete` i `noWarningIsNotSafe`; `questionsNote` raz pod nagłówkiem pytań (bez `DOCTOR_QUESTION_COPY.note`), tylko gdy jest choć jedno pytanie — gdy wszystkie objawy trafiają do „Bez pytania”, noty nie ma (addendum po impl-review F1); zachęta `askDoctorOrPharmacist` zawsze na dole. Błąd odczytu → status 500 i `loadError` (jak `leki/index.astro:56-66`). Odnośniki wyłącznie do `/leki/nowy`, `/dzienniczek/nowy`, `/dzienniczek`. Kolory tylko z tokenów.
 
 #### 5. Menu
 
