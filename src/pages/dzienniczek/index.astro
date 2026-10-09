@@ -8,6 +8,7 @@
 // dose and never orders medications by suspicion (FR-012) — events go by date, other medications by name.
 import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
+import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
 import { JOURNAL_COPY } from "@/lib/copy/journal";
@@ -144,43 +145,7 @@ const questionTexts =
         ) : (
           <>
             {questionTexts.map((text, index) => (
-              <details open={index === 0} class="rounded-lg border border-border px-4 py-3">
-                <summary class="cursor-pointer text-lg font-semibold">{text.heading}</summary>
-                <div class="mt-2 flex flex-col gap-3">
-                  <p class="text-sm text-muted-foreground">{text.summary}</p>
-                  <p>{text.eventsIntro}</p>
-                  {text.events.length > 0 ? (
-                    <>
-                      <ul class="flex list-disc flex-col gap-1 pl-5">
-                        {text.events.map((event) => (
-                          <li>{event}</li>
-                        ))}
-                      </ul>
-                      <p class="font-medium">{text.question}</p>
-                      {text.others.length > 0 && (
-                        <details>
-                          <summary class="cursor-pointer text-muted-foreground">{text.othersLabel}</summary>
-                          <ul class="mt-2 flex list-disc flex-col gap-1 pl-5">
-                            {text.others.map((other) => (
-                              <li>{other}</li>
-                            ))}
-                          </ul>
-                        </details>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <p>{text.othersLabel}</p>
-                      <ul class="flex list-disc flex-col gap-1 pl-5">
-                        {text.others.map((other) => (
-                          <li>{other}</li>
-                        ))}
-                      </ul>
-                      <p class="font-medium">{text.question}</p>
-                    </>
-                  )}
-                </div>
-              </details>
+              <DoctorQuestionCard text={text} open={index === 0} />
             ))}
             <p class="text-sm text-muted-foreground">{DOCTOR_QUESTION_COPY.note}</p>
           </>

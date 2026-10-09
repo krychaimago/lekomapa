@@ -29,6 +29,7 @@ import { INTERACTION_COPY } from "../src/lib/copy/interactions.ts";
 import { JOURNAL_COPY } from "../src/lib/copy/journal.ts";
 import { MEDICATION_COPY } from "../src/lib/copy/medications.ts";
 import { CURRENT_TERMS_VERSION } from "../src/lib/copy/terms.ts";
+import { VISIT_SUMMARY_COPY } from "../src/lib/copy/visit-summary.ts";
 import { TERMS_ACCEPTANCE_PATH } from "../src/lib/auth/terms-gate.ts";
 import { PLURAL_SYMPTOM_NAMES } from "../src/lib/services/doctor-question.ts";
 import { earliestChangeDate, formatIsoDate, todayInWarsaw } from "../src/lib/services/medications.ts";
@@ -1173,6 +1174,7 @@ const medicationSteps = isolationSkipReason
 const JOURNAL_NEW_PAGE = "/dzienniczek/nowy";
 const JOURNAL_LIST_PAGE = "/dzienniczek";
 const JOURNAL_ROUTE = "/api/journal";
+const VISIT_SUMMARY_PAGE = "/wizyta";
 
 // Filled by the steps below and read by the later ones. `paths` holds every URL path the flow requested.
 const journal = { jar: new Map(), symptom: null, entryId: null, paths: [] };
@@ -1338,6 +1340,32 @@ const journalFlowSteps = [
         detail: `section ${section ? "present" : "missing"}; title ${title ? "present" : "missing"}; ${medicationName} ${
           medication ? "present" : "missing"
         }; phrase ${phrase ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "visit summary: the section shows the question for the saved symptom with the smoke medication and the phrase",
+    async () => {
+      if (!journal.symptom || !fixtures.a) return { ok: false, detail: "check did not run: no entry was saved" };
+      journal.paths.push(VISIT_SUMMARY_PAGE);
+      const page = await requestPage(VISIT_SUMMARY_PAGE, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // The questions part alone, so the names and the phrase are proven inside it, not in the interactions part.
+      const start = page.body.indexOf("data-visit-questions");
+      const end = start === -1 ? -1 : page.body.indexOf("</section>", start);
+      const section = end === -1 ? null : page.body.slice(start, end);
+      const medicationName = fixtures.a.medication.product_name;
+      const symptom = section !== null && pageContains(section, journal.symptom.name);
+      const medication = section !== null && pageContains(section, medicationName);
+      const requiredPhrase = PLURAL_SYMPTOM_NAMES.has(journal.symptom.name) ? REQUIRED_PHRASE_PLURAL : REQUIRED_PHRASE;
+      const phrase = section !== null && pageContains(section, requiredPhrase);
+      const askDoctor = pageContains(page.body, VISIT_SUMMARY_COPY.askDoctorOrPharmacist);
+      return {
+        ok: symptom && medication && phrase && askDoctor,
+        detail: `questions ${section ? "present" : "missing"}; symptom ${symptom ? "present" : "missing"}; ${medicationName} ${
+          medication ? "present" : "missing"
+        }; phrase ${phrase ? "present" : "missing"}; ask doctor or pharmacist ${askDoctor ? "present" : "missing"}`,
       };
     },
     EXPECT_OK,
@@ -1903,6 +1931,7 @@ const emailConfirmSteps = [
 const steps = [
   ["home redirects anonymous user", () => request("/"), { status: 302, location: "/auth/signin" }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["visit summary redirects anonymous user", () => request("/wizyta"), { status: 302, location: "/auth/signin" }],
   [
     "dashboard.html redirects anonymous user",
     () => request("/dashboard.html"),

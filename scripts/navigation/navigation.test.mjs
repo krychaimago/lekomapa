@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { NAV_ITEMS, findActiveNavItem, matchesNavHref } from "../../src/lib/navigation.ts";
+import { INTERIOR_ROUTES, NAV_ITEMS, findActiveNavItem, matchesNavHref } from "../../src/lib/navigation.ts";
 
 const HREF_SHAPE = /^\/[^/]+(\/[^/]+)*$/;
 
@@ -39,4 +39,13 @@ test("the journal is in the menu, so its screens are highlighted and protected",
   for (const path of ["/dzienniczek", "/dzienniczek/nowy"]) {
     assert.equal(findActiveNavItem(path, NAV_ITEMS)?.href, "/dzienniczek", path);
   }
+});
+
+test("the doctor visit section is the third menu item, so it is protected and terms-gated", () => {
+  assert.deepEqual(
+    NAV_ITEMS.map((item) => item.href),
+    ["/leki", "/dzienniczek", "/wizyta"],
+  );
+  assert.equal(NAV_ITEMS[2].label, "Wizyta");
+  assert.ok(INTERIOR_ROUTES.includes("/wizyta"));
 });

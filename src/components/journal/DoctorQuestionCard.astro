@@ -1,0 +1,51 @@
+---
+// One question for the doctor (S-06), shared by the journal and the doctor visit section (S-08) so both screens show
+// it identically. Puts in place only the strings of doctorQuestionText: events go by date, other medications by name,
+// never by suspicion (FR-012). Plain <details>, no JavaScript in the browser.
+import type { DoctorQuestionText } from "@/lib/services/doctor-question";
+
+interface Props {
+  text: DoctorQuestionText;
+  open: boolean;
+}
+
+const { text, open } = Astro.props;
+---
+
+<details open={open} class="rounded-lg border border-border px-4 py-3">
+  <summary class="cursor-pointer text-lg font-semibold">{text.heading}</summary>
+  <div class="mt-2 flex flex-col gap-3">
+    <p class="text-sm text-muted-foreground">{text.summary}</p>
+    <p>{text.eventsIntro}</p>
+    {text.events.length > 0 ? (
+      <>
+        <ul class="flex list-disc flex-col gap-1 pl-5">
+          {text.events.map((event) => (
+            <li>{event}</li>
+          ))}
+        </ul>
+        <p class="font-medium">{text.question}</p>
+        {text.others.length > 0 && (
+          <details>
+            <summary class="cursor-pointer text-muted-foreground">{text.othersLabel}</summary>
+            <ul class="mt-2 flex list-disc flex-col gap-1 pl-5">
+              {text.others.map((other) => (
+                <li>{other}</li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </>
+    ) : (
+      <>
+        <p>{text.othersLabel}</p>
+        <ul class="flex list-disc flex-col gap-1 pl-5">
+          {text.others.map((other) => (
+            <li>{other}</li>
+          ))}
+        </ul>
+        <p class="font-medium">{text.question}</p>
+      </>
+    )}
+  </div>
+</details>

@@ -1,7 +1,7 @@
 // Data for the questions for the doctor of one journal entry (S-06, US-02, FR-010). Takes the client like
 // ./registry-search.ts and leaves the window rule to ./doctor-question.ts, which stays free of the Supabase client for
-// its node tests. Every read goes through RLS, so only the signed-in person's rows take part. How S-08 reads its data
-// (symptoms from many entries) is decided by the S-08 plan; this module reads one entry.
+// its node tests. Every read goes through RLS, so only the signed-in person's rows take part. The medications read is
+// shared with the doctor visit section (./visit-summary-data.ts), so both screens line up the same dosage history.
 import type { createClient } from "@/lib/supabase";
 import { composeDoctorQuestion } from "@/lib/services/doctor-question";
 import type { DoctorQuestion, DoctorQuestionMedication, DosagePeriod, Medication, RegistryProduct } from "@/types";
@@ -49,7 +49,7 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
     .sort((a, b) => a.name.localeCompare(b.name, "pl"));
   if (symptoms.length === 0) return { questions: [], skippedSymptoms: 0 };
 
-  const [occurrences, medications] = await Promise.all([
+  const [occurrences, questionMedications] = await Promise.all([
     supabase
       .from("symptom_entry_items")
       .select("symptom_id, symptom_entries!inner(occurred_at)")
@@ -58,37 +58,13 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
         symptoms.map((symptom) => symptom.id),
       )
       .overrideTypes<OccurrenceRow[], { merge: false }>(),
-    supabase
-      .from("medications")
-      .select(
-        "id, product_name, discontinued_on, registry_products(strength, pharmaceutical_form), dosage_periods(started_on, ended_on, dose_text, registry_products(strength, pharmaceutical_form))",
-      )
-      .overrideTypes<MedicationRow[], { merge: false }>(),
+    loadQuestionMedications(supabase),
   ]);
-  if (occurrences.error || medications.error) {
-    console.error("Loading data for the doctor question failed", {
-      occurrencesCode: occurrences.error?.code,
-      medicationsCode: medications.error?.code,
-    });
+  if (occurrences.error) {
+    console.error("Loading data for the doctor question failed", { occurrencesCode: occurrences.error.code });
     return { error: true };
   }
-
-  const questionMedications: DoctorQuestionMedication[] = medications.data.map((row) => ({
-    id: row.id,
-    name: row.product_name,
-    discontinuedOn: row.discontinued_on,
-    periods: row.dosage_periods.map((period) => {
-      // A period saved without a variant reads the variant of the medication, as the undo screen does.
-      const variant = period.registry_products ?? row.registry_products;
-      return {
-        startedOn: period.started_on,
-        endedOn: period.ended_on,
-        doseText: period.dose_text,
-        strength: variant?.strength ?? null,
-        pharmaceuticalForm: variant?.pharmaceutical_form ?? null,
-      };
-    }),
-  }));
+  if ("error" in questionMedications) return { error: true };
 
   const questions: DoctorQuestion[] = [];
   let skippedSymptoms = 0;
@@ -105,4 +81,37 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
     else skippedSymptoms++;
   }
   return { questions, skippedSymptoms };
+}
+
+// Every medication of the signed-in person, ended ones included, with its dosage periods. Only the error code is
+// logged, never the data.
+export async function loadQuestionMedications(
+  supabase: SupabaseClient,
+): Promise<DoctorQuestionMedication[] | { error: true }> {
+  const medications = await supabase
+    .from("medications")
+    .select(
+      "id, product_name, discontinued_on, registry_products(strength, pharmaceutical_form), dosage_periods(started_on, ended_on, dose_text, registry_products(strength, pharmaceutical_form))",
+    )
+    .overrideTypes<MedicationRow[], { merge: false }>();
+  if (medications.error) {
+    console.error("Loading medications for the doctor question failed", { code: medications.error.code });
+    return { error: true };
+  }
+  return medications.data.map((row) => ({
+    id: row.id,
+    name: row.product_name,
+    discontinuedOn: row.discontinued_on,
+    periods: row.dosage_periods.map((period) => {
+      // A period saved without a variant reads the variant of the medication, as the undo screen does.
+      const variant = period.registry_products ?? row.registry_products;
+      return {
+        startedOn: period.started_on,
+        endedOn: period.ended_on,
+        doseText: period.dose_text,
+        strength: variant?.strength ?? null,
+        pharmaceuticalForm: variant?.pharmaceutical_form ?? null,
+      };
+    }),
+  }));
 }

@@ -37,7 +37,7 @@ Kierunek rozwoju poza pierwszą wersją: osoby starsze przyjmujące kilka leków
 
 - Po zalogowaniu użytkowniczka dodaje pojedynczo przyjmowane leki, wpisując ich nazwy handlowe, i po dodaniu leku kolidującego z już zapisanym widzi informację o możliwej kolizji bez proszenia o nią.
 - Użytkowniczka zapisuje wpis o samopoczuciu z datą i godziną, wybierając objaw z zamkniętej listy, a produkt sam składa pytanie do lekarza zestawiające ten objaw z okresami dawkowania przyjmowanych leków.
-- Przed wizytą użytkowniczka otwiera sekcję „Do omówienia z lekarzem" i widzi w jednym miejscu możliwe kolizje oraz gotowe pytania o zbieżność objawów z okresami dawkowania.
+- Przed wizytą użytkowniczka otwiera sekcję „Wizyta" i widzi w jednym miejscu możliwe kolizje oraz gotowe pytania o zbieżność objawów z okresami dawkowania.
 
 ### Secondary
 
@@ -89,7 +89,7 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 ### US-03: Użytkowniczka przygotowuje się do wizyty
 
 - **Given** użytkowniczka z zapisanymi lekami i wpisami o samopoczuciu
-- **When** przed wizytą otwiera sekcję „Do omówienia z lekarzem"
+- **When** przed wizytą otwiera sekcję „Wizyta"
 - **Then** widzi w jednym miejscu wykryte możliwe kolizje oraz złożone pytania o zbieżność objawów z okresami dawkowania
 
 #### Acceptance Criteria
@@ -158,7 +158,7 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 
 ### Podsumowanie na wizytę
 
-- FR-011: Użytkowniczka może wyświetlić sekcję „Do omówienia z lekarzem", zbierającą wykryte możliwe kolizje i złożone pytania o zbieżność objawów z okresami dawkowania — jedno aktualne pytanie na objaw. Pusta sekcja lub jej część mówi, skąd bierze się brak treści, i nie brzmi jak potwierdzenie bezpieczeństwa. Priority: must-have
+- FR-011: Użytkowniczka może wyświetlić sekcję „Wizyta" (do 2026-10-09 nazywaną „Do omówienia z lekarzem"; nowa nazwa jest krótsza w menu na telefonie i dalej wskazuje wizytę u lekarza), zbierającą wykryte możliwe kolizje i złożone pytania o zbieżność objawów z okresami dawkowania — jedno aktualne pytanie na objaw. Pusta sekcja lub jej część mówi, skąd bierze się brak treści, i nie brzmi jak potwierdzenie bezpieczeństwa. Priority: must-have
   > Socratic: Kontrargumenty rozważone: sekcja duplikuje treść widoczną przy lekach; lekarz nie przeczyta długiego zestawienia. Rozstrzygnięcie: podniesiona z nice-to-have do must-have. Produkt istnieje dla momentu wizyty, a po zmianie kształtu FR-010 sekcja nie liczy niczego nowego — zbiera gotowe zdania.
 
 ## Non-Functional Requirements
@@ -169,7 +169,7 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 - Dostęp do zapisanych danych przeżywa wymianę urządzenia i jest możliwy z więcej niż jednego urządzenia tej samej osoby.
 - Interfejs jest w języku polskim i ma wspólny wygląd na wszystkich ekranach, w trybie jasnym i ciemnym. Tryb ciemny zachowuje czytelność trybu jasnego i znaczenie kolorów funkcjonalnych — możliwa kolizja nie wygląda w nim jak alarm. (Rewizja 2026-09-26; ustalenia wizualne: `context/changes/auth-login-design/design-draft.md`, który jest prototypem wizualnym, nie ostatecznym wyglądem.)
 
-- Główna treść ekranu jest widoczna w czasie nie dłuższym niż 2,5 s (Largest Contentful Paint, Lighthouse w trybie Mobile) na trzech ekranach: lista leków, zapis objawu i „Do omówienia z lekarzem”. (Rozstrzygnięcie 2026-10-06, `## Open Questions`, pytanie 6.)
+- Główna treść ekranu jest widoczna w czasie nie dłuższym niż 2,5 s (Largest Contentful Paint, Lighthouse w trybie Mobile) na trzech ekranach: lista leków, zapis objawu i „Wizyta”. (Rozstrzygnięcie 2026-10-06, `## Open Questions`, pytanie 6.)
 - Każdy błąd serwera na produkcji (odpowiedź 5xx, przekroczenie limitu CPU) dociera do autorki mailem. Raport błędu nie zawiera danych o zdrowiu.
 - Przerwa w działaniu produktu dociera do autorki mailem w ciągu 15 minut, a baza nie usypia z braku ruchu.
 
@@ -187,7 +187,7 @@ Wejścia reguły to wyłącznie rzeczy, które użytkowniczka sama wprowadza: pr
 
 Rewizja 2026-09-21: wcześniejsza wersja wymieniała jako drugi zbiór reguł znane działania niepożądane przypisane substancjom. Zestawianie objawu z lekami (FR-010) działa wyłącznie na osi czasu — porównuje datę objawu z okresami dawkowania — więc taki zbiór nie jest w pierwszej wersji do niczego potrzebny. Przeniesiony poza zakres, patrz `## Non-Goals`.
 
-Wyjściem nie jest lista podejrzanych leków ani ocena ryzyka, tylko dwa rodzaje informacji: oznaczenie możliwej kolizji przy konkretnym leku oraz złożone zdanie-pytanie zestawiające okres dawkowania z zapisanym objawem. Użytkowniczka spotyka je w trzech momentach: zaraz po dodaniu leku, zaraz po zapisaniu objawu oraz w sekcji „Do omówienia z lekarzem", którą otwiera przed wizytą.
+Wyjściem nie jest lista podejrzanych leków ani ocena ryzyka, tylko dwa rodzaje informacji: oznaczenie możliwej kolizji przy konkretnym leku oraz złożone zdanie-pytanie zestawiające okres dawkowania z zapisanym objawem. Użytkowniczka spotyka je w trzech momentach: zaraz po dodaniu leku, zaraz po zapisaniu objawu oraz w sekcji „Wizyta", którą otwiera przed wizytą.
 
 Reguła świadomie nie rozstrzyga przyczyny. Zbieżność w czasie nie jest przyczynowością i produkt nie ma prawa tej granicy przekroczyć — stąd FR-012 o języku komunikatów i bariera mówiąca, że brak ostrzeżenia nie oznacza bezpieczeństwa.
 

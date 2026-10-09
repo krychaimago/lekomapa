@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-10-08
+updated: 2026-10-09
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -60,7 +60,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | ready       |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Do omówienia z lekarzem" przed wizytą                               | S-02, S-06                         | US-03, FR-011, FR-012                      | proposed    |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | in-progress |
 | S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
 
@@ -308,9 +308,9 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Risk:** Swobodna edycja po fakcie daje obraz ładniejszy niż prawdziwy, a dzienniczek jest wart tyle, ile jego kompletność. Samo okno powstaje w S-05 (reguła w bazie i informacja „do kiedy” po zapisie i na liście); S-07 dokłada ekran poprawy i usunięcia wpisu w oknie oraz edycję notatki po jego zamknięciu. Poprawka w oknie zmienia wpis, który zasilił już złożone pytanie z S-06 — pytanie musi iść za poprawionym wpisem. Spełnione przez S-06: pytanie jest przeliczane przy każdym wyświetleniu, więc S-07 nie musi go aktualizować.
 - **Status:** ready
 
-### S-08: Sekcja „Do omówienia z lekarzem"
+### S-08: Sekcja „Wizyta"
 
-- **Outcome:** Użytkowniczka może przed wizytą otworzyć sekcję „Do omówienia z lekarzem" i zobaczyć w jednym miejscu wykryte możliwe kolizje oraz złożone pytania o zbieżność objawów z okresami dawkowania.
+- **Outcome:** Użytkowniczka może przed wizytą otworzyć sekcję „Wizyta" i zobaczyć w jednym miejscu wykryte możliwe kolizje oraz złożone pytania o zbieżność objawów z okresami dawkowania.
 - **Change ID:** `doctor-visit-summary`
 - **Issue:** #19
 - **PRD refs:** US-03, FR-011, FR-012
@@ -322,7 +322,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - Sposób odczytu danych do pytań — ustali plan S-08. S-08 zbiera objawy z różnych wpisów, a `loadDoctorQuestions` z S-06 (`src/lib/services/doctor-question-data.ts`) czyta jeden wpis; wspólne są typy i składanie pytania (`composeDoctorQuestion`). Uwaga dla planu: zapytanie o wszystkie wpisy obcina limit `max_rows = 1000` (`supabase/config.toml:18`); przy sortowaniu od najnowszego odpada najstarszy wpis, który wyznacza początek okna 90 dni (plan-review S-06, F3). — Owner: plan S-08. Block: no.
   - ~~Co pokazuje pusta sekcja?~~ — Rozstrzygnięte 2026-10-06 (#7): bez leków i bez wpisów — jedno wprowadzenie zamiast dwóch pustych części („tu zbiorą się możliwe kolizje i pytania do lekarza”) z przyciskami „Dodaj lek” i „Zapisz objaw”. W pozostałych przypadkach każda część ma własny pusty stan. Kolizje zależnie od liczby bieżących leków: 0 — brak leków i odnośnik do dodania; 1 — pary sprawdzane są przy co najmniej dwóch lekach; 2+ — „wśród bieżących leków nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze par (teksty istnieją w `src/lib/copy/interactions.ts`). Rozróżnienie jest konieczne, bo „nie znaleziono pary” przy zerze lub jednym leku jest nieprawdą. Pytania: pojawiają się po zapisaniu objawu, z odnośnikiem do dzienniczka. Zawsze widoczna zachęta, że o każdy lek i objaw można zapytać lekarza lub farmaceutę. Nowe teksty przechodzą filtr FR-012.
 - **Risk:** Sekcja nie wylicza niczego ponad to, co powstało w S-02 i S-06 — zbiera gotowe treści. Przeliczanie czegokolwiek od nowa rozjechałoby ją z treściami widocznymi przy lekach. To jednocześnie moment odbioru wartości całego produktu, więc język informacyjny musi się tu utrzymać bez wyjątku. Próg szybkości z PRD (#6): główna treść sekcji widoczna w ≤ 2,5 s (Lighthouse Mobile, LCP) — pomiar należy do tego plasterka.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-09: Usunięcie konta kasuje wszystkie dane
 
@@ -370,7 +370,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 | S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                                   | #16   |
 | S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
 | S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | yes                   | Uruchom `/10x-plan journal-correction-window`          | #18   |
-| S-08       | `doctor-visit-summary`                 | Sekcja „Do omówienia z lekarzem"                          | no                    | Wymaga S-02 i S-06                                     | #19   |
+| S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | no                    | Wymaga S-02 i S-06                                     | #19   |
 | S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                         | #20   |
 | S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
 
@@ -394,7 +394,7 @@ Rozstrzygnięte:
 
 ## Parked
 
-- **Lista bieżących leków z dawkami w sekcji „Do omówienia z lekarzem”** — Why parked: sekcja nigdy nie byłaby pusta, a lista „biorę X, Y, Z” to dokładnie to, co pada na wizycie. Rozszerza jednak FR-011 poza zbieranie gotowych treści, więc wymaga zmiany PRD. Odłożone 2026-10-06 przy przeglądzie kryteriów (#7).
+- **Lista bieżących leków z dawkami w sekcji „Wizyta”** — Why parked: sekcja nigdy nie byłaby pusta, a lista „biorę X, Y, Z” to dokładnie to, co pada na wizycie. Rozszerza jednak FR-011 poza zbieranie gotowych treści, więc wymaga zmiany PRD. Odłożone 2026-10-06 przy przeglądzie kryteriów (#7).
 - **Eksport własnych danych z aplikacji** — Why parked: uznany za potrzebny, świadomie odłożony poza pierwszą wersję (`shape-notes.md`, `## Forward: technical-roadmap`).
 - **Oś czasu: objawy i leki zestawione wizualnie lub jako raport** — Why parked: Kryterium sukcesu drugorzędne, a cel sekwencjonowania to `speed`; struktura okresów dawkowania z S-03 jest pod to gotowa.
 - **Integracja z zewnętrzną bazą interakcji** — Why parked: PRD `## Non-Goals`; reguły pochodzą wyłącznie ze zbioru dostarczonego z produktem.

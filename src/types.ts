@@ -374,6 +374,19 @@ export interface DoctorQuestion {
 }
 
 /**
+ * Content of the doctor visit section `/wizyta` (S-08, FR-011), gathered from what S-02 and S-06 produce.
+ * `interactions` holds each pair once, alphabetically — never by suspicion (FR-012). `questions` holds one question
+ * per symptom from its newest entry; `withoutQuestion` names the symptoms with no medication in their window.
+ */
+export interface VisitSummary {
+  showIntro: boolean;
+  interactions: { firstName: string; secondName: string; description: string }[];
+  interactionsEmptyState: "noMedications" | "oneMedication" | "noPair" | null;
+  questions: DoctorQuestion[];
+  withoutQuestion: string[];
+}
+
+/**
  * Acceptance of one version of the terms of use (table terms_acceptances). Append-only history: never changed or
  * deleted, disappears only with the account. accepted_at is set by the database.
  */
