@@ -1,7 +1,7 @@
 ---
 change_id: journal-correction-window
 title: Journal correction window
-status: implementing
+status: implemented
 created: 2026-10-09
 updated: 2026-10-09
 ---
