@@ -18,6 +18,7 @@
 // The password recovery steps run only in throwaway mode against a local Supabase and read the reset mail from
 // mailpit (MAILPIT_URL, default http://127.0.0.1:54324).
 
+import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { createClient, isAuthApiError } from "@supabase/supabase-js";
@@ -1475,6 +1476,105 @@ const journalFlowSteps = [
       const after = await entryRowsOf(id);
       const stored = after.entry?.note === SMOKE_CHANGED_NOTE;
       return { ok: stored, detail: `200; note ${stored ? "stored" : "not stored"}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the entry page renders the correction form with the saved values and the link to deleting",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const path = `${JOURNAL_LIST_PAGE}/${id}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // Fields of the open window: the time, the symptom choice with the corrected symptom, the note as changed above.
+      const occurred = page.body.includes('id="occurredLocal"');
+      const note = page.body.includes('id="note"') && pageContains(page.body, SMOKE_CHANGED_NOTE);
+      const symptom = journal.correctedSymptom !== null && pageContains(page.body, journal.correctedSymptom.name);
+      const submit = pageContains(page.body, JOURNAL_COPY.entry.submit);
+      const deleteLink = page.body.includes(`href="${JOURNAL_LIST_PAGE}/${id}/usun"`);
+      return {
+        ok: occurred && note && symptom && submit && deleteLink,
+        detail: `time field ${occurred ? "present" : "missing"}; note ${note ? "present" : "missing"}; symptom ${
+          symptom ? "present" : "missing"
+        }; submit ${submit ? "present" : "missing"}; delete link ${deleteLink ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the deletion page renders the confirmation form posting to the delete route",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const path = `${JOURNAL_LIST_PAGE}/${id}/usun`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      const form = page.body.includes(`action="${JOURNAL_ROUTE}/${id}/delete"`);
+      const button = pageContains(page.body, JOURNAL_COPY.deletion.submit);
+      return {
+        ok: form && button,
+        detail: `form ${form ? "present" : "missing"}; button ${button ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the list after a correction shows the corrected message, the corrected symptom and the question for the doctor",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id || !fixtures.a || !journal.correctedSymptom) {
+        return { ok: false, detail: "check did not run: no entry was corrected" };
+      }
+      const path = `${JOURNAL_LIST_PAGE}?poprawiono=${id}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // The message carries the entry's symptoms and the deadline, so only its fixed start is compared.
+      const correctedPrefix = JOURNAL_COPY.list.correctedWithDeadline.split(/\{(?:objawy|do)\}/)[0];
+      const message = pageContains(page.body, correctedPrefix);
+      const item = entryItemOf(page.body, id);
+      const named = item !== null && pageContains(item, journal.correctedSymptom.name);
+      const start = page.body.indexOf("data-doctor-question");
+      const end = start === -1 ? -1 : page.body.indexOf("</section>", start);
+      const section = end === -1 ? null : page.body.slice(start, end);
+      const medicationName = fixtures.a.medication.product_name;
+      const medication = section !== null && pageContains(section, medicationName);
+      const requiredPhrase = PLURAL_SYMPTOM_NAMES.has(journal.correctedSymptom.name)
+        ? REQUIRED_PHRASE_PLURAL
+        : REQUIRED_PHRASE;
+      const phrase = section !== null && pageContains(section, requiredPhrase);
+      return {
+        ok: message && named && medication && phrase,
+        detail: `message ${message ? "present" : "missing"}; symptom ${named ? "present" : "missing"}; question ${
+          section ? "present" : "missing"
+        }; ${medicationName} ${medication ? "present" : "missing"}; phrase ${phrase ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: an entry page with a malformed or unknown id gets 404, on the entry and the deletion screen",
+    async () => {
+      // An id that is a uuid but no entry of this account: the same 404 as another account's entry.
+      const unknown = randomUUID();
+      const paths = [
+        `${JOURNAL_LIST_PAGE}/not-a-uuid`,
+        `${JOURNAL_LIST_PAGE}/not-a-uuid/usun`,
+        `${JOURNAL_LIST_PAGE}/${unknown}`,
+        `${JOURNAL_LIST_PAGE}/${unknown}/usun`,
+      ];
+      const statuses = [];
+      for (const path of paths) {
+        journal.paths.push(path);
+        statuses.push((await requestPage(path, { jar: journal.jar })).status);
+      }
+      return {
+        ok: statuses.every((status) => status === 404),
+        detail: paths.map((path, index) => `${path} ${statuses[index]}`).join("; "),
+      };
     },
     EXPECT_OK,
   ],

@@ -316,31 +316,31 @@ Migracja dodaje wyłącznie funkcje; nie zmienia danych ani wyzwalaczy. Po merge
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe i filtr FR-012 dla nowych tekstów przechodzą: `npm test`
-- [x] 2.2 Typy przechodzą: `npm run typecheck`
-- [x] 2.3 Lint przechodzi: `npm run lint`
-- [x] 2.4 Smoke przeciw lokalnemu Supabase przechodzi z nowymi krokami: `npm run smoke`
+- [x] 2.1 Testy jednostkowe i filtr FR-012 dla nowych tekstów przechodzą: `npm test` — 1bcbb03
+- [x] 2.2 Typy przechodzą: `npm run typecheck` — 1bcbb03
+- [x] 2.3 Lint przechodzi: `npm run lint` — 1bcbb03
+- [x] 2.4 Smoke przeciw lokalnemu Supabase przechodzi z nowymi krokami: `npm run smoke` — 1bcbb03
 
 #### Manual
 
-- [x] 2.5 Autorka czyta nowe teksty w `src/lib/copy/journal.ts` i potwierdza brzmienie
+- [x] 2.5 Autorka czyta nowe teksty w `src/lib/copy/journal.ts` i potwierdza brzmienie — 1bcbb03
 
 ### Phase 3: Ekran wpisu, ekran usunięcia i lista
 
 #### Automated
 
-- [ ] 3.1 Pokrycie tras (nowe strony chronione i za kontrolą warunków), test `minOccurredLocal` i pozostałe testy przechodzą: `npm test`
-- [ ] 3.2 Typy przechodzą: `npm run typecheck`
-- [ ] 3.3 Lint przechodzi: `npm run lint`
-- [ ] 3.4 Build przechodzi: `npm run build`
-- [ ] 3.5 Smoke przeciw lokalnemu Supabase przechodzi z krokami stron: `npm run smoke`
+- [x] 3.1 Pokrycie tras (nowe strony chronione i za kontrolą warunków), test `minOccurredLocal` i pozostałe testy przechodzą: `npm test`
+- [x] 3.2 Typy przechodzą: `npm run typecheck`
+- [x] 3.3 Lint przechodzi: `npm run lint`
+- [x] 3.4 Build przechodzi: `npm run build`
+- [x] 3.5 Smoke przeciw lokalnemu Supabase przechodzi z krokami stron: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.6 W oknie: zamiana objawu i zmiana nasilenia widoczne na liście po zapisie, z komunikatem poprawki i nowym pytaniem do lekarza
-- [ ] 3.7 Po zamknięciu okna (wpis cofnięty `created_at` w lokalnej bazie): data, objawy i nasilenie tylko do odczytu, notatkę da się zmienić i wyczyścić
-- [ ] 3.8 Okno zamknięte między otwarciem ekranu a zapisem: nic się nie zapisuje, wpisane dane zostają w formularzu, komunikat z godziną zamknięcia
-- [ ] 3.9 Usunięcie wpisu dodanego przez pomyłkę w oknie znika z listy; po zamknięciu okna ekran usunięcia nie ma przycisku
-- [ ] 3.10 Wpis datowany blisko granicy 14 dni: niezmieniony formularz da się wysłać (pole daty nie blokuje)
-- [ ] 3.11 Ekran wpisu czytelny na telefonie (szerokość 375 px), formularz działa w prawdziwej przeglądarce
-- [ ] 3.12 Pasek adresu na każdym kroku zawiera wyłącznie uuid, bez nazwy objawu i notatki
+- [x] 3.6 W oknie: zamiana objawu i zmiana nasilenia widoczne na liście po zapisie, z komunikatem poprawki i nowym pytaniem do lekarza
+- [x] 3.7 Po zamknięciu okna (wpis cofnięty `created_at` w lokalnej bazie): data, objawy i nasilenie tylko do odczytu, notatkę da się zmienić i wyczyścić
+- [x] 3.8 Okno zamknięte między otwarciem ekranu a zapisem: nic się nie zapisuje, wpisane dane zostają w formularzu, komunikat z godziną zamknięcia
+- [x] 3.9 Usunięcie wpisu dodanego przez pomyłkę w oknie znika z listy; po zamknięciu okna ekran usunięcia nie ma przycisku
+- [x] 3.10 Wpis datowany blisko granicy 14 dni: niezmieniony formularz da się wysłać (pole daty nie blokuje)
+- [x] 3.11 Ekran wpisu czytelny na telefonie (szerokość 375 px), formularz działa w prawdziwej przeglądarce
+- [x] 3.12 Pasek adresu na każdym kroku zawiera wyłącznie uuid, bez nazwy objawu i notatki

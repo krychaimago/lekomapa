@@ -14,6 +14,7 @@ import {
   formatLocalDateTime,
   formatWarsawDateTime,
   groupSymptomsByCategory,
+  minOccurredLocal,
   nowInWarsawLocal,
 } from "../../src/lib/services/journal.ts";
 import { foldForSearch } from "../../src/lib/services/text-fold.ts";
@@ -123,6 +124,17 @@ test("earliest entry time is 14 days back, rounded up to a full minute so the da
   assert.equal(earliestEntryLocal(new Date("2026-10-20T10:00:30Z")), "2026-10-06T12:01");
   // Across the clock change: 14 x 24 h before 30.10 10:00 UTC (11:00 CET) is 16.10 10:00 UTC = 12:00 CEST.
   assert.equal(earliestEntryLocal(new Date("2026-10-30T10:00:00Z")), "2026-10-16T12:00");
+});
+
+test("correcting an entry dated 26.09.2026 08:00 on 10.10.2026 09:00 keeps the saved time as the field's lower bound", () => {
+  // Saved on 09.10.2026 (the limit was then 25.09.2026), corrected the next day inside its 24-hour window: the 14-day
+  // limit (26.09.2026 09:00) is now later than the saved time, so the unchanged form must stay sendable.
+  assert.equal(minOccurredLocal("2026-09-26T08:00", new Date("2026-10-10T07:00:00Z")), "2026-09-26T08:00");
+});
+
+test("correcting a fresh entry keeps the 14-day limit as the field's lower bound", () => {
+  // 09.10.2026 12:00 CEST: the limit is 25.09.2026 12:00, earlier than the saved time.
+  assert.equal(minOccurredLocal("2026-10-09T11:30", new Date("2026-10-09T10:00:00Z")), "2026-09-25T12:00");
 });
 
 test("times are shown as DD.MM.YYYY, HH:MM in Polish time", () => {
