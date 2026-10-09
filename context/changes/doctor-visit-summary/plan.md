@@ -344,21 +344,21 @@ Migracja dodaje wyłącznie funkcję; bez zmian w danych i tabelach. Wycofanie: 
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe, w tym nawigacja i pokrycie tras: `npm test`
-- [x] 3.2 Typy: `npm run typecheck`
-- [x] 3.3 Lint: `npm run lint`
-- [x] 3.4 Build: `npm run build`
-- [x] 3.5 Smoke przeciw lokalnemu Supabase przechodzi, w tym nowy krok: `npm run smoke`
+- [x] 3.1 Testy jednostkowe, w tym nawigacja i pokrycie tras: `npm test` — 365e73e
+- [x] 3.2 Typy: `npm run typecheck` — 365e73e
+- [x] 3.3 Lint: `npm run lint` — 365e73e
+- [x] 3.4 Build: `npm run build` — 365e73e
+- [x] 3.5 Smoke przeciw lokalnemu Supabase przechodzi, w tym nowy krok: `npm run smoke` — 365e73e
 
 #### Manual
 
-- [x] 3.6 Na telefonie (szerokość ~375 px) menu ma trzy pozycje, etykiety się mieszczą, sekcja czytelna
-- [x] 3.7 Konto bez leków i wpisów: tylko wprowadzenie z dwoma przyciskami i zachęta do pytania lekarza lub farmaceuty
-- [x] 3.8 Puste stany interakcji dla 1 leku, 2 leków bez pary i para pokazana raz z notą (1 lek — pary od dwóch leków; 2 bez pary — „nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze)
-- [x] 3.9 Konto z trzema objawami: kolejność od najnowszego wpisu, wszystkie rozwinięte, objaw bez leku w oknie w linijce „Bez pytania”
-- [x] 3.10 Pytanie dla objawu w sekcji identyczne z pytaniem po zapisaniu jego najnowszego wpisu
-- [x] 3.11 Autorka czyta wszystkie nowe teksty i zatwierdza brzmienie
-- [x] 3.12 Pasek adresu na każdym kroku bez nazwy leku, objawu i dawki
+- [x] 3.6 Na telefonie (szerokość ~375 px) menu ma trzy pozycje, etykiety się mieszczą, sekcja czytelna — 365e73e
+- [x] 3.7 Konto bez leków i wpisów: tylko wprowadzenie z dwoma przyciskami i zachęta do pytania lekarza lub farmaceuty — 365e73e
+- [x] 3.8 Puste stany interakcji dla 1 leku, 2 leków bez pary i para pokazana raz z notą (1 lek — pary od dwóch leków; 2 bez pary — „nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze) — 365e73e
+- [x] 3.9 Konto z trzema objawami: kolejność od najnowszego wpisu, wszystkie rozwinięte, objaw bez leku w oknie w linijce „Bez pytania” — 365e73e
+- [x] 3.10 Pytanie dla objawu w sekcji identyczne z pytaniem po zapisaniu jego najnowszego wpisu — 365e73e
+- [x] 3.11 Autorka czyta wszystkie nowe teksty i zatwierdza brzmienie — 365e73e
+- [x] 3.12 Pasek adresu na każdym kroku bez nazwy leku, objawu i dawki — 365e73e
 
 ### Phase 4: Pomiar szybkości po wdrożeniu
 
