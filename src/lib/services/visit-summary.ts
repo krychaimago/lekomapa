@@ -1,4 +1,4 @@
-// The "Do omówienia z lekarzem" section (S-08, US-03, FR-011): gathers what S-02 and S-06 already produce and decides
+// The "Wizyta" section (S-08, US-03, FR-011): gathers what S-02 and S-06 already produce and decides
 // only which entry is the newest, the order of symptoms, which pairs show once and which empty state appears.
 // No `@/` imports and no Supabase client, so scripts/visit-summary/visit-summary.test.mjs can load this file directly
 // under `node --experimental-strip-types`.

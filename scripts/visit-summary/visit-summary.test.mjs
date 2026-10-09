@@ -1,4 +1,4 @@
-// The "Do omówienia z lekarzem" section (S-08, US-03, FR-011): which entry of a symptom the question is built from,
+// The "Wizyta" section (S-08, US-03, FR-011): which entry of a symptom the question is built from,
 // in what order the symptoms go, which pairs show once, and which empty state appears. Expected values come from the
 // plan's definitions, not from the code: the newest entry is the largest `occurred_at`, not the last row added;
 // symptoms go from the newest entry, a tie by name; pairs are never ordered by suspicion (FR-012).

@@ -1,0 +1,126 @@
+---
+// Doctor visit section (S-08, US-03, FR-011): possible interactions between current medications (S-02) and one current
+// question for the doctor per journal symptom (S-06), gathered in one place. Nothing is computed anew — the pairs come
+// from medication_interactions() as on /leki, the questions from composeDoctorQuestion as in the journal. Pairs go
+// alphabetically, never by suspicion, each with the note; the page never says a medication causes a symptom and never
+// suggests stopping or changing a dose (FR-012). No URL parameters: links lead only to fixed routes.
+import AppLayout from "@/layouts/AppLayout.astro";
+import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
+import { INTERACTION_COPY } from "@/lib/copy/interactions";
+import { VISIT_SUMMARY_COPY as copy } from "@/lib/copy/visit-summary";
+import { doctorQuestionText } from "@/lib/services/doctor-question";
+import { loadVisitSummary } from "@/lib/services/visit-summary-data";
+import { createClient } from "@/lib/supabase";
+import type { VisitSummary } from "@/types";
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+const result = supabase ? await loadVisitSummary(supabase) : ({ error: true } as const);
+const summary: VisitSummary | null = "error" in result ? null : result;
+if (!summary) Astro.response.status = 500;
+
+const questionTexts = summary ? summary.questions.map(doctorQuestionText) : [];
+const hasSymptoms = summary !== null && (summary.questions.length > 0 || summary.withoutQuestion.length > 0);
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <h1 class="text-3xl font-bold">{copy.title}</h1>
+
+    {!summary ? (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    ) : summary.showIntro ? (
+      <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <p>{copy.intro}</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="/leki/nowy" class:list={buttonVariants()}>
+            {copy.introAddMedication}
+          </a>
+          <a href="/dzienniczek/nowy" class:list={buttonVariants({ variant: "outline" })}>
+            {copy.introAddSymptom}
+          </a>
+        </div>
+      </section>
+    ) : (
+      <>
+        <section data-visit-interactions aria-labelledby="visit-interactions-title" class="flex flex-col gap-3">
+          <h2 id="visit-interactions-title" class="text-xl font-semibold">
+            {INTERACTION_COPY.detailsHeading}
+          </h2>
+          {summary.interactions.length > 0 ? (
+            <>
+              <ul class="flex flex-col gap-3">
+                {summary.interactions.map((item) => (
+                  <li class="flex flex-col gap-2 rounded-xl border border-interaction-border bg-interaction p-4 text-interaction-foreground">
+                    <p class="font-semibold">
+                      {copy.pairLabel.replace("{lek}", item.firstName).replace("{drugi}", item.secondName)}
+                    </p>
+                    <p>{item.description}</p>
+                    <p class="text-sm">{INTERACTION_COPY.note}</p>
+                  </li>
+                ))}
+              </ul>
+              <p class="text-sm text-muted-foreground">{INTERACTION_COPY.rulesIncomplete}</p>
+              <p class="text-sm text-muted-foreground">{INTERACTION_COPY.noWarningIsNotSafe}</p>
+            </>
+          ) : (
+            <div class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
+              {summary.interactionsEmptyState === "noMedications" && (
+                <>
+                  <p>{copy.noCurrentMedications}</p>
+                  <a href="/leki/nowy" class:list={linkClass}>
+                    {copy.introAddMedication}
+                  </a>
+                </>
+              )}
+              {summary.interactionsEmptyState === "oneMedication" && <p>{copy.oneMedication}</p>}
+              {summary.interactionsEmptyState === "noPair" && (
+                <>
+                  <p>{copy.noPairFound}</p>
+                  <p>{INTERACTION_COPY.rulesIncomplete}</p>
+                  <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
+                </>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section data-visit-questions aria-labelledby="visit-questions-title" class="flex flex-col gap-3">
+          <h2 id="visit-questions-title" class="text-xl font-semibold">
+            {copy.questionsHeading}
+          </h2>
+          {hasSymptoms ? (
+            <>
+              {questionTexts.length > 0 && <p class="text-sm text-muted-foreground">{copy.questionsNote}</p>}
+              {questionTexts.map((text) => (
+                <DoctorQuestionCard text={text} open />
+              ))}
+              {summary.withoutQuestion.length > 0 && (
+                <div class="flex flex-col gap-1 text-sm text-muted-foreground">
+                  <p>{copy.withoutQuestion.replace("{objawy}", summary.withoutQuestion.join(", "))}</p>
+                  <p>{DOCTOR_QUESTION_COPY.noQuestion}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
+              <p>{copy.noQuestions}</p>
+              <a href="/dzienniczek" class:list={linkClass}>
+                {copy.journalLink}
+              </a>
+            </div>
+          )}
+        </section>
+      </>
+    )}
+
+    <p class="text-muted-foreground">{copy.askDoctorOrPharmacist}</p>
+  </div>
+</AppLayout>

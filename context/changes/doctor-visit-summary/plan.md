@@ -2,7 +2,7 @@
 
 ## Overview
 
-Nowy ekran wnętrza `/do-omowienia`, trzecia pozycja menu. Zbiera w jednym miejscu dwie gotowe treści: możliwe interakcje między bieżącymi lekami (S-02) i jedno aktualne pytanie do lekarza na każdy objaw z dzienniczka (S-06). Niczego nie wylicza od nowa: kolizje przychodzą z tej samej funkcji bazy co na liście leków, a pytania składa ta sama funkcja `composeDoctorQuestion` co po zapisaniu wpisu. To moment odbioru wartości całego produktu (US-03, FR-011), więc język FR-012 obowiązuje tu bez wyjątku.
+Nowy ekran wnętrza `/wizyta`, trzecia pozycja menu. Zbiera w jednym miejscu dwie gotowe treści: możliwe interakcje między bieżącymi lekami (S-02) i jedno aktualne pytanie do lekarza na każdy objaw z dzienniczka (S-06). Niczego nie wylicza od nowa: kolizje przychodzą z tej samej funkcji bazy co na liście leków, a pytania składa ta sama funkcja `composeDoctorQuestion` co po zapisaniu wpisu. To moment odbioru wartości całego produktu (US-03, FR-011), więc język FR-012 obowiązuje tu bez wyjątku.
 
 ## Current State Analysis
 
@@ -17,7 +17,7 @@ Nowy ekran wnętrza `/do-omowienia`, trzecia pozycja menu. Zbiera w jednym miejs
 
 ## Desired End State
 
-- Pozycja menu „Do omówienia” prowadzi na `/do-omowienia` (pasek boczny i dolny).
+- Pozycja menu „Wizyta” prowadzi na `/wizyta` (pasek boczny i dolny).
 - Bez żadnego leku (także zakończonego) i bez żadnego wpisu: jedno wprowadzenie z przyciskami „Dodaj lek” i „Zapisz objaw” zamiast dwóch pustych części.
 - W pozostałych przypadkach dwie części:
   - **Możliwe interakcje** — każda para leków raz, z treścią opisu pary i notą poglądową przy każdej; pod listą „sprawdzane są tylko wybrane pary” i „brak oznaczenia nie znaczy bezpieczne”. Pusty stan zależny od liczby bieżących leków: 0 — brak bieżących leków i droga do dodania; 1 — pary sprawdzane są od dwóch leków; 2+ — „nie znaleziono sprawdzanej pary” wraz z notą o niepełnym zbiorze.
@@ -136,7 +136,7 @@ Czysty moduł decydujący o zawartości sekcji oraz plik tekstów z testem FR-01
 
 **Intent**: Nowe teksty sekcji w jednym module bez importów, tylko pola tekstowe, szablony ze znacznikami `{…}` (konwencja plików `src/lib/copy/`).
 
-**Contract**: `VISIT_SUMMARY_COPY` z kluczami co najmniej: `title` („Do omówienia z lekarzem”), `intro`, `introAddMedication` („Dodaj lek”), `introAddSymptom` („Zapisz objaw”), `pairLabel` („{lek} i {drugi}”), `noCurrentMedications`, `oneMedication`, `noPairFound`, `questionsHeading`, `noQuestions`, `journalLink`, `withoutQuestion` („Bez pytania: {objawy}.”), `askDoctorOrPharmacist` („O każdy lek i każdy objaw możesz zapytać lekarza lub farmaceutę.”), `questionsNote` („Pytania zestawiają daty z dzienniczka i z listy leków. Nie są oceną ani diagnozą.”), `loadError`. Teksty interakcji już istniejące (`note`, `rulesIncomplete`, `noWarningIsNotSafe`, `detailsHeading`) i S-06 (`noQuestion`) — z ich modułów, nie kopiowane. `DOCTOR_QUESTION_COPY.note` z S-06 nie trafia do sekcji: jego ostatnie zdanie to `askDoctorOrPharmacist`, więc padłoby na ekranie dwa razy; zamiast niego `questionsNote` raz pod nagłówkiem pytań (plan-review F2). Brzmienie robocze; autorka zatwierdza w fazie 3. Etykieta menu „Do omówienia” w `src/lib/navigation.ts`.
+**Contract**: `VISIT_SUMMARY_COPY` z kluczami co najmniej: `title` („Wizyta”), `intro`, `introAddMedication` („Dodaj lek”), `introAddSymptom` („Zapisz objaw”), `pairLabel` („{lek} i {drugi}”), `noCurrentMedications`, `oneMedication`, `noPairFound`, `questionsHeading`, `noQuestions`, `journalLink`, `withoutQuestion` („Bez pytania: {objawy}.”), `askDoctorOrPharmacist` („O każdy lek i objaw możesz zapytać lekarza lub farmaceutę.”), `questionsNote` („Pytania zestawiają daty z dzienniczka oraz listy leków. Nie są oceną ani diagnozą.”), `loadError`. Teksty interakcji już istniejące (`note`, `rulesIncomplete`, `noWarningIsNotSafe`, `detailsHeading`) i S-06 (`noQuestion`) — z ich modułów, nie kopiowane. `DOCTOR_QUESTION_COPY.note` z S-06 nie trafia do sekcji: jego ostatnie zdanie to `askDoctorOrPharmacist`, więc padłoby na ekranie dwa razy; zamiast niego `questionsNote` raz pod nagłówkiem pytań (plan-review F2). Brzmienie robocze; autorka zatwierdza w fazie 3. Etykieta menu „Wizyta” w `src/lib/navigation.ts`.
 
 #### 3. Testy
 
@@ -169,7 +169,7 @@ Czysty moduł decydujący o zawartości sekcji oraz plik tekstów z testem FR-01
 
 ### Overview
 
-Odczyt danych, strona `/do-omowienia`, wspólny komponent pytania, pozycja menu, krok smoke.
+Odczyt danych, strona `/wizyta`, wspólny komponent pytania, pozycja menu, krok smoke.
 
 ### Changes Required:
 
@@ -199,7 +199,7 @@ Odczyt danych, strona `/do-omowienia`, wspólny komponent pytania, pozycja menu,
 
 #### 4. Strona
 
-**File**: `src/pages/do-omowienia.astro`
+**File**: `src/pages/wizyta.astro`
 
 **Intent**: Ekran sekcji przez `AppLayout`, bez parametrów w URL.
 
@@ -211,7 +211,7 @@ Odczyt danych, strona `/do-omowienia`, wspólny komponent pytania, pozycja menu,
 
 **Intent**: Trzecia pozycja menu; ochrona trasy i kontrola warunków przychodzą z `INTERIOR_ROUTES`.
 
-**Contract**: `NAV_ITEMS` += `{ href: "/do-omowienia", label: "Do omówienia" }` (po „Dzienniczek”). Test: pozycja jest w menu i `/do-omowienia` jest w `INTERIOR_ROUTES`.
+**Contract**: `NAV_ITEMS` += `{ href: "/wizyta", label: "Wizyta" }` (po „Dzienniczek”). Test: pozycja jest w menu i `/wizyta` jest w `INTERIOR_ROUTES`.
 
 #### 6. Krok smoke
 
@@ -219,7 +219,7 @@ Odczyt danych, strona `/do-omowienia`, wspólny komponent pytania, pozycja menu,
 
 **Intent**: Dowieść, że sekcja renderuje się dla zalogowanego konta i pokazuje pytanie z zapisanego wpisu.
 
-**Contract**: krok po krokach dzienniczka, na `journal.jar`: `GET /do-omowienia` → 200; w `data-visit-questions` nazwa objawu z `journal.symptom`, nazwa leku `fixtures.a.medication.product_name` i fraza `REQUIRED_PHRASE` / `REQUIRED_PHRASE_PLURAL` (wg `PLURAL_SYMPTOM_NAMES`); na stronie `askDoctorOrPharmacist`. Krok wstawiony w `journalFlowSteps` przed krokiem „journal: no URL on the way carries…” i sam woła `journal.paths.push("/do-omowienia")` (jak `scripts/smoke.mjs:1300`, `:1322`) — `requestPage` nie dopisuje ścieżki sam, więc bez tego krok „żaden URL nie niesie nazwy” nie obejmie sekcji. Niezalogowany `GET /do-omowienia` → przekierowanie na logowanie.
+**Contract**: krok po krokach dzienniczka, na `journal.jar`: `GET /wizyta` → 200; w `data-visit-questions` nazwa objawu z `journal.symptom`, nazwa leku `fixtures.a.medication.product_name` i fraza `REQUIRED_PHRASE` / `REQUIRED_PHRASE_PLURAL` (wg `PLURAL_SYMPTOM_NAMES`); na stronie `askDoctorOrPharmacist`. Krok wstawiony w `journalFlowSteps` przed krokiem „journal: no URL on the way carries…” i sam woła `journal.paths.push("/wizyta")` (jak `scripts/smoke.mjs:1300`, `:1322`) — `requestPage` nie dopisuje ścieżki sam, więc bez tego krok „żaden URL nie niesie nazwy” nie obejmie sekcji. Niezalogowany `GET /wizyta` → przekierowanie na logowanie.
 
 ### Success Criteria:
 
@@ -259,7 +259,7 @@ Jednorazowy pomiar progu z PRD (LCP ≤ 2,5 s, Lighthouse Mobile) na produkcji.
 
 **Intent**: Potwierdzić próg z NFR na prawdziwym środowisku (Cloudflare Workers + Supabase).
 
-**Contract**: Chrome DevTools → Lighthouse, tryb Mobile, kategoria Performance, strona `https://lekomapa.pl/do-omowienia` (albo bieżący adres Workera), osobne konto wyłącznie do pomiaru (nie konto smoke z `.env`, nie konto prywatne autorki) z danymi przykładowymi: co najmniej 4 bieżące leki z jedną parą, 5 objawów, 15 wpisów, wpisanymi ręcznie przez ekrany aplikacji (~20 min). Po zamknięciu okna korekty wpisów nie da się usunąć, więc konto zostaje jako stałe konto pomiarowe do kolejnych pomiarów; adres konta poza repozytorium (plan-review F4). Trzy biegi, zapisana mediana LCP, data i opis danych. Przy wyniku > 2,5 s — nowa zmiana przez `/10x-new`, bez poprawek w tej.
+**Contract**: Chrome DevTools → Lighthouse, tryb Mobile, kategoria Performance, strona `https://lekomapa.pl/wizyta` (albo bieżący adres Workera), osobne konto wyłącznie do pomiaru (nie konto smoke z `.env`, nie konto prywatne autorki) z danymi przykładowymi: co najmniej 4 bieżące leki z jedną parą, 5 objawów, 15 wpisów, wpisanymi ręcznie przez ekrany aplikacji (~20 min). Po zamknięciu okna korekty wpisów nie da się usunąć, więc konto zostaje jako stałe konto pomiarowe do kolejnych pomiarów; adres konta poza repozytorium (plan-review F4). Trzy biegi, zapisana mediana LCP, data i opis danych. Przy wyniku > 2,5 s — nowa zmiana przez `/10x-new`, bez poprawek w tej.
 
 ### Success Criteria:
 
@@ -284,7 +284,7 @@ Jednorazowy pomiar progu z PRD (LCP ≤ 2,5 s, Lighthouse Mobile) na produkcji.
 
 ### Manual Testing Steps:
 
-1. Nowe konto testowe lokalnie → `/do-omowienia`: wprowadzenie, przyciski prowadzą na `/leki/nowy` i `/dzienniczek/nowy`.
+1. Nowe konto testowe lokalnie → `/wizyta`: wprowadzenie, przyciski prowadzą na `/leki/nowy` i `/dzienniczek/nowy`.
 2. Dodaj jeden lek → część interakcji: tekst o dwóch lekach; część pytań: „pojawią się po zapisaniu objawu”.
 3. Dodaj drugi lek tworzący parę (np. Acenocumarol + Ibuprom) → para raz, z notą.
 4. Zapisz trzy wpisy z różnymi objawami w różnych dniach → kolejność od najnowszego, wszystkie rozwinięte.
@@ -332,33 +332,33 @@ Migracja dodaje wyłącznie funkcję; bez zmian w danych i tabelach. Wycofanie: 
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 2.2 Typy: `npm run typecheck`
-- [x] 2.3 Lint: `npm run lint`
+- [x] 2.1 Testy jednostkowe przechodzą: `npm test` — 70bce7a
+- [x] 2.2 Typy: `npm run typecheck` — 70bce7a
+- [x] 2.3 Lint: `npm run lint` — 70bce7a
 
 #### Manual
 
-- [x] 2.4 Test modułu pada, gdy deduplikacja par zostanie wyłączona albo „najnowszy” liczony po pozycji w tablicy — sprawdzone raz, zmiana cofnięta
+- [x] 2.4 Test modułu pada, gdy deduplikacja par zostanie wyłączona albo „najnowszy” liczony po pozycji w tablicy — sprawdzone raz, zmiana cofnięta — 70bce7a
 
 ### Phase 3: Ekran, menu i smoke
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe, w tym nawigacja i pokrycie tras: `npm test`
-- [ ] 3.2 Typy: `npm run typecheck`
-- [ ] 3.3 Lint: `npm run lint`
-- [ ] 3.4 Build: `npm run build`
-- [ ] 3.5 Smoke przeciw lokalnemu Supabase przechodzi, w tym nowy krok: `npm run smoke`
+- [x] 3.1 Testy jednostkowe, w tym nawigacja i pokrycie tras: `npm test`
+- [x] 3.2 Typy: `npm run typecheck`
+- [x] 3.3 Lint: `npm run lint`
+- [x] 3.4 Build: `npm run build`
+- [x] 3.5 Smoke przeciw lokalnemu Supabase przechodzi, w tym nowy krok: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.6 Na telefonie (szerokość ~375 px) menu ma trzy pozycje, etykiety się mieszczą, sekcja czytelna
-- [ ] 3.7 Konto bez leków i wpisów: tylko wprowadzenie z dwoma przyciskami i zachęta do pytania lekarza lub farmaceuty
-- [ ] 3.8 Puste stany interakcji dla 1 leku, 2 leków bez pary i para pokazana raz z notą (1 lek — pary od dwóch leków; 2 bez pary — „nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze)
-- [ ] 3.9 Konto z trzema objawami: kolejność od najnowszego wpisu, wszystkie rozwinięte, objaw bez leku w oknie w linijce „Bez pytania”
-- [ ] 3.10 Pytanie dla objawu w sekcji identyczne z pytaniem po zapisaniu jego najnowszego wpisu
-- [ ] 3.11 Autorka czyta wszystkie nowe teksty i zatwierdza brzmienie
-- [ ] 3.12 Pasek adresu na każdym kroku bez nazwy leku, objawu i dawki
+- [x] 3.6 Na telefonie (szerokość ~375 px) menu ma trzy pozycje, etykiety się mieszczą, sekcja czytelna
+- [x] 3.7 Konto bez leków i wpisów: tylko wprowadzenie z dwoma przyciskami i zachęta do pytania lekarza lub farmaceuty
+- [x] 3.8 Puste stany interakcji dla 1 leku, 2 leków bez pary i para pokazana raz z notą (1 lek — pary od dwóch leków; 2 bez pary — „nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze)
+- [x] 3.9 Konto z trzema objawami: kolejność od najnowszego wpisu, wszystkie rozwinięte, objaw bez leku w oknie w linijce „Bez pytania”
+- [x] 3.10 Pytanie dla objawu w sekcji identyczne z pytaniem po zapisaniu jego najnowszego wpisu
+- [x] 3.11 Autorka czyta wszystkie nowe teksty i zatwierdza brzmienie
+- [x] 3.12 Pasek adresu na każdym kroku bez nazwy leku, objawu i dawki
 
 ### Phase 4: Pomiar szybkości po wdrożeniu
 

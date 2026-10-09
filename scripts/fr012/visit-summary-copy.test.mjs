@@ -1,4 +1,4 @@
-// FR-012 for the "Do omówienia z lekarzem" section (S-08): every text in src/lib/copy/visit-summary.ts passes the stem
+// FR-012 for the "Wizyta" section (S-08): every text in src/lib/copy/visit-summary.ts passes the stem
 // filter with no exception. These texts gather questions and pairs but never link a medicine to a symptom themselves —
 // the questions come from S-06 and the pair descriptions from S-02, both checked in their own tests — so the required
 // wording is not demanded here (see lessons.md, "Filtr języka…").
