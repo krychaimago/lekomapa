@@ -304,26 +304,26 @@ Migracja dodaje wyłącznie funkcje; nie zmienia danych ani wyzwalaczy. Po merge
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
-- [x] 1.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy plik: `npm run db:check`
-- [x] 1.3 Testy jednostkowe przechodzą: `npm test`
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — 0275d39
+- [x] 1.2 Wszystkie sprawdzenia SQL przechodzą, w tym nowy plik: `npm run db:check` — 0275d39
+- [x] 1.3 Testy jednostkowe przechodzą: `npm test` — 0275d39
 
 #### Manual
 
-- [x] 1.4 Autorka czyta nagłówek migracji i potwierdza, że przykłady opisują FR-009 (okno 24 h od zapisu, notatka zawsze)
+- [x] 1.4 Autorka czyta nagłówek migracji i potwierdza, że przykłady opisują FR-009 (okno 24 h od zapisu, notatka zawsze) — 0275d39
 
 ### Phase 2: Trasy API i teksty
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe i filtr FR-012 dla nowych tekstów przechodzą: `npm test`
-- [ ] 2.2 Typy przechodzą: `npm run typecheck`
-- [ ] 2.3 Lint przechodzi: `npm run lint`
-- [ ] 2.4 Smoke przeciw lokalnemu Supabase przechodzi z nowymi krokami: `npm run smoke`
+- [x] 2.1 Testy jednostkowe i filtr FR-012 dla nowych tekstów przechodzą: `npm test`
+- [x] 2.2 Typy przechodzą: `npm run typecheck`
+- [x] 2.3 Lint przechodzi: `npm run lint`
+- [x] 2.4 Smoke przeciw lokalnemu Supabase przechodzi z nowymi krokami: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Autorka czyta nowe teksty w `src/lib/copy/journal.ts` i potwierdza brzmienie
+- [x] 2.5 Autorka czyta nowe teksty w `src/lib/copy/journal.ts` i potwierdza brzmienie
 
 ### Phase 3: Ekran wpisu, ekran usunięcia i lista
 
