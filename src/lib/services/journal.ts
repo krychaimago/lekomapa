@@ -134,8 +134,8 @@ export function formatWarsawDateTime(iso: string): string {
 }
 
 // A `datetime-local` value (`YYYY-MM-DDTHH:MM`, no zone) as Polish wall-clock time; add_symptom_entry reads it the
-// same way (`at time zone 'Europe/Warsaw'`).
-function toWarsawLocal(instant: Date): string {
+// same way (`at time zone 'Europe/Warsaw'`). Seconds dropped: the field has minute precision.
+export function toWarsawLocal(instant: Date): string {
   const { date, time } = warsawParts(instant);
   return `${date}T${time}`;
 }
@@ -150,6 +150,16 @@ export function nowInWarsawLocal(now: Date = new Date()): string {
 export function earliestEntryLocal(now: Date = new Date()): string {
   const limit = now.getTime() - JOURNAL_MAX_DAYS_BACK * MS_PER_DAY;
   return toWarsawLocal(new Date(Math.ceil(limit / MS_PER_MINUTE) * MS_PER_MINUTE));
+}
+
+// Lower bound of the time field when correcting an entry (S-07): the earlier of the 14-day limit and the saved time.
+// An entry dated close to the limit is older than the limit a day later; a `min` above its saved value would make the
+// browser refuse to send the unchanged form, although the database accepts the unchanged date
+// (symptom_entries_guard_occurred_at lets an unchanged occurred_at through). Both values are `YYYY-MM-DDTHH:MM` in
+// Polish time, so comparing the strings compares the times.
+export function minOccurredLocal(occurredLocal: string, now: Date = new Date()): string {
+  const earliest = earliestEntryLocal(now);
+  return occurredLocal < earliest ? occurredLocal : earliest;
 }
 
 // "YYYY-MM-DDTHH:MM" as "DD.MM.YYYY, HH:MM", without a Date object (the value is already Polish time).

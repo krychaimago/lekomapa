@@ -18,6 +18,7 @@
 // The password recovery steps run only in throwaway mode against a local Supabase and read the reset mail from
 // mailpit (MAILPIT_URL, default http://127.0.0.1:54324).
 
+import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { createClient, isAuthApiError } from "@supabase/supabase-js";
@@ -1177,7 +1178,20 @@ const JOURNAL_ROUTE = "/api/journal";
 const VISIT_SUMMARY_PAGE = "/wizyta";
 
 // Filled by the steps below and read by the later ones. `paths` holds every URL path the flow requested.
-const journal = { jar: new Map(), symptom: null, entryId: null, paths: [] };
+// `correctedSymptom` is the symptom a correction puts on an entry (S-07); `jarB` is fixture account B's browser.
+const journal = {
+  jar: new Map(),
+  jarB: new Map(),
+  symptom: null,
+  correctedSymptom: null,
+  correctedEntryId: null,
+  entryId: null,
+  paths: [],
+};
+
+// Notes the S-07 steps write: synthetic, and checked against every URL of the flow like the symptom names.
+const SMOKE_CORRECTION_NOTE = "Smoke correction note";
+const SMOKE_CHANGED_NOTE = "Smoke changed note";
 
 // A JSON POST like the form's fetch: the body never travels in the URL. Returns the status and the parsed body.
 async function postJson(path, body, { jar: cookieJar, origin }) {
@@ -1197,6 +1211,35 @@ async function postJson(path, body, { jar: cookieJar, origin }) {
     // Not JSON: left null, the step reports the status.
   }
   return { status: response.status, json };
+}
+
+// Saves an entry of its own for a step that changes or deletes it, so the S-06 steps on journal.entryId and
+// journal.symptom stay on the entry they expect. Returns the new id, or null with the response for the step's detail.
+async function saveSeparateEntry(symptomId, note) {
+  const response = await postJson(
+    JOURNAL_ROUTE,
+    { occurredLocal: null, items: [{ symptomId, severity: "mild" }], note },
+    { jar: journal.jar, origin: await formOrigin(JOURNAL_NEW_PAGE, journal.jar) },
+  );
+  const id = response.status === 201 && typeof response.json?.id === "string" ? response.json.id : null;
+  return { id, detail: `${response.status} ${JSON.stringify(response.json)}` };
+}
+
+// The rows of one entry as account A reads them, for comparing before and after a step.
+async function entryRowsOf(entryId) {
+  const entry = await fixtures.a.client
+    .from("symptom_entries")
+    .select("occurred_at, note")
+    .eq("id", entryId)
+    .maybeSingle();
+  if (entry.error) throw new Error(`read of symptom_entries failed: ${entry.error.code}`);
+  const items = await fixtures.a.client
+    .from("symptom_entry_items")
+    .select("symptom_id, severity")
+    .eq("entry_id", entryId)
+    .order("symptom_id");
+  if (items.error) throw new Error(`read of symptom_entry_items failed: ${items.error.code}`);
+  return { entry: entry.data, items: items.data };
 }
 
 // The <li> of one journal entry on the list, so the symptom name is checked inside that entry.
@@ -1370,13 +1413,314 @@ const journalFlowSteps = [
     },
     EXPECT_OK,
   ],
+  // --- Correcting, the note and deleting (S-07) ---
+  //
+  // The correction and the note change go as the screen's fetch will: a JSON body, the Origin a browser derives from
+  // the referrer policy of the entry page, nothing more. Deleting is a plain form POST from the confirmation page.
+  [
+    "journal: correcting a separate entry over HTTP returns 200; the database has the new symptom and severity, the date unchanged",
+    async () => {
+      if (!fixtures.a || !journal.symptom) return { ok: false, detail: "check did not run: no entry was saved" };
+      // The third symptom by id: neither the isolation fixture (first) nor the entry above (second) uses it.
+      const symptom = await fixtures.a.client.from("symptoms").select("id, name").order("id").range(2, 2).single();
+      if (symptom.error) return { ok: false, detail: `symptom lookup failed: ${symptom.error.message}` };
+      journal.correctedSymptom = symptom.data;
+
+      const saved = await saveSeparateEntry(journal.symptom.id, "Smoke entry to correct");
+      if (!saved.id) return { ok: false, detail: `saving the entry to correct: ${saved.detail}` };
+      journal.correctedEntryId = saved.id;
+      const before = await entryRowsOf(saved.id);
+
+      const response = await postJson(
+        `${JOURNAL_ROUTE}/${saved.id}`,
+        {
+          occurredLocal: null,
+          items: [{ symptomId: journal.correctedSymptom.id, severity: "severe" }],
+          note: SMOKE_CORRECTION_NOTE,
+        },
+        { jar: journal.jar, origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${saved.id}`, journal.jar) },
+      );
+      if (response.status !== 200 || response.json?.id !== saved.id) {
+        return { ok: false, detail: `${response.status} ${JSON.stringify(response.json)}` };
+      }
+
+      const after = await entryRowsOf(saved.id);
+      const symptoms =
+        after.items.length === 1 &&
+        after.items[0].symptom_id === journal.correctedSymptom.id &&
+        after.items[0].severity === "severe";
+      const dateKept = before.entry !== null && after.entry?.occurred_at === before.entry.occurred_at;
+      const note = after.entry?.note === SMOKE_CORRECTION_NOTE;
+      return {
+        ok: symptoms && dateKept && note,
+        detail: `200; symptoms ${symptoms ? "as corrected" : "not as corrected"}; date ${
+          dateKept ? "unchanged" : "changed"
+        }; note ${note ? "as corrected" : "not as corrected"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: changing the note over HTTP returns 200, and the note is in the database",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const response = await postJson(
+        `${JOURNAL_ROUTE}/${id}/note`,
+        { note: SMOKE_CHANGED_NOTE },
+        { jar: journal.jar, origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${id}`, journal.jar) },
+      );
+      if (response.status !== 200 || response.json?.id !== id) {
+        return { ok: false, detail: `${response.status} ${JSON.stringify(response.json)}` };
+      }
+      const after = await entryRowsOf(id);
+      const stored = after.entry?.note === SMOKE_CHANGED_NOTE;
+      return { ok: stored, detail: `200; note ${stored ? "stored" : "not stored"}` };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the entry page renders the correction form with the saved values and the link to deleting",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const path = `${JOURNAL_LIST_PAGE}/${id}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // Fields of the open window: the time, the symptom choice with the corrected symptom, the note as changed above.
+      const occurred = page.body.includes('id="occurredLocal"');
+      const note = page.body.includes('id="note"') && pageContains(page.body, SMOKE_CHANGED_NOTE);
+      const symptom = journal.correctedSymptom !== null && pageContains(page.body, journal.correctedSymptom.name);
+      const submit = pageContains(page.body, JOURNAL_COPY.entry.submit);
+      const deleteLink = page.body.includes(`href="${JOURNAL_LIST_PAGE}/${id}/usun"`);
+      return {
+        ok: occurred && note && symptom && submit && deleteLink,
+        detail: `time field ${occurred ? "present" : "missing"}; note ${note ? "present" : "missing"}; symptom ${
+          symptom ? "present" : "missing"
+        }; submit ${submit ? "present" : "missing"}; delete link ${deleteLink ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the deletion page renders the confirmation form posting to the delete route",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const path = `${JOURNAL_LIST_PAGE}/${id}/usun`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      const form = page.body.includes(`action="${JOURNAL_ROUTE}/${id}/delete"`);
+      const button = pageContains(page.body, JOURNAL_COPY.deletion.submit);
+      return {
+        ok: form && button,
+        detail: `form ${form ? "present" : "missing"}; button ${button ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: the list after a correction shows the corrected message, the corrected symptom and the question for the doctor",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id || !fixtures.a || !journal.correctedSymptom) {
+        return { ok: false, detail: "check did not run: no entry was corrected" };
+      }
+      const path = `${JOURNAL_LIST_PAGE}?poprawiono=${id}`;
+      journal.paths.push(path);
+      const page = await requestPage(path, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // The message carries the entry's symptoms and the deadline, so only its fixed start is compared.
+      const correctedPrefix = JOURNAL_COPY.list.correctedWithDeadline.split(/\{(?:objawy|do)\}/)[0];
+      const message = pageContains(page.body, correctedPrefix);
+      const item = entryItemOf(page.body, id);
+      const named = item !== null && pageContains(item, journal.correctedSymptom.name);
+      const start = page.body.indexOf("data-doctor-question");
+      const end = start === -1 ? -1 : page.body.indexOf("</section>", start);
+      const section = end === -1 ? null : page.body.slice(start, end);
+      const medicationName = fixtures.a.medication.product_name;
+      const medication = section !== null && pageContains(section, medicationName);
+      const requiredPhrase = PLURAL_SYMPTOM_NAMES.has(journal.correctedSymptom.name)
+        ? REQUIRED_PHRASE_PLURAL
+        : REQUIRED_PHRASE;
+      const phrase = section !== null && pageContains(section, requiredPhrase);
+      return {
+        ok: message && named && medication && phrase,
+        detail: `message ${message ? "present" : "missing"}; symptom ${named ? "present" : "missing"}; question ${
+          section ? "present" : "missing"
+        }; ${medicationName} ${medication ? "present" : "missing"}; phrase ${phrase ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: an entry page with a malformed or unknown id gets 404, on the entry and the deletion screen",
+    async () => {
+      // An id that is a uuid but no entry of this account: the same 404 as another account's entry.
+      const unknown = randomUUID();
+      const paths = [
+        `${JOURNAL_LIST_PAGE}/not-a-uuid`,
+        `${JOURNAL_LIST_PAGE}/not-a-uuid/usun`,
+        `${JOURNAL_LIST_PAGE}/${unknown}`,
+        `${JOURNAL_LIST_PAGE}/${unknown}/usun`,
+      ];
+      const statuses = [];
+      for (const path of paths) {
+        journal.paths.push(path);
+        statuses.push((await requestPage(path, { jar: journal.jar })).status);
+      }
+      return {
+        ok: statuses.every((status) => status === 404),
+        detail: paths.map((path, index) => `${path} ${statuses[index]}`).join("; "),
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: a correction without symptoms gets 422 noSymptoms, and the entry stays as it was",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const before = await entryRowsOf(id);
+      const response = await postJson(
+        `${JOURNAL_ROUTE}/${id}`,
+        { occurredLocal: null, items: [], note: null },
+        { jar: journal.jar, origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${id}`, journal.jar) },
+      );
+      const after = await entryRowsOf(id);
+      const intact = JSON.stringify(after) === JSON.stringify(before);
+      return {
+        ok: response.status === 422 && response.json?.error === "noSymptoms" && intact,
+        detail: `${response.status} ${JSON.stringify(response.json)}; entry ${intact ? "intact" : "altered"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: no session gets 401 on correcting, the note and deleting",
+    async () => {
+      const id = journal.correctedEntryId;
+      if (!id) return { ok: false, detail: "check did not run: no entry was corrected" };
+      const correction = await postJson(
+        `${JOURNAL_ROUTE}/${id}`,
+        { occurredLocal: null, items: [], note: null },
+        { jar: new Map(), origin: BASE_URL },
+      );
+      const note = await postJson(`${JOURNAL_ROUTE}/${id}/note`, { note: null }, { jar: new Map(), origin: BASE_URL });
+      const deletePath = `${JOURNAL_ROUTE}/${id}/delete`;
+      journal.paths.push(deletePath);
+      const deletion = await request(deletePath, { method: "POST", jar: new Map(), form: {} });
+      const after = await entryRowsOf(id);
+      // Exactly 401: a redirect or a 422 would mean the route looked at the body before deciding on the session.
+      return {
+        ok: correction.status === 401 && note.status === 401 && deletion.status === 401 && after.entry !== null,
+        detail: `correction ${correction.status}; note ${note.status}; delete ${deletion.status} ${
+          deletion.location
+        }; entry ${after.entry ? "still there" : "gone"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: account B gets entryNotFound for account A's entry on all three routes, and the entry stays as it was",
+    async () => {
+      if (!fixtures.a || !fixtures.b || !journal.correctedSymptom) {
+        return { ok: false, detail: "check did not run: no fixture accounts or no symptom was read" };
+      }
+      const signIn = await request("/api/auth/signin", {
+        method: "POST",
+        jar: journal.jarB,
+        form: { email: fixtures.b.address, password },
+      });
+      if (signIn.status !== 302 || signIn.location !== "/") {
+        return { ok: false, detail: `sign-in of B: ${signIn.status} ${signIn.location}` };
+      }
+
+      // Account A's isolation fixture: a fresh entry, so its window is open and only ownership can stop B.
+      const id = fixtures.a.symptomEntry.id;
+      const before = await entryRowsOf(id);
+      if (!before.entry) return { ok: false, detail: "check did not run: account A's entry is not readable" };
+
+      const correction = await postJson(
+        `${JOURNAL_ROUTE}/${id}`,
+        {
+          occurredLocal: null,
+          items: [{ symptomId: journal.correctedSymptom.id, severity: "severe" }],
+          note: "Wpis z obcego konta",
+        },
+        { jar: journal.jarB, origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${id}`, journal.jarB) },
+      );
+      const note = await postJson(
+        `${JOURNAL_ROUTE}/${id}/note`,
+        { note: "Wpis z obcego konta" },
+        { jar: journal.jarB, origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${id}`, journal.jarB) },
+      );
+      const deletePath = `${JOURNAL_ROUTE}/${id}/delete`;
+      journal.paths.push(deletePath);
+      const deletion = await request(deletePath, {
+        method: "POST",
+        jar: journal.jarB,
+        origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${id}/usun`, journal.jarB),
+        form: {},
+      });
+
+      const after = await entryRowsOf(id);
+      const intact = JSON.stringify(after) === JSON.stringify(before);
+      const expectedDelete = `${JOURNAL_LIST_PAGE}/${id}/usun?error=entryNotFound`;
+      return {
+        ok:
+          correction.json?.error === "entryNotFound" &&
+          note.json?.error === "entryNotFound" &&
+          deletion.status === 302 &&
+          deletion.location === expectedDelete &&
+          intact,
+        detail: `correction ${correction.status} ${JSON.stringify(correction.json)}; note ${note.status} ${JSON.stringify(
+          note.json,
+        )}; delete ${deletion.status} ${deletion.location}; entry ${intact ? "intact" : "altered"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "journal: deleting a fresh entry over HTTP redirects to the list, and the entry is gone from the database",
+    async () => {
+      if (!fixtures.a || !journal.symptom) return { ok: false, detail: "check did not run: no entry was saved" };
+      const saved = await saveSeparateEntry(journal.symptom.id, "Smoke entry to delete");
+      if (!saved.id) return { ok: false, detail: `saving the entry to delete: ${saved.detail}` };
+      const deletePath = `${JOURNAL_ROUTE}/${saved.id}/delete`;
+      journal.paths.push(deletePath);
+      const response = await request(deletePath, {
+        method: "POST",
+        jar: journal.jar,
+        origin: await formOrigin(`${JOURNAL_LIST_PAGE}/${saved.id}/usun`, journal.jar),
+        form: {},
+      });
+      // Gone, not hidden: no entry row and no symptom rows left (on delete cascade).
+      const after = await entryRowsOf(saved.id);
+      const gone = after.entry === null && after.items.length === 0;
+      return {
+        ok: response.status === 302 && response.location === `${JOURNAL_LIST_PAGE}?usunieto=1` && gone,
+        detail: `${response.status} ${response.location}; entry ${gone ? "deleted" : "still there"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
   [
     "journal: no URL on the way carries the symptom name, the medication name or the note",
     async () => {
       if (!journal.symptom || !fixtures.a) return { ok: false, detail: "check did not run: no symptom was read" };
-      const forbidden = [journal.symptom.name, fixtures.a.medication.product_name, "Smoke journal note"].flatMap(
-        (text) => [text.toLowerCase(), encodeURIComponent(text).toLowerCase()],
-      );
+      // The S-07 texts join only once their steps have run; the step above already failed if they did not.
+      const s07Texts = journal.correctedSymptom
+        ? [journal.correctedSymptom.name, SMOKE_CORRECTION_NOTE, SMOKE_CHANGED_NOTE]
+        : [];
+      const forbidden = [
+        journal.symptom.name,
+        fixtures.a.medication.product_name,
+        "Smoke journal note",
+        ...s07Texts,
+      ].flatMap((text) => [text.toLowerCase(), encodeURIComponent(text).toLowerCase()]);
       const leaking = journal.paths.filter((path) => forbidden.some((text) => path.toLowerCase().includes(text)));
       return {
         ok: journal.paths.length > 0 && leaking.length === 0,

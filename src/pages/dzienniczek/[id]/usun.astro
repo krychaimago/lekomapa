@@ -1,0 +1,176 @@
+---
+// Deleting a journal entry added by mistake (S-07, FR-009): a confirmation screen, then a plain HTML form posting to
+// /api/journal/<id>/delete. Allowed only within the entry's correction window (24 hours from saving it); after that
+// the screen only says so and offers no button. Only the entry's uuid travels in the URL; the route returns nothing
+// but `?error=<key>`, looked up in JOURNAL_COPY.apiErrors. RLS limits the read to the signed-in person, so another
+// account's entry reads as missing and gets the same 404 as an unknown id.
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { JOURNAL_COPY, type JournalApiErrorCode, apiErrorMessage } from "@/lib/copy/journal";
+import { formatCorrectionDeadline, formatWarsawDateTime } from "@/lib/services/journal";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import { SYMPTOM_SEVERITIES, type Symptom, type SymptomSeverity } from "@/types";
+
+interface EntryRow {
+  id: string;
+  occurred_at: string;
+  // End of the entry's correction window (created_at + 24 h), read from the database so the screen agrees with
+  // delete_symptom_entry.
+  correction_window_ends_at: string | null;
+  symptom_entry_items: {
+    severity: SymptomSeverity | null;
+    symptoms: Pick<Symptom, "name"> | null;
+  }[];
+}
+
+// The keys /api/journal/<id>/delete sends back. Any other key shows nothing: a crafted `?error=` must not put a
+// message from another screen (with an unfilled marker) here.
+const DELETE_ERRORS: ReadonlySet<string> = new Set<JournalApiErrorCode>([
+  "entryNotFound",
+  "deleteWindowClosed",
+  "deleteGeneric",
+  "sessionExpired",
+]);
+
+const copy = JOURNAL_COPY.deletion;
+const severityLabel = new Map(SYMPTOM_SEVERITIES.map(({ value, label }) => [value, label]));
+const id = Astro.params.id ?? "";
+
+let entry: EntryRow | null = null;
+let loadFailed = false;
+
+// A non-uuid id never reaches the database: it would be a 22P02 error there, here it is simply not found.
+const validId = z.uuid().safeParse(id).success;
+const supabase = validId ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validId && !supabase) loadFailed = true;
+
+if (supabase) {
+  const result = await supabase
+    .from("symptom_entries")
+    .select("id, occurred_at, correction_window_ends_at, symptom_entry_items(severity, symptoms(name))")
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<EntryRow | null, { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading a journal entry for deleting it failed", { code: result.error.code });
+  } else {
+    entry = result.data;
+  }
+}
+
+const notFound = !loadFailed && entry === null;
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+// The window of the entry, compared the way delete_symptom_entry does (now() < correction_window_end(created_at)).
+const nowIso = new Date().toISOString();
+const endsAt = entry?.correction_window_ends_at ?? null;
+const deadline =
+  endsAt !== null && Date.parse(endsAt) > Date.parse(nowIso) ? formatCorrectionDeadline(endsAt, nowIso) : null;
+
+const errorKey = Astro.url.searchParams.get("error");
+const error = DELETE_ERRORS.has(errorKey ?? "") ? apiErrorMessage(errorKey) : null;
+
+const items = (entry?.symptom_entry_items ?? [])
+  .flatMap((item) => (item.symptoms ? [{ name: item.symptoms.name, severity: item.severity }] : []))
+  .sort((a, b) => a.name.localeCompare(b.name, "pl"));
+
+const entryHref = `/dzienniczek/${id}`;
+const formAction = `/api/journal/${id}/delete`;
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const noticeClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    {validId && entry ? (
+      <a href={entryHref} class:list={linkClass}>
+        {copy.backToEntry}
+      </a>
+    ) : (
+      <a href="/dzienniczek" class:list={linkClass}>
+        {JOURNAL_COPY.form.backToList}
+      </a>
+    )}
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {JOURNAL_COPY.entry.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class:list={noticeClass}>
+        <h1 class="text-2xl font-bold">{copy.title}</h1>
+        <p>{JOURNAL_COPY.entry.notFound}</p>
+      </section>
+    )}
+
+    {entry && !loadFailed && (
+      <>
+        <h1 class="text-3xl font-bold">{copy.title}</h1>
+
+        {error && (
+          <p
+            role="alert"
+            class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        <section class:list={noticeClass}>
+          <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
+            <dt class="text-sm text-muted-foreground">{JOURNAL_COPY.form.occurredLabel}</dt>
+            <dd>
+              <time datetime={entry.occurred_at}>{formatWarsawDateTime(entry.occurred_at)}</time>
+            </dd>
+            <dt class="text-sm text-muted-foreground">{JOURNAL_COPY.form.symptomsLegend}</dt>
+            <dd>
+              <ul class="flex flex-col gap-1">
+                {items.map((item) => (
+                  <li>
+                    <span class="first-letter:uppercase">{item.name}</span>
+                    {item.severity && <span class="text-muted-foreground"> · {severityLabel.get(item.severity)}</span>}
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </dl>
+        </section>
+
+        {deadline ? (
+          <section class:list={noticeClass}>
+            <p>{copy.explanation}</p>
+            <p class="text-sm text-muted-foreground">{copy.deadline.replace("{do}", deadline)}</p>
+            <form method="POST" action={formAction} class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {/* Outline, not destructive: destructive tokens are for form and technical errors only. */}
+              <button
+                type="submit"
+                class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto")}
+              >
+                {copy.submit}
+              </button>
+              <a href={entryHref} class:list={linkClass}>
+                {copy.backToEntry}
+              </a>
+            </form>
+          </section>
+        ) : (
+          <section class:list={noticeClass}>
+            <p>{copy.closed}</p>
+            <a href={entryHref} class:list={linkClass}>
+              {copy.backToEntry}
+            </a>
+          </section>
+        )}
+      </>
+    )}
+  </div>
+</AppLayout>

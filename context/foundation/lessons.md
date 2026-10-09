@@ -129,3 +129,10 @@
 - **Problem**: W S-02 dawkę świadomie trzymano poza URL, ale nazwa leku i substancji trafiała tam w sześciu miejscach (`?q=`, `?nazwa=`, `?substancja=`, `?niedopasowana=`, `/api/registry/search?q=`), a komentarz w kodzie twierdził, że „health data does not travel in URLs”. Adres trafia do historii przeglądarki, zakładek, nagłówka Referer i logów Cloudflare. To, jaki lek ktoś bierze, jest daną zdrowotną tak samo jak dawka.
 - **Rule**: Nazwa leku, nazwa substancji, dawka ani objaw nigdy nie trafiają do URL — ani w ścieżce, ani w parametrach, ani w zapytaniach `fetch`. Tekst wpisany przez użytkowniczkę idzie w treści żądania POST; między krokami przekazuj wyłącznie identyfikatory (uuid); stan formularza po błędzie w krótkotrwałym ciasteczku HttpOnly. Regułę pilnuje test, nie komentarz.
 - **Applies to**: plan, implement, impl-review
+
+## Po merge'u migracji wykonaj db push
+
+- **Context**: Każda zmiana z nowym plikiem w `supabase/migrations`.
+- **Problem**: Migracja nie trafia na produkcję, ekran pokazuje błąd mimo zielonego CI.
+- **Rule**: Po merge'u zmiany z migracją zawsze zrób db push i sprawdź listę.
+- **Applies to**: plan, implement, impl-review

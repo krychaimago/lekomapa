@@ -59,9 +59,9 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | ready       |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | in-progress |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | in-progress |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | ready       |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
 
 ## Streams
@@ -306,7 +306,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - ~~Jak długo trwa okno korekty wpisu dzienniczka?~~ — rozstrzygnięte 2026-10-05 (issue #4): 24 h od chwili zapisu, zegarem serwera, wspólne z lekami. Szczegóły: `prd.md`, `## Open Questions`, pytanie 5.
 - **Risk:** Swobodna edycja po fakcie daje obraz ładniejszy niż prawdziwy, a dzienniczek jest wart tyle, ile jego kompletność. Samo okno powstaje w S-05 (reguła w bazie i informacja „do kiedy” po zapisie i na liście); S-07 dokłada ekran poprawy i usunięcia wpisu w oknie oraz edycję notatki po jego zamknięciu. Poprawka w oknie zmienia wpis, który zasilił już złożone pytanie z S-06 — pytanie musi iść za poprawionym wpisem. Spełnione przez S-06: pytanie jest przeliczane przy każdym wyświetleniu, więc S-07 nie musi go aktualizować.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-08: Sekcja „Wizyta"
 
@@ -322,7 +322,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - Sposób odczytu danych do pytań — ustali plan S-08. S-08 zbiera objawy z różnych wpisów, a `loadDoctorQuestions` z S-06 (`src/lib/services/doctor-question-data.ts`) czyta jeden wpis; wspólne są typy i składanie pytania (`composeDoctorQuestion`). Uwaga dla planu: zapytanie o wszystkie wpisy obcina limit `max_rows = 1000` (`supabase/config.toml:18`); przy sortowaniu od najnowszego odpada najstarszy wpis, który wyznacza początek okna 90 dni (plan-review S-06, F3). — Owner: plan S-08. Block: no.
   - ~~Co pokazuje pusta sekcja?~~ — Rozstrzygnięte 2026-10-06 (#7): bez leków i bez wpisów — jedno wprowadzenie zamiast dwóch pustych części („tu zbiorą się możliwe kolizje i pytania do lekarza”) z przyciskami „Dodaj lek” i „Zapisz objaw”. W pozostałych przypadkach każda część ma własny pusty stan. Kolizje zależnie od liczby bieżących leków: 0 — brak leków i odnośnik do dodania; 1 — pary sprawdzane są przy co najmniej dwóch lekach; 2+ — „wśród bieżących leków nie znaleziono sprawdzanej pary” z notą o niepełnym zbiorze par (teksty istnieją w `src/lib/copy/interactions.ts`). Rozróżnienie jest konieczne, bo „nie znaleziono pary” przy zerze lub jednym leku jest nieprawdą. Pytania: pojawiają się po zapisaniu objawu, z odnośnikiem do dzienniczka. Zawsze widoczna zachęta, że o każdy lek i objaw można zapytać lekarza lub farmaceutę. Nowe teksty przechodzą filtr FR-012.
 - **Risk:** Sekcja nie wylicza niczego ponad to, co powstało w S-02 i S-06 — zbiera gotowe treści. Przeliczanie czegokolwiek od nowa rozjechałoby ją z treściami widocznymi przy lekach. To jednocześnie moment odbioru wartości całego produktu, więc język informacyjny musi się tu utrzymać bez wyjątku. Próg szybkości z PRD (#6): główna treść sekcji widoczna w ≤ 2,5 s (Lighthouse Mobile, LCP) — pomiar należy do tego plasterka.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-09: Usunięcie konta kasuje wszystkie dane
 
@@ -335,7 +335,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Operacja nieodwracalna, a zakres kasowania rośnie z każdą nową tabelą — dlatego sekwencjonowana po tym, jak powstały wszystkie tabele z danymi konta (S-01 dla zapisu akceptacji warunków, S-02 dla leków i okresów, S-05 dla dzienniczka, S-06 dla złożonych pytań). S-01 i S-06 dopisane 2026-09-26: wcześniej brakowało ich w wymaganiach wstępnych, choć obie tworzą dane przypisane do konta. Zaplanowana wcześniej przeoczyłaby dane dodane później i zostawiła sieroty, czego samo przejście ścieżki nie ujawni. Przy publicznej rejestracji to także jedyna droga, którą strona prywatności z S-01 może wskazać jako „jak usunąć konto” — do czasu S-09 strona musi mówić, jak zrobić to inaczej.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-11: Tryb ciemny
 
@@ -371,7 +371,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 | S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
 | S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | yes                   | Uruchom `/10x-plan journal-correction-window`          | #18   |
 | S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | no                    | Wymaga S-02 i S-06                                     | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                         | #20   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | yes                   | Uruchom `/10x-plan account-deletion-cascade`           | #20   |
 | S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
 
 ## Open Roadmap Questions
@@ -431,3 +431,4 @@ Rozstrzygnięte:
 - **S-04: Użytkowniczka może zakończyć przyjmowanie leku z datą odstawienia — lek znika z listy aktualnych, ale zostaje w historii i nadal tłumaczy dawne wpisy; trwałe usunięcie pozycji zarezerwowane dla pozycji dodanych przez pomyłkę.** — Archived 2026-10-06 → `context/archive/2026-10-05-discontinue-medication/`. Lesson: —.
 - **S-06: Użytkowniczka po zapisaniu objawu widzi gotowe pytanie do lekarza, zestawiające ten objaw z okresami dawkowania przyjmowanych leków, z pierwszeństwem dla leków rozpoczętych, zmienionych lub odstawionych w oknie czasowym objawu (od 90 dni przed pierwszym wpisem tego objawu do bieżącego wpisu); pozostałe leki zostają dostępne pod zwinięciem.** — Archived 2026-10-07 → `context/archive/2026-10-06-symptom-question-composer/`. Lesson: —.
 - **S-01: Użytkowniczka może przed założeniem konta przeczytać krótką stronę prywatności, założyć konto, świadomie akceptując warunki korzystania w wersji 1 „prototyp”, i zalogować się loginem i hasłem — na ekranach wejściowych w układzie z makiety.** — Archived 2026-10-08 → `context/archive/2026-10-07-terms-acceptance-on-signup/`. Lesson: —.
+- **S-08: Użytkowniczka może przed wizytą otworzyć sekcję „Wizyta" i zobaczyć w jednym miejscu wykryte możliwe kolizje oraz złożone pytania o zbieżność objawów z okresami dawkowania.** — Archived 2026-10-09 → `context/archive/2026-10-08-doctor-visit-summary/`. Lesson: —.

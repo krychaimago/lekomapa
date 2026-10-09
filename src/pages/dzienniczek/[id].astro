@@ -1,0 +1,206 @@
+---
+// One journal entry (S-07, FR-009): correcting it while its correction window is open — 24 hours from saving, by the
+// server's clock — and its note at any time. The end of the window comes from the database
+// (correction_window_ends_at), so the screen agrees with the functions that enforce it; the database decides again
+// on saving (SE007), so a window closing while the screen is open saves nothing. Only the entry's uuid travels in the
+// URL; the form posts JSON. RLS limits the read to the signed-in person, so another account's entry reads as missing
+// and gets the same 404 as an unknown id.
+import { z } from "zod";
+import AppLayout from "@/layouts/AppLayout.astro";
+import EditEntryForm from "@/components/journal/EditEntryForm";
+import { JOURNAL_COPY } from "@/lib/copy/journal";
+import {
+  earliestEntryLocal,
+  formatCorrectionDeadline,
+  formatWarsawDateTime,
+  groupSymptomsByCategory,
+  minOccurredLocal,
+  toWarsawLocal,
+} from "@/lib/services/journal";
+import { createClient } from "@/lib/supabase";
+import { SYMPTOM_SEVERITIES, type Symptom, type SymptomSearchTerm, type SymptomSeverity } from "@/types";
+
+interface EntryRow {
+  id: string;
+  occurred_at: string;
+  note: string | null;
+  correction_window_ends_at: string | null;
+  symptom_entry_items: {
+    symptom_id: string;
+    severity: SymptomSeverity | null;
+    symptoms: Pick<Symptom, "name"> | null;
+  }[];
+}
+
+type SymptomRow = Pick<Symptom, "id" | "name" | "category" | "sort_order">;
+type TermRow = Pick<SymptomSearchTerm, "symptom_id" | "term">;
+
+const copy = JOURNAL_COPY.entry;
+const severityLabel = new Map(SYMPTOM_SEVERITIES.map(({ value, label }) => [value, label]));
+const id = Astro.params.id ?? "";
+
+let entry: EntryRow | null = null;
+let symptoms: SymptomRow[] = [];
+let terms: TermRow[] = [];
+let loadFailed = false;
+
+// A non-uuid id never reaches the database: it would be a 22P02 error there, here it is simply not found.
+const validId = z.uuid().safeParse(id).success;
+const supabase = validId ? createClient(Astro.request.headers, Astro.cookies) : null;
+if (validId && !supabase) loadFailed = true;
+
+if (supabase) {
+  const result = await supabase
+    .from("symptom_entries")
+    .select(
+      "id, occurred_at, note, correction_window_ends_at, symptom_entry_items(symptom_id, severity, symptoms(name))",
+    )
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<EntryRow | null, { merge: false }>();
+  if (result.error) {
+    loadFailed = true;
+    console.error("Loading a journal entry failed", { code: result.error.code });
+  } else {
+    entry = result.data;
+  }
+}
+
+// Without the end of the window the screen cannot tell which form to show; the database would decide on saving, but
+// the screen must not offer a correction it cannot vouch for.
+if (entry?.correction_window_ends_at === null) {
+  loadFailed = true;
+  console.error("A journal entry came without the end of its correction window");
+}
+
+// One "now" for the whole page, from the server's clock.
+const now = new Date();
+const nowIso = now.toISOString();
+const endsAt = entry?.correction_window_ends_at ?? null;
+const deadline =
+  endsAt !== null && Date.parse(endsAt) > Date.parse(nowIso) ? formatCorrectionDeadline(endsAt, nowIso) : null;
+const windowOpen = deadline !== null;
+
+// The symptom catalog only while the window is open: the closed form has no symptom choice.
+if (supabase && entry && windowOpen && !loadFailed) {
+  const [symptomResult, termResult] = await Promise.all([
+    supabase.from("symptoms").select("id, name, category, sort_order").overrideTypes<SymptomRow[], { merge: false }>(),
+    supabase.from("symptom_search_terms").select("symptom_id, term").overrideTypes<TermRow[], { merge: false }>(),
+  ]);
+  if (symptomResult.error || termResult.error) {
+    loadFailed = true;
+    console.error("Loading the symptom catalog failed", {
+      symptomsCode: symptomResult.error?.code,
+      termsCode: termResult.error?.code,
+    });
+  } else {
+    symptoms = symptomResult.data;
+    terms = termResult.data;
+    try {
+      // A category without a heading would leave its symptoms out of the grouped view: fail visibly instead.
+      groupSymptomsByCategory(symptoms);
+    } catch (error) {
+      loadFailed = true;
+      console.error("The symptom catalog has a category the screen does not know", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+    if (symptoms.length === 0) loadFailed = true;
+  }
+}
+
+const notFound = !loadFailed && entry === null;
+if (notFound) Astro.response.status = 404;
+if (loadFailed) Astro.response.status = 500;
+
+const items = (entry?.symptom_entry_items ?? [])
+  .flatMap((item) =>
+    item.symptoms ? [{ symptomId: item.symptom_id, name: item.symptoms.name, severity: item.severity }] : [],
+  )
+  .sort((a, b) => a.name.localeCompare(b.name, "pl"));
+
+// Polish time, computed on the server (the Worker runs in UTC; the helpers convert).
+const occurred = entry ? toWarsawLocal(new Date(entry.occurred_at)) : "";
+const minOccurred = entry ? minOccurredLocal(occurred, now) : "";
+const earliestOccurred = earliestEntryLocal(now);
+
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const noticeClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <a href="/dzienniczek" class:list={linkClass}>
+      {JOURNAL_COPY.form.backToList}
+    </a>
+
+    {loadFailed && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {copy.loadError}
+      </p>
+    )}
+
+    {notFound && (
+      <section class:list={noticeClass}>
+        <h1 class="text-2xl font-bold">{copy.title}</h1>
+        <p>{copy.notFound}</p>
+      </section>
+    )}
+
+    {entry && endsAt !== null && !loadFailed && (
+      <>
+        <h1 class="text-3xl font-bold">{copy.title}</h1>
+
+        {deadline ? (
+          <div class="flex flex-col gap-2">
+            <p class="text-sm text-muted-foreground">{copy.deadline.replace("{do}", deadline)}</p>
+            <a href={`/dzienniczek/${entry.id}/usun`} class:list={linkClass}>
+              {copy.delete}
+            </a>
+          </div>
+        ) : (
+          <section class:list={noticeClass}>
+            <h2 class="text-xl font-semibold">{copy.closedTitle}</h2>
+            <p>{copy.closed.replace("{o}", formatWarsawDateTime(endsAt))}</p>
+            <dl class="grid gap-3 sm:grid-cols-[auto_1fr] sm:gap-x-6">
+              <dt class="text-sm text-muted-foreground">{JOURNAL_COPY.form.occurredLabel}</dt>
+              <dd>
+                <time datetime={entry.occurred_at}>{formatWarsawDateTime(entry.occurred_at)}</time>
+              </dd>
+              <dt class="text-sm text-muted-foreground">{JOURNAL_COPY.form.symptomsLegend}</dt>
+              <dd>
+                <ul class="flex flex-col gap-1">
+                  {items.map((item) => (
+                    <li>
+                      <span class="first-letter:uppercase">{item.name}</span>
+                      {item.severity && (
+                        <span class="text-muted-foreground"> · {severityLabel.get(item.severity)}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </dl>
+          </section>
+        )}
+
+        <EditEntryForm
+          entryId={entry.id}
+          windowOpen={windowOpen}
+          windowEndsAt={endsAt}
+          occurred={occurred}
+          minOccurred={minOccurred}
+          earliestOccurred={earliestOccurred}
+          items={items.map((item) => ({ symptomId: item.symptomId, severity: item.severity }))}
+          note={entry.note}
+          symptoms={symptoms}
+          terms={terms}
+          client:load
+        />
+      </>
+    )}
+  </div>
+</AppLayout>

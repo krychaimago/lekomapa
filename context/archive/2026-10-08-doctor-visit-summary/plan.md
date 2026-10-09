@@ -364,4 +364,4 @@ Migracja dodaje wyłącznie funkcję; bez zmian w danych i tabelach. Wycofanie: 
 
 #### Manual
 
-- [ ] 4.1 Mediana LCP z trzech biegów Lighthouse Mobile ≤ 2,5 s, wynik i dane wpisane przy kroku w Progress
+- [x] 4.1 Mediana LCP z trzech biegów Lighthouse Mobile ≤ 2,5 s, wynik i dane wpisane przy kroku w Progress (2026-10-09, produkcja `/wizyta` po zalogowaniu, Chrome incognito, Lighthouse Mobile, Performance: 1,4 s / 1,4 s / 1,4 s, mediana 1,4 s) — e0110fb

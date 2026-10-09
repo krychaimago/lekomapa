@@ -2,7 +2,7 @@
 --   JOURNAL 1: a correct save — two symptoms, one with a severity, a trimmed note; a blank note is stored as null;
 --              correction_window_ends_at(entry) read by authenticated is created_at + 24 h.
 --   JOURNAL 2: every error code of the save call — 28000 without a session, SE001 no symptom, SE004 the same
---              symptom twice, SE005 a symptom not on the list, SE002 in the future, SE003 more than 14 days back;
+--              symptom twice (also with its id once in lower and once in upper case), SE005 a symptom not on the list, SE002 in the future, SE003 more than 14 days back;
 --              nothing is left behind by a refused save.
 --   JOURNAL 3: no time given -> occurred_at is now() of the transaction (the moment of saving).
 --   JOURNAL 4: date bounds — now passes, now + 1 min is SE002, now - 14 days + 1 min passes, now - 14 days - 1 min is
@@ -303,6 +303,7 @@ declare
   v_empty text;
   v_null_items text;
   v_duplicate text;
+  v_duplicate_case text;
   v_unknown text;
   v_future text;
   v_too_old text;
@@ -317,6 +318,10 @@ begin
   v_empty := pg_temp.try_code(format(c_call, 'null', '[]'), 'SE001');
   v_null_items := pg_temp.try_code('select public.add_symptom_entry(null, null, null)', 'SE001');
   v_duplicate := pg_temp.try_code(format(c_call, 'null', pg_temp.items(array['nausea', 'nausea'], array['mild', 'severe'])), 'SE004');
+  -- The same uuid in two letter cases is one symptom: the ids are compared as uuid, not as text.
+  v_duplicate_case := pg_temp.try_code(format(c_call, 'null', jsonb_build_array(
+    jsonb_build_object('symptom_id', lower(pg_temp.symptom('nausea')::text), 'severity', 'mild'),
+    jsonb_build_object('symptom_id', upper(pg_temp.symptom('nausea')::text), 'severity', 'severe'))), 'SE004');
   v_unknown := pg_temp.try_code(format(c_call, 'null',
     jsonb_build_array(jsonb_build_object('symptom_id', '00000000-0000-4000-9400-0000000000ff', 'severity', null))), 'SE005');
   v_future := pg_temp.try_code(format(c_call, quote_literal(((now() + interval '1 hour') at time zone 'Europe/Warsaw')::text) || '::timestamp',
@@ -329,6 +334,7 @@ begin
   perform pg_temp.assert_code('2', 'saving with an empty list of symptoms', v_empty, 'SE001');
   perform pg_temp.assert_code('2', 'saving with no list of symptoms', v_null_items, 'SE001');
   perform pg_temp.assert_code('2', 'saving the same symptom twice', v_duplicate, 'SE004');
+  perform pg_temp.assert_code('2', 'saving the same symptom twice in two letter cases', v_duplicate_case, 'SE004');
   perform pg_temp.assert_code('2', 'saving a symptom not on the list', v_unknown, 'SE005');
   perform pg_temp.assert_code('2', 'saving a time one hour ahead', v_future, 'SE002');
   perform pg_temp.assert_code('2', 'saving a time 15 days back', v_too_old, 'SE003');

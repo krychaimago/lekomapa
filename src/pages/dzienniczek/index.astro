@@ -6,6 +6,8 @@
 // with the medication dates of its window, rebuilt from current data on every visit. The page only puts in place the
 // strings of doctorQuestionText; it never says a medication causes a symptom, never suggests stopping or changing a
 // dose and never orders medications by suspicion (FR-012) — events go by date, other medications by name.
+// Every entry links to its own screen (S-07), where it is corrected in its window and its note changed at any time;
+// a correction gets its message and the question rebuilt the same way as a new entry.
 import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
@@ -32,11 +34,21 @@ interface EntryRow {
 }
 
 const copy = JOURNAL_COPY.list;
+const linkClass = "self-start text-primary underline underline-offset-4 hover:no-underline";
 const severityLabel = new Map(SYMPTOM_SEVERITIES.map(({ value, label }) => [value, label]));
 
 // Only a well-formed uuid is looked up; anything else is ignored (no text from the URL reaches the screen).
-const addedParam = z.uuid().safeParse(Astro.url.searchParams.get("dodano"));
-const addedId = addedParam.success ? addedParam.data : null;
+const uuidParam = (name: string): string | null => {
+  const parsed = z.uuid().safeParse(Astro.url.searchParams.get(name));
+  return parsed.success ? parsed.data : null;
+};
+const addedId = uuidParam("dodano");
+const correctedId = uuidParam("poprawiono");
+const noteId = uuidParam("notatka");
+// A fixed value, never echoed: the deleted entry is gone, so there is no id to show.
+const deleted = Astro.url.searchParams.get("usunieto") === "1";
+// One highlighted entry: a new entry first, then a correction, then a note change.
+const highlightedId = addedId ?? correctedId ?? noteId;
 
 let loadFailed = false;
 let entries: SymptomEntry[] = [];
@@ -88,25 +100,56 @@ const deadlineOf = (entry: SymptomEntry): string | null =>
     ? formatCorrectionDeadline(entry.correctionWindowEndsAt, nowIso)
     : null;
 
-const addedEntry = addedId === null ? undefined : entries.find((entry) => entry.id === addedId);
-const addedDeadline = addedEntry ? deadlineOf(addedEntry) : null;
+const findEntry = (id: string | null): SymptomEntry | undefined =>
+  id === null ? undefined : entries.find((entry) => entry.id === id);
+const highlightedEntry = findEntry(highlightedId);
+// The kind of message follows the parameter the entry came from; an id that is not on the list gets none.
+const highlightKind: "added" | "corrected" | "note" | null = !highlightedEntry
+  ? null
+  : highlightedId === addedId
+    ? "added"
+    : highlightedId === correctedId
+      ? "corrected"
+      : "note";
+
 // At most three symptom names in the message; a longer entry is shown in full on its card, highlighted below.
 const SAVED_NAMES_SHOWN = 3;
-const addedSymptoms = addedEntry
-  ? [
-      addedEntry.items
-        .slice(0, SAVED_NAMES_SHOWN)
-        .map((item) => item.name)
-        .join(", "),
-      ...(addedEntry.items.length > SAVED_NAMES_SHOWN
-        ? [copy.savedMoreSymptoms.replace("{liczba}", String(addedEntry.items.length - SAVED_NAMES_SHOWN))]
-        : []),
-    ].join(" ")
-  : "";
+const symptomsSummary = (entry: SymptomEntry): string =>
+  [
+    entry.items
+      .slice(0, SAVED_NAMES_SHOWN)
+      .map((item) => item.name)
+      .join(", "),
+    ...(entry.items.length > SAVED_NAMES_SHOWN
+      ? [copy.savedMoreSymptoms.replace("{liczba}", String(entry.items.length - SAVED_NAMES_SHOWN))]
+      : []),
+  ].join(" ");
 
-// The question for the doctor only for an entry that is on the list; a failed read leaves the saved message in place.
+// The message above the list, or null. Nothing from the URL beyond the matched id reaches it.
+function statusMessageOf(): string | null {
+  if (highlightedEntry && (highlightKind === "added" || highlightKind === "corrected")) {
+    const deadline = deadlineOf(highlightedEntry);
+    const template =
+      highlightKind === "added"
+        ? deadline
+          ? copy.savedWithDeadline.replace("{do}", deadline)
+          : copy.saved
+        : deadline
+          ? copy.correctedWithDeadline.replace("{do}", deadline)
+          : copy.corrected;
+    return template.replace("{objawy}", symptomsSummary(highlightedEntry));
+  }
+  if (highlightKind === "note") return copy.noteSaved;
+  return deleted ? copy.deleted : null;
+}
+const statusMessage = statusMessageOf();
+
+// The question for the doctor after a new entry or a correction (its symptoms or date may have changed), not after a
+// note change; only for an entry that is on the list. A failed read leaves the message in place.
 const doctorQuestions: DoctorQuestionsResult | null =
-  addedEntry && supabase ? await loadDoctorQuestions(supabase, addedEntry.id) : null;
+  highlightedEntry && (highlightKind === "added" || highlightKind === "corrected") && supabase
+    ? await loadDoctorQuestions(supabase, highlightedEntry.id)
+    : null;
 const questionTexts =
   doctorQuestions && !("error" in doctorQuestions) ? doctorQuestions.questions.map(doctorQuestionText) : [];
 ---
@@ -120,12 +163,9 @@ const questionTexts =
       </a>
     </div>
 
-    {addedEntry && (
+    {statusMessage && (
       <p role="status" class="rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground">
-        {(addedDeadline ? copy.savedWithDeadline.replace("{do}", addedDeadline) : copy.saved).replace(
-          "{objawy}",
-          addedSymptoms,
-        )}
+        {statusMessage}
       </p>
     )}
 
@@ -176,7 +216,7 @@ const questionTexts =
               data-entry-id={entry.id}
               class:list={cn(
                 "flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm",
-                entry.id === addedId && "border-primary ring-2 ring-primary",
+                entry.id === highlightedId && "border-primary ring-2 ring-primary",
               )}
             >
               <p class="text-lg font-semibold">
@@ -198,6 +238,10 @@ const questionTexts =
               {deadline && (
                 <p class="text-sm text-muted-foreground">{copy.correctableUntil.replace("{do}", deadline)}</p>
               )}
+              {/* In both window states: once it is closed, the entry's screen still changes the note. */}
+              <a href={`/dzienniczek/${entry.id}`} class:list={linkClass}>
+                {deadline ? JOURNAL_COPY.entry.open : JOURNAL_COPY.entry.openClosed}
+              </a>
             </li>
           );
         })}
