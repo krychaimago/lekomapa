@@ -128,7 +128,10 @@ export default function EditEntryForm({
     await send(
       `/api/journal/${entryId}`,
       {
-        occurredLocal: occurredTouched && typeof occurredValue === "string" ? occurredValue : null,
+        // A value equal to the saved time is no change: null keeps occurred_at as saved, with its seconds and its
+        // offset (an hour repeated by the autumn clock change would otherwise resolve to its first occurrence).
+        occurredLocal:
+          occurredTouched && typeof occurredValue === "string" && occurredValue !== occurred ? occurredValue : null,
         items: selected.map((item) => ({ symptomId: item.symptomId, severity: item.severity })),
         note: typeof noteValue === "string" ? noteValue : null,
       },

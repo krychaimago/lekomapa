@@ -8,7 +8,8 @@
 --                 cleared.
 --   CORRECTION 3: no date given (p_occurred_local null) keeps occurred_at as saved.
 --   CORRECTION 4: an entry dated 13 days 23 h back gets a symptom corrected inside its window (the date is unchanged).
---   CORRECTION 5: content codes of the correction — SE001 (empty and missing list), SE004, SE005, SE002, SE003; a
+--   CORRECTION 5: content codes of the correction — SE001 (empty and missing list), SE004 (also with the id of a
+--                 symptom already on the entry once in lower and once in upper case), SE005, SE002, SE003; a
 --                 refused correction leaves the entry as saved.
 --   CORRECTION 6: account B on an entry of account A — all three functions are SE006, the entry of A stays as saved.
 --   CORRECTION 7: no session — all three functions are 28000.
@@ -457,6 +458,7 @@ declare
   v_empty text;
   v_null_items text;
   v_duplicate text;
+  v_duplicate_case text;
   v_unknown text;
   v_future text;
   v_too_old text;
@@ -473,6 +475,10 @@ begin
   v_null_items := pg_temp.try_code(format('select public.correct_symptom_entry(%L, null, null, null)', v_entry), 'SE001');
   v_duplicate := pg_temp.try_code(format(c_call, v_entry, 'null',
     pg_temp.items(array['nausea', 'nausea'], array['mild', 'severe'])), 'SE004');
+  -- The same uuid in two letter cases is one symptom: the ids are compared as uuid, not as text.
+  v_duplicate_case := pg_temp.try_code(format(c_call, v_entry, 'null', jsonb_build_array(
+    jsonb_build_object('symptom_id', lower(pg_temp.symptom('nausea')::text), 'severity', 'moderate'),
+    jsonb_build_object('symptom_id', upper(pg_temp.symptom('nausea')::text), 'severity', 'severe'))), 'SE004');
   v_unknown := pg_temp.try_code(format(c_call, v_entry, 'null',
     jsonb_build_array(jsonb_build_object('symptom_id', '00000000-0000-4000-9800-0000000000ff', 'severity', null))), 'SE005');
   v_future := pg_temp.try_code(format(c_call, v_entry,
@@ -486,6 +492,7 @@ begin
   perform pg_temp.assert_code('5', 'correcting with an empty list of symptoms', v_empty, 'SE001');
   perform pg_temp.assert_code('5', 'correcting with no list of symptoms', v_null_items, 'SE001');
   perform pg_temp.assert_code('5', 'correcting to the same symptom twice', v_duplicate, 'SE004');
+  perform pg_temp.assert_code('5', 'correcting to the same symptom twice in two letter cases', v_duplicate_case, 'SE004');
   perform pg_temp.assert_code('5', 'correcting to a symptom not on the list', v_unknown, 'SE005');
   perform pg_temp.assert_code('5', 'correcting the time to one hour ahead', v_future, 'SE002');
   perform pg_temp.assert_code('5', 'correcting the time to 15 days back', v_too_old, 'SE003');

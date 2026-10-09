@@ -29,8 +29,10 @@ export const JOURNAL_COPY = {
   // Screen of one entry (S-07), /dzienniczek/<id>: correcting it while the window is open, the note always.
   entry: {
     title: "Wpis w dzienniczku",
-    // Link on every card of the list, in both window states.
+    // Link on every card of the list: `open` while the window is open, `openClosed` after it closes (only the note
+    // can still change).
     open: "Popraw wpis",
+    openClosed: "Zobacz wpis i notatkę",
     deadline: "Możesz poprawić do {do}.",
     // The date field of a correction: left untouched, the saved date stays (unlike a new entry).
     occurredHint:

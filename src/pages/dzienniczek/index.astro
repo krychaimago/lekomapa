@@ -240,7 +240,7 @@ const questionTexts =
               )}
               {/* In both window states: once it is closed, the entry's screen still changes the note. */}
               <a href={`/dzienniczek/${entry.id}`} class:list={linkClass}>
-                {JOURNAL_COPY.entry.open}
+                {deadline ? JOURNAL_COPY.entry.open : JOURNAL_COPY.entry.openClosed}
               </a>
             </li>
           );

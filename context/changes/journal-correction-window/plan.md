@@ -196,7 +196,7 @@ Strony i formularz, link z listy, komunikaty po poprawce, notatce i usunięciu, 
 
 **Contract**:
 
-- `minOccurred` wyliczany czystą funkcją `minOccurredLocal(occurredLocal: string, now?: Date): string` w `src/lib/services/journal.ts` (obok `earliestEntryLocal`, :150): wcześniejsza z (`earliestEntryLocal(now)`, `occurredLocal`). Test obowiązkowy w `scripts/journal/journal.test.mjs`: wpis z 26.09.2026 08:00 poprawiany 09.10.2026 → `min` = zapisana wartość; wpis świeży → `min` = granica 14 dni.
+- `minOccurred` wyliczany czystą funkcją `minOccurredLocal(occurredLocal: string, now?: Date): string` w `src/lib/services/journal.ts` (obok `earliestEntryLocal`, :150): wcześniejsza z (`earliestEntryLocal(now)`, `occurredLocal`). Test obowiązkowy w `scripts/journal/journal.test.mjs`: wpis z 26.09.2026 08:00 zapisany 09.10.2026, poprawiany 10.10.2026 09:00 (granica 14 dni: 26.09.2026 09:00) → `min` = zapisana wartość; wpis świeży → `min` = granica 14 dni.
 - Props: `entryId`, `windowOpen`, `windowEndsAt` (ISO), `occurred` (`YYYY-MM-DDTHH:MM`, czas polski), `minOccurred` (patrz Critical Implementation Details), `items` (wybrane objawy z nasileniem), `note`, katalog objawów i terminy wyszukiwania.
 - Nietknięta data → `occurredLocal: null`.
 - `correctionWindowClosed` wyświetlany z `{o}` = `formatWarsawDateTime(windowEndsAt)`.
