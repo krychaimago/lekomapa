@@ -59,9 +59,9 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
 | S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | ready       |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | in-progress |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | proposed    |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | ready       |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
 
 ## Streams
@@ -306,7 +306,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - ~~Jak długo trwa okno korekty wpisu dzienniczka?~~ — rozstrzygnięte 2026-10-05 (issue #4): 24 h od chwili zapisu, zegarem serwera, wspólne z lekami. Szczegóły: `prd.md`, `## Open Questions`, pytanie 5.
 - **Risk:** Swobodna edycja po fakcie daje obraz ładniejszy niż prawdziwy, a dzienniczek jest wart tyle, ile jego kompletność. Samo okno powstaje w S-05 (reguła w bazie i informacja „do kiedy” po zapisie i na liście); S-07 dokłada ekran poprawy i usunięcia wpisu w oknie oraz edycję notatki po jego zamknięciu. Poprawka w oknie zmienia wpis, który zasilił już złożone pytanie z S-06 — pytanie musi iść za poprawionym wpisem. Spełnione przez S-06: pytanie jest przeliczane przy każdym wyświetleniu, więc S-07 nie musi go aktualizować.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-08: Sekcja „Wizyta"
 
@@ -335,7 +335,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Operacja nieodwracalna, a zakres kasowania rośnie z każdą nową tabelą — dlatego sekwencjonowana po tym, jak powstały wszystkie tabele z danymi konta (S-01 dla zapisu akceptacji warunków, S-02 dla leków i okresów, S-05 dla dzienniczka, S-06 dla złożonych pytań). S-01 i S-06 dopisane 2026-09-26: wcześniej brakowało ich w wymaganiach wstępnych, choć obie tworzą dane przypisane do konta. Zaplanowana wcześniej przeoczyłaby dane dodane później i zostawiła sieroty, czego samo przejście ścieżki nie ujawni. Przy publicznej rejestracji to także jedyna droga, którą strona prywatności z S-01 może wskazać jako „jak usunąć konto” — do czasu S-09 strona musi mówić, jak zrobić to inaczej.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-11: Tryb ciemny
 
@@ -371,7 +371,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 | S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
 | S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | yes                   | Uruchom `/10x-plan journal-correction-window`          | #18   |
 | S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | no                    | Wymaga S-02 i S-06                                     | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | no                    | Wymaga S-01, S-02, S-05 i S-06                         | #20   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | yes                   | Uruchom `/10x-plan account-deletion-cascade`           | #20   |
 | S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
 
 ## Open Roadmap Questions
