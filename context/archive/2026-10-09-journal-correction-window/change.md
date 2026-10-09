@@ -1,9 +1,10 @@
 ---
 change_id: journal-correction-window
 title: Journal correction window
-status: impl_reviewed
+status: archived
 created: 2026-10-09
 updated: 2026-10-09
+archived_at: 2026-10-09T20:53:25Z
 ---
 
 ## Notes
