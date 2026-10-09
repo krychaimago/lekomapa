@@ -320,25 +320,25 @@ Migracja dodaje wyłącznie funkcję; bez zmian w danych i tabelach. Wycofanie: 
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
-- [x] 1.2 Bramka SQL przechodzi, w tym nowy plik: `npm run db:check`
-- [x] 1.3 Niezmienniki schematu bez zmian (INVARIANT 1–7 OK) w tym samym biegu `npm run db:check`
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — bc4f2ae
+- [x] 1.2 Bramka SQL przechodzi, w tym nowy plik: `npm run db:check` — bc4f2ae
+- [x] 1.3 Niezmienniki schematu bez zmian (INVARIANT 1–7 OK) w tym samym biegu `npm run db:check` — bc4f2ae
 
 #### Manual
 
-- [x] 1.4 Przy celowo zepsutej funkcji odpowiedni blok OCCURRENCES pada — sprawdzone raz lokalnie, zmiana cofnięta (np. `grant execute … to anon` wywraca OCCURRENCES 3)
+- [x] 1.4 Przy celowo zepsutej funkcji odpowiedni blok OCCURRENCES pada — sprawdzone raz lokalnie, zmiana cofnięta (np. `grant execute … to anon` wywraca OCCURRENCES 3) — bc4f2ae
 
 ### Phase 2: Logika sekcji i teksty
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe przechodzą: `npm test`
-- [ ] 2.2 Typy: `npm run typecheck`
-- [ ] 2.3 Lint: `npm run lint`
+- [x] 2.1 Testy jednostkowe przechodzą: `npm test`
+- [x] 2.2 Typy: `npm run typecheck`
+- [x] 2.3 Lint: `npm run lint`
 
 #### Manual
 
-- [ ] 2.4 Test modułu pada, gdy deduplikacja par zostanie wyłączona albo „najnowszy” liczony po pozycji w tablicy — sprawdzone raz, zmiana cofnięta
+- [x] 2.4 Test modułu pada, gdy deduplikacja par zostanie wyłączona albo „najnowszy” liczony po pozycji w tablicy — sprawdzone raz, zmiana cofnięta
 
 ### Phase 3: Ekran, menu i smoke
 
