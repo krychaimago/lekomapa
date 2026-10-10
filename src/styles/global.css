@@ -144,6 +144,9 @@ html {
 @media (min-width: 64rem) {
   html {
     --text-floor: 1.0625rem; /* 17px */
+    /* Fixed height of the demo bar from lg up, so the sticky sidebar in AppLayout can sit right
+       under it and fill the rest of the window. Fits one line of the floor text plus its padding. */
+    --demo-bar-height: 2.75rem;
   }
 }
 
