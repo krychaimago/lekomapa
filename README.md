@@ -93,7 +93,13 @@ Ten sam układ co przy odzyskiwaniu dostępu: lokalnie szablon i adres przekiero
 
 Odnośnik zużywa dopiero przycisk „Potwierdź adres” na `/auth/confirm` (skanery poczty otwierają odnośniki same). Po potwierdzeniu aplikacja wylogowuje powstałą sesję i prosi o zalogowanie hasłem.
 
-Do czasu własnego nadawcy maili (F-05) mail dochodzi na produkcji tylko na adresy członków zespołu projektu Supabase.
+#### Nadawca maili (SMTP Brevo)
+
+Produkcja wysyła maile przez SMTP Brevo (`smtp-relay.brevo.com:587`) jako `Lekomapa <kontakt@lekomapa.pl>`. Konfiguracja żyje w panelu Supabase → Authentication → Emails → SMTP Settings; klucz SMTP Brevo istnieje wyłącznie tam — nie trafia do repozytorium, `.env` ani sekretów Workera. Limit w Authentication → Rate Limits: 30 maili na godzinę (darmowe Brevo daje 300 dziennie).
+
+Wpisy DNS (DKIM Brevo, DMARC, SPF) są w Cloudflare. Nie zmieniaj serwerów DNS w OVH — odcina to aplikację od domeny. Na korzeniu może być tylko jeden rekord `v=spf1`; nowy dostawca dopisuje swój `include:` do istniejącego rekordu. Odpowiedzi na `kontakt@lekomapa.pl` przekierowuje Cloudflare Email Routing na `krysko.anna@gmail.com`.
+
+Lokalnie bez zmian: maile łapie mailpit (`supabase/config.toml`).
 
 ### Migracje
 
