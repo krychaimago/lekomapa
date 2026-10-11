@@ -432,5 +432,5 @@ Brak migracji bazy. Zmiana konfiguracji: lokalnie w `supabase/config.toml`, na p
 #### Manual
 
 - [x] 3.6 Wygaśnięcie: lokalnie `otp_expiry = 60`, restart Supabase, odnośnik kliknięty po ponad minucie pokazuje komunikat o wygasłym odnośniku; `otp_expiry` przywrócone do 3600 — 8d76504
-- [ ] 3.7 Szablon i adres przekierowania ustawione w panelu produkcji i odczytane z powrotem
-- [ ] 3.8 Po wdrożeniu: reset na koncie autorki na produkcji — mail dochodzi, odnośnik prowadzi na adres produkcji, nowe hasło działa
+- [x] 3.7 Szablon i adres przekierowania ustawione w panelu produkcji i odczytane z powrotem — 96b18ea
+- [x] 3.8 Po wdrożeniu: reset na koncie autorki na produkcji — mail dochodzi, odnośnik prowadzi na adres produkcji, nowe hasło działa — 96b18ea
