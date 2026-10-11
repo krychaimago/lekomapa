@@ -281,33 +281,33 @@ Supabase wysyła przez Brevo, szablony są polskie, a reset hasła i potwierdzen
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą: `npm test`
-- [x] 2.2 Lint przechodzi: `npm run lint`
-- [x] 2.3 Typy przechodzą: `npm run typecheck`
-- [x] 2.4 Build przechodzi: `npm run build`
-- [x] 2.5 Starego zdania nie ma w kodzie: `grep -rn "wysyła Supabase" src` nie zwraca nic
-- [ ] 2.6 CI na `main` po merge'u zielone (`ci`, `smoke`, `deploy`)
+- [x] 2.1 Testy przechodzą: `npm test` — 0b49ffb
+- [x] 2.2 Lint przechodzi: `npm run lint` — 0b49ffb
+- [x] 2.3 Typy przechodzą: `npm run typecheck` — 0b49ffb
+- [x] 2.4 Build przechodzi: `npm run build` — 0b49ffb
+- [x] 2.5 Starego zdania nie ma w kodzie: `grep -rn "wysyła Supabase" src` nie zwraca nic — 0b49ffb
+- [x] 2.6 CI na `main` po merge'u zielone (`ci`, `smoke`, `deploy`) — f7b469f
 
 #### Manual
 
-- [ ] 2.7 `/prywatnosc` na produkcji pokazuje nowe zdanie
-- [ ] 2.8 `/warunki` na produkcji bez zmian
-- [ ] 2.9 Faza 1 zakończona przed merge'em; faza 3 tego samego dnia
+- [x] 2.7 `/prywatnosc` na produkcji pokazuje nowe zdanie — f7b469f
+- [x] 2.8 `/warunki` na produkcji bez zmian — f7b469f
+- [x] 2.9 Faza 1 zakończona przed merge'em; faza 3 tego samego dnia — f7b469f
 
 ### Phase 3: Przełączenie i sprawdzenie na produkcji
 
 #### Automated
 
-- [ ] 3.1 Nagłówki maila z Gmaila zawierają `spf=pass`, `dkim=pass` (lekomapa.pl) i `dmarc=pass`
-- [ ] 3.2 Przekierowanie bez zmian: MX zwraca trzy serwery `mx.cloudflare.net`
+- [x] 3.1 Nagłówki maila z Gmaila zawierają `spf=pass`, `dkim=pass` (lekomapa.pl) i `dmarc=pass`
+- [x] 3.2 Przekierowanie bez zmian: MX zwraca trzy serwery `mx.cloudflare.net`
 
 #### Manual
 
-- [ ] 3.3 Supabase pokazuje SMTP Brevo, nadawcę `Lekomapa <kontakt@lekomapa.pl>` i limit 30/h
-- [ ] 3.4 Oba szablony w panelu zawierają odnośniki z `token_hash`
-- [ ] 3.5 Gmail spoza zespołu: rejestracja, potwierdzenie i logowanie działają
-- [ ] 3.6 Gmail spoza zespołu: reset hasła i logowanie nowym hasłem działają
-- [ ] 3.7 Poczta polska spoza zespołu: oba maile w odebranych
-- [ ] 3.8 Odnotowane, czy jest dopisek „Sent with Brevo”
-- [ ] 3.9 Konta testowe usunięte
+- [x] 3.3 Supabase pokazuje SMTP Brevo, nadawcę `Lekomapa <kontakt@lekomapa.pl>` i limit 30/h
+- [x] 3.4 Oba szablony w panelu zawierają odnośniki z `token_hash`
+- [x] 3.5 Gmail spoza zespołu: rejestracja, potwierdzenie i logowanie działają
+- [x] 3.6 Gmail spoza zespołu: reset hasła i logowanie nowym hasłem działają
+- [x] 3.7 Poczta polska spoza zespołu: oba maile w odebranych
+- [x] 3.8 Odnotowane, czy jest dopisek „Sent with Brevo”
+- [x] 3.9 Konta testowe usunięte
 - [ ] 3.10 Brevo: śledzenie kliknięć i otwarć wyłączone; odnośnik w mailu testowym prowadzi wprost na `lekomapa.pl`
