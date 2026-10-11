@@ -108,6 +108,8 @@ Obserwowalność jest już włączona w `wrangler.jsonc`. Puść równolegle z t
 
 Panel Supabase → Authentication → Users → usuń konto `smoke-<timestamp>@example.com`.
 
+Konta użytkowniczek usuwa się w aplikacji (Konto → Usuń konto, potwierdzenie hasłem). Panel Supabase zostaje drogą awaryjną — gdy osoba nie może się zalogować albo nie akceptuje nowej wersji warunków i pisze mailem — oraz drogą sprzątania kont smoke.
+
 ## Weryfikacja końcowa
 
 Ręcznie, z telefonu (PRD wymaga pełnej używalności na ekranie telefonu):
@@ -136,7 +138,7 @@ Zgodnie z historią operacyjną w `infrastructure.md`:
 - logowanie do Cloudflare (krok 1),
 - wpisanie wartości sekretów (krok 4),
 - zmiany konfiguracji w panelu Supabase (krok 5),
-- usunięcie konta testowego (krok 8).
+- usunięcie konta testowego w panelu Supabase (krok 8) i każde awaryjne usunięcie konta w panelu na prośbę mailową.
 
 Agent wykonuje kroki 2, 3, 6, 7 i może cofnąć wdrożenie bez pytania.
 

@@ -89,7 +89,10 @@ export const PRIVACY_COPY = {
     },
     {
       heading: "Jak usunąć konto",
-      points: ["Napisz z adresu konta na krysko.anna@gmail.com. Usunę konto razem ze wszystkimi wpisami, bez kopii."],
+      points: [
+        "Wejdź w Konto → Usuń konto i potwierdź hasłem. Konto znika od razu razem ze wszystkimi wpisami, bez kopii.",
+        "Jeśli nie możesz się zalogować albo nie akceptujesz nowej wersji warunków, napisz z adresu konta na krysko.anna@gmail.com. Usunę konto razem ze wszystkimi wpisami, bez kopii.",
+      ],
     },
     {
       heading: "Na czas prototypu",

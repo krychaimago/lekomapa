@@ -211,6 +211,8 @@ W tym samym trybie chodzą kroki dla tabel wspólnych (`registry_products`, `reg
 
 W tym samym trybie, ale **wyłącznie przeciw lokalnemu Supabase** (bez obejścia przez `SMOKE_ALLOW_REMOTE_WRITES`), chodzą kroki odzyskiwania dostępu: prośba o odnośnik, odczyt maila z mailpitu (`MAILPIT_URL`, domyślnie `http://127.0.0.1:54324`), jednorazowość odnośnika, blokada wnętrza w sesji z odnośnika, zapis nowego hasła i zamknięcie sesji na innym urządzeniu. Zmieniają hasło konta, więc nigdy nie dotykają prawdziwego konta. Mailpit musi działać — w CI nie jest wyłączany.
 
+Na tych samych warunkach (konto jednorazowe, wyłącznie lokalny Supabase) chodzą kroki usunięcia konta: osobne konto z lekiem i wpisem dzienniczka, odmowa przy złym haśle, usunięcie przez `/api/account/delete`, stare ciasteczko bez dostępu do wnętrza i odmowa ponownego logowania. Stałego konta z `SMOKE_EMAIL` nigdy nie usuwają.
+
 To sanity check po aktualizacji zależności, nie zestaw testów. Logika okresów dawkowania i zestawiania objawów w czasie wymaga własnych testów jednostkowych — do dopisania razem z pierwszym serwisem w `src/lib/services/`.
 
 ## CI

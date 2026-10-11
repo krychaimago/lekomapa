@@ -388,29 +388,29 @@ Brak. Usunięcie to jedno żądanie i kaskada na danych jednego konta.
 
 #### Automated
 
-- [x] 2.1 Typy: `npm run typecheck`
-- [x] 2.2 Lint: `npm run lint`
-- [x] 2.3 Testy jednostkowe, w tym pokrycie tras, menu, kolory na sztywno, FR-012 dla nowych tekstów: `npm test`
-- [x] 2.4 Build: `npm run build`
+- [x] 2.1 Typy: `npm run typecheck` — a54e64f
+- [x] 2.2 Lint: `npm run lint` — a54e64f
+- [x] 2.3 Testy jednostkowe, w tym pokrycie tras, menu, kolory na sztywno, FR-012 dla nowych tekstów: `npm test` — a54e64f
+- [x] 2.4 Build: `npm run build` — a54e64f
 
 #### Manual
 
-- [x] 2.5 Na lokalnym Supabase: „Konto” widoczne w pasie bocznym i na pasku zakładek telefonu; ekran pokazuje adres e-mail
-- [x] 2.6 Złe hasło na `/konto/usun` daje komunikat, a konto dalej się loguje
-- [x] 2.7 Dobre hasło prowadzi na „Konto usunięte”; wejście na `/leki` przekierowuje na logowanie; ponowne logowanie tym kontem nie działa
-- [x] 2.8 Zmierzone i zapisane w `change.md`: co zwraca `signOut` po usunięciu i że ciasteczka `sb-*` znikają
+- [x] 2.5 Na lokalnym Supabase: „Konto” widoczne w pasie bocznym i na pasku zakładek telefonu; ekran pokazuje adres e-mail — a54e64f
+- [x] 2.6 Złe hasło na `/konto/usun` daje komunikat, a konto dalej się loguje — a54e64f
+- [x] 2.7 Dobre hasło prowadzi na „Konto usunięte”; wejście na `/leki` przekierowuje na logowanie; ponowne logowanie tym kontem nie działa — a54e64f
+- [x] 2.8 Zmierzone i zapisane w `change.md`: co zwraca `signOut` po usunięciu i że ciasteczka `sb-*` znikają — a54e64f
 
 ### Phase 3: Strona prywatności, smoke i dokumenty
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe, w tym tekst strony prywatności i FR-012: `npm test`
-- [ ] 3.2 Smoke na lokalnym Supabase z odsuniętym `.env`, przy zatrzymanym starym podglądzie: `npm run smoke`, z zielonymi krokami grupy usunięcia konta
-- [ ] 3.3 Typy i lint: `npm run typecheck` i `npm run lint`
+- [x] 3.1 Testy jednostkowe, w tym tekst strony prywatności i FR-012: `npm test`
+- [x] 3.2 Smoke na lokalnym Supabase z odsuniętym `.env`, przy zatrzymanym starym podglądzie: `npm run smoke`, z zielonymi krokami grupy usunięcia konta
+- [x] 3.3 Typy i lint: `npm run typecheck` i `npm run lint`
 
 #### Manual
 
-- [ ] 3.4 Autorka zatwierdza brzmienie sekcji „Jak usunąć konto” na `/prywatnosc`
-- [ ] 3.5 Pomiar przed smoke: konto testowe powstało w lokalnym `auth.users`, nie na produkcji
+- [x] 3.4 Autorka zatwierdza brzmienie sekcji „Jak usunąć konto” na `/prywatnosc`
+- [x] 3.5 Pomiar przed smoke: konto testowe powstało w lokalnym `auth.users`, nie na produkcji
 - [ ] 3.6 Po merge'u: `npx supabase db push` na produkcję i lista migracji pokazuje `20261010120000_delete_own_account`
 - [ ] 3.7 Po wdrożeniu: usunięcie świeżo założonego konta testowego na produkcji przechodzi i konto znika z panelu Supabase

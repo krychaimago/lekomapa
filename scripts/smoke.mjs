@@ -2113,6 +2113,154 @@ const passwordRecoverySteps = recoverySkipReason
   ? [["password recovery checks", null, { skip: recoverySkipReason }]]
   : recoverySteps;
 
+// --- Account deletion (S-09) -----------------------------------------------
+//
+// Walks the deletion through the app on an account of its own that has data: sign-up and sign-in over HTTP, one
+// medication and one journal entry through the app's routes, a wrong password that leaves the account in place, then
+// the real deletion. The only check of the real commit in the database, the deferred journal triggers included: a
+// refused commit ends on the error screen instead of /auth/konto-usuniete. The form posts from /konto/usun, so its
+// Origin comes from that page's referrer policy (formOrigin). Only ids travel in URLs.
+
+const ACCOUNT_DELETE_PAGE = "/konto/usun";
+const ACCOUNT_DELETE_ROUTE = "/api/account/delete";
+const ACCOUNT_DELETED_PATH = "/auth/konto-usuniete";
+const WRONG_PASSWORD_LOCATION = `${ACCOUNT_DELETE_PAGE}?error=wrongPassword`;
+
+// `oldJar` is a copy of the browser's cookies taken right before the deletion: the session the deleted account had.
+const deletion = {
+  email: `smoke-deletion-${Date.now()}@${emailDomain}`,
+  jar: new Map(),
+  oldJar: null,
+  medicationId: null,
+  entryId: null,
+};
+
+const postAccountDeletion = async (formPassword) =>
+  request(ACCOUNT_DELETE_ROUTE, {
+    method: "POST",
+    jar: deletion.jar,
+    origin: await formOrigin(ACCOUNT_DELETE_PAGE, deletion.jar),
+    form: { password: formPassword },
+  });
+
+const signInDeletionAccount = (cookieJar) =>
+  request("/api/auth/signin", { method: "POST", jar: cookieJar, form: { email: deletion.email, password } });
+
+const accountDeletionFlowSteps = [
+  [
+    "account deletion: a new account signs up and signs in over HTTP",
+    async () => {
+      const signUp = await request("/api/auth/signup", {
+        method: "POST",
+        jar: deletion.jar,
+        form: signupForm(deletion.email),
+      });
+      const signIn = await signInDeletionAccount(deletion.jar);
+      return {
+        ok:
+          signUp.status === 302 &&
+          signUp.location === "/auth/confirm-email" &&
+          signIn.status === 302 &&
+          signIn.location === "/",
+        detail: `sign-up ${signUp.status} ${signUp.location}; sign-in ${signIn.status} ${signIn.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "account deletion: the account adds a medication and a journal entry through the app",
+    async () => {
+      const medication = await request("/api/medications", {
+        method: "POST",
+        jar: deletion.jar,
+        origin: await formOrigin(LEAFLET_ADD_PAGE, deletion.jar),
+        form: {
+          source: "leaflet",
+          productName: "Smoke Test Preparat do usunięcia konta",
+          substanceName: `Smoketestum ${Date.now()}`,
+          confirmUnverified: "1",
+          doseText: "1 tabletka (smoke)",
+          startedOn: todayInWarsaw(),
+        },
+      });
+      deletion.medicationId = medication.status === 302 ? addedIdFrom(medication.location) : null;
+      if (!deletion.medicationId) {
+        return { ok: false, detail: `medication: ${medication.status} ${medication.location}` };
+      }
+
+      // The symptom by id from the shared list, read with this account's own session; its name travels nowhere.
+      const client = supabaseClient();
+      const { error: signInError } = await client.auth.signInWithPassword({ email: deletion.email, password });
+      if (signInError) return { ok: false, detail: `symptom lookup sign-in failed: ${describeError(signInError)}` };
+      const symptom = await client.from("symptoms").select("id").order("id").limit(1).single();
+      if (symptom.error) return { ok: false, detail: `symptom lookup failed: ${describeError(symptom.error)}` };
+
+      const entry = await postJson(
+        JOURNAL_ROUTE,
+        {
+          occurredLocal: null,
+          items: [{ symptomId: symptom.data.id, severity: "mild" }],
+          note: "Smoke account deletion note",
+        },
+        { jar: deletion.jar, origin: await formOrigin(JOURNAL_NEW_PAGE, deletion.jar) },
+      );
+      deletion.entryId = entry.status === 201 && typeof entry.json?.id === "string" ? entry.json.id : null;
+      return {
+        ok: deletion.entryId !== null,
+        detail: `medication ${deletion.medicationId}; journal ${entry.status} ${JSON.stringify(entry.json)}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "account deletion: a wrong password is refused and the account still signs in",
+    async () => {
+      const refused = await postAccountDeletion(`${password}-wrong`);
+      // A separate browser: the main jar keeps the session the next step deletes the account with.
+      const signIn = await signInDeletionAccount(new Map());
+      return {
+        ok:
+          refused.status === 303 &&
+          refused.location === WRONG_PASSWORD_LOCATION &&
+          signIn.status === 302 &&
+          signIn.location === "/",
+        detail: `delete ${refused.status} ${refused.location}; sign-in ${signIn.status} ${signIn.location}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "account deletion: the right password deletes the account",
+    async () => {
+      deletion.oldJar = new Map(deletion.jar);
+      return postAccountDeletion(password);
+    },
+    { status: 303, location: ACCOUNT_DELETED_PATH, exact: true },
+  ],
+  [
+    "account deletion: the old session cookie no longer opens the interior",
+    () => request("/leki", { jar: deletion.oldJar ?? new Map() }),
+    { status: 302, location: "/auth/signin", exact: true },
+  ],
+  [
+    "account deletion: the deleted account no longer signs in",
+    () => signInDeletionAccount(new Map()),
+    { status: 302, location: "/auth/signin?error=credentials", exact: true },
+  ],
+];
+
+// Deletes an account, so never in existing-account mode (that account is permanent), and only against a local
+// Supabase, without the SMOKE_ALLOW_REMOTE_WRITES override: like the recovery steps, it never touches a real database.
+const accountDeletionSkipReason = usesExistingAccount
+  ? "existing-account mode never deletes the permanent test account"
+  : !isLocalSupabase(SUPABASE_URL)
+    ? "SUPABASE_URL is not a local Supabase — the deletion steps create and delete an account with invented health data"
+    : null;
+
+const accountDeletionSteps = accountDeletionSkipReason
+  ? [["account deletion checks", null, { skip: accountDeletionSkipReason }]]
+  : accountDeletionFlowSteps;
+
 // --- Registry suggestions (S-02, phase 6) ----------------------------------
 //
 // The JSON route behind the suggestions under the name field. Read-only, so it runs in both modes, signed in with the
@@ -2308,6 +2456,7 @@ const steps = [
   ...journalSteps,
   ...termsGateSteps,
   ...passwordRecoverySteps,
+  ...accountDeletionSteps,
 ];
 
 console.log(
