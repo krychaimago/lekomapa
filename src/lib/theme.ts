@@ -21,14 +21,14 @@ export function parseThemePreference(value: string | undefined): ThemePreference
   return (THEME_PREFERENCES as readonly string[]).includes(value ?? "") ? (value as ThemePreference) : "system";
 }
 
-// Only a path inside lekomapa: a single leading "/", no "//", no "\", no query or fragment, no control characters.
+// Only a path inside lekomapa: a single leading "/", no "//", no "\", no query or fragment, printable ASCII only (no
+// spaces, no control characters a browser would strip into "//", no raw non-ASCII a Location header cannot carry).
 // Anything else → "/". Rejecting "?" also keeps query strings (which could carry health data) out of redirects.
 export function safeReturnPath(value: unknown): string {
   if (typeof value !== "string") return "/";
   if (!value.startsWith("/")) return "/";
   if (value.includes("//") || value.includes("\\")) return "/";
   if (value.includes("?") || value.includes("#")) return "/";
-  // eslint-disable-next-line no-control-regex
-  if (/[\u0000-\u001f\u007f]/.test(value)) return "/";
+  if (!/^[\x21-\x7e]+$/.test(value)) return "/";
   return value;
 }

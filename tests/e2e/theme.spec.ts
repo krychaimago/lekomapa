@@ -66,7 +66,7 @@ test("system: without a saved choice the page follows the device setting, also w
   await expect(html).not.toHaveClass(DARK_CLASS);
 });
 
-test("Konto: Jak w systemie after Ciemny follows a light device", async ({ page }) => {
+test("Konto: Jak w systemie after Ciemny follows the device", async ({ page }) => {
   await page.goto("/konto");
   const html = page.locator("html");
 
@@ -80,6 +80,10 @@ test("Konto: Jak w systemie after Ciemny follows a light device", async ({ page 
   await expect(page).toHaveURL(/\/konto$/);
   await expect(page.getByRole("radio", { name: "Jak w systemie" })).toBeChecked();
   await expect(html).not.toHaveClass(DARK_CLASS);
+
+  // A light device alone cannot tell "system" from "light": only "system" turns dark with the device.
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(html).toHaveClass(DARK_CLASS);
 });
 
 test.describe("signed out", () => {

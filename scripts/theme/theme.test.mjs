@@ -1,9 +1,10 @@
-// Color mode rules (dark-mode phase 1): an unknown cookie value never breaks the page, and the return path
-// after saving the choice never leaves lekomapa.
+// Color mode rules (dark-mode phase 1): an unknown cookie value never breaks the page, the return path
+// after saving the choice never leaves lekomapa, and saving it stays behind the terms gate.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { termsGateAction } from "../../src/lib/auth/terms-gate.ts";
 import { parseThemePreference, safeReturnPath } from "../../src/lib/theme.ts";
 
 test("parseThemePreference falls back to system for anything unknown", () => {
@@ -32,10 +33,18 @@ test("safeReturnPath sends everything else to /", () => {
     "https://example.com",
     "leki",
     "/leki?q=x",
+    "/leki#x",
+    "/\t/example.com",
+    "/\n/example.com",
+    "/ł",
     "",
     undefined,
     42,
   ]) {
     assert.equal(safeReturnPath(value), "/", `value: ${JSON.stringify(value)}`);
   }
+});
+
+test("the theme route answers 403 without the current terms version", () => {
+  assert.equal(termsGateAction("/api/preferences/theme", null, 1), "forbid");
 });

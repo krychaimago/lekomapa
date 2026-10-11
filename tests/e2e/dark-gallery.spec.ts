@@ -415,15 +415,36 @@ test.describe("dark-mode gallery", () => {
     }
   }
 
-  // Runs also when a step above failed: deletes this run's data through the UI, inside the correction window.
+  // Runs also when a step above failed: deletes this run's data through the UI, inside the correction window. Every
+  // deletion is tried on its own; failures are collected and reported after the final "no marker left" check.
   test.afterAll(async ({ browser }, testInfo) => {
     const context = await newDarkContext(browser, testInfo, true);
     const page = await context.newPage();
+    const failures: string[] = [];
+    const attempt = async (label: string, action: () => Promise<void>) => {
+      try {
+        await action();
+      } catch (error) {
+        failures.push(`${label}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    };
     try {
-      if (data.journalId) {
-        await page.goto(`/dzienniczek/${data.journalId}/usun`);
-        await page.getByRole("button", { name: "Usuń wpis" }).click();
-        await page.waitForURL(/\/dzienniczek\?usunieto=1$/);
+      // Tracked id plus any entry whose note carries this run's marker (an id lost to a failure halfway).
+      const journalIds = new Set([data.journalId].filter((id): id is string => id !== undefined));
+      await attempt("find journal entries", async () => {
+        await page.goto("/dzienniczek");
+        const found = await page
+          .locator("li[data-entry-id]")
+          .filter({ hasText: RUN_MARKER })
+          .evaluateAll((items) => items.map((item) => item.getAttribute("data-entry-id") ?? ""));
+        for (const id of found) if (new RegExp(`^${UUID}$`).test(id)) journalIds.add(id);
+      });
+      for (const id of journalIds) {
+        await attempt(`delete journal entry ${id}`, async () => {
+          await page.goto(`/dzienniczek/${id}/usun`);
+          await page.getByRole("button", { name: "Usuń wpis" }).click();
+          await page.waitForURL(/\/dzienniczek\?usunieto=1$/);
+        });
       }
 
       // Tracked ids plus anything with this run's marker on either list (an id lost to a failure halfway).
@@ -431,29 +452,36 @@ test.describe("dark-mode gallery", () => {
         [data.interactingId, data.pairedId, data.endedId].filter((id): id is string => id !== undefined),
       );
       for (const listPath of ["/leki", "/leki/zakonczone"]) {
-        await page.goto(listPath);
-        const hrefs = await page
-          .locator('a[href^="/leki/"]')
-          .filter({ hasText: RUN_MARKER })
-          .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
-        for (const href of hrefs) {
-          const match = new RegExp(`^/leki/(${UUID})$`).exec(href);
-          if (match) ids.add(match[1]);
-        }
+        await attempt(`find medications on ${listPath}`, async () => {
+          await page.goto(listPath);
+          const hrefs = await page
+            .locator('a[href^="/leki/"]')
+            .filter({ hasText: RUN_MARKER })
+            .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+          for (const href of hrefs) {
+            const match = new RegExp(`^/leki/(${UUID})$`).exec(href);
+            if (match) ids.add(match[1]);
+          }
+        });
       }
 
       for (const id of ids) {
-        await page.goto(`/leki/${id}/usun`);
-        await page.getByRole("button", { name: "Usuń pozycję" }).click();
-        await page.waitForURL(/\/leki\?usunieto=1$/);
+        await attempt(`delete medication ${id}`, async () => {
+          await page.goto(`/leki/${id}/usun`);
+          await page.getByRole("button", { name: "Usuń pozycję" }).click();
+          await page.waitForURL(/\/leki\?usunieto=1$/);
+        });
       }
 
-      for (const listPath of ["/leki", "/leki/zakonczone"]) {
-        await page.goto(listPath);
-        await expect(page.getByText(RUN_MARKER)).toHaveCount(0);
+      for (const listPath of ["/dzienniczek", "/leki", "/leki/zakonczone"]) {
+        await attempt(`marker left on ${listPath}`, async () => {
+          await page.goto(listPath);
+          await expect(page.getByText(RUN_MARKER)).toHaveCount(0);
+        });
       }
     } finally {
       await context.close();
     }
+    if (failures.length > 0) throw new Error(`Gallery cleanup incomplete:\n${failures.join("\n")}`);
   });
 });

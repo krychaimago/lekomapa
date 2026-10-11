@@ -21,5 +21,9 @@ export const POST: APIRoute = async (context) => {
     });
   }
 
-  return context.redirect(safeReturnPath(form?.get("returnTo")), 303);
+  // No-store like the other redirecting routes: the answer carries Set-Cookie and must not be kept by a cache.
+  return new Response(null, {
+    status: 303,
+    headers: { Location: safeReturnPath(form?.get("returnTo")), "Cache-Control": "private, no-store" },
+  });
 };
