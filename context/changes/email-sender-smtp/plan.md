@@ -298,16 +298,16 @@ Supabase wysyła przez Brevo, szablony są polskie, a reset hasła i potwierdzen
 
 #### Automated
 
-- [x] 3.1 Nagłówki maila z Gmaila zawierają `spf=pass`, `dkim=pass` (lekomapa.pl) i `dmarc=pass`
-- [x] 3.2 Przekierowanie bez zmian: MX zwraca trzy serwery `mx.cloudflare.net`
+- [x] 3.1 Nagłówki maila z Gmaila zawierają `spf=pass`, `dkim=pass` (lekomapa.pl) i `dmarc=pass` — 96b18ea
+- [x] 3.2 Przekierowanie bez zmian: MX zwraca trzy serwery `mx.cloudflare.net` — 96b18ea
 
 #### Manual
 
-- [x] 3.3 Supabase pokazuje SMTP Brevo, nadawcę `Lekomapa <kontakt@lekomapa.pl>` i limit 30/h
-- [x] 3.4 Oba szablony w panelu zawierają odnośniki z `token_hash`
-- [x] 3.5 Gmail spoza zespołu: rejestracja, potwierdzenie i logowanie działają
-- [x] 3.6 Gmail spoza zespołu: reset hasła i logowanie nowym hasłem działają
-- [x] 3.7 Poczta polska spoza zespołu: oba maile w odebranych
-- [x] 3.8 Odnotowane, czy jest dopisek „Sent with Brevo”
-- [x] 3.9 Konta testowe usunięte
+- [x] 3.3 Supabase pokazuje SMTP Brevo, nadawcę `Lekomapa <kontakt@lekomapa.pl>` i limit 30/h — 96b18ea
+- [x] 3.4 Oba szablony w panelu zawierają odnośniki z `token_hash` — 96b18ea
+- [x] 3.5 Gmail spoza zespołu: rejestracja, potwierdzenie i logowanie działają — 96b18ea
+- [x] 3.6 Gmail spoza zespołu: reset hasła i logowanie nowym hasłem działają — 96b18ea
+- [x] 3.7 Poczta polska spoza zespołu: oba maile w odebranych — 96b18ea
+- [x] 3.8 Odnotowane, czy jest dopisek „Sent with Brevo” — 96b18ea
+- [x] 3.9 Konta testowe usunięte — 96b18ea
 - [ ] 3.10 Brevo: śledzenie kliknięć i otwarć wyłączone; odnośnik w mailu testowym prowadzi wprost na `lekomapa.pl`
