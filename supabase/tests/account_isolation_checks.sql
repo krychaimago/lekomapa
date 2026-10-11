@@ -42,8 +42,8 @@ begin;
 
 -- ---------------------------------------------------------------------------
 -- Account data tables: closure of foreign keys leading to auth.users.
--- Copied from schema_invariants_checks.sql; keep both copies identical, because a table that drops out of this
--- copy would drop out of the behaviour checks below. ISOLATION 0 also applies the partition rule of that file, so a
+-- Copied from schema_invariants_checks.sql, and copied again in account_deletion_checks.sql; keep all three copies
+-- identical, because a table that drops out of this copy would drop out of the behaviour checks below. ISOLATION 0 also applies the partition rule of that file, so a
 -- table missing from this copy fails here too instead of being skipped.
 --   - Tables in public (relkind r or p) reachable from auth.users by foreign keys (contype f), walking from the
 --     referenced table to the referencing one.

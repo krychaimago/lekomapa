@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-10-09
+updated: 2026-10-11
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -61,7 +61,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done        |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | ready       |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | in-progress |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
 
 ## Streams
@@ -335,7 +335,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Operacja nieodwracalna, a zakres kasowania rośnie z każdą nową tabelą — dlatego sekwencjonowana po tym, jak powstały wszystkie tabele z danymi konta (S-01 dla zapisu akceptacji warunków, S-02 dla leków i okresów, S-05 dla dzienniczka, S-06 dla złożonych pytań). S-01 i S-06 dopisane 2026-09-26: wcześniej brakowało ich w wymaganiach wstępnych, choć obie tworzą dane przypisane do konta. Zaplanowana wcześniej przeoczyłaby dane dodane później i zostawiła sieroty, czego samo przejście ścieżki nie ujawni. Przy publicznej rejestracji to także jedyna droga, którą strona prywatności z S-01 może wskazać jako „jak usunąć konto” — do czasu S-09 strona musi mówić, jak zrobić to inaczej.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-11: Tryb ciemny
 

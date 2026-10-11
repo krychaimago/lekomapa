@@ -34,8 +34,8 @@ begin;
 
 -- ---------------------------------------------------------------------------
 -- Account data tables: closure of foreign keys leading to auth.users.
--- The same predicate is copied in account_isolation_checks.sql; keep both copies identical, because a table that
--- drops out of one copy would drop out of the behaviour checks.
+-- The same predicate is copied in account_isolation_checks.sql and account_deletion_checks.sql; keep all three copies
+-- identical, because a table that drops out of one copy would drop out of the behaviour checks.
 --   - Tables in public (relkind r or p) reachable from auth.users by foreign keys (contype f), walking from the
 --     referenced table to the referencing one.
 --   - The walk is a recursive UNION carrying the path of visited tables and never enters a table already on the
@@ -355,6 +355,12 @@ $$;
 -- (S-05) as their own definer and need no
 -- EXECUTE for the caller. A function that must
 -- be callable from the browser checks auth.uid() and gets a deliberate exception here.
+-- The one exception: public.delete_own_account() (S-09). It must delete a row of auth.users, which authenticated has
+-- no privilege on, so it is security definer and executable by authenticated. It deletes only the row of auth.uid()
+-- (28000 without a session) and only with a fresh password sign-in in the token's amr (AD001). It is excluded from
+-- the authenticated part of the EXECUTE rule only: anon must still have no EXECUTE on it, it must stay security
+-- definer (checked below, so the exception cannot cover a function that silently changed), and it must pin its
+-- search_path like every other one. Its behaviour is proven in account_deletion_checks.sql.
 -- Every security definer function, trigger functions included, sets search_path: without it an object created
 -- earlier on the caller's path (a table or operator of the same name) is resolved in place of the intended one and
 -- runs with the owner's privileges.
@@ -388,12 +394,21 @@ begin
     raise exception 'INVARIANT 7 FAILED: correction window functions missing or not security definer, so this rule would not measure them: %', v_list;
   end if;
 
+  -- The deliberate exception must exist as a security definer function, or the exclusion below would cover nothing.
+  if not exists (
+    select 1 from pg_proc p where p.oid = to_regprocedure('public.delete_own_account()') and p.prosecdef
+  ) then
+    raise exception 'INVARIANT 7 FAILED: public.delete_own_account() missing or not security definer, so the exception of this rule names a function it does not measure';
+  end if;
+
   select string_agg(p.oid::regprocedure::text, ', ' order by p.oid::regprocedure::text) into v_list
   from pg_proc p
   where p.pronamespace = 'public'::regnamespace
     and p.prosecdef
     and p.prorettype <> 'trigger'::regtype
-    and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'));
+    and (has_function_privilege('anon', p.oid, 'EXECUTE')
+         or (has_function_privilege('authenticated', p.oid, 'EXECUTE')
+             and p.oid is distinct from to_regprocedure('public.delete_own_account()')));
   if v_list is not null then
     raise exception 'INVARIANT 7 FAILED: anon or authenticated can execute security definer functions (revoke execute ... from anon, authenticated; revoke from public alone does not remove the Supabase default grants): %', v_list;
   end if;
@@ -407,7 +422,7 @@ begin
     raise exception 'INVARIANT 7 FAILED: security definer functions without a pinned search_path (add set search_path = '''' and schema-qualify every name): %', v_list;
   end if;
 
-  raise notice 'INVARIANT 7 OK: anon and authenticated cannot execute any of % security definer function(s) in public, and all % security definer function(s) pin search_path', v_count,
+  raise notice 'INVARIANT 7 OK: anon and authenticated cannot execute any of % security definer function(s) in public (authenticated only public.delete_own_account()), and all % security definer function(s) pin search_path', v_count,
     (select count(*) from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prosecdef);
 end;
 $$;
