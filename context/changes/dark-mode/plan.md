@@ -354,13 +354,13 @@ Brak migracji. Osoby bez ciasteczka dostają „jak w systemie” — dotychczas
 
 #### Automated
 
-- [x] 3.1 Galeria powstaje bez błędów: `DARK_GALLERY=1 npx playwright test tests/e2e/dark-gallery.spec.ts`
-- [x] 3.2 Każda strona z `src/pages` poza `api/` ma ≥ 1 wpis na liście; zrzutów = 2 × liczba wpisów
-- [x] 3.3 Kontrast i skaner kolorów przechodzą po poprawkach: `npm test`
-- [x] 3.4 Zwykły bieg E2E pomija galerię: `npx playwright test`
+- [x] 3.1 Galeria powstaje bez błędów: `DARK_GALLERY=1 npx playwright test tests/e2e/dark-gallery.spec.ts` — 3432d01
+- [x] 3.2 Każda strona z `src/pages` poza `api/` ma ≥ 1 wpis na liście; zrzutów = 2 × liczba wpisów — 3432d01
+- [x] 3.3 Kontrast i skaner kolorów przechodzą po poprawkach: `npm test` — 3432d01
+- [x] 3.4 Zwykły bieg E2E pomija galerię: `npx playwright test` — 3432d01
 
 #### Manual
 
-- [x] 3.5 Autorka zaakceptowała galerię wszystkich ekranów w trybie ciemnym na telefonie i komputerze
-- [x] 3.6 Znacznik „Możliwa interakcja” w trybie ciemnym nie wygląda jak alarm ani jak błąd
-- [x] 3.7 Usterki spoza tokenów (jeśli są) zapisane w `change.md` jako osobne zmiany
+- [x] 3.5 Autorka zaakceptowała galerię wszystkich ekranów w trybie ciemnym na telefonie i komputerze — 3432d01
+- [x] 3.6 Znacznik „Możliwa interakcja” w trybie ciemnym nie wygląda jak alarm ani jak błąd — 3432d01
+- [x] 3.7 Usterki spoza tokenów (jeśli są) zapisane w `change.md` jako osobne zmiany — 3432d01
