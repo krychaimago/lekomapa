@@ -50,7 +50,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done        |
 | F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done        |
 | F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done        |
-| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | proposed    |
+| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | in-progress |
 | F-06 | production-observability             | (fundament) błąd i przerwa w działaniu produkcji docierają do autorki mailem         | —                                  | NFR progów szybkości, błędów i dostępności | ready       |
 | S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | done        |
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
@@ -159,7 +159,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Dopisane 2026-09-27 przy planowaniu S-10: produkcja używa domyślnego nadawcy Supabase, który dostarcza maile wyłącznie na adresy członków zespołu projektu i ma limit kilku maili na godzinę. Objaw nie wychodzi przy testach na koncie autorki, więc wygląda to na działający produkt, a obca osoba nie dostaje ani potwierdzenia rejestracji, ani odnośnika resetu. Praca prawie w całości poza kodem: konto u dostawcy poczty (np. Resend), potwierdzenie domeny wpisami DNS (SPF, DKIM), dane SMTP i adres nadawcy w panelu produkcyjnego Supabase (Authentication → SMTP), podniesienie limitu maili na godzinę. Zamyka się dopiero sprawdzeniem, że mail doszedł na adres spoza zespołu. Musi być `done` przed wpuszczeniem innych osób, niezależnie od kolejności plasterków.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### F-06: Śledzenie błędów i monitor dostępności
 
