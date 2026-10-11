@@ -73,7 +73,7 @@ export const PRIVACY_COPY = {
       points: [
         "Konta i wpisy przechowuje Supabase, w regionie Frankfurt nad Menem (Niemcy).",
         "Aplikację uruchamia Cloudflare. Przy każdym połączeniu Cloudflare przetwarza dane techniczne, takie jak adres IP.",
-        "Maile z odnośnikami wysyła Supabase.",
+        "Maile z odnośnikami wysyła Brevo (Francja). Odpowiedzi na nie Cloudflare przekazuje do skrzynki Gmail (Google) osoby odpowiedzialnej za serwis.",
       ],
     },
     {

@@ -263,29 +263,29 @@ Supabase wysyła przez Brevo, szablony są polskie, a reset hasła i potwierdzen
 
 #### Automated
 
-- [x] 1.1 MX na Cloudflare: `dig +short MX lekomapa.pl` zwraca trzy serwery `mx.cloudflare.net`
-- [x] 1.2 Dokładnie jeden SPF na korzeniu, zawiera `include:_spf.mx.cloudflare.net`, bez `include:mx.ovh.com`
-- [x] 1.3 DMARC istnieje: `dig +short TXT _dmarc.lekomapa.pl` zwraca `v=DMARC1`
-- [x] 1.4 Wpisy DKIM z panelu Brevo rozwiązują się poleceniem `dig`
-- [x] 1.5 Aplikacja dalej odpowiada: `curl -sI https://lekomapa.pl` zwraca 302 na `/auth/signin`
+- [x] 1.1 MX na Cloudflare: `dig +short MX lekomapa.pl` zwraca trzy serwery `mx.cloudflare.net` — 022ad43
+- [x] 1.2 Dokładnie jeden SPF na korzeniu, zawiera `include:_spf.mx.cloudflare.net`, bez `include:mx.ovh.com` — 022ad43
+- [x] 1.3 DMARC istnieje: `dig +short TXT _dmarc.lekomapa.pl` zwraca `v=DMARC1` — 022ad43
+- [x] 1.4 Wpisy DKIM z panelu Brevo rozwiązują się poleceniem `dig` — 022ad43
+- [x] 1.5 Aplikacja dalej odpowiada: `curl -sI https://lekomapa.pl` zwraca 302 na `/auth/signin` — 022ad43
 
 #### Manual
 
-- [x] 1.6 Mail z obcej skrzynki na `kontakt@lekomapa.pl` jest w Gmailu `krysko.anna@gmail.com`
-- [x] 1.7 Brevo pokazuje domenę `lekomapa.pl` jako uwierzytelnioną i nadawcę `kontakt@lekomapa.pl`
-- [x] 1.8 Brevo pokazuje dane SMTP (klucz powstaje w fazie 3)
-- [x] 1.9 Supabase dalej ma wyłączony custom SMTP
-- [x] 1.10 Cloudflare Email Routing: adres docelowy potwierdzony, jedna reguła dla `kontakt@`
+- [x] 1.6 Mail z obcej skrzynki na `kontakt@lekomapa.pl` jest w Gmailu `krysko.anna@gmail.com` — 022ad43
+- [x] 1.7 Brevo pokazuje domenę `lekomapa.pl` jako uwierzytelnioną i nadawcę `kontakt@lekomapa.pl` — 022ad43
+- [x] 1.8 Brevo pokazuje dane SMTP (klucz powstaje w fazie 3) — 022ad43
+- [x] 1.9 Supabase dalej ma wyłączony custom SMTP — 022ad43
+- [x] 1.10 Cloudflare Email Routing: adres docelowy potwierdzony, jedna reguła dla `kontakt@` — 022ad43
 
 ### Phase 2: Strona prywatności i dokumenty
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą: `npm test`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
-- [ ] 2.3 Typy przechodzą: `npm run typecheck`
-- [ ] 2.4 Build przechodzi: `npm run build`
-- [ ] 2.5 Starego zdania nie ma w kodzie: `grep -rn "wysyła Supabase" src` nie zwraca nic
+- [x] 2.1 Testy przechodzą: `npm test`
+- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.3 Typy przechodzą: `npm run typecheck`
+- [x] 2.4 Build przechodzi: `npm run build`
+- [x] 2.5 Starego zdania nie ma w kodzie: `grep -rn "wysyła Supabase" src` nie zwraca nic
 - [ ] 2.6 CI na `main` po merge'u zielone (`ci`, `smoke`, `deploy`)
 
 #### Manual
