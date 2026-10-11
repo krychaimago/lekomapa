@@ -1,0 +1,78 @@
+---
+// Confirming the deletion of the account (S-09): what goes, a password field and a plain HTML form posting to
+// /api/account/delete. The route returns nothing but `?error=<key>`, looked up in ACCOUNT_COPY.apiErrors. The
+// password is never written back into the form and never travels in the URL.
+import AppLayout from "@/layouts/AppLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { inputClassName } from "@/components/ui/input";
+import { ACCOUNT_COPY, apiErrorMessage } from "@/lib/copy/account";
+import { cn } from "@/lib/utils";
+
+const copy = ACCOUNT_COPY.deletion;
+const error = apiErrorMessage(Astro.url.searchParams.get("error"));
+
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const cardClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <a href="/konto" class:list={linkClass}>
+      {copy.cancel}
+    </a>
+
+    <h1 class="text-3xl font-bold">{copy.title}</h1>
+
+    {error && (
+      <p
+        role="alert"
+        class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+      >
+        {error}
+      </p>
+    )}
+
+    <section class:list={cardClass}>
+      <p>{copy.intro}</p>
+      <ul class="flex list-disc flex-col gap-1 pl-6">
+        <li>{copy.items.medications}</li>
+        <li>{copy.items.journal}</li>
+        <li>{copy.items.terms}</li>
+      </ul>
+      <p>{copy.questions}</p>
+      <p class="font-semibold">{copy.irreversible}</p>
+
+      <form method="post" action="/api/account/delete" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <label for="account-delete-password" class="text-sm leading-none font-medium">
+            {copy.passwordLabel}
+          </label>
+          <input
+            id="account-delete-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            aria-describedby="account-delete-password-hint"
+            class:list={cn(inputClassName, "sm:max-w-sm")}
+          />
+          <p id="account-delete-password-hint" class="text-sm text-muted-foreground">
+            {copy.passwordHint}
+          </p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Outline, not destructive: destructive tokens are for form and technical errors only. */}
+          <button
+            type="submit"
+            class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto")}
+          >
+            {copy.submit}
+          </button>
+          <a href="/konto" class:list={linkClass}>
+            {copy.cancel}
+          </a>
+        </div>
+      </form>
+    </section>
+  </div>
+</AppLayout>

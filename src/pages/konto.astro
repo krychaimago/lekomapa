@@ -1,0 +1,36 @@
+---
+// Account screen (S-09): the address of the signed-in account and the way to delete it. Protected and terms-gated
+// through NAV_ITEMS. No React: nothing here holds state.
+import AppLayout from "@/layouts/AppLayout.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { ACCOUNT_COPY } from "@/lib/copy/account";
+import { cn } from "@/lib/utils";
+
+const copy = ACCOUNT_COPY.account;
+// Middleware has already sent signed-out visitors to sign-in, so the user is set here.
+const email = Astro.locals.user?.email ?? "";
+const cardClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
+---
+
+<AppLayout title={copy.title}>
+  <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    <h1 class="text-3xl font-bold">{copy.title}</h1>
+
+    <section class:list={cardClass}>
+      <h2 class="text-sm text-muted-foreground">{copy.emailLabel}</h2>
+      <p class="text-lg break-words">{email}</p>
+    </section>
+
+    <section class:list={cardClass}>
+      <h2 class="text-xl font-semibold">{copy.deleteHeading}</h2>
+      <p>{copy.deleteIntro}</p>
+      {/* Outline, not destructive: destructive tokens are for form and technical errors only. */}
+      <a
+        href="/konto/usun"
+        class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto sm:self-start")}
+      >
+        {copy.deleteLink}
+      </a>
+    </section>
+  </div>
+</AppLayout>

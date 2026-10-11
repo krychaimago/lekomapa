@@ -1,0 +1,20 @@
+---
+// Public confirmation after deleting the account (S-09). Public through the /auth/ prefix: the session is gone by the
+// time this renders, so an interior path would only redirect to sign-in.
+import AuthSpreadLayout from "@/layouts/AuthSpreadLayout.astro";
+import { ACCOUNT_COPY } from "@/lib/copy/account";
+
+const copy = ACCOUNT_COPY.deleted;
+---
+
+<AuthSpreadLayout title={copy.pageTitle}>
+  <h1 class="mb-6 text-2xl font-bold">{copy.heading}</h1>
+  <p role="status" class="mb-6">
+    {copy.body}
+  </p>
+  <p>
+    <a href="/" class="text-primary underline underline-offset-4 hover:no-underline">
+      {copy.homeLink}
+    </a>
+  </p>
+</AuthSpreadLayout>

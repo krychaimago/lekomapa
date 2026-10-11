@@ -44,8 +44,15 @@ test("the journal is in the menu, so its screens are highlighted and protected",
 test("the doctor visit section is the third menu item, so it is protected and terms-gated", () => {
   assert.deepEqual(
     NAV_ITEMS.map((item) => item.href),
-    ["/leki", "/dzienniczek", "/wizyta"],
+    ["/leki", "/dzienniczek", "/wizyta", "/konto"],
   );
   assert.equal(NAV_ITEMS[2].label, "Wizyta");
   assert.ok(INTERIOR_ROUTES.includes("/wizyta"));
+});
+
+test("the account screen is the fourth menu item, so it is protected and terms-gated", () => {
+  // /konto/usun is protected only through this menu item: it is not listed anywhere else.
+  assert.deepEqual(NAV_ITEMS[3], { href: "/konto", label: "Konto" });
+  assert.ok(INTERIOR_ROUTES.includes("/konto"));
+  assert.equal(findActiveNavItem("/konto/usun", NAV_ITEMS)?.href, "/konto");
 });

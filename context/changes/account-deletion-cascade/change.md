@@ -21,3 +21,14 @@ archived_at: null
 - Sesja z odnośnika resetu hasła (`generate_link` typu `recovery` + `/auth/v1/verify`): `amr = [{"method":"otp","timestamp":<liczba>}]`.
   - Brak metody `password`, więc funkcja ją odrzuca (`AD001`).
 - Wniosek: kształt zgodny z założeniem planu. Warunek funkcji: wpis z `method = 'password'` i liczbowym `timestamp` (sekundy) nie starszym niż 5 minut.
+
+### Pomiar `signOut` i ciasteczek po usunięciu konta (faza 2, 11.10.2026, lokalne Supabase)
+
+- Przebieg w przeglądarce (autorka) i drugi, jednorazowy przez `curl` na podglądzie z `.dev.vars`; `.env` odsunięty.
+- `signOut()` po `delete_own_account` nie zwraca błędu: w logach podglądu brak wpisów „sign-out after deletion failed/threw”.
+  - Jedyny wpis trasy to złe hasło z testu 2.6: `{ code: 'invalid_credentials', status: 400 }`. Bez hasła i adresu.
+- Odpowiedź na POST `/api/account/delete`: `303`, `Location: /auth/konto-usuniete`, `Cache-Control: private, no-store`.
+  - Jeden nagłówek `Set-Cookie: sb-127-auth-token=…; Path=/; Expires=Thu, 01 Jan 1970` — ciasteczko sesji wygaszone.
+  - Słoik ciasteczek klienta po odpowiedzi: brak `sb-*`.
+- Stare ciasteczko: GET `/leki` → 302 na `/auth/signin`. Ponowne logowanie → `/auth/signin?error=credentials`.
+- Baza po obu przebiegach: 0 wierszy w `auth.users`, `auth.sessions`, `auth.refresh_tokens` i we wszystkich 6 tabelach konta.

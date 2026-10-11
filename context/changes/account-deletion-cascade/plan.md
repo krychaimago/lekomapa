@@ -375,30 +375,30 @@ Brak. Usunięcie to jedno żądanie i kaskada na danych jednego konta.
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą lokalną bazę: `npx supabase db reset`
-- [x] 1.2 Wszystkie bramki SQL zielone, w tym nowe `account_deletion_checks.sql`: `npm run db:check`
-- [x] 1.3 Testy jednostkowe zielone: `npm test`
+- [x] 1.1 Migracja wchodzi na czystą lokalną bazę: `npx supabase db reset` — 072446b
+- [x] 1.2 Wszystkie bramki SQL zielone, w tym nowe `account_deletion_checks.sql`: `npm run db:check` — 072446b
+- [x] 1.3 Testy jednostkowe zielone: `npm test` — 072446b
 
 #### Manual
 
-- [x] 1.4 Kształt `amr` zmierzony i zapisany w `change.md`, a warunek funkcji mu odpowiada
-- [x] 1.5 Przegląd migracji: brak `when others`, `search_path` pusty, grant tylko dla `authenticated`
+- [x] 1.4 Kształt `amr` zmierzony i zapisany w `change.md`, a warunek funkcji mu odpowiada — 072446b
+- [x] 1.5 Przegląd migracji: brak `when others`, `search_path` pusty, grant tylko dla `authenticated` — 072446b
 
 ### Phase 2: Ekran „Konto”, potwierdzenie hasłem i trasa
 
 #### Automated
 
-- [ ] 2.1 Typy: `npm run typecheck`
-- [ ] 2.2 Lint: `npm run lint`
-- [ ] 2.3 Testy jednostkowe, w tym pokrycie tras, menu, kolory na sztywno, FR-012 dla nowych tekstów: `npm test`
-- [ ] 2.4 Build: `npm run build`
+- [x] 2.1 Typy: `npm run typecheck`
+- [x] 2.2 Lint: `npm run lint`
+- [x] 2.3 Testy jednostkowe, w tym pokrycie tras, menu, kolory na sztywno, FR-012 dla nowych tekstów: `npm test`
+- [x] 2.4 Build: `npm run build`
 
 #### Manual
 
-- [ ] 2.5 Na lokalnym Supabase: „Konto” widoczne w pasie bocznym i na pasku zakładek telefonu; ekran pokazuje adres e-mail
-- [ ] 2.6 Złe hasło na `/konto/usun` daje komunikat, a konto dalej się loguje
-- [ ] 2.7 Dobre hasło prowadzi na „Konto usunięte”; wejście na `/leki` przekierowuje na logowanie; ponowne logowanie tym kontem nie działa
-- [ ] 2.8 Zmierzone i zapisane w `change.md`: co zwraca `signOut` po usunięciu i że ciasteczka `sb-*` znikają
+- [x] 2.5 Na lokalnym Supabase: „Konto” widoczne w pasie bocznym i na pasku zakładek telefonu; ekran pokazuje adres e-mail
+- [x] 2.6 Złe hasło na `/konto/usun` daje komunikat, a konto dalej się loguje
+- [x] 2.7 Dobre hasło prowadzi na „Konto usunięte”; wejście na `/leki` przekierowuje na logowanie; ponowne logowanie tym kontem nie działa
+- [x] 2.8 Zmierzone i zapisane w `change.md`: co zwraca `signOut` po usunięciu i że ciasteczka `sb-*` znikają
 
 ### Phase 3: Strona prywatności, smoke i dokumenty
 

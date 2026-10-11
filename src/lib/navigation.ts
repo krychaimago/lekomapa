@@ -9,6 +9,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/leki", label: "Leki" },
   { href: "/dzienniczek", label: "Dzienniczek" },
   { href: "/wizyta", label: "Wizyta" },
+  { href: "/konto", label: "Konto" },
 ];
 
 // Every interior screen: signed-out visitors are sent to sign-in, accounts without the current terms version to
