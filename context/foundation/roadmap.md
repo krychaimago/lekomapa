@@ -61,7 +61,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done        |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | in-progress |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done        |
 | S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
 
 ## Streams
@@ -335,7 +335,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Operacja nieodwracalna, a zakres kasowania rośnie z każdą nową tabelą — dlatego sekwencjonowana po tym, jak powstały wszystkie tabele z danymi konta (S-01 dla zapisu akceptacji warunków, S-02 dla leków i okresów, S-05 dla dzienniczka, S-06 dla złożonych pytań). S-01 i S-06 dopisane 2026-09-26: wcześniej brakowało ich w wymaganiach wstępnych, choć obie tworzą dane przypisane do konta. Zaplanowana wcześniej przeoczyłaby dane dodane później i zostawiła sieroty, czego samo przejście ścieżki nie ujawni. Przy publicznej rejestracji to także jedyna droga, którą strona prywatności z S-01 może wskazać jako „jak usunąć konto” — do czasu S-09 strona musi mówić, jak zrobić to inaczej.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-11: Tryb ciemny
 
@@ -433,3 +433,4 @@ Rozstrzygnięte:
 - **S-01: Użytkowniczka może przed założeniem konta przeczytać krótką stronę prywatności, założyć konto, świadomie akceptując warunki korzystania w wersji 1 „prototyp”, i zalogować się loginem i hasłem — na ekranach wejściowych w układzie z makiety.** — Archived 2026-10-08 → `context/archive/2026-10-07-terms-acceptance-on-signup/`. Lesson: —.
 - **S-08: Użytkowniczka może przed wizytą otworzyć sekcję „Wizyta" i zobaczyć w jednym miejscu wykryte możliwe kolizje oraz złożone pytania o zbieżność objawów z okresami dawkowania.** — Archived 2026-10-09 → `context/archive/2026-10-08-doctor-visit-summary/`. Lesson: —.
 - **S-07: Użytkowniczka może poprawić wpis dzienniczka w oknie korekty; po jego zamknięciu rdzeń wpisu — data, godzina, objawy, nasilenie — jest niemodyfikowalny, a edytowalna zostaje notatka. Usunięcie wpisu zarezerwowane dla pozycji dodanych przez pomyłkę.** — Archived 2026-10-09 → `context/archive/2026-10-09-journal-correction-window/`. Lesson: —.
+- **S-09: Użytkowniczka może usunąć konto, co bezpowrotnie kasuje wszystkie powiązane dane — leki, okresy dawkowania, wpisy o samopoczuciu i złożone pytania — bez kopii zachowanej „na wszelki wypadek".** — Archived 2026-10-11 → `context/archive/2026-10-10-account-deletion-cascade/`. Lesson: —.
