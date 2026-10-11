@@ -3,18 +3,31 @@ import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
 import DemoBar from "@/components/DemoBar.astro";
 import { missingConfigs } from "@/lib/config-status";
+import { THEME_COOKIE, parseThemePreference } from "@/lib/theme";
 
 interface Props {
   title?: string;
 }
 
 const { title = "lekomapa" } = Astro.props;
+
+// The server draws <html> in the chosen mode from the first byte: "dark" gets the class, "light" does not,
+// and "system" leaves it to the inline script below, which follows prefers-color-scheme.
+const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
 ---
 
 <!doctype html>
-<html lang="pl">
+<html lang="pl" class:list={{ dark: theme === "dark" }} data-theme={theme}>
   <head>
     <meta charset="UTF-8" />
+    {theme === "system" && <script is:inline>
+      (() => {
+        const query = window.matchMedia("(prefers-color-scheme: dark)");
+        const apply = () => document.documentElement.classList.toggle("dark", query.matches);
+        apply();
+        query.addEventListener("change", apply);
+      })();
+    </script>}
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>

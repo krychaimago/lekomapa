@@ -8,6 +8,8 @@
    Dark values accepted on the mockup: https://claude.ai/artifact/Ha6A6SV4aPjtwMsreZLu3n */
 
 :root {
+  /* Native controls (date and time fields, scrollbars, autofill lists) follow the mode. */
+  color-scheme: light;
   --radius: 0.625rem;
   --background: #f7f8f4;
   --foreground: #1e241f;
@@ -52,6 +54,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #141915;
   --foreground: #e8ebe4;
   --card: #1c221d;

@@ -62,7 +62,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done        |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
 | S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done        |
-| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | proposed    |
+| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | in-progress |
 
 ## Streams
 
@@ -350,7 +350,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - ~~Jak wygląda ciemna paleta?~~ — rozstrzygnięte w F-04 (2026-09-26): ciemne wartości tokenów zaakceptowane na makiecie i zapisane w bloku `.dark` w `src/styles/global.css`, opis w `design-draft.md` `## Paleta ciemna`. W S-11 zostaje przełącznik, decyzja „ręcznie czy za systemem” i przegląd ekranów w trybie ciemnym.
   - Czy tryb wybiera się ręcznie, idzie za ustawieniem systemu, czy jedno i drugie? — Owner: użytkowniczka. Block: no.
 - **Risk:** Ostatni, bo nie wnosi nic do głównego przepływu, a przegląd ma sens dopiero na ekranach, które istnieją — to praca w trybie poprawiania istniejących widoków, nie budowania nowych. Tani tylko wtedy, gdy plasterki trzymały się nazwanych kolorów z F-04; każdy kolor wpisany na sztywno wychodzi tutaj jako ekran do przeróbki. Kolory funkcjonalne muszą zachować znaczenie: bursztyn możliwej interakcji w ciemnej wersji nadal nie może wyglądać jak alarm ani jak czerwień.
-- **Status:** proposed
+- **Status:** in-progress
 
 ## Backlog Handoff
 
