@@ -14,11 +14,11 @@ setup("sign in once and save the session", async ({ page }) => {
   // blocks the submit. Retry fill + submit until the submit leaves the sign-in page (signing in
   // twice changes nothing). Clear before filling: re-filling the same value fires no change event.
   await expect(async () => {
-    await page.getByRole("textbox", { name: "Email" }).fill("");
-    await page.getByRole("textbox", { name: "Email" }).fill(username);
-    await page.getByRole("textbox", { name: "Password" }).fill("");
-    await page.getByRole("textbox", { name: "Password" }).fill(password);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("textbox", { name: "Adres e-mail" }).fill("");
+    await page.getByRole("textbox", { name: "Adres e-mail" }).fill(username);
+    await page.getByRole("textbox", { name: "Hasło" }).fill("");
+    await page.getByRole("textbox", { name: "Hasło" }).fill(password);
+    await page.getByRole("button", { name: "Zaloguj się" }).click();
     await page.waitForURL((url) => !url.pathname.startsWith("/auth/signin"), { timeout: 5_000 });
   }).toPass();
   await expect(page.getByRole("button", { name: "Wyloguj się" })).toBeVisible();

@@ -1,14 +1,19 @@
 ---
-// Account screen (S-09): the address of the signed-in account and the way to delete it. Protected and terms-gated
-// through NAV_ITEMS. No React: nothing here holds state.
+// Account screen (S-09): the address of the signed-in account, the color mode and the way to delete it. Protected and
+// terms-gated through NAV_ITEMS. No React: nothing here holds state; the color mode is a plain form POST.
 import AppLayout from "@/layouts/AppLayout.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { ACCOUNT_COPY } from "@/lib/copy/account";
+import { APPEARANCE_COPY } from "@/lib/copy/appearance";
+import { THEME_COOKIE, THEME_PREFERENCES, parseThemePreference } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const copy = ACCOUNT_COPY.account;
 // Middleware has already sent signed-out visitors to sign-in, so the user is set here.
 const email = Astro.locals.user?.email ?? "";
+const appearance = APPEARANCE_COPY.section;
+// The saved preference is checked; no cookie or an unknown value reads as "system", the same as Layout.astro draws it.
+const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
 const cardClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm";
 ---
 
@@ -19,6 +24,30 @@ const cardClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p
     <section class:list={cardClass}>
       <h2 class="text-sm text-muted-foreground">{copy.emailLabel}</h2>
       <p class="text-lg break-words">{email}</p>
+    </section>
+
+    <section class:list={cardClass} aria-labelledby="appearance-heading">
+      <h2 id="appearance-heading" class="text-xl font-semibold">
+        {appearance.heading}
+      </h2>
+      <form method="POST" action="/api/preferences/theme" class="flex flex-col gap-4">
+        <input type="hidden" name="returnTo" value="/konto" />
+        <fieldset class="flex flex-col gap-1">
+          <legend class="mb-2">{appearance.legend}</legend>
+          {THEME_PREFERENCES.map((value) => (
+            <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-md px-2 hover:bg-accent hover:text-accent-foreground">
+              <input type="radio" name="theme" value={value} checked={value === theme} class="size-5 accent-primary" />
+              <span>{appearance.options[value]}</span>
+            </label>
+          ))}
+        </fieldset>
+        <button
+          type="submit"
+          class:list={cn(buttonVariants({ variant: "default" }), "w-full rounded-lg text-base sm:w-auto sm:self-start")}
+        >
+          {appearance.submit}
+        </button>
+      </form>
     </section>
 
     <section class:list={cardClass}>

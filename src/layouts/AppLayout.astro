@@ -1,7 +1,8 @@
 ---
 // Shared frame of the signed-in screens: sidebar on large screens, header and bottom tabs on phones.
-// No React: the frame holds no state and handles no events; sign-out is a plain form POST.
+// No React: the frame holds no state and handles no events; sign-out and the color mode icon are plain form POSTs.
 import Layout from "@/layouts/Layout.astro";
+import ThemeToggle from "@/components/ThemeToggle.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { NAV_ITEMS, findActiveNavItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -45,20 +46,26 @@ const signOutClass = cn(
           })}
         </ul>
       </nav>
-      <form method="POST" action="/api/auth/signout">
-        <button type="submit" class:list={cn(signOutClass, "w-full")}>
-          Wyloguj się
-        </button>
-      </form>
+      <div class="flex items-center gap-2">
+        <form method="POST" action="/api/auth/signout" class="min-w-0 flex-1">
+          <button type="submit" class:list={cn(signOutClass, "w-full")}>
+            Wyloguj się
+          </button>
+        </form>
+        <ThemeToggle class="shrink-0" />
+      </div>
     </aside>
 
     <header class="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4 py-2 text-sidebar-foreground lg:hidden">
       <p class="text-xl font-bold">lekomapa</p>
-      <form method="POST" action="/api/auth/signout">
-        <button type="submit" class:list={signOutClass}>
-          Wyloguj się
-        </button>
-      </form>
+      <div class="flex shrink-0 items-center gap-2">
+        <ThemeToggle />
+        <form method="POST" action="/api/auth/signout">
+          <button type="submit" class:list={signOutClass}>
+            Wyloguj się
+          </button>
+        </form>
+      </div>
     </header>
 
     <main class:list={cn("min-w-0 flex-1 bg-background p-4 lg:p-10", hasTabs && "pb-24 lg:pb-10")}>

@@ -1,0 +1,76 @@
+---
+// Header icon that switches to the mode opposite to the one on screen, on every interior screen.
+// No React: a plain form POST to /api/preferences/theme, which sets the cookie and returns here.
+// Both buttons are rendered; the `dark` class on <html> decides which one shows (dark:hidden / hidden dark:inline-flex),
+// so the right one is visible from the first byte also when the preference is "system". Never a colored dark: class.
+import { buttonVariants } from "@/components/ui/button";
+import { APPEARANCE_COPY } from "@/lib/copy/appearance";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+// Path only: a query string could carry health data, and /api/preferences/theme rejects it anyway.
+const returnTo = Astro.url.pathname;
+const copy = APPEARANCE_COPY.toggle;
+
+// Same sidebar colors as the sign-out button; size "icon" is 48 px, above the 44 px touch target.
+const iconButtonClass = cn(
+  buttonVariants({ variant: "outline", size: "icon" }),
+  "border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg:not([class*='size-'])]:size-5",
+);
+---
+
+<form method="POST" action="/api/preferences/theme" class:list={className}>
+  <input type="hidden" name="returnTo" value={returnTo} />
+  <button
+    type="submit"
+    name="theme"
+    value="dark"
+    aria-label={copy.toDark}
+    class:list={cn(iconButtonClass, "dark:hidden")}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+    </svg>
+  </button>
+  <button
+    type="submit"
+    name="theme"
+    value="light"
+    aria-label={copy.toLight}
+    class:list={cn(iconButtonClass, "hidden dark:inline-flex")}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2v2"></path>
+      <path d="M12 20v2"></path>
+      <path d="m4.93 4.93 1.41 1.41"></path>
+      <path d="m17.66 17.66 1.41 1.41"></path>
+      <path d="M2 12h2"></path>
+      <path d="M20 12h2"></path>
+      <path d="m6.34 17.66-1.41 1.41"></path>
+      <path d="m19.07 4.93-1.41 1.41"></path>
+    </svg>
+  </button>
+</form>

@@ -85,7 +85,9 @@ export const PRIVACY_COPY = {
     },
     {
       heading: "Ciasteczka",
-      points: ["Używamy wyłącznie ciasteczek potrzebnych do logowania. Nie ma reklam ani statystyk odwiedzin."],
+      points: [
+        "Używamy wyłącznie ciasteczek potrzebnych do logowania i jednego ciasteczka, które zapamiętuje wybrany wygląd: jasny, ciemny lub jak w systemie. Nie ma reklam ani statystyk odwiedzin.",
+      ],
     },
     {
       heading: "Jak usunąć konto",

@@ -9,7 +9,7 @@ test("signed-out visitor opening /leki is sent to sign-in and sees no medication
   await page.goto("/leki");
 
   await expect(page).toHaveURL(/\/auth\/signin$/);
-  await expect(page.getByRole("heading", { name: "Sign in", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Witaj w lekomapie", level: 1 })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Menu główne" })).toBeHidden();
 
   // No cleanup: the test creates no data.

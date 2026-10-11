@@ -322,33 +322,33 @@ Brak migracji. Osoby bez ciasteczka dostają „jak w systemie” — dotychczas
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe trybu przechodzą: `npm test`
-- [x] 1.2 Typy bez błędów: `npm run typecheck`
-- [x] 1.3 Lint bez błędów: `npm run lint`
-- [x] 1.4 Build przechodzi: `npm run build`
+- [x] 1.1 Testy jednostkowe trybu przechodzą: `npm test` — 771c8d3
+- [x] 1.2 Typy bez błędów: `npm run typecheck` — 771c8d3
+- [x] 1.3 Lint bez błędów: `npm run lint` — 771c8d3
+- [x] 1.4 Build przechodzi: `npm run build` — 771c8d3
 
 #### Manual
 
-- [x] 1.5 Z ciasteczkiem `lekomapa-theme=dark` strona logowania i `/leki` są ciemne od pierwszego narysowania
-- [x] 1.6 Bez ciasteczka zmiana ustawienia systemu przełącza tryb otwartej strony bez przeładowania
-- [x] 1.7 Pole daty w `/dzienniczek/nowy` ma ciemny wybierak w trybie ciemnym
+- [x] 1.5 Z ciasteczkiem `lekomapa-theme=dark` strona logowania i `/leki` są ciemne od pierwszego narysowania — 771c8d3
+- [x] 1.6 Bez ciasteczka zmiana ustawienia systemu przełącza tryb otwartej strony bez przeładowania — 771c8d3
+- [x] 1.7 Pole daty w `/dzienniczek/nowy` ma ciemny wybierak w trybie ciemnym — 771c8d3
 
 ### Phase 2: Przełączniki
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe i filtr tekstów przechodzą: `npm test`
-- [ ] 2.2 Typy bez błędów: `npm run typecheck`
-- [ ] 2.3 Lint bez błędów: `npm run lint`
-- [ ] 2.4 Test przełączania przechodzi przeciw lokalnemu Supabase: `npx playwright test tests/e2e/theme.spec.ts`
-- [ ] 2.5 Pozostałe testy E2E bez regresji: `npx playwright test`
+- [x] 2.1 Testy jednostkowe i filtr tekstów przechodzą: `npm test`
+- [x] 2.2 Typy bez błędów: `npm run typecheck`
+- [x] 2.3 Lint bez błędów: `npm run lint`
+- [x] 2.4 Test przełączania przechodzi przeciw lokalnemu Supabase: `npx playwright test tests/e2e/theme.spec.ts`
+- [x] 2.5 Pozostałe testy E2E bez regresji: `npx playwright test`
 
 #### Manual
 
-- [ ] 2.6 Autorka zaakceptowała brzmienie tekstów sekcji „Wygląd”, etykiet ikony i punktu o ciasteczkach
-- [ ] 2.7 Na telefonie ikona w nagłówku mieści się obok „Wyloguj się” i nie zasłania nazwy produktu
-- [ ] 2.8 Czytnik ekranu czyta jeden przycisk ikony z etykietą zgodną z widocznym trybem
-- [ ] 2.9 Na stronie `/prywatnosc` widać nowy punkt o ciasteczkach
+- [x] 2.6 Autorka zaakceptowała brzmienie tekstów sekcji „Wygląd”, etykiet ikony i punktu o ciasteczkach
+- [x] 2.7 Na telefonie ikona w nagłówku mieści się obok „Wyloguj się” i nie zasłania nazwy produktu
+- [x] 2.8 Czytnik ekranu czyta jeden przycisk ikony z etykietą zgodną z widocznym trybem
+- [x] 2.9 Na stronie `/prywatnosc` widać nowy punkt o ciasteczkach
 
 ### Phase 3: Przegląd ekranów
 
