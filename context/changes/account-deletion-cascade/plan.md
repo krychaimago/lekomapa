@@ -404,13 +404,13 @@ Brak. Usunięcie to jedno żądanie i kaskada na danych jednego konta.
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe, w tym tekst strony prywatności i FR-012: `npm test`
-- [x] 3.2 Smoke na lokalnym Supabase z odsuniętym `.env`, przy zatrzymanym starym podglądzie: `npm run smoke`, z zielonymi krokami grupy usunięcia konta
-- [x] 3.3 Typy i lint: `npm run typecheck` i `npm run lint`
+- [x] 3.1 Testy jednostkowe, w tym tekst strony prywatności i FR-012: `npm test` — 8bbfeac
+- [x] 3.2 Smoke na lokalnym Supabase z odsuniętym `.env`, przy zatrzymanym starym podglądzie: `npm run smoke`, z zielonymi krokami grupy usunięcia konta — 8bbfeac
+- [x] 3.3 Typy i lint: `npm run typecheck` i `npm run lint` — 8bbfeac
 
 #### Manual
 
-- [x] 3.4 Autorka zatwierdza brzmienie sekcji „Jak usunąć konto” na `/prywatnosc`
-- [x] 3.5 Pomiar przed smoke: konto testowe powstało w lokalnym `auth.users`, nie na produkcji
+- [x] 3.4 Autorka zatwierdza brzmienie sekcji „Jak usunąć konto” na `/prywatnosc` — 8bbfeac
+- [x] 3.5 Pomiar przed smoke: konto testowe powstało w lokalnym `auth.users`, nie na produkcji — 8bbfeac
 - [ ] 3.6 Po merge'u: `npx supabase db push` na produkcję i lista migracji pokazuje `20261010120000_delete_own_account`
 - [ ] 3.7 Po wdrożeniu: usunięcie świeżo założonego konta testowego na produkcji przechodzi i konto znika z panelu Supabase

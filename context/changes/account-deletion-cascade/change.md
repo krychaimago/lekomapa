@@ -1,7 +1,7 @@
 ---
 change_id: account-deletion-cascade
 title: Account deletion cascade
-status: implementing
+status: implemented
 created: 2026-10-10
 updated: 2026-10-11
 archived_at: null
