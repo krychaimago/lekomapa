@@ -420,4 +420,4 @@ Brak. Usunięcie to jedno żądanie i kaskada na danych jednego konta.
 - [x] 3.4 Autorka zatwierdza brzmienie sekcji „Jak usunąć konto” na `/prywatnosc` — 8bbfeac
 - [x] 3.5 Pomiar przed smoke: konto testowe powstało w lokalnym `auth.users`, nie na produkcji — 8bbfeac
 - [x] 3.6 Po merge'u: `npx supabase db push` na produkcję i lista migracji pokazuje `20261010120000_delete_own_account` — 11.10.2026, przed pushem kodu (impl-review F2)
-- [ ] 3.7 Po wdrożeniu: usunięcie świeżo założonego konta testowego na produkcji przechodzi i konto znika z panelu Supabase
+- [x] 3.7 Po wdrożeniu: usunięcie świeżo założonego konta testowego na produkcji przechodzi i konto znika z panelu Supabase — 11.10.2026, autorka w przeglądarce (złe hasło odrzucone, dobre usuwa konto)
