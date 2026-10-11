@@ -62,7 +62,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done        |
 | S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
 | S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done        |
-| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | in-progress |
+| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | done        |
 
 ## Streams
 
@@ -350,7 +350,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
   - ~~Jak wygląda ciemna paleta?~~ — rozstrzygnięte w F-04 (2026-09-26): ciemne wartości tokenów zaakceptowane na makiecie i zapisane w bloku `.dark` w `src/styles/global.css`, opis w `design-draft.md` `## Paleta ciemna`. W S-11 zostaje przełącznik, decyzja „ręcznie czy za systemem” i przegląd ekranów w trybie ciemnym.
   - Czy tryb wybiera się ręcznie, idzie za ustawieniem systemu, czy jedno i drugie? — Owner: użytkowniczka. Block: no.
 - **Risk:** Ostatni, bo nie wnosi nic do głównego przepływu, a przegląd ma sens dopiero na ekranach, które istnieją — to praca w trybie poprawiania istniejących widoków, nie budowania nowych. Tani tylko wtedy, gdy plasterki trzymały się nazwanych kolorów z F-04; każdy kolor wpisany na sztywno wychodzi tutaj jako ekran do przeróbki. Kolory funkcjonalne muszą zachować znaczenie: bursztyn możliwej interakcji w ciemnej wersji nadal nie może wyglądać jak alarm ani jak czerwień.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -434,3 +434,4 @@ Rozstrzygnięte:
 - **S-08: Użytkowniczka może przed wizytą otworzyć sekcję „Wizyta" i zobaczyć w jednym miejscu wykryte możliwe kolizje oraz złożone pytania o zbieżność objawów z okresami dawkowania.** — Archived 2026-10-09 → `context/archive/2026-10-08-doctor-visit-summary/`. Lesson: —.
 - **S-07: Użytkowniczka może poprawić wpis dzienniczka w oknie korekty; po jego zamknięciu rdzeń wpisu — data, godzina, objawy, nasilenie — jest niemodyfikowalny, a edytowalna zostaje notatka. Usunięcie wpisu zarezerwowane dla pozycji dodanych przez pomyłkę.** — Archived 2026-10-09 → `context/archive/2026-10-09-journal-correction-window/`. Lesson: —.
 - **S-09: Użytkowniczka może usunąć konto, co bezpowrotnie kasuje wszystkie powiązane dane — leki, okresy dawkowania, wpisy o samopoczuciu i złożone pytania — bez kopii zachowanej „na wszelki wypadek".** — Archived 2026-10-11 → `context/archive/2026-10-10-account-deletion-cascade/`. Lesson: —.
+- **S-11: Użytkowniczka może korzystać z produktu w trybie ciemnym na wszystkich ekranach M-1, z czytelnością na tym samym poziomie co w trybie jasnym.** — Archived 2026-10-11 → `context/archive/2026-10-11-dark-mode/`. Lesson: —.

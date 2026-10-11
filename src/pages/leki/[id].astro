@@ -210,7 +210,7 @@ const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}")
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
 
-<AppLayout title={medication?.product_name ?? copy.title}>
+<AppLayout title={copy.title}>
   <div class="mx-auto flex max-w-3xl flex-col gap-6">
     <a href={backHref} class:list={linkClass}>
       {backText}

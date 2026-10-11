@@ -128,6 +128,7 @@
 - **Context**: Każda trasa i formularz operujące na lekach: wyszukiwanie w rejestrze, wybór wariantu, przekierowania po błędzie, podpowiedzi (`fetch`), linki między krokami. Dotyczy też każdego przyszłego ekranu z danymi zdrowotnymi (dzienniczek objawów S-05 i dalej).
 - **Problem**: W S-02 dawkę świadomie trzymano poza URL, ale nazwa leku i substancji trafiała tam w sześciu miejscach (`?q=`, `?nazwa=`, `?substancja=`, `?niedopasowana=`, `/api/registry/search?q=`), a komentarz w kodzie twierdził, że „health data does not travel in URLs”. Adres trafia do historii przeglądarki, zakładek, nagłówka Referer i logów Cloudflare. To, jaki lek ktoś bierze, jest daną zdrowotną tak samo jak dawka.
 - **Rule**: Nazwa leku, nazwa substancji, dawka ani objaw nigdy nie trafiają do URL — ani w ścieżce, ani w parametrach, ani w zapytaniach `fetch`. Tekst wpisany przez użytkowniczkę idzie w treści żądania POST; między krokami przekazuj wyłącznie identyfikatory (uuid); stan formularza po błędzie w krótkotrwałym ciasteczku HttpOnly. Regułę pilnuje test, nie komentarz.
+- **Correction (11.10.2026)**: Tytuł strony (`title=` w `src/pages/`) trafia do historii przeglądarki, zakładek, podglądu kart i synchronizacji tak samo jak URL. Tytuł to wyłącznie stały tekst z `src/lib/copy/*`, nigdy nazwa leku, substancji, dawka ani objaw. W S-02 `src/pages/leki/[id].astro` ustawiał tytuł z nazwy leku (#82). Regułę pilnuje test `scripts/pages/page-title.test.mjs`.
 - **Applies to**: plan, implement, impl-review
 
 ## Po merge'u migracji wykonaj db push
