@@ -100,6 +100,7 @@ Funkcja `delete_own_account()` usuwa konto wywołującej osoby, wyłącznie przy
 - `delete from auth.users where id = auth.uid()`. Zero usuniętych wierszy → `errcode = 'AD002'`.
 - `revoke execute on function … from public, anon, authenticated; grant execute … to authenticated;`
 - Okno 5 minut jako stała w treści funkcji, z komentarzem dlaczego: trasa wykonuje logowanie i usunięcie w jednym żądaniu, a zapas pokrywa rozjazd zegarów.
+  - **Sprostowanie po impl-review (F1, 11.10.2026):** okno skrócone do 60 sekund. Funkcja nie odróżnia logowania przez trasę od zwykłego logowania, więc przez całe okno po każdym logowaniu hasłem token wystarcza do usunięcia konta bez hasła. Migracja nie była jeszcze na produkcji, więc poprawiona w miejscu.
 
 #### 3. Testy SQL
 
@@ -114,6 +115,7 @@ Funkcja `delete_own_account()` usuwa konto wywołującej osoby, wyłącznie przy
 - `pg_temp.account_data_tables()` — trzecia kopia z `account_isolation_checks.sql:44-57`. Komentarz „keep identical” we wszystkich trzech plikach (`account_isolation_checks.sql`, `schema_invariants_checks.sql`, nowy) wymienia wszystkie trzy. Bez filtra po kolumnie `user_id`: `medication_substances`, `dosage_periods` i `symptom_entry_items` należą do konta przez `medication_id` / `entry_id` i filtr by je pominął.
   Sprawdzenia:
 - DELETION 1: `anon` i rola bez sesji → `28000`. Łapany kod `28000`, nie `when others`.
+  - **Sprostowanie po impl-review (F3, 11.10.2026):** `anon` dostaje `42501`, bo nie ma `EXECUTE` i nie dochodzi do sprawdzenia sesji. `28000` dotyczy `postgres` bez claims i `authenticated` bez `sub`. Oba kody łapane po nazwie.
 - DELETION 2: `amr` bez metody `password` (np. `recovery`, `otp`) → `AD001`.
 - DELETION 3: `amr` z `password` starszym niż 5 minut → `AD001`.
 - DELETION 4: świeże `password` przy zamkniętych oknach korekty (technika `backdate` z `correction_window_checks.sql:81-112`). Konto A ma lek z okresem i wpis dzienniczka z objawem: wiersz A w `auth.users` znika, przed usunięciem test zapisuje `id` każdego wiersza konta A z każdej tabeli z `pg_temp.account_data_tables()` (wszystkie mają `id uuid primary key`), po usunięciu żaden z tych `id` nie istnieje; tak samo zapisane `id` konta B wszystkie istnieją. Zaraz po usunięciu `set constraints public.symptom_entries_require_item, public.symptom_entry_items_require_item immediate;`, potem z powrotem `deferred` (wzorzec `symptom_journal_checks.sql:128-134`) — plik kończy się `rollback`, więc bez tego odroczone wyzwalacze dzienniczka nigdy się nie wykonają.
@@ -355,6 +357,11 @@ Brak. Usunięcie to jedno żądanie i kaskada na danych jednego konta.
 - Wycofanie: `drop function public.delete_own_account()` w nowej migracji i usunięcie wyjątku z INVARIANT 7.
 - Konta usunięte przed wycofaniem nie wracają. To zamierzone.
 - Po merge'u `npx supabase db push` (lekcja „Po merge'u migracji wykonaj db push”). Bez tego trasa na produkcji zwraca `deleteGeneric` mimo zielonego CI.
+- **Kolejność po impl-review (F2, 11.10.2026):** w tej zmianie `db push` idzie _przed_ pushem kodu na `main`, świadomie odwrotnie niż w lekcji.
+  1. `npx supabase db push`, potem `npx supabase migration list --linked`: wiersz `20261010120000` ma wartość w kolumnie `remote`.
+  2. Push kodu na `main` (CI wdraża na produkcję).
+  3. Punkt 3.7: usunięcie świeżego konta testowego na produkcji. To jedyny dowód, że funkcja ma na hostowanym Supabase uprawnienie do `auth.users` (lokalnie `postgres` jest superużytkownikiem).
+  - Powód: migracja dodaje wyłącznie funkcję. Przed wdrożeniem trasy nic jej nie woła, a `anon` nie ma `EXECUTE`, więc wcześniejsze wgranie nie szkodzi i usuwa okno, w którym ekran „Usuń konto” zwraca błąd.
 
 ## References
 

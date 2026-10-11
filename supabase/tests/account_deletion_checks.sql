@@ -6,8 +6,8 @@
 --   DELETION 2: amr without a "password" entry — no amr, an empty array, a non-array value, "otp" (measured shape of
 --               a session from the password reset link), "recovery", and "password" without a numeric timestamp —
 --               is AD001.
---   DELETION 3: amr with "password" older than 5 minutes (5 min 1 s, also next to a fresh "otp") is AD001.
---   DELETION 4: a fresh "password" (4 min 59 s) with the correction windows closed deletes account A: its auth.users
+--   DELETION 3: amr with "password" older than 60 seconds (61 s, also next to a fresh "otp") is AD001.
+--   DELETION 4: a fresh "password" (59 s) with the correction windows closed deletes account A: its auth.users
 --               row and every row of A in every account table are gone, every row of account B stays. A second call
 --               by the deleted account is AD002. Counterexample: with the windows closed, deleting A's medication or
 --               journal entry by hand is refused by the history guards, so the guards were active.
@@ -25,8 +25,8 @@
 --   - The role is switched at the top level of a block, never inside an exception subblock: `set local role` inside a
 --     subblock that catches an error is undone with it, and the next steps would run as postgres.
 --   - amr timestamps are unix seconds (measured on local Supabase, see context/changes/account-deletion-cascade/
---     change.md). now() is constant inside the transaction, so "4 min 59 s ago" and "5 min 1 s ago" sit one second on
---     each side of the 5-minute bound.
+--     change.md). now() is constant inside the transaction, so "59 s ago" and "61 s ago" sit one second on
+--     each side of the 60-second bound.
 --   - Rows get an old created_at only through pg_temp.backdate, which disables ONLY the freeze trigger of that table
 --     for one update. Every history guard stays active, so DELETION 4 measures the deletion with the guards on.
 --   - The deferred "at least one symptom" checks run at commit, and this file ends with rollback. DELETION 4 runs them
@@ -400,7 +400,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- DELETION 3: "password" older than 5 minutes -> AD001
+-- DELETION 3: "password" older than 60 seconds -> AD001
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -409,7 +409,7 @@ declare
   v_old text;
   v_old_next_to_otp text;
 begin
-  perform pg_temp.act_as(v_a, pg_temp.amr('password', interval '5 minutes 1 second'));
+  perform pg_temp.act_as(v_a, pg_temp.amr('password', interval '61 seconds'));
   v_old := pg_temp.try_delete();
   perform pg_temp.act_as_postgres();
 
@@ -418,11 +418,11 @@ begin
   v_old_next_to_otp := pg_temp.try_delete();
   perform pg_temp.act_as_postgres();
 
-  perform pg_temp.assert_code('3', 'password sign-in 5 min 1 s ago', v_old, 'AD001');
+  perform pg_temp.assert_code('3', 'password sign-in 61 s ago', v_old, 'AD001');
   perform pg_temp.assert_code('3', 'password sign-in 1 h ago next to a fresh otp', v_old_next_to_otp, 'AD001');
   perform pg_temp.assert_account_exists('3', 'an old password sign-in', v_a);
 
-  raise notice 'DELETION 3 OK: a password sign-in older than 5 minutes is refused with AD001, also next to a fresh otp entry, the account stays';
+  raise notice 'DELETION 3 OK: a password sign-in older than 60 seconds is refused with AD001, also next to a fresh otp entry, the account stays';
 end;
 $$;
 
@@ -486,7 +486,7 @@ begin
     raise exception 'DELETION 4 FAILED: account tables without a test row: %. Insert a row of A and of B with ids from the pool in the test data of account_deletion_checks.sql, otherwise the deletion of that table is not measured', v_list;
   end if;
 
-  perform pg_temp.act_as(v_a, pg_temp.amr('password', interval '4 minutes 59 seconds'));
+  perform pg_temp.act_as(v_a, pg_temp.amr('password', interval '59 seconds'));
   v_got := pg_temp.try_delete();
   perform pg_temp.act_as_postgres();
 
@@ -494,7 +494,7 @@ begin
   set constraints public.symptom_entries_require_item, public.symptom_entry_items_require_item immediate;
   set constraints public.symptom_entries_require_item, public.symptom_entry_items_require_item deferred;
 
-  perform pg_temp.assert_code('4', 'a password sign-in 4 min 59 s ago with the windows closed', v_got, 'ok');
+  perform pg_temp.assert_code('4', 'a password sign-in 59 s ago with the windows closed', v_got, 'ok');
 
   if exists (select 1 from auth.users where id = v_a) then
     raise exception 'DELETION 4 FAILED: account A is still in auth.users after a successful call';

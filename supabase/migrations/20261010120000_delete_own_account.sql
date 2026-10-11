@@ -13,15 +13,19 @@
 --        deletion by the missing auth.users row (medications_guard_delete, symptom_entries_guard_delete,
 --        terms_acceptances_guard), so a soft delete would be refused by them once a correction window is closed.
 --      - It accepts only a fresh password sign-in: the token must carry an `amr` entry with method "password" whose
---        timestamp is at most 5 minutes old. The anon key is public, so without this check anyone holding a session
+--        timestamp is at most 60 seconds old. The anon key is public, so without this check anyone holding a session
 --        (a stolen cookie, a session opened from the password reset link, whose amr method is "otp") could call the
---        function directly and skip the password. Shape of `amr` measured on local Supabase on 2026-10-11:
+--        function directly and skip the password.
+--      - Accepted residual: the function cannot tell the route's sign-in from an ordinary one on /auth/signin. For
+--        60 seconds after any password sign-in, whoever holds that session's token can call the function directly
+--        without the password. The window is kept as short as the route allows (impl-review F1, 2026-10-11).
+--        Shape of `amr` measured on local Supabase on 2026-10-11:
 --        [{"method":"password","timestamp":<unix seconds>}] after a password sign-in,
 --        [{"method":"otp","timestamp":<unix seconds>}] after the password reset link.
 --
 -- Errors, each a named SQLSTATE the route maps to a text, checked in this order:
 --   28000  no signed-in session (auth.uid() is empty);
---   AD001  no fresh password sign-in in the token (no "password" entry in amr, or one older than 5 minutes);
+--   AD001  no fresh password sign-in in the token (no "password" entry in amr, or one older than 60 seconds);
 --   AD002  the account row was not found (already deleted), so nothing was deleted.
 --
 -- Privileges: security definer, because authenticated has no privilege on auth.users. The function deletes only the
@@ -36,9 +40,10 @@ security definer
 set search_path = ''
 as $$
 declare
-  -- The route signs in with the password and calls this function in one request, so a few seconds would do. The
-  -- margin covers clock drift between the auth server that stamps the amr timestamp and the database clock.
-  c_fresh_sign_in constant interval := interval '5 minutes';
+  -- The route signs in with the password and calls this function in one request (measured locally: 0 s apart), so a
+  -- few seconds would do. The margin covers clock drift between the auth server that stamps the amr timestamp and the
+  -- database clock. Kept short because the same window lets a holder of a freshly signed-in token skip the password.
+  c_fresh_sign_in constant interval := interval '60 seconds';
   v_user_id uuid := auth.uid();
   v_amr jsonb := auth.jwt() -> 'amr';
   v_rows integer;
@@ -75,7 +80,7 @@ end;
 $$;
 
 comment on function public.delete_own_account() is
-  'Deletes the account of the caller (auth.uid()) from auth.users; the on delete cascade keys remove every row of the account in public, and the history guards let the cascade through because the account row is gone. Example: Anna signs in with her password on 2026-10-11 at 21:14 and the route calls this function in the same request; her medications, dosage periods, journal entries and terms acceptances are deleted, with no copy. Requires a fresh password sign-in: an amr entry with method "password" and a timestamp (unix seconds) at most 5 minutes old; a session from the password reset link (method "otp") or an older sign-in is refused. Errors: 28000 = no signed-in session, AD001 = no fresh password sign-in, AD002 = account not found. security definer because authenticated has no privilege on auth.users; it never deletes a row other than auth.uid().';
+  'Deletes the account of the caller (auth.uid()) from auth.users; the on delete cascade keys remove every row of the account in public, and the history guards let the cascade through because the account row is gone. Example: Anna signs in with her password on 2026-10-11 at 21:14 and the route calls this function in the same request; her medications, dosage periods, journal entries and terms acceptances are deleted, with no copy. Requires a fresh password sign-in: an amr entry with method "password" and a timestamp (unix seconds) at most 60 seconds old; a session from the password reset link (method "otp") or an older sign-in is refused. Errors: 28000 = no signed-in session, AD001 = no fresh password sign-in, AD002 = account not found. security definer because authenticated has no privilege on auth.users; it never deletes a row other than auth.uid().';
 
 -- The Supabase default privileges grant anon and authenticated EXECUTE on every new function in public; revoking
 -- from public alone would not remove those direct grants.
