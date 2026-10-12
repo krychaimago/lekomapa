@@ -30,6 +30,7 @@
 - 3.2 (czułość strażnika) — nie powtórzona ręcznie; w pliku testu jest fixture „a medication name in the address is reported”.
 - Zgodność z planem: wszystkie pozycje MATCH. Uzasadnione odstępstwo: `clearCookie` używa `cookies.set(..., { maxAge: 0 })` zamiast `cookies.delete`, bo `delete` wysyła tylko `Expires`, a smoke sprawdza `Max-Age=0` (komentarz w `src/lib/medication-draft.ts:97-100`).
 - Po merge'u (z planu, poza Progress): sprawdzić w logach Workera jedno wywołanie `/leki/nowy` po wyszukiwaniu — adres bez nazwy; odnotować, czy log zapisuje nagłówek `Cookie`. Wynik dopisać tutaj.
+  - **Wynik (12.10.2026, `wrangler tail` na produkcji, 35 zdarzeń)**: adresy `/leki/nowy`, `POST /api/medications/draft` (303), `POST /api/registry/search` (200), `/leki/nowy?wariant=…` — żaden nie niesie nazwy leku ani substancji. Nagłówek `Cookie` jest w zdarzeniu, ale `wrangler tail` pokazuje go jako `REDACTED`; nazwy ciasteczek `lekomapa-*` ani `sb-*` nie występują w zapisie. Zapisanych Workers Logs nie odczytano (token OAuth wranglera bez uprawnienia do observability) — czy trwały log ukrywa `Cookie` tak samo, pozostaje niesprawdzone.
 
 ## Findings
 
