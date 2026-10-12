@@ -4,6 +4,7 @@ import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { TermsCheckbox } from "@/components/auth/TermsCheckbox";
 import { AUTH_COPY } from "@/lib/copy/auth";
 import { MIN_PASSWORD_LENGTH } from "@/lib/copy/password-recovery";
@@ -22,6 +23,7 @@ export default function SignUpForm({ serverError }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [submitting, markSubmitting] = useSubmitting();
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; terms?: string }>(
     {},
   );
@@ -62,7 +64,9 @@ export default function SignUpForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+    markSubmitting();
   }
 
   const passwordHint = <p className="text-muted-foreground mt-1 text-sm">{copy.passwordHint}</p>;
@@ -141,7 +145,7 @@ export default function SignUpForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText={copy.pending} icon={<UserPlus className="size-4" />}>
+      <SubmitButton pending={submitting} pendingText={copy.pending} icon={<UserPlus className="size-4" />}>
         {copy.submit}
       </SubmitButton>
     </form>
