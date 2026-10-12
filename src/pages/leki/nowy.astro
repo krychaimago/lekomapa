@@ -1,14 +1,21 @@
 ---
-// Adding a medication from the registry (S-02, FR-003) in three steps on one server-rendered page, driven by GET:
-//   ?q=      search trade names (at most MAX_NAMES names, each a link to its variants);
-//   ?nazwa=  variants of one name with strength, form and composition, then the dose and the start date;
-//   ?error=  a code from the save route, looked up in MEDICATION_COPY.apiErrors.
-// A search that finds exactly one name goes straight to its variants. The search field is RegistrySearch: the same GET
-// form without JavaScript, with suggestions from /api/registry/search once hydrated.
+// Adding a medication from the registry (S-02, FR-003) in three steps on one server-rendered page. No medication name
+// travels in the address (lesson "Żadna nazwa leku ani dawka w adresie URL"); the page reads only:
+//   ?wariant=  id of a registry product: the page reads that product's name and shows every variant of the name with
+//              strength, form and composition, then the dose and the start date, with this product selected. An
+//              unknown id shows "no results";
+//   ?error=    a code from the save route, looked up in MEDICATION_COPY.apiErrors.
+// Without ?wariant= the searched text comes from the registry search draft cookie (set by POST /api/medications/draft
+// for this account only): at most MAX_NAMES names, each a link to ?wariant=<id of its first row>. A search that finds
+// exactly one name goes straight to its variants. Old addresses with ?q= or ?nazwa= are ignored. The search field is
+// RegistrySearch: a POST form to the draft route without JavaScript, with suggestions from /api/registry/search once
+// hydrated.
+import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import AddMedicationForm from "@/components/medications/AddMedicationForm";
 import RegistrySearch from "@/components/medications/RegistrySearch";
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import { MAX_DRAFT_TEXT_LENGTH, readRegistrySearch } from "@/lib/medication-draft";
 import {
   type RegistryNameGroup,
   type RegistrySubstanceRow,
@@ -25,24 +32,46 @@ type VariantRow = Pick<RegistryProduct, "id" | "product_name" | "strength" | "ph
 
 const MAX_NAMES = 20;
 const MAX_VARIANTS = 100;
-const MAX_INPUT_LENGTH = 200;
+const MAX_INPUT_LENGTH = MAX_DRAFT_TEXT_LENGTH;
 const LEAFLET_PATH = "/leki/nowy/z-ulotki";
 
 const copy = MEDICATION_COPY.add;
 const params = Astro.url.searchParams;
-const query = (params.get("q") ?? "").trim().slice(0, MAX_INPUT_LENGTH);
-let name = (params.get("nazwa") ?? "").trim().slice(0, MAX_INPUT_LENGTH);
-const requestedVariant = params.get("wariant");
+const wariant = z.uuid().safeParse(params.get("wariant"));
+const requestedVariant = wariant.success ? wariant.data : null;
 const error = apiErrorMessage(params.get("error"));
 const today = todayInWarsaw();
+// The page is protected, so a user is always signed in here; the draft is read only for that account.
+const userId = Astro.locals.user?.id ?? "";
+const query = requestedVariant ? "" : (readRegistrySearch(Astro.cookies, userId)?.q ?? "");
+let name = "";
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
-let loadFailed = supabase === null && (query !== "" || name !== "");
+let loadFailed = supabase === null && (query !== "" || requestedVariant !== null);
 let searched = false;
+let unknownVariant = false;
 let groups: RegistryNameGroup[] = [];
 let truncated = false;
 
-if (supabase && query && !name) {
+if (supabase && requestedVariant) {
+  // The name of the chosen product; its variants are read below like those of a searched name.
+  const { data, error: productError } = await supabase
+    .from("registry_products")
+    .select("product_name")
+    .eq("id", requestedVariant)
+    .maybeSingle()
+    .overrideTypes<Pick<RegistryProduct, "product_name">, { merge: false }>();
+  if (productError) {
+    loadFailed = true;
+    console.error("Reading a registry product failed", { code: productError.code });
+  } else if (data) {
+    name = data.product_name;
+  } else {
+    unknownVariant = true;
+  }
+}
+
+if (supabase && query) {
   searched = true;
   const allGroups = await searchRegistryNames(supabase, query);
   if (allGroups === null) {
@@ -86,7 +115,8 @@ if (supabase && name && !loadFailed) {
 
 const selectedId = variants.find((variant) => variant.id === requestedVariant)?.id ?? variants.at(0)?.id ?? "";
 const showVariants = variants.length > 0;
-const showNoResults = !loadFailed && ((name !== "" && !showVariants) || (searched && groups.length === 0));
+const showNoResults =
+  !loadFailed && (unknownVariant || (name !== "" && !showVariants) || (searched && groups.length === 0));
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
 
@@ -135,7 +165,7 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           {groups.map((group) => (
             <li>
               <a
-                href={`/leki/nowy?${new URLSearchParams({ nazwa: group.name }).toString()}`}
+                href={`/leki/nowy?${new URLSearchParams({ wariant: group.productId }).toString()}`}
                 class="flex min-h-12 items-center justify-between gap-4 rounded-lg border border-border bg-card px-4 py-2 text-card-foreground hover:border-primary"
               >
                 <span class="font-medium">{group.name}</span>
@@ -159,14 +189,7 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
     {showVariants && (
       <section class="flex flex-col gap-4">
         <h2 class="text-2xl font-semibold">{name}</h2>
-        <AddMedicationForm
-          name={name}
-          variants={variants}
-          selectedId={selectedId}
-          today={today}
-          serverError={error}
-          client:load
-        />
+        <AddMedicationForm variants={variants} selectedId={selectedId} today={today} serverError={error} client:load />
         <div class="grid gap-4 sm:grid-cols-2">
           <section class="rounded-lg border border-border bg-card p-4 text-card-foreground">
             <h3 class="mb-1 font-semibold">{MEDICATION_COPY.hints.doseHistoryTitle}</h3>

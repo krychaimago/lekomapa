@@ -23,19 +23,21 @@ export function likeLiteral(input: string): string {
   return escapeLikePattern(input).replaceAll("*", "\\*");
 }
 
-// Every trade name containing `query` (case-insensitive), grouped by name and sorted alphabetically. `null` when the
-// query failed; the error code is logged here, never the message.
+// Every trade name containing `query` (case-insensitive), grouped by name with the id of its first row, sorted
+// alphabetically. `null` when the query failed; the error code is logged here, never the message.
 export async function searchRegistryNames(
   supabase: SupabaseClient,
   query: string,
 ): Promise<RegistryNameGroup[] | null> {
   const { data, error } = await supabase
     .from("registry_products")
-    .select("product_name")
+    .select("id, product_name")
     .ilike("product_name", `%${likeLiteral(query)}%`)
+    // Ordered by id within a name, so a group's productId is the same on the page and in the suggestions.
     .order("product_name")
+    .order("id")
     .limit(MAX_SEARCH_ROWS)
-    .overrideTypes<Pick<RegistryProduct, "product_name">[], { merge: false }>();
+    .overrideTypes<Pick<RegistryProduct, "id" | "product_name">[], { merge: false }>();
   if (error) {
     console.error("Searching the registry failed", { code: error.code });
     return null;

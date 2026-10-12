@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
 import { MEDICATION_COPY, type MedicationApiErrorCode } from "@/lib/copy/medications";
+import { clearMedicationDrafts } from "@/lib/medication-draft";
 import { todayInWarsaw } from "@/lib/services/medications";
 
 export const prerender = false;
@@ -82,8 +83,9 @@ function leafletParams(form: FormData): URLSearchParams {
   return params;
 }
 
-// Back to the step the form was sent from. Registry: the chosen name and variant stay. Leaflet: the typed name,
-// substance and date stay. The typed dose never does.
+// Back to the step the form was sent from. Registry: only the chosen variant's id and the error code, never the name
+// (the page reads the name back from the id). Leaflet: the typed name, substance and date stay. The typed dose never
+// does.
 function errorRedirect(code: MedicationApiErrorCode, form: FormData): string {
   if (formText(form, "source") === "leaflet") {
     const params = leafletParams(form);
@@ -93,8 +95,6 @@ function errorRedirect(code: MedicationApiErrorCode, form: FormData): string {
     return `${LEAFLET_PATH}?${params.toString()}`;
   }
   const params = new URLSearchParams();
-  const name = formText(form, "nazwa")?.trim();
-  if (name) params.set("nazwa", name);
   const variant = formText(form, "registryProductId");
   if (variant && z.uuid().safeParse(variant).success) params.set("wariant", variant);
   params.set("error", code);
@@ -195,5 +195,7 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(errorRedirect(GENERIC, form));
   }
 
+  // The medication is saved: the search text and the leaflet draft have done their job.
+  clearMedicationDrafts(context.cookies);
   return context.redirect(`${LIST_PATH}?dodano=${medicationId.data}`);
 };
