@@ -1902,6 +1902,8 @@ const existingAccountTermsStep = [
 const MAILPIT_URL = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
 const MAIL_TIMEOUT_MS = 15000;
 const MAIL_POLL_MS = 250;
+// Per request: the deadline in waitForMail is checked only between requests, so a hung mailpit would stall it.
+const MAILPIT_REQUEST_TIMEOUT_MS = 5000;
 const NEW_PASSWORD = "Smoke-Test-Passw0rd-New!";
 const RESET_PASSWORD_PAGE = "/auth/reset-password";
 const RESET_CONFIRM_PATH = "/auth/reset-password/confirm";
@@ -1914,7 +1916,7 @@ const recovery = { unknownAddress: `smoke-nobody-${Date.now()}@${emailDomain}`, 
 // never passes for "no mail".
 async function mailpitMessagesTo(address) {
   const url = `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${address}`)}`;
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(MAILPIT_REQUEST_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`mailpit search failed: HTTP ${response.status} from ${MAILPIT_URL}`);
   const body = await response.json();
   if (!Array.isArray(body.messages)) throw new Error("mailpit search returned no message list");
@@ -1939,7 +1941,9 @@ async function waitForMail(address) {
 }
 
 async function readMessage(id) {
-  const response = await fetch(`${MAILPIT_URL}/api/v1/message/${encodeURIComponent(id)}`);
+  const response = await fetch(`${MAILPIT_URL}/api/v1/message/${encodeURIComponent(id)}`, {
+    signal: AbortSignal.timeout(MAILPIT_REQUEST_TIMEOUT_MS),
+  });
   if (!response.ok) throw new Error(`mailpit message read failed: HTTP ${response.status}`);
   return response.json();
 }
@@ -2045,10 +2049,16 @@ const recoverySteps = [
   ],
   [
     "recovery: the same link used again in another browser is expired",
-    () =>
-      recovery.link
-        ? request("/api/auth/password-reset-verify", { method: "POST", form: verifyForm(), jar: new Map() })
-        : NO_LINK,
+    async () => {
+      if (!recovery.link) return NO_LINK;
+      const freshJar = new Map();
+      return request("/api/auth/password-reset-verify", {
+        method: "POST",
+        form: verifyForm(),
+        jar: freshJar,
+        origin: await formOrigin(linkPath(), freshJar),
+      });
+    },
     { status: 302, location: RECOVERY_EXPIRED_PATH, exact: true },
   ],
   [
@@ -2079,7 +2089,7 @@ const recoverySteps = [
   [
     "recovery: old password no longer signs in",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/auth/signin?error=" },
+    { status: 302, location: "/auth/signin?error=credentials", exact: true },
   ],
   [
     "recovery: new password signs in",
