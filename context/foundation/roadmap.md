@@ -44,25 +44,25 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                       | Prerequisites                      | PRD refs                                   | Status      |
-| ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | ----------- |
-| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done        |
-| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done        |
-| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done        |
-| F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done        |
-| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | done        |
-| F-06 | production-observability             | (fundament) błąd i przerwa w działaniu produkcji docierają do autorki mailem         | —                                  | NFR progów szybkości, błędów i dostępności | ready       |
-| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | done        |
-| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done        |
-| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done        |
-| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
-| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done        |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done        |
-| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | done        |
+| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                       | Prerequisites                      | PRD refs                                   | Status |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | ------ |
+| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done   |
+| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done   |
+| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done   |
+| F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done   |
+| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | done   |
+| F-06 | production-observability             | (fundament) błąd i przerwa w działaniu produkcji docierają do autorki mailem         | —                                  | NFR progów szybkości, błędów i dostępności | ready  |
+| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | done   |
+| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | done   |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done   |
+| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done   |
+| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done   |
+| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done   |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done   |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done   |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done   |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done   |
+| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | done   |
 
 ## Streams
 
@@ -207,7 +207,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - ~~Czy ekran potwierdzenia wysłania zdradza, że konto o danym adresie istnieje?~~ — Rozstrzygnięte 2026-10-06 (#34): wariant bezpieczniejszy, już wdrożony — każdy wynik prośby kończy się tym samym ekranem (`src/pages/api/auth/password-reset-request.ts`). Wymóg na przyszłość: żadna zmiana tego plasterka nie rozróżnia komunikatu po istnieniu konta.
 - **Risk:** Wersja 1 roadmapy uznała odzyskiwanie dostępu za obecne w starterze, a w kodzie go nie ma — FR-002 (konieczne) był niepokryty. Wydzielony z S-01, bo to osobna czynność użytkowniczki z własnym ryzykiem: odnośnik resetujący, który nie wygasa albo działa wielokrotnie, jest drogą do cudzych danych o zdrowiu. Trzy ekrany (prośba o adres, potwierdzenie wysłania, nowe hasło) w palecie z F-04. Nowe ekrany nie trafiają na listę wyjątków skanera kolorów (`EXCEPTIONS` w `scripts/tokens/hardcoded-colors.mjs`). Jeśli plasterek przepina na tokeny wspólne komponenty formularza z tej listy (np. `FormField`, `SubmitButton`), zdejmuje je z niej — test wywraca się, gdy plik na liście nie ma już koloru na sztywno. Nadawca maili poza zakresem (decyzja 2026-09-27): do czasu F-05 odnośnik resetu dochodzi wyłącznie na adresy członków zespołu projektu Supabase.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-02: Dodanie leku po nazwie handlowej ze znacznikiem możliwej kolizji
 
@@ -354,25 +354,25 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                                  | Issue |
-| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | ------------------------------------------------------ | ----- |
-| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                                   | #9    |
-| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                                   | #10   |
-| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                                   | #11   |
-| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                                   | #35   |
-| F-05       | `email-sender-smtp`                    | Własny nadawca maili (SMTP na domenie lekomapa.pl)        | yes                   | Przed wpuszczeniem innych osób; praca w panelach i DNS | #44   |
-| F-06       | `production-observability`             | Śledzenie błędów i monitor dostępności (Sentry)           | yes                   | Uruchom `/10x-plan production-observability`           | #74   |
-| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup`         | #12   |
-| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | —                     | in-progress; zostały kroki ręczne 3.7–3.8              | #36   |
-| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | —                     | done                                                   | #13   |
-| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | —                     | done                                                   | #14   |
-| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | —                     | done                                                   | #15   |
-| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                                   | #16   |
-| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
-| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | —                     | done                                                   | #18   |
-| S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | no                    | Wymaga S-02 i S-06                                     | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | yes                   | Uruchom `/10x-plan account-deletion-cascade`           | #20   |
-| S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
+| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                        | Issue |
+| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | -------------------------------------------- | ----- |
+| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                         | #9    |
+| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                         | #10   |
+| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                         | #11   |
+| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                         | #35   |
+| F-05       | `email-sender-smtp`                    | Własny nadawca maili (SMTP na domenie lekomapa.pl)        | —                     | done                                         | #44   |
+| F-06       | `production-observability`             | Śledzenie błędów i monitor dostępności (Sentry)           | yes                   | Uruchom `/10x-plan production-observability` | #74   |
+| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | —                     | done                                         | #12   |
+| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | —                     | done                                         | #36   |
+| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | —                     | done                                         | #13   |
+| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | —                     | done                                         | #14   |
+| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | —                     | done                                         | #15   |
+| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                         | #16   |
+| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | —                     | done                                         | #17   |
+| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | —                     | done                                         | #18   |
+| S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | —                     | done                                         | #19   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | —                     | done                                         | #20   |
+| S-11       | `dark-mode`                            | Tryb ciemny                                               | —                     | done                                         | #37   |
 
 ## Open Roadmap Questions
 
@@ -436,3 +436,4 @@ Rozstrzygnięte:
 - **S-09: Użytkowniczka może usunąć konto, co bezpowrotnie kasuje wszystkie powiązane dane — leki, okresy dawkowania, wpisy o samopoczuciu i złożone pytania — bez kopii zachowanej „na wszelki wypadek".** — Archived 2026-10-11 → `context/archive/2026-10-10-account-deletion-cascade/`. Lesson: —.
 - **S-11: Użytkowniczka może korzystać z produktu w trybie ciemnym na wszystkich ekranach M-1, z czytelnością na tym samym poziomie co w trybie jasnym.** — Archived 2026-10-11 → `context/archive/2026-10-11-dark-mode/`. Lesson: —.
 - **F-05: (fundament) maile wysyłane przez produkt — potwierdzenie adresu po rejestracji i odnośnik do ustawienia nowego hasła — dochodzą na adres każdej osoby, a nie tylko członków zespołu projektu Supabase, z nadawcą z domeny `lekomapa.pl`.** — Archived 2026-10-12 → `context/archive/2026-10-11-email-sender-smtp/`. Lesson: —.
+- **S-10: Użytkowniczka, która nie pamięta hasła, może poprosić o odnośnik na adres e-mail konta, ustawić nowe hasło i zalogować się nim; wygasły odnośnik kończy się zrozumiałym komunikatem z drogą do nowego.** — Archived 2026-10-12 → `context/archive/2026-09-27-password-recovery/`. Lesson: —.

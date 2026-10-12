@@ -389,48 +389,48 @@ Brak migracji bazy. Zmiana konfiguracji: lokalnie w `supabase/config.toml`, na p
 
 #### Automated
 
-- [x] 1.1 Lint przechodzi: `npm run lint` — f97d255
-- [x] 1.2 Typy przechodzą: `npm run typecheck` — f97d255
-- [x] 1.3 Build przechodzi: `npm run build` — f97d255
-- [x] 1.4 Testy tokenów przechodzą bez zmian: `npm test` — f97d255
+- [x] 1.1 Lint przechodzi: `npm run lint` — b0b52db
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — b0b52db
+- [x] 1.3 Build przechodzi: `npm run build` — b0b52db
+- [x] 1.4 Testy tokenów przechodzą bez zmian: `npm test` — b0b52db
 
 #### Manual
 
-- [x] 1.5 Pomiar `amr` dla trzech rodzajów sesji zapisany w `change.md` i pokazuje rozróżnialną sesję z odnośnika — f97d255
-- [x] 1.6 Na lokalnym Supabase `curl` prośby o odnośnik dla istniejącego i nieistniejącego adresu daje identyczne przekierowanie; mail dla istniejącego konta widać w mailpicie z odnośnikiem `token_hash` na port 4321 — f97d255
-- [x] 1.7 `curl` POST weryfikacji z tokenem z maila daje 302 na `/auth/reset-password`; drugi POST tym samym tokenem daje 302 na `/auth/reset-password/confirm?expired=1` — f97d255
-- [x] 1.8 W sesji z odnośnika `/dashboard` przekierowuje na `/auth/reset-password`; po zapisie hasła logowanie starym hasłem pada, nowym przechodzi — f97d255
+- [x] 1.5 Pomiar `amr` dla trzech rodzajów sesji zapisany w `change.md` i pokazuje rozróżnialną sesję z odnośnika — b0b52db
+- [x] 1.6 Na lokalnym Supabase `curl` prośby o odnośnik dla istniejącego i nieistniejącego adresu daje identyczne przekierowanie; mail dla istniejącego konta widać w mailpicie z odnośnikiem `token_hash` na port 4321 — b0b52db
+- [x] 1.7 `curl` POST weryfikacji z tokenem z maila daje 302 na `/auth/reset-password`; drugi POST tym samym tokenem daje 302 na `/auth/reset-password/confirm?expired=1` — b0b52db
+- [x] 1.8 W sesji z odnośnika `/dashboard` przekierowuje na `/auth/reset-password`; po zapisie hasła logowanie starym hasłem pada, nowym przechodzi — b0b52db
 
 ### Phase 2: Ekrany odzyskiwania i wspólne komponenty na tokenach
 
 #### Automated
 
-- [x] 2.1 Skaner i kontrast przechodzą z czterema komponentami zdjętymi z `EXCEPTIONS`: `npm test` — 54b175f
-- [x] 2.2 Lint przechodzi: `npm run lint` — 54b175f
-- [x] 2.3 Typy przechodzą: `npm run typecheck` — 54b175f
-- [x] 2.4 Build przechodzi: `npm run build` — 54b175f
+- [x] 2.1 Skaner i kontrast przechodzą z czterema komponentami zdjętymi z `EXCEPTIONS`: `npm test` — b0b52db
+- [x] 2.2 Lint przechodzi: `npm run lint` — b0b52db
+- [x] 2.3 Typy przechodzą: `npm run typecheck` — b0b52db
+- [x] 2.4 Build przechodzi: `npm run build` — b0b52db
 
 #### Manual
 
-- [x] 2.5 Cała ścieżka w przeglądarce na lokalnym Supabase: logowanie → „Nie pamiętasz hasła?” → adres → „wysłaliśmy” → odnośnik z mailpitu → przycisk → nowe hasło → logowanie z informacją o zmianie → logowanie nowym hasłem — 54b175f
-- [x] 2.6 Odnośnik z maila otwarty w innej przeglądarce niż prośba działa — 54b175f
-- [x] 2.7 Ekrany czytelne na szerokości telefonu (375 px): tekst co najmniej 15 px, pola i przyciski wyższe niż 44 px, bez poziomego przewijania — 54b175f
-- [x] 2.8 Logowanie i rejestracja nadal działają i są czytelne z przepiętymi komponentami na tle `bg-cosmic` — 54b175f
-- [x] 2.9 Brak angielskich napisów na nowych ekranach — 54b175f
-- [x] 2.10 W sesji z odnośnika „Anuluj i wyloguj” kończy sesję; potem `/auth/signin` otwiera się normalnie, a logowanie starym hasłem przechodzi — 54b175f
+- [x] 2.5 Cała ścieżka w przeglądarce na lokalnym Supabase: logowanie → „Nie pamiętasz hasła?” → adres → „wysłaliśmy” → odnośnik z mailpitu → przycisk → nowe hasło → logowanie z informacją o zmianie → logowanie nowym hasłem — b0b52db
+- [x] 2.6 Odnośnik z maila otwarty w innej przeglądarce niż prośba działa — b0b52db
+- [x] 2.7 Ekrany czytelne na szerokości telefonu (375 px): tekst co najmniej 15 px, pola i przyciski wyższe niż 44 px, bez poziomego przewijania — b0b52db
+- [x] 2.8 Logowanie i rejestracja nadal działają i są czytelne z przepiętymi komponentami na tle `bg-cosmic` — b0b52db
+- [x] 2.9 Brak angielskich napisów na nowych ekranach — b0b52db
+- [x] 2.10 W sesji z odnośnika „Anuluj i wyloguj” kończy sesję; potem `/auth/signin` otwiera się normalnie, a logowanie starym hasłem przechodzi — b0b52db
 
 ### Phase 3: Bramka smoke, CI i konfiguracja produkcji
 
 #### Automated
 
-- [x] 3.1 Smoke przechodzi na lokalnym Supabase z mailpitem, łącznie z 12 krokami odzyskiwania: `npm run smoke` (po odsunięciu `.env` i ze świeżym `npm run preview`, zgodnie z `lessons.md`) — 8d76504
-- [x] 3.2 Lint przechodzi: `npm run lint` — 8d76504
-- [x] 3.3 Typy przechodzą: `npm run typecheck` — 8d76504
-- [x] 3.4 Testy tokenów przechodzą: `npm test` — 8d76504
-- [x] 3.5 Job `smoke` w CI przechodzi na pull requeście — 8d76504
+- [x] 3.1 Smoke przechodzi na lokalnym Supabase z mailpitem, łącznie z 12 krokami odzyskiwania: `npm run smoke` (po odsunięciu `.env` i ze świeżym `npm run preview`, zgodnie z `lessons.md`) — b0b52db
+- [x] 3.2 Lint przechodzi: `npm run lint` — b0b52db
+- [x] 3.3 Typy przechodzą: `npm run typecheck` — b0b52db
+- [x] 3.4 Testy tokenów przechodzą: `npm test` — b0b52db
+- [x] 3.5 Job `smoke` w CI przechodzi na pull requeście — b0b52db
 
 #### Manual
 
-- [x] 3.6 Wygaśnięcie: lokalnie `otp_expiry = 60`, restart Supabase, odnośnik kliknięty po ponad minucie pokazuje komunikat o wygasłym odnośniku; `otp_expiry` przywrócone do 3600 — 8d76504
+- [x] 3.6 Wygaśnięcie: lokalnie `otp_expiry = 60`, restart Supabase, odnośnik kliknięty po ponad minucie pokazuje komunikat o wygasłym odnośniku; `otp_expiry` przywrócone do 3600 — b0b52db
 - [x] 3.7 Szablon i adres przekierowania ustawione w panelu produkcji i odczytane z powrotem — 96b18ea
 - [x] 3.8 Po wdrożeniu: reset na koncie autorki na produkcji — mail dochodzi, odnośnik prowadzi na adres produkcji, nowe hasło działa — 96b18ea
