@@ -1,10 +1,10 @@
 ---
 change_id: password-recovery
 title: Odzyskiwanie dostępu przez ustawienie nowego hasła
-status: impl_reviewed
+status: archived
 created: 2026-09-27
 updated: 2026-10-12
-archived_at: null
+archived_at: 2026-10-12T16:43:20Z
 ---
 
 ## Notes
