@@ -650,6 +650,16 @@ async function periodsOf(medicationId) {
   return data;
 }
 
+// The <input> tag of the leaflet form's substance field (id="substanceName"), so the check reads that field's value
+// and not the hidden substanceName of a "similar names" button.
+function leafletSubstanceFieldOf(body) {
+  const at = body.indexOf('id="substanceName"');
+  if (at === -1) return null;
+  const start = body.lastIndexOf("<input", at);
+  const end = body.indexOf(">", at);
+  return start === -1 || end === -1 ? null : body.slice(start, end + 1);
+}
+
 function addedIdFrom(location) {
   if (!location.startsWith(ADDED_PREFIX)) return null;
   const id = location.slice(ADDED_PREFIX.length);
@@ -818,6 +828,47 @@ const medicationFlowSteps = [
       return {
         ok: notCovered,
         detail: `details ${page.status}; not-covered text ${notCovered ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: a leaflet substance outside the dictionary returns to the bare form address in the no-match state",
+    async () => {
+      // A made-up name no dictionary holds, without the "save without checking" box: the route keeps the typed fields
+      // in the leaflet draft cookie and the page reads them back from it, not from the address.
+      const substanceName = `Smoketestum ${Date.now()}`;
+      const response = await addMedication(
+        { source: "leaflet", productName: "Smoke Test Preparat bez dopasowania", substanceName },
+        LEAFLET_ADD_PAGE,
+      );
+      if (![302, 303].includes(response.status) || response.location !== LEAFLET_ADD_PAGE) {
+        return { ok: false, detail: `save: ${response.status} ${response.location}` };
+      }
+      const page = await requestPage(LEAFLET_ADD_PAGE, { jar: flow.jarA });
+      const noMatch = page.status === 200 && pageContains(page.body, MEDICATION_COPY.leaflet.noMatch);
+      const field = leafletSubstanceFieldOf(page.body);
+      const filled = field !== null && field.includes(`value="${escapeHtml(substanceName)}"`);
+      return {
+        ok: noMatch && filled,
+        detail: `save: ${response.status} ${response.location}; page ${page.status}, no-match text ${
+          noMatch ? "present" : "missing"
+        }, substance ${filled ? "in the field" : "NOT in the field"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: a leaflet save with an empty name returns with only the error code in the address",
+    async () => {
+      const response = await addMedication(
+        { source: "leaflet", productName: "", substanceName: `Smoketestum ${Date.now()}` },
+        LEAFLET_ADD_PAGE,
+      );
+      const expected = `${LEAFLET_ADD_PAGE}?error=productNameRequired`;
+      return {
+        ok: [302, 303].includes(response.status) && response.location === expected,
+        detail: `${response.status} ${response.location}`,
       };
     },
     EXPECT_OK,

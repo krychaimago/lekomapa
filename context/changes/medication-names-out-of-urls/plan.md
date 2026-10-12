@@ -336,35 +336,35 @@ Brak migracji bazy. Stare zakładki z `?q=` / `?nazwa=` otwierają pusty formula
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Lint przechodzi: `npm run lint`
-- [x] 1.4 Smoke przechodzi przeciw lokalnemu Supabase (`.env` odsunięty, stary podgląd zatrzymany): `npm run smoke`
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 84aee21
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — 84aee21
+- [x] 1.3 Lint przechodzi: `npm run lint` — 84aee21
+- [x] 1.4 Smoke przechodzi przeciw lokalnemu Supabase (`.env` odsunięty, stary podgląd zatrzymany): `npm run smoke` — 84aee21
 
 #### Manual
 
-- [x] 1.5 Wyszukanie „Ibuprom” przyciskiem „Szukaj”, wybór nazwy z listy i wybór podpowiedzi: pasek adresu i historia przeglądarki pokazują wyłącznie `/leki/nowy` i `/leki/nowy?wariant=<uuid>`
-- [x] 1.6 Odświeżenie wyników wyszukiwania pokazuje te same wyniki bez komunikatu o ponownym wysłaniu formularza
-- [x] 1.7 Wyszukiwanie działa z wyłączonym JavaScriptem
-- [x] 1.8 W zakładce Sieć żądanie podpowiedzi to `POST /api/registry/search` bez parametrów w adresie
-- [x] 1.9 Stary adres `/leki/nowy?nazwa=Ibuprom` pokazuje pusty formularz wyszukiwania
-- [x] 1.10 Po wylogowaniu i zalogowaniu innym kontem `/leki/nowy` nie pokazuje poprzedniego wyszukiwania
+- [x] 1.5 Wyszukanie „Ibuprom” przyciskiem „Szukaj”, wybór nazwy z listy i wybór podpowiedzi: pasek adresu i historia przeglądarki pokazują wyłącznie `/leki/nowy` i `/leki/nowy?wariant=<uuid>` — 84aee21
+- [x] 1.6 Odświeżenie wyników wyszukiwania pokazuje te same wyniki bez komunikatu o ponownym wysłaniu formularza — 84aee21
+- [x] 1.7 Wyszukiwanie działa z wyłączonym JavaScriptem — 84aee21
+- [x] 1.8 W zakładce Sieć żądanie podpowiedzi to `POST /api/registry/search` bez parametrów w adresie — 84aee21
+- [x] 1.9 Stary adres `/leki/nowy?nazwa=Ibuprom` pokazuje pusty formularz wyszukiwania — 84aee21
+- [x] 1.10 Po wylogowaniu i zalogowaniu innym kontem `/leki/nowy` nie pokazuje poprzedniego wyszukiwania — 84aee21
 
 ### Phase 2: Formularz z ulotki bez nazwy w adresie
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe przechodzą: `npm test`
-- [ ] 2.2 Typy przechodzą: `npm run typecheck`
-- [ ] 2.3 Lint przechodzi: `npm run lint`
-- [ ] 2.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 2.1 Testy jednostkowe przechodzą: `npm test`
+- [x] 2.2 Typy przechodzą: `npm run typecheck`
+- [x] 2.3 Lint przechodzi: `npm run lint`
+- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Zapis z substancją „ibuprofn”: strona pokazuje „brak dopasowania” z podobnymi nazwami, adres to `/leki/nowy/z-ulotki`, nazwa leku i data wracają w polach, dawka nie
-- [ ] 2.6 Kliknięcie podobnej nazwy wypełnia pole substancji, adres bez nazwy; działa też z wyłączonym JavaScriptem
-- [ ] 2.7 Błąd daty z przyszłości: adres `/leki/nowy/z-ulotki?error=futureDate`, wpisane pola wracają
-- [ ] 2.8 Udany zapis, potem ponowne wejście na `/leki/nowy/z-ulotki`: formularz pusty
+- [x] 2.5 Zapis z substancją „ibuprofn”: strona pokazuje „brak dopasowania” z podobnymi nazwami, adres to `/leki/nowy/z-ulotki`, nazwa leku i data wracają w polach, dawka nie
+- [x] 2.6 Kliknięcie podobnej nazwy wypełnia pole substancji, adres bez nazwy; działa też z wyłączonym JavaScriptem
+- [x] 2.7 Błąd daty z przyszłości: adres `/leki/nowy/z-ulotki?error=futureDate`, wpisane pola wracają
+- [x] 2.8 Udany zapis, potem ponowne wejście na `/leki/nowy/z-ulotki`: formularz pusty
 
 ### Phase 3: Strażnik reguły
 
