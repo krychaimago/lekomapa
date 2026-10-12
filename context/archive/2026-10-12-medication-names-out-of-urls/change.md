@@ -1,10 +1,10 @@
 ---
 change_id: medication-names-out-of-urls
 title: Nazwy leków i substancji poza adresami URL (dług po S-02)
-status: impl_reviewed
+status: archived
 created: 2026-10-12
 updated: 2026-10-12
-archived_at: null
+archived_at: 2026-10-12T19:51:41Z
 ---
 
 ## Notes
