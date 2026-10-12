@@ -4,6 +4,7 @@ import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { AUTH_COPY } from "@/lib/copy/auth";
 
 const copy = AUTH_COPY.signIn;
@@ -17,6 +18,7 @@ export default function SignInForm({ serverError }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, markSubmitting] = useSubmitting();
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   function validate() {
@@ -40,7 +42,9 @@ export default function SignInForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+    markSubmitting();
   }
 
   return (
@@ -84,7 +88,7 @@ export default function SignInForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText={copy.pending} icon={<LogIn className="size-4" />}>
+      <SubmitButton pending={submitting} pendingText={copy.pending} icon={<LogIn className="size-4" />}>
         {copy.submit}
       </SubmitButton>
     </form>
