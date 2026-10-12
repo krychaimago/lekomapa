@@ -370,7 +370,7 @@ Brak migracji bazy. Stare zakładki z `?q=` / `?nazwa=` otwierają pusty formula
 
 #### Automated
 
-- [x] 3.1 Testy jednostkowe przechodzą, w tym nowy test parametrów: `npm test`
-- [x] 3.2 Test parametrów pada po tymczasowym przywróceniu `?nazwa=` w `src/pages/leki/nowy.astro`
-- [x] 3.3 Typy i lint przechodzą: `npm run typecheck && npm run lint`
-- [x] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 3.1 Testy jednostkowe przechodzą, w tym nowy test parametrów: `npm test` — d4d1050
+- [x] 3.2 Test parametrów pada po tymczasowym przywróceniu `?nazwa=` w `src/pages/leki/nowy.astro` — d4d1050
+- [x] 3.3 Typy i lint przechodzą: `npm run typecheck && npm run lint` — d4d1050
+- [x] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke` — d4d1050
