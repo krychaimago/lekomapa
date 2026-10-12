@@ -59,7 +59,7 @@ Formularze wyszukiwania i „podobnych substancji” wysyłają tekst do `POST /
 
 ## Open Risks & Assumptions
 
-- `?wariant=<uuid>` wskazuje wiersz rejestru czytelny dla każdego zalogowanego konta — kto ma log i konto, może odczytać nazwę produktu. Lesson dopuszcza identyfikatory; ryzyko świadomie przyjęte.
+- `?wariant=<uuid>` wskazuje wiersz rejestru czytelny dla każdego zalogowanego konta — kto ma log i konto, może odczytać nazwę produktu. Lesson dopuszcza identyfikatory; ryzyko świadomie przyjęte. Potwierdzone w impl-review (F4). Alternatywa — wybór wariantu przez POST + ciasteczko — to osobna zmiana.
 - Logi Workera są włączone; nie wiadomo, czy zapisują nagłówek `Cookie`. Krok ręczny w fazie 3 to sprawdza — dotyczy też istniejącego ciasteczka sesji.
 - Dwie karty z różnymi wyszukiwaniami nadpisują wspólne ciasteczko — ostatnie wyszukiwanie wygrywa.
 - Odświeżenie strony po błędzie pokazuje ten sam błąd (jak dziś), dopóki szkic nie wygaśnie albo zapis się nie uda.

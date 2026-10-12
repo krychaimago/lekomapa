@@ -119,6 +119,12 @@ function noMatchRedirect(form: FormData, draft: DraftTarget): string {
   return LEAFLET_PATH;
 }
 
+// 302 as before (smoke expects it), with no-store like the other redirecting routes: the answer carries Set-Cookie
+// (the drafts) and must not be kept by a cache.
+function redirect(location: string): Response {
+  return new Response(null, { status: 302, headers: { Location: location, "Cache-Control": "private, no-store" } });
+}
+
 export const POST: APIRoute = async (context) => {
   // /api/medications is outside PROTECTED_ROUTES, so the route guards itself. The middleware already redirects a
   // session opened from a password reset link away from every other route; the second check keeps that true here
@@ -144,12 +150,12 @@ export const POST: APIRoute = async (context) => {
     startedOn: formText(form, "startedOn"),
   });
   if (!parsed.success) {
-    return context.redirect(errorRedirect(toErrorCode(parsed.error.issues[0]?.message), form, draft));
+    return redirect(errorRedirect(toErrorCode(parsed.error.issues[0]?.message), form, draft));
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(errorRedirect(GENERIC, form, draft));
+    return redirect(errorRedirect(GENERIC, form, draft));
   }
 
   const command = parsed.data;
@@ -173,11 +179,11 @@ export const POST: APIRoute = async (context) => {
       .limit(1);
     if (match.error) {
       console.error("Matching a leaflet substance failed", { code: match.error.code });
-      return context.redirect(errorRedirect(GENERIC, form, draft));
+      return redirect(errorRedirect(GENERIC, form, draft));
     }
     const verified = match.data.length > 0;
     if (!verified && command.confirmUnverified !== "1") {
-      return context.redirect(noMatchRedirect(form, draft));
+      return redirect(noMatchRedirect(form, draft));
     }
     response = await supabase.rpc("add_medication_from_leaflet", {
       p_product_name: command.productName,
@@ -187,7 +193,7 @@ export const POST: APIRoute = async (context) => {
       p_started_on: command.startedOn,
     });
     if (response.error?.code === LEAFLET_NO_MATCH) {
-      return context.redirect(noMatchRedirect(form, draft));
+      return redirect(noMatchRedirect(form, draft));
     }
   }
 
@@ -195,7 +201,7 @@ export const POST: APIRoute = async (context) => {
   if (error) {
     // Only the code: the message may carry the product id or the substance, and the details the dose.
     console.error("Adding a medication failed", { source: command.source, code: error.code });
-    return context.redirect(
+    return redirect(
       errorRedirect(
         command.source === "registry" && Object.hasOwn(DB_ERROR_CODES, error.code)
           ? DB_ERROR_CODES[error.code]
@@ -209,10 +215,10 @@ export const POST: APIRoute = async (context) => {
   const medicationId = z.uuid().safeParse(response.data as unknown);
   if (!medicationId.success) {
     console.error("Adding a medication returned no id", { source: command.source });
-    return context.redirect(errorRedirect(GENERIC, form, draft));
+    return redirect(errorRedirect(GENERIC, form, draft));
   }
 
   // The medication is saved: the search text and the leaflet draft have done their job.
   clearMedicationDrafts(context.cookies);
-  return context.redirect(`${LIST_PATH}?dodano=${medicationId.data}`);
+  return redirect(`${LIST_PATH}?dodano=${medicationId.data}`);
 };

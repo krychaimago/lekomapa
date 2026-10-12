@@ -2,6 +2,9 @@
 // bookmarks, the Referer header and Cloudflare logs, so a medication name, substance, dose or symptom must never get
 // there (lesson "Żadna nazwa leku ani dawka w adresie URL"). The test scans src/ for parameter names and fails on any
 // name outside ALLOWED_URL_PARAMS, so a new parameter needs a deliberate entry instead of slipping in with a feature.
+// It also fails on a form not sent with POST, since a GET form puts every field name and value in the address.
+// The path is not checked: `/leki/${encodeURIComponent(name)}` would pass. Every dynamic route segment in src/pages
+// ([id], [periodId]) is a uuid looked up under RLS; a segment carrying anything else needs its own guard first.
 
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
@@ -45,6 +48,7 @@ const DYNAMIC_KEY_FILES = new Map([
     "components/journal/EditEntryForm.tsx",
     'successParam is typed "poprawiono" | "notatka", the journal success flags in ALLOWED_URL_PARAMS.',
   ],
+  ["pages/dzienniczek/index.astro", "uuidParam(name) reads searchParams.get(name); its callers pass literal names."],
 ]);
 
 // The code without comments, so an example `?x=` in a comment is not read as a parameter. TypeScript reprints the
@@ -70,9 +74,17 @@ function stripScriptComments(source, fileName) {
 }
 
 const STRING = String.raw`["'\`]([^"'\`]+)["'\`]`;
+const METHODS = "(?:get|getAll|has|set|append|delete)";
+
+// A regex source matching a URLSearchParams object: any `*params` / `*Params`, plus every variable the file assigns
+// from `new URLSearchParams(…)` or `….searchParams`, so `const qs = new URLSearchParams()` is not missed by its name.
+function paramObjects(code) {
+  const assigned = /\b(?:const|let|var)\s+(\w+)\s*=\s*(?:new URLSearchParams\(|[\w.$?]*\.searchParams\b)/g;
+  const names = [...code.matchAll(assigned)].map((match) => match[1]);
+  return String.raw`\b(?:\w*[pP]arams${names.map((name) => `|${name}`).join("")})`;
+}
+
 const NAME_PATTERNS = [
-  // searchParams.get("x"), params.has("x"), params.set("x", …), params.append("x", …) on URLSearchParams objects.
-  new RegExp(String.raw`\b\w*[pP]arams\s*\.\s*(?:get|getAll|has|set|append|delete)\(\s*${STRING}`, "g"),
   // Helpers reading one parameter: uuidParam("notatka"), readParam("…").
   new RegExp(String.raw`\b\w+Param\(\s*${STRING}`, "g"),
   // Literal ?x= / &x= in strings and templates.
@@ -104,9 +116,10 @@ function objectLiteralKeys(code, report) {
   return names;
 }
 
-// Parameter names a key built at run time could produce: `?${…}=` / `&${…}=`, URLSearchParams from anything but an
-// object literal, and set/append with a key that is not a string literal.
-function dynamicKeys(code) {
+// Parameter names a key built at run time could produce: `?${…}=` / `&${…}=`, `"?" + key + "="`, URLSearchParams
+// from anything but an object literal, a method called with a key that is not a string literal, and reads of every
+// parameter at once.
+function dynamicKeys(code, objects) {
   const found = [];
   const template = /[?&]\$\{/g;
   let match;
@@ -123,24 +136,78 @@ function dynamicKeys(code) {
   for (const constructed of code.matchAll(/new URLSearchParams\(\s*([^\s){])/g)) {
     found.push(`new URLSearchParams(${constructed[1]}…)`);
   }
-  for (const setter of code.matchAll(/\b\w*[pP]arams\s*\.\s*(?:set|append)\(\s*([^\s"'`])/g)) {
-    found.push(setter[0]);
+  for (const joined of code.matchAll(/[?&]["'`]\s*\+\s*[^;\n]+?\s*\+\s*["'`]=/g)) found.push(joined[0]);
+  for (const call of code.matchAll(new RegExp(String.raw`${objects}\s*\.\s*${METHODS}\(\s*[^\s"'\`)]`, "g"))) {
+    found.push(call[0]);
   }
+  const everyParam = String.raw`Object\.fromEntries\(\s*[\w.$?]*${objects}|${objects}\s*\.\s*(?:entries|keys|forEach)\(`;
+  for (const all of code.matchAll(new RegExp(everyParam, "g"))) found.push(all[0]);
   return found;
 }
 
 // `{ names, dynamic }` for one source file: every parameter name it reads or writes, and every run-time key.
 function urlParamsOf(source, fileName) {
   const code = stripComments(source, fileName);
-  const dynamic = dynamicKeys(code);
+  const objects = paramObjects(code);
+  const dynamic = dynamicKeys(code, objects);
   const names = objectLiteralKeys(code, (expression) => dynamic.push(expression));
+  // searchParams.get("x"), params.has("x"), qs.set("x", …), sp.append("x", …) on URLSearchParams objects.
+  for (const match of code.matchAll(new RegExp(String.raw`${objects}\s*\.\s*${METHODS}\(\s*${STRING}`, "g"))) {
+    names.push(match[1]);
+  }
   for (const pattern of NAME_PATTERNS) {
     for (const match of code.matchAll(pattern)) names.push(match[1]);
   }
   return { names: [...new Set(names)], dynamic };
 }
 
-// Failure lines for one file: a parameter outside the list, or a run-time key in a file not in DYNAMIC_KEY_FILES.
+// The opening `<form …>` tags; braces are tracked so an `=>` inside `onSubmit={…}` does not end the tag.
+function formTags(code) {
+  const tags = [];
+  for (const start of code.matchAll(/<form\b/g)) {
+    let depth = 0;
+    let end = start.index;
+    while (end < code.length && !(code[end] === ">" && depth === 0)) {
+      if (code[end] === "{") depth += 1;
+      if (code[end] === "}") depth -= 1;
+      end += 1;
+    }
+    tags.push(code.slice(start.index, end + 1));
+  }
+  return tags;
+}
+
+// The literal value of an attribute (`x="v"`, `x='v'`, `x={"v"}`), "" when it is absent, null when it is computed.
+function attributeValue(tag, name) {
+  const match = new RegExp(
+    String.raw`\b${name}\s*=\s*(?:"([^"]*)"|'([^']*)'|\{\s*["'\`]([^"'\`]*)["'\`]\s*\}|\{)`,
+    "i",
+  ).exec(tag);
+  if (!match) return "";
+  const value = match[1] ?? match[2] ?? match[3];
+  return value === undefined ? null : value;
+}
+
+// A form sent with GET puts the name and value of every field in the address — the way `?q=` leaked in S-02. A
+// native form must say method="POST"; a .tsx form with onSubmit and no action is sent by JavaScript and is left alone.
+function formViolations(code, relativePath) {
+  const reported = [];
+  for (const tag of formTags(code)) {
+    const method = attributeValue(tag, "method");
+    const scriptOnly = relativePath.endsWith(".tsx") && /\bonSubmit\s*=/.test(tag) && !/\baction\s*=/.test(tag);
+    if (method?.toLowerCase() === "post" || (method === "" && scriptOnly)) continue;
+    reported.push(`${relativePath}: ${tag.split("\n")[0]} is not sent with method="POST"`);
+  }
+  for (const override of code.matchAll(/\bformmethod\s*=\s*\S+/gi)) {
+    if (attributeValue(override[0], "formmethod")?.toLowerCase() !== "post") {
+      reported.push(`${relativePath}: ${override[0]} sends a form with something other than POST`);
+    }
+  }
+  return reported;
+}
+
+// Failure lines for one file: a parameter outside the list, a run-time key in a file not in DYNAMIC_KEY_FILES, or a
+// form not sent with POST.
 function violations(source, relativePath) {
   const { names, dynamic } = urlParamsOf(source, relativePath);
   const reported = names
@@ -151,6 +218,7 @@ function violations(source, relativePath) {
       reported.push(`${relativePath}: parameter name built at run time (${expression}), file not in DYNAMIC_KEY_FILES`);
     }
   }
+  reported.push(...formViolations(stripComments(source, relativePath), relativePath));
   return reported;
 }
 
@@ -198,6 +266,17 @@ test("a medication name in the address is reported", () => {
   assert.deepEqual(violations('const s = Astro.url.searchParams.get("substancja");', "a.ts"), [
     'a.ts: parameter "substancja" is not in ALLOWED_URL_PARAMS',
   ]);
+  // Whatever the variable is called.
+  const renamed = [
+    "const qs = new URLSearchParams();",
+    'qs.set("nazwa", name);',
+    "const sp = Astro.url.searchParams;",
+    'const substance = sp.get("substancja");',
+  ].join("\n");
+  assert.deepEqual(violations(renamed, "a.ts"), [
+    'a.ts: parameter "nazwa" is not in ALLOWED_URL_PARAMS',
+    'a.ts: parameter "substancja" is not in ALLOWED_URL_PARAMS',
+  ]);
 });
 
 test("an example address in a comment is not a parameter", () => {
@@ -216,8 +295,40 @@ test("a parameter name built at run time is reported outside DYNAMIC_KEY_FILES",
   ].join("\n");
   assert.equal(violations(source, "components/Other.tsx").length, 4);
   assert.deepEqual(violations("const a = `/dzienniczek?${key}=${id}`;", "components/journal/EditEntryForm.tsx"), []);
+  const other = [
+    'const qs = new URLSearchParams(); qs.set(key, "1");',
+    "const sp = Astro.url.searchParams; const v = sp.get(name);",
+    "const all = Object.fromEntries(Astro.url.searchParams);",
+    'const u = "/leki/nowy?" + key + "=" + value;',
+  ].join("\n");
+  assert.equal(violations(other, "components/Other.tsx").length, 4);
   // A whole query string after `?` is not a key.
   assert.deepEqual(urlParamsOf("const a = `/leki?${params.toString()}`;", "a.ts").dynamic, []);
+});
+
+test("a form not sent with POST is reported", () => {
+  const astro = [
+    "---",
+    "---",
+    '<form method="GET" action="/leki/nowy"><input name="q" /></form>',
+    '<form action="/leki/nowy"><input name="q" /></form>',
+    '<form method="post" action="/api/medications/draft"><button formmethod="get">x</button></form>',
+  ].join("\n");
+  assert.equal(violations(astro, "pages/leki/nowy.astro").length, 3);
+  const component = [
+    'const a = <form method={method} action={path}><input name="q" /></form>;',
+    'const b = <form onSubmit={(event) => void submit(event)} action="/leki/nowy"><input name="q" /></form>;',
+  ].join("\n");
+  assert.equal(violations(component, "components/Other.tsx").length, 2);
+});
+
+test("a form sent with POST or only by JavaScript is not reported", () => {
+  const component = [
+    'const a = <form method="POST" action={`/api/medications/${id}/dosage`} onSubmit={markSubmitting}>x</form>;',
+    'const b = <form className="flex" onSubmit={(event) => void submit(event)}>x</form>;',
+  ].join("\n");
+  assert.deepEqual(violations(component, "components/Other.tsx"), []);
+  assert.deepEqual(violations('<form method="post" action="/api/account/delete">x</form>', "pages/a.astro"), []);
 });
 
 test("every URL parameter in src/ is an allowed id, code or flag", async () => {
