@@ -354,25 +354,25 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                                  | Issue |
-| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | ------------------------------------------------------ | ----- |
-| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                                   | #9    |
-| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                                   | #10   |
-| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                                   | #11   |
-| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                                   | #35   |
-| F-05       | `email-sender-smtp`                    | Własny nadawca maili (SMTP na domenie lekomapa.pl)        | yes                   | Przed wpuszczeniem innych osób; praca w panelach i DNS | #44   |
-| F-06       | `production-observability`             | Śledzenie błędów i monitor dostępności (Sentry)           | yes                   | Uruchom `/10x-plan production-observability`           | #74   |
-| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | yes                   | Uruchom `/10x-plan terms-acceptance-on-signup`         | #12   |
-| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | —                     | in-progress; zostały kroki ręczne 3.7–3.8              | #36   |
-| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | —                     | done                                                   | #13   |
-| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | —                     | done                                                   | #14   |
-| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | —                     | done                                                   | #15   |
-| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                                   | #16   |
-| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | yes                   | Uruchom `/10x-plan symptom-question-composer`          | #17   |
-| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | —                     | done                                                   | #18   |
-| S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | no                    | Wymaga S-02 i S-06                                     | #19   |
-| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | yes                   | Uruchom `/10x-plan account-deletion-cascade`           | #20   |
-| S-11       | `dark-mode`                            | Tryb ciemny                                               | no                    | Ostatnia pozycja M-1                                   | #37   |
+| Roadmap ID | Change ID                              | Suggested issue title                                     | Ready for `/10x-plan` | Notes                                        | Issue |
+| ---------- | -------------------------------------- | --------------------------------------------------------- | --------------------- | -------------------------------------------- | ----- |
+| F-01       | `medication-schema-rls`                | Schemat leków i okresów dawkowania z RLS                  | —                     | done                                         | #9    |
+| F-02       | `interaction-rules-seed`               | Pary kolizji na grupach ATC i rejestr leków               | —                     | done                                         | #10   |
+| F-03       | `symptom-catalog-seed`                 | Zamknięta lista objawów ze słowami wyszukiwania           | —                     | done                                         | #11   |
+| F-04       | `app-shell-visual-foundation`          | Wspólna warstwa wizualna i szkielet wnętrza               | —                     | done                                         | #35   |
+| F-05       | `email-sender-smtp`                    | Własny nadawca maili (SMTP na domenie lekomapa.pl)        | —                     | done                                         | #44   |
+| F-06       | `production-observability`             | Śledzenie błędów i monitor dostępności (Sentry)           | yes                   | Uruchom `/10x-plan production-observability` | #74   |
+| S-01       | `terms-acceptance-on-signup`           | Warunki „prototyp”, strona prywatności i ekrany wejściowe | —                     | done                                         | #12   |
+| S-10       | `password-recovery`                    | Odzyskiwanie dostępu przez ustawienie nowego hasła        | —                     | done                                         | #36   |
+| S-02       | `add-medication-with-interaction-flag` | Dodanie leku po nazwie handlowej ze znacznikiem kolizji   | —                     | done                                         | #13   |
+| S-03       | `dosage-period-history`                | Zmiana dawkowania zamyka okres i otwiera nowy             | —                     | done                                         | #14   |
+| S-04       | `discontinue-medication`               | Zakończenie przyjmowania leku z datą odstawienia          | —                     | done                                         | #15   |
+| S-05       | `symptom-journal-entry`                | Wpis o samopoczuciu z datą, godziną i objawami            | —                     | done                                         | #16   |
+| S-06       | `symptom-question-composer`            | Złożone pytanie do lekarza po zapisaniu objawu            | —                     | done                                         | #17   |
+| S-07       | `journal-correction-window`            | Okno korekty wpisu dzienniczka                            | —                     | done                                         | #18   |
+| S-08       | `doctor-visit-summary`                 | Sekcja „Wizyta"                                           | —                     | done                                         | #19   |
+| S-09       | `account-deletion-cascade`             | Usunięcie konta kasuje wszystkie powiązane dane           | —                     | done                                         | #20   |
+| S-11       | `dark-mode`                            | Tryb ciemny                                               | —                     | done                                         | #37   |
 
 ## Open Roadmap Questions
 
