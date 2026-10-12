@@ -354,23 +354,23 @@ Brak migracji bazy. Stare zakładki z `?q=` / `?nazwa=` otwierają pusty formula
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 2.2 Typy przechodzą: `npm run typecheck`
-- [x] 2.3 Lint przechodzi: `npm run lint`
-- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 2.1 Testy jednostkowe przechodzą: `npm test` — f6b9626
+- [x] 2.2 Typy przechodzą: `npm run typecheck` — f6b9626
+- [x] 2.3 Lint przechodzi: `npm run lint` — f6b9626
+- [x] 2.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke` — f6b9626
 
 #### Manual
 
-- [x] 2.5 Zapis z substancją „ibuprofn”: strona pokazuje „brak dopasowania” z podobnymi nazwami, adres to `/leki/nowy/z-ulotki`, nazwa leku i data wracają w polach, dawka nie
-- [x] 2.6 Kliknięcie podobnej nazwy wypełnia pole substancji, adres bez nazwy; działa też z wyłączonym JavaScriptem
-- [x] 2.7 Błąd daty z przyszłości: adres `/leki/nowy/z-ulotki?error=futureDate`, wpisane pola wracają
-- [x] 2.8 Udany zapis, potem ponowne wejście na `/leki/nowy/z-ulotki`: formularz pusty
+- [x] 2.5 Zapis z substancją „ibuprofn”: strona pokazuje „brak dopasowania” z podobnymi nazwami, adres to `/leki/nowy/z-ulotki`, nazwa leku i data wracają w polach, dawka nie — f6b9626
+- [x] 2.6 Kliknięcie podobnej nazwy wypełnia pole substancji, adres bez nazwy; działa też z wyłączonym JavaScriptem — f6b9626
+- [x] 2.7 Błąd daty z przyszłości: adres `/leki/nowy/z-ulotki?error=futureDate`, wpisane pola wracają — f6b9626
+- [x] 2.8 Udany zapis, potem ponowne wejście na `/leki/nowy/z-ulotki`: formularz pusty — f6b9626
 
 ### Phase 3: Strażnik reguły
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe przechodzą, w tym nowy test parametrów: `npm test`
-- [ ] 3.2 Test parametrów pada po tymczasowym przywróceniu `?nazwa=` w `src/pages/leki/nowy.astro`
-- [ ] 3.3 Typy i lint przechodzą: `npm run typecheck && npm run lint`
-- [ ] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
+- [x] 3.1 Testy jednostkowe przechodzą, w tym nowy test parametrów: `npm test`
+- [x] 3.2 Test parametrów pada po tymczasowym przywróceniu `?nazwa=` w `src/pages/leki/nowy.astro`
+- [x] 3.3 Typy i lint przechodzą: `npm run typecheck && npm run lint`
+- [x] 3.4 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`

@@ -660,6 +660,26 @@ function leafletSubstanceFieldOf(body) {
   return start === -1 || end === -1 ? null : body.slice(start, end + 1);
 }
 
+// True when a redirect's `location` carries none of the sent texts (medication name, substance), in any letter case,
+// raw or URL-encoded (percent-encoding and the form encoding's "+" for a space). Empty texts are skipped: an empty
+// string is in every address. Lesson "Żadna nazwa leku ani dawka w adresie URL"; same idea as noDoseInUrl below.
+function noNameInUrl(location, ...texts) {
+  const raw = location.toLowerCase();
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(location.replaceAll("+", " ")).toLowerCase();
+  } catch {
+    // A malformed escape: the raw and encoded comparisons below still run.
+  }
+  return texts
+    .filter((text) => typeof text === "string" && text.trim() !== "")
+    .every((text) => {
+      const lower = text.toLowerCase();
+      const encoded = encodeURIComponent(lower).toLowerCase();
+      return !raw.includes(lower) && !decoded.includes(lower) && !raw.includes(encoded);
+    });
+}
+
 function addedIdFrom(location) {
   if (!location.startsWith(ADDED_PREFIX)) return null;
   const id = location.slice(ADDED_PREFIX.length);
@@ -711,11 +731,36 @@ function addRegistryStep(group) {
         flow.ids[group] = id;
         flow.addResponses[group] = response;
       }
-      return { ok: id !== null, detail: `${response.status} ${response.location}` };
+      const nameOut = noNameInUrl(response.location, product.name);
+      return {
+        ok: id !== null && nameOut,
+        detail: `${response.status} ${response.location}; name ${nameOut ? "not in the address" : "IN the address"}`,
+      };
     },
     EXPECT_OK,
   ];
 }
+
+// A registry save that fails validation (no dose) returns to the chosen variant: only its id and the error code
+// travel in the address, never the product name.
+const addRegistryErrorStep = [
+  "medications: a failed registry save returns with only the variant id and the error code in the address",
+  async () => {
+    const product = flow.products[FLAG_GROUPS[0]];
+    if (!product) return { ok: false, detail: `check did not run: no ${FLAG_GROUPS[0]} product was found` };
+    const response = await addMedication(
+      { source: "registry", registryProductId: product.id, doseText: "" },
+      MEDICATION_ADD_PAGE,
+    );
+    const expected = `${MEDICATION_ADD_PAGE}?wariant=${product.id}&error=doseRequired`;
+    const nameOut = noNameInUrl(response.location, product.name);
+    return {
+      ok: [302, 303].includes(response.status) && response.location === expected && nameOut,
+      detail: `${response.status} ${response.location}; name ${nameOut ? "not in the address" : "IN the address"}`,
+    };
+  },
+  EXPECT_OK,
+];
 
 const medicationFlowSteps = [
   [
@@ -762,6 +807,7 @@ const medicationFlowSteps = [
     EXPECT_OK,
   ],
   ...FLAG_GROUPS.map(addRegistryStep),
+  addRegistryErrorStep,
   [
     "medications: a successful save deletes both medication draft cookies",
     async () => {
@@ -811,23 +857,23 @@ const medicationFlowSteps = [
     "medications: a substance saved from a leaflet without checking is shown as not covered",
     async () => {
       // A made-up name no dictionary holds, sent with the "save without checking" box ticked.
+      const productName = "Smoke Test Preparat z ulotki";
+      const substanceName = `Smoketestum ${Date.now()}`;
       const response = await addMedication(
-        {
-          source: "leaflet",
-          productName: "Smoke Test Preparat z ulotki",
-          substanceName: `Smoketestum ${Date.now()}`,
-          confirmUnverified: "1",
-        },
+        { source: "leaflet", productName, substanceName, confirmUnverified: "1" },
         LEAFLET_ADD_PAGE,
       );
       const id = response.status === 302 ? addedIdFrom(response.location) : null;
       if (!id) return { ok: false, detail: `add: ${response.status} ${response.location}` };
       flow.ids.leaflet = id;
+      const nameOut = noNameInUrl(response.location, productName, substanceName);
       const page = await requestPage(`/leki/${id}`, { jar: flow.jarA });
       const notCovered = page.status === 200 && pageContains(page.body, INTERACTION_COPY.substanceNotCovered);
       return {
-        ok: notCovered,
-        detail: `details ${page.status}; not-covered text ${notCovered ? "present" : "missing"}`,
+        ok: notCovered && nameOut,
+        detail: `add ${response.location}, name ${nameOut ? "not in the address" : "IN the address"}; details ${
+          page.status
+        }; not-covered text ${notCovered ? "present" : "missing"}`,
       };
     },
     EXPECT_OK,
@@ -837,12 +883,14 @@ const medicationFlowSteps = [
     async () => {
       // A made-up name no dictionary holds, without the "save without checking" box: the route keeps the typed fields
       // in the leaflet draft cookie and the page reads them back from it, not from the address.
+      const productName = "Smoke Test Preparat bez dopasowania";
       const substanceName = `Smoketestum ${Date.now()}`;
-      const response = await addMedication(
-        { source: "leaflet", productName: "Smoke Test Preparat bez dopasowania", substanceName },
-        LEAFLET_ADD_PAGE,
-      );
-      if (![302, 303].includes(response.status) || response.location !== LEAFLET_ADD_PAGE) {
+      const response = await addMedication({ source: "leaflet", productName, substanceName }, LEAFLET_ADD_PAGE);
+      if (
+        ![302, 303].includes(response.status) ||
+        response.location !== LEAFLET_ADD_PAGE ||
+        !noNameInUrl(response.location, productName, substanceName)
+      ) {
         return { ok: false, detail: `save: ${response.status} ${response.location}` };
       }
       const page = await requestPage(LEAFLET_ADD_PAGE, { jar: flow.jarA });
@@ -861,14 +909,13 @@ const medicationFlowSteps = [
   [
     "medications: a leaflet save with an empty name returns with only the error code in the address",
     async () => {
-      const response = await addMedication(
-        { source: "leaflet", productName: "", substanceName: `Smoketestum ${Date.now()}` },
-        LEAFLET_ADD_PAGE,
-      );
+      const substanceName = `Smoketestum ${Date.now()}`;
+      const response = await addMedication({ source: "leaflet", productName: "", substanceName }, LEAFLET_ADD_PAGE);
       const expected = `${LEAFLET_ADD_PAGE}?error=productNameRequired`;
+      const nameOut = noNameInUrl(response.location, substanceName);
       return {
-        ok: [302, 303].includes(response.status) && response.location === expected,
-        detail: `${response.status} ${response.location}`,
+        ok: [302, 303].includes(response.status) && response.location === expected && nameOut,
+        detail: `${response.status} ${response.location}; substance ${nameOut ? "not in the address" : "IN the address"}`,
       };
     },
     EXPECT_OK,
@@ -2431,7 +2478,7 @@ const registrySearchDraftStep = [
       origin: await formOrigin(MEDICATION_ADD_PAGE),
       form: { kind: "search", q: registry.name },
     });
-    if (draft.status !== 303 || draft.location !== MEDICATION_ADD_PAGE) {
+    if (draft.status !== 303 || draft.location !== MEDICATION_ADD_PAGE || !noNameInUrl(draft.location, registry.name)) {
       return { ok: false, detail: `draft ${draft.status} ${draft.location}` };
     }
     const page = await requestPage(MEDICATION_ADD_PAGE);
@@ -2441,6 +2488,33 @@ const registrySearchDraftStep = [
     return {
       ok: found,
       detail: `draft 303 ${draft.location}; page ${page.status}, name ${found ? "found" : "missing"}`,
+    };
+  },
+  EXPECT_OK,
+];
+
+// The leaflet form's fields posted to the draft route return to the bare form address; the page reads them back from
+// the cookie. Runs before sign-out, so the sign-out step deletes a draft that exists.
+const leafletDraftStep = [
+  "leaflet draft: the draft route returns to /leki/nowy/z-ulotki without the name or substance, and the form keeps them",
+  async () => {
+    const productName = "Smoke Test Preparat szkic";
+    const substanceName = `Smoketestum ${Date.now()}`;
+    const draft = await request("/api/medications/draft", {
+      method: "POST",
+      origin: await formOrigin(LEAFLET_ADD_PAGE),
+      form: { kind: "leaflet", productName, substanceName, startedOn: todayInWarsaw() },
+    });
+    const nameOut = noNameInUrl(draft.location, productName, substanceName);
+    if (draft.status !== 303 || draft.location !== LEAFLET_ADD_PAGE || !nameOut) {
+      return { ok: false, detail: `draft ${draft.status} ${draft.location}` };
+    }
+    const page = await requestPage(LEAFLET_ADD_PAGE);
+    const field = leafletSubstanceFieldOf(page.body);
+    const kept = page.status === 200 && field !== null && field.includes(`value="${escapeHtml(substanceName)}"`);
+    return {
+      ok: kept,
+      detail: `draft 303 ${draft.location}; page ${page.status}, substance ${kept ? "in the field" : "NOT in the field"}`,
     };
   },
   EXPECT_OK,
@@ -2619,6 +2693,7 @@ const steps = [
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   registrySuggestionsStep,
   registrySearchDraftStep,
+  leafletDraftStep,
   signOutStep,
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   registrySuggestionsAnonymousStep,
