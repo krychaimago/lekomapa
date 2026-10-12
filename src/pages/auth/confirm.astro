@@ -9,7 +9,8 @@ import { confirmLinkScreen } from "@/lib/auth/confirm-link";
 import { AUTH_COPY } from "@/lib/copy/auth";
 import { cn } from "@/lib/utils";
 
-// The URL carries a one-time token: keep it out of caches and Referer headers.
+// The URL carries a one-time token: keep it out of caches and out of the Referer sent to other sites.
+// Requests to lekomapa itself (assets, the form POST) still carry the full URL as Referer.
 Astro.response.headers.set("Cache-Control", "no-store");
 // same-origin, not no-referrer: under no-referrer the browser posts the form with `Origin: null`, which
 // Astro's checkOrigin rejects with 403. same-origin still sends nothing to any other site.
