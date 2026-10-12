@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-10-11
+updated: 2026-10-12
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -50,7 +50,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done        |
 | F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done        |
 | F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done        |
-| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | in-progress |
+| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | done        |
 | F-06 | production-observability             | (fundament) błąd i przerwa w działaniu produkcji docierają do autorki mailem         | —                                  | NFR progów szybkości, błędów i dostępności | ready       |
 | S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | done        |
 | S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | in-progress |
@@ -159,7 +159,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Dopisane 2026-09-27 przy planowaniu S-10: produkcja używa domyślnego nadawcy Supabase, który dostarcza maile wyłącznie na adresy członków zespołu projektu i ma limit kilku maili na godzinę. Objaw nie wychodzi przy testach na koncie autorki, więc wygląda to na działający produkt, a obca osoba nie dostaje ani potwierdzenia rejestracji, ani odnośnika resetu. Praca prawie w całości poza kodem: konto u dostawcy poczty (np. Resend), potwierdzenie domeny wpisami DNS (SPF, DKIM), dane SMTP i adres nadawcy w panelu produkcyjnego Supabase (Authentication → SMTP), podniesienie limitu maili na godzinę. Zamyka się dopiero sprawdzeniem, że mail doszedł na adres spoza zespołu. Musi być `done` przed wpuszczeniem innych osób, niezależnie od kolejności plasterków.
-- **Status:** in-progress
+- **Status:** done
 
 ### F-06: Śledzenie błędów i monitor dostępności
 
@@ -435,3 +435,4 @@ Rozstrzygnięte:
 - **S-07: Użytkowniczka może poprawić wpis dzienniczka w oknie korekty; po jego zamknięciu rdzeń wpisu — data, godzina, objawy, nasilenie — jest niemodyfikowalny, a edytowalna zostaje notatka. Usunięcie wpisu zarezerwowane dla pozycji dodanych przez pomyłkę.** — Archived 2026-10-09 → `context/archive/2026-10-09-journal-correction-window/`. Lesson: —.
 - **S-09: Użytkowniczka może usunąć konto, co bezpowrotnie kasuje wszystkie powiązane dane — leki, okresy dawkowania, wpisy o samopoczuciu i złożone pytania — bez kopii zachowanej „na wszelki wypadek".** — Archived 2026-10-11 → `context/archive/2026-10-10-account-deletion-cascade/`. Lesson: —.
 - **S-11: Użytkowniczka może korzystać z produktu w trybie ciemnym na wszystkich ekranach M-1, z czytelnością na tym samym poziomie co w trybie jasnym.** — Archived 2026-10-11 → `context/archive/2026-10-11-dark-mode/`. Lesson: —.
+- **F-05: (fundament) maile wysyłane przez produkt — potwierdzenie adresu po rejestracji i odnośnik do ustawienia nowego hasła — dochodzą na adres każdej osoby, a nie tylko członków zespołu projektu Supabase, z nadawcą z domeny `lekomapa.pl`.** — Archived 2026-10-12 → `context/archive/2026-10-11-email-sender-smtp/`. Lesson: —.
