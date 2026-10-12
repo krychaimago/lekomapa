@@ -2,6 +2,7 @@ import type { APIContext, APIRoute } from "astro";
 import { parseCookieHeader } from "@supabase/ssr";
 import { z } from "zod";
 import type { AccountApiErrorCode } from "@/lib/copy/account";
+import { clearMedicationDrafts } from "@/lib/medication-draft";
 import { createClient } from "@/lib/supabase";
 
 export const prerender = false;
@@ -115,6 +116,7 @@ export const POST: APIRoute = async (context) => {
   for (const name of sessionCookieNames(context)) {
     context.cookies.delete(name, { path: "/" });
   }
+  clearMedicationDrafts(context.cookies);
 
   return redirect("/auth/konto-usuniete");
 };

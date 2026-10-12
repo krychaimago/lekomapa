@@ -46,25 +46,41 @@ test("on the same start date the medicine added later comes first", () => {
 
 test("names differing only in case form one group, alphabetically, with the variant count", () => {
   const rows = [
-    { product_name: "Ibuprom" },
-    { product_name: "Bibloc" },
-    { product_name: "BIBLOC" },
-    { product_name: "Acenocumarol WZF" },
+    { id: "id-ibuprom", product_name: "Ibuprom" },
+    { id: "id-bibloc-1", product_name: "Bibloc" },
+    { id: "id-bibloc-2", product_name: "BIBLOC" },
+    { id: "id-aceno", product_name: "Acenocumarol WZF" },
   ];
   assert.deepEqual(groupRegistryResults(rows), [
-    { name: "Acenocumarol WZF", variants: 1 },
-    { name: "Bibloc", variants: 2 },
-    { name: "Ibuprom", variants: 1 },
+    { name: "Acenocumarol WZF", variants: 1, productId: "id-aceno" },
+    { name: "Bibloc", variants: 2, productId: "id-bibloc-1" },
+    { name: "Ibuprom", variants: 1, productId: "id-ibuprom" },
   ]);
+});
+
+test("a group carries the id of its first row in result order, not of a later variant", () => {
+  // The link to a name's variants carries this id instead of the name; the page reads the name back from it.
+  const rows = [
+    { id: "second-name-first-row", product_name: "Nurofen" },
+    { id: "first-row", product_name: "Ibuprom" },
+    { id: "second-row", product_name: "ibuprom" },
+    { id: "third-row", product_name: "IBUPROM" },
+  ];
+  const groups = groupRegistryResults(rows);
+  assert.equal(groups.find((group) => group.name === "Ibuprom")?.productId, "first-row");
+  assert.equal(groups.find((group) => group.name === "Nurofen")?.productId, "second-name-first-row");
 });
 
 test("product names are sorted in Polish alphabetical order, L before Ł", () => {
   // "Alphabetically" (plan S-02) means the Polish alphabet (author's decision, 4.10.2026). The default collation
   // treats Ł as a variant of L and would put "Łagodny" first, because "a" comes before "o".
-  const rows = [{ product_name: "Łagodny" }, { product_name: "Lorafen" }];
+  const rows = [
+    { id: "id-lagodny", product_name: "Łagodny" },
+    { id: "id-lorafen", product_name: "Lorafen" },
+  ];
   assert.deepEqual(groupRegistryResults(rows), [
-    { name: "Lorafen", variants: 1 },
-    { name: "Łagodny", variants: 1 },
+    { name: "Lorafen", variants: 1, productId: "id-lorafen" },
+    { name: "Łagodny", variants: 1, productId: "id-lagodny" },
   ]);
 });
 

@@ -22,7 +22,7 @@ interface Answer {
 function isNameGroup(value: unknown): value is RegistryNameGroup {
   if (typeof value !== "object" || value === null) return false;
   const group = value as Record<string, unknown>;
-  return typeof group.name === "string" && typeof group.variants === "number";
+  return typeof group.name === "string" && typeof group.variants === "number" && typeof group.productId === "string";
 }
 
 // Trade names suggested for `query`, asked for DEBOUNCE_MS after the last keystroke. A newer query aborts the
@@ -40,9 +40,12 @@ export function useRegistrySuggestions(query: string): RegistrySuggestions {
     const timer = window.setTimeout(() => {
       void (async () => {
         try {
-          const response = await fetch(`${SEARCH_PATH}?${new URLSearchParams({ q: text }).toString()}`, {
+          // The typed text goes in the body, never in the URL.
+          const response = await fetch(SEARCH_PATH, {
+            method: "POST",
             signal: controller.signal,
-            headers: { Accept: "application/json" },
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ q: text }),
           });
           if (!response.ok) return;
           const body = (await response.json()) as { names?: unknown };

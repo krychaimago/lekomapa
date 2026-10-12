@@ -22,16 +22,18 @@ export function orderMedications<T extends OrderableMedication>(items: readonly 
 export interface RegistryNameGroup {
   name: string;
   variants: number;
+  // Id of the group's first row in result order: the link to the name's variants carries this id, never the name.
+  productId: string;
 }
 
 // One entry per product name ignoring case, spelled as it first appears, sorted alphabetically (Polish collation).
-export function groupRegistryResults(rows: readonly { product_name: string }[]): RegistryNameGroup[] {
+export function groupRegistryResults(rows: readonly { id: string; product_name: string }[]): RegistryNameGroup[] {
   const groups = new Map<string, RegistryNameGroup>();
-  for (const { product_name } of rows) {
+  for (const { id, product_name } of rows) {
     const key = product_name.toLocaleLowerCase("pl");
     const group = groups.get(key);
     if (group) group.variants += 1;
-    else groups.set(key, { name: product_name, variants: 1 });
+    else groups.set(key, { name: product_name, variants: 1, productId: id });
   }
   return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, "pl"));
 }

@@ -12,8 +12,6 @@ const copy = MEDICATION_COPY.add;
 const formCopy = MEDICATION_COPY.form;
 
 interface Props {
-  // Trade name of the chosen step, sent back so an error redirect returns to the same variants.
-  name: string;
   variants: RegistryVariantOption[];
   selectedId: string;
   // `YYYY-MM-DD` in Europe/Warsaw: default and upper bound of the start date.
@@ -23,7 +21,7 @@ interface Props {
 
 // Native POST form: radios and fields work without JavaScript. React only disables the button after the first
 // submit, so a double click cannot save the same medication twice.
-export default function AddMedicationForm({ name, variants, selectedId, today, serverError }: Props) {
+export default function AddMedicationForm({ variants, selectedId, today, serverError }: Props) {
   const [submitting, markSubmitting] = useSubmitting();
 
   return (
@@ -31,7 +29,6 @@ export default function AddMedicationForm({ name, variants, selectedId, today, s
       <CardContent>
         <form method="POST" action="/api/medications" className="flex flex-col gap-6" onSubmit={markSubmitting}>
           <input type="hidden" name="source" value="registry" />
-          <input type="hidden" name="nazwa" value={name} />
 
           <fieldset className="flex flex-col gap-3">
             <legend className="mb-3 text-lg font-semibold">

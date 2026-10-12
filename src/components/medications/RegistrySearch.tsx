@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 const copy = MEDICATION_COPY.add;
 const formCopy = MEDICATION_COPY.form;
 const ADD_PATH = "/leki/nowy";
+const DRAFT_PATH = "/api/medications/draft";
 
 interface Props {
-  // Text the field starts with: the searched text or the chosen name, as the server rendered it.
+  // Text the field starts with: the searched text (from the draft cookie) or the chosen name, as the server rendered it.
   initialValue: string;
   maxLength: number;
 }
@@ -22,13 +23,15 @@ interface ActiveOption {
   index: number;
 }
 
-function nameUrl(name: string): string {
-  return `${ADD_PATH}?${new URLSearchParams({ nazwa: name }).toString()}`;
+// A name's variants are opened by the id of its first registry row, never by the name.
+function variantUrl(productId: string): string {
+  return `${ADD_PATH}?${new URLSearchParams({ wariant: productId }).toString()}`;
 }
 
-// The name search on /leki/nowy. Server-rendered it is the plain GET form of phase 3 (`?q=`), so it works without
-// JavaScript. Once hydrated it adds suggestions under the field (ARIA combobox with a listbox); choosing one opens
-// that name's variants (`?nazwa=`). The "Szukaj" button keeps submitting the form as before.
+// The name search on /leki/nowy. Server-rendered it is a plain POST form to the draft route, which keeps the text in a
+// short-lived cookie and returns to /leki/nowy, so it works without JavaScript and the text never enters the URL.
+// Once hydrated it adds suggestions under the field (ARIA combobox with a listbox); choosing one opens that name's
+// variants (`?wariant=<id>`). The "Szukaj" button keeps submitting the form as before.
 export default function RegistrySearch({ initialValue, maxLength }: Props) {
   const id = useId();
   const inputId = "q";
@@ -52,9 +55,9 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
         : copy.suggestionsNone
       : "";
 
-  function choose(name: string) {
+  function choose(group: RegistryNameGroup) {
     setDismissed(true);
-    window.location.assign(nameUrl(name));
+    window.location.assign(variantUrl(group.productId));
   }
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -88,7 +91,7 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
         // With no active suggestion Enter submits the form, as the plain search does.
         if (open && activeIndex !== -1) {
           event.preventDefault();
-          choose(names[activeIndex].name);
+          choose(names[activeIndex]);
         }
         break;
       case "Escape":
@@ -103,7 +106,8 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
   }
 
   return (
-    <form method="GET" action={ADD_PATH} className="flex flex-col gap-2">
+    <form method="POST" action={DRAFT_PATH} className="flex flex-col gap-2">
+      <input type="hidden" name="kind" value="search" />
       <label htmlFor={inputId} className="text-sm font-medium">
         {copy.searchLabel} <span className="text-muted-foreground font-normal">{formCopy.requiredMark}</span>
       </label>
@@ -149,7 +153,7 @@ export default function RegistrySearch({ initialValue, maxLength }: Props) {
                     event.preventDefault();
                   }}
                   onClick={() => {
-                    choose(group.name);
+                    choose(group);
                   }}
                   className={cn(
                     "hover:bg-accent hover:text-accent-foreground flex min-h-12 cursor-pointer items-center justify-between gap-4 px-3 py-2",

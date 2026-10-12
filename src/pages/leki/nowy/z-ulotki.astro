@@ -1,30 +1,31 @@
 ---
 // Adding a medication from outside the registry (S-02, FR-003): a free product name and one active substance from
-// the leaflet, suggested from the dictionary of substances that have an ATC code. Driven by GET:
-//   ?nazwa=, ?substancja=, ?data=  values typed before an error, put back into the fields (never the dose);
-//   ?niedopasowana=                "no match" state: the typed substance is not in the dictionary, so the page lists
-//                                  similar names and offers "save without checking" (the only way to save it
-//                                  without a code);
-//   ?error=                        a code from the save route, looked up in MEDICATION_COPY.apiErrors.
+// the leaflet, suggested from the dictionary of substances that have an ATC code. No medication or substance name
+// travels in the address (lesson "Żadna nazwa leku ani dawka w adresie URL"); the page reads only:
+//   ?error=  a code from the save route, looked up in MEDICATION_COPY.apiErrors.
+// The typed product name, substance and date come from the leaflet draft cookie (HttpOnly, short-lived, this account
+// only), written by POST /api/medications after a failed save and by POST /api/medications/draft. The dose is never
+// put back. A draft with `unmatched: true` is the "no match" state: the typed substance is not in the dictionary, so
+// the page lists similar names and offers "save without checking" (the only way to save it without a code). Each
+// similar name is a button in its own POST form to the draft route, which puts that name into the substance field.
 import AppLayout from "@/layouts/AppLayout.astro";
 import AddLeafletMedicationForm from "@/components/medications/AddLeafletMedicationForm";
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
+import { readLeafletDraft } from "@/lib/medication-draft";
 import { similarSubstances, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 
-const MAX_INPUT_LENGTH = 200;
-const PATH = "/leki/nowy/z-ulotki";
-
 const copy = MEDICATION_COPY.leaflet;
-const params = Astro.url.searchParams;
-const readParam = (key: string) => (params.get(key) ?? "").trim().slice(0, MAX_INPUT_LENGTH);
-const productName = readParam("nazwa");
-const unmatched = readParam("niedopasowana");
-const substanceName = unmatched || readParam("substancja");
+const error = apiErrorMessage(Astro.url.searchParams.get("error"));
+// The page is protected, so a user is always signed in here; the draft is read only for that account.
+const userId = Astro.locals.user?.id ?? "";
+const draft = readLeafletDraft(Astro.cookies, userId);
+const productName = draft?.productName ?? "";
+const substanceName = draft?.substanceName ?? "";
+const unmatched = draft?.unmatched && substanceName ? substanceName : "";
 const today = todayInWarsaw();
-const requestedDate = readParam("data");
-const startedOn = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= today ? requestedDate : today;
-const error = apiErrorMessage(params.get("error"));
+// The draft holds only real ISO dates; a date from the future falls back to today, as the form does not accept it.
+const startedOn = draft?.startedOn && draft.startedOn <= today ? draft.startedOn : today;
 
 // Distinct dictionary names with a code, alphabetically, in one call. The function returns a single array, so the
 // PostgREST row cap (max_rows) cannot drop names.
@@ -46,13 +47,6 @@ if (supabase) {
 
 const showNoMatch = unmatched !== "";
 const similar = showNoMatch ? similarSubstances(unmatched, substanceNames) : [];
-function similarHref(name: string): string {
-  const next = new URLSearchParams();
-  if (productName) next.set("nazwa", productName);
-  next.set("substancja", name);
-  next.set("data", startedOn);
-  return `${PATH}?${next.toString()}`;
-}
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
 
@@ -84,12 +78,18 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           <ul class="flex flex-col gap-2">
             {similar.map((name) => (
               <li>
-                <a
-                  href={similarHref(name)}
-                  class="flex min-h-12 items-center rounded-lg border border-border bg-card px-4 py-2 font-medium text-card-foreground hover:border-primary"
-                >
-                  {name}
-                </a>
+                <form method="post" action="/api/medications/draft">
+                  <input type="hidden" name="kind" value="leaflet" />
+                  <input type="hidden" name="productName" value={productName} />
+                  <input type="hidden" name="startedOn" value={startedOn} />
+                  <input type="hidden" name="substanceName" value={name} />
+                  <button
+                    type="submit"
+                    class="flex min-h-12 w-full items-center rounded-lg border border-border bg-card px-4 py-2 text-left font-medium text-card-foreground hover:border-primary"
+                  >
+                    {name}
+                  </button>
+                </form>
               </li>
             ))}
           </ul>

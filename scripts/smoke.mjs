@@ -110,7 +110,37 @@ async function request(path, { method = "GET", form, jar: cookieJar = jar, origi
     body: form ? new URLSearchParams(form).toString() : undefined,
   });
   storeCookies(response, cookieJar);
-  return { status: response.status, location: response.headers.get("location") ?? "" };
+  // The raw Set-Cookie headers too: the cookie jar keeps only names and values, and a step checking a cookie's
+  // deletion needs its Path and Max-Age.
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    setCookies: response.headers.getSetCookie(),
+  };
+}
+
+// The medication drafts (src/lib/medication-draft.ts), named here as the browser sees them: each is deleted only by a
+// Set-Cookie with the same Path, so a deletion without it would leave the typed text in the browser.
+const MEDICATION_DRAFT_COOKIES = [
+  { name: "lekomapa-registry-search", path: "/leki/nowy" },
+  { name: "lekomapa-leaflet-draft", path: "/leki/nowy/z-ulotki" },
+];
+
+// Which draft cookies the raw Set-Cookie headers delete: same name, same Path, Max-Age=0. Reported per cookie so a
+// failing step says which one stays.
+function draftCookieClears(setCookies) {
+  return MEDICATION_DRAFT_COOKIES.map(({ name, path }) => {
+    const cleared = setCookies.some((raw) => {
+      const [pair, ...attrs] = raw.split(";").map((part) => part.trim());
+      const attributes = attrs.map((attr) => attr.toLowerCase());
+      return pair.split("=")[0] === name && attributes.includes(`path=${path}`) && attributes.includes("max-age=0");
+    });
+    return { name, cleared };
+  });
+}
+
+function describeClears(clears) {
+  return clears.map(({ name, cleared }) => `${name} ${cleared ? "cleared" : "NOT cleared"}`).join(", ");
 }
 
 // GET a page and keep its HTML: the steps that check what a screen says need the body, which request() discards.
@@ -578,7 +608,7 @@ const SMOKE_MISTAKEN_DOSE = "2 tabletki (smoke pomyłka)";
 const SMOKE_CORRECTED_DOSE = "1 tabletka (smoke poprawka)";
 
 // Filled by the steps below and read by the later ones.
-const flow = { jarA: new Map(), jarB: new Map(), products: {}, description: null, ids: {} };
+const flow = { jarA: new Map(), jarB: new Map(), products: {}, description: null, ids: {}, addResponses: {} };
 
 // Astro escapes these five characters in rendered text; a string is compared in the form it takes in the HTML.
 function escapeHtml(text) {
@@ -618,6 +648,36 @@ async function periodsOf(medicationId) {
     .order("started_on");
   if (error) throw new Error(`reading periods failed: ${error.code}`);
   return data;
+}
+
+// The <input> tag of the leaflet form's substance field (id="substanceName"), so the check reads that field's value
+// and not the hidden substanceName of a "similar names" button.
+function leafletSubstanceFieldOf(body) {
+  const at = body.indexOf('id="substanceName"');
+  if (at === -1) return null;
+  const start = body.lastIndexOf("<input", at);
+  const end = body.indexOf(">", at);
+  return start === -1 || end === -1 ? null : body.slice(start, end + 1);
+}
+
+// True when a redirect's `location` carries none of the sent texts (medication name, substance), in any letter case,
+// raw or URL-encoded (percent-encoding and the form encoding's "+" for a space). Empty texts are skipped: an empty
+// string is in every address. Lesson "Żadna nazwa leku ani dawka w adresie URL"; same idea as noDoseInUrl below.
+function noNameInUrl(location, ...texts) {
+  const raw = location.toLowerCase();
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(location.replaceAll("+", " ")).toLowerCase();
+  } catch {
+    // A malformed escape: the raw and encoded comparisons below still run.
+  }
+  return texts
+    .filter((text) => typeof text === "string" && text.trim() !== "")
+    .every((text) => {
+      const lower = text.toLowerCase();
+      const encoded = encodeURIComponent(lower).toLowerCase();
+      return !raw.includes(lower) && !decoded.includes(lower) && !raw.includes(encoded);
+    });
 }
 
 function addedIdFrom(location) {
@@ -667,12 +727,40 @@ function addRegistryStep(group) {
       if (!product) return { ok: false, detail: `check did not run: no ${group} product was found` };
       const response = await addMedication({ source: "registry", registryProductId: product.id }, MEDICATION_ADD_PAGE);
       const id = response.status === 302 ? addedIdFrom(response.location) : null;
-      if (id) flow.ids[group] = id;
-      return { ok: id !== null, detail: `${response.status} ${response.location}` };
+      if (id) {
+        flow.ids[group] = id;
+        flow.addResponses[group] = response;
+      }
+      const nameOut = noNameInUrl(response.location, product.name);
+      return {
+        ok: id !== null && nameOut,
+        detail: `${response.status} ${response.location}; name ${nameOut ? "not in the address" : "IN the address"}`,
+      };
     },
     EXPECT_OK,
   ];
 }
+
+// A registry save that fails validation (no dose) returns to the chosen variant: only its id and the error code
+// travel in the address, never the product name.
+const addRegistryErrorStep = [
+  "medications: a failed registry save returns with only the variant id and the error code in the address",
+  async () => {
+    const product = flow.products[FLAG_GROUPS[0]];
+    if (!product) return { ok: false, detail: `check did not run: no ${FLAG_GROUPS[0]} product was found` };
+    const response = await addMedication(
+      { source: "registry", registryProductId: product.id, doseText: "" },
+      MEDICATION_ADD_PAGE,
+    );
+    const expected = `${MEDICATION_ADD_PAGE}?wariant=${product.id}&error=doseRequired`;
+    const nameOut = noNameInUrl(response.location, product.name);
+    return {
+      ok: [302, 303].includes(response.status) && response.location === expected && nameOut,
+      detail: `${response.status} ${response.location}; name ${nameOut ? "not in the address" : "IN the address"}`,
+    };
+  },
+  EXPECT_OK,
+];
 
 const medicationFlowSteps = [
   [
@@ -719,6 +807,17 @@ const medicationFlowSteps = [
     EXPECT_OK,
   ],
   ...FLAG_GROUPS.map(addRegistryStep),
+  addRegistryErrorStep,
+  [
+    "medications: a successful save deletes both medication draft cookies",
+    async () => {
+      const response = flow.addResponses[FLAG_GROUPS[0]];
+      if (!response) return { ok: false, detail: "check did not run: the medication was not added" };
+      const clears = draftCookieClears(response.setCookies);
+      return { ok: clears.every(({ cleared }) => cleared), detail: describeClears(clears) };
+    },
+    EXPECT_OK,
+  ],
   [
     "medications: list flags both medications and shows the note",
     async () => {
@@ -758,23 +857,65 @@ const medicationFlowSteps = [
     "medications: a substance saved from a leaflet without checking is shown as not covered",
     async () => {
       // A made-up name no dictionary holds, sent with the "save without checking" box ticked.
+      const productName = "Smoke Test Preparat z ulotki";
+      const substanceName = `Smoketestum ${Date.now()}`;
       const response = await addMedication(
-        {
-          source: "leaflet",
-          productName: "Smoke Test Preparat z ulotki",
-          substanceName: `Smoketestum ${Date.now()}`,
-          confirmUnverified: "1",
-        },
+        { source: "leaflet", productName, substanceName, confirmUnverified: "1" },
         LEAFLET_ADD_PAGE,
       );
       const id = response.status === 302 ? addedIdFrom(response.location) : null;
       if (!id) return { ok: false, detail: `add: ${response.status} ${response.location}` };
       flow.ids.leaflet = id;
+      const nameOut = noNameInUrl(response.location, productName, substanceName);
       const page = await requestPage(`/leki/${id}`, { jar: flow.jarA });
       const notCovered = page.status === 200 && pageContains(page.body, INTERACTION_COPY.substanceNotCovered);
       return {
-        ok: notCovered,
-        detail: `details ${page.status}; not-covered text ${notCovered ? "present" : "missing"}`,
+        ok: notCovered && nameOut,
+        detail: `add ${response.location}, name ${nameOut ? "not in the address" : "IN the address"}; details ${
+          page.status
+        }; not-covered text ${notCovered ? "present" : "missing"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: a leaflet substance outside the dictionary returns to the bare form address in the no-match state",
+    async () => {
+      // A made-up name no dictionary holds, without the "save without checking" box: the route keeps the typed fields
+      // in the leaflet draft cookie and the page reads them back from it, not from the address.
+      const productName = "Smoke Test Preparat bez dopasowania";
+      const substanceName = `Smoketestum ${Date.now()}`;
+      const response = await addMedication({ source: "leaflet", productName, substanceName }, LEAFLET_ADD_PAGE);
+      if (
+        ![302, 303].includes(response.status) ||
+        response.location !== LEAFLET_ADD_PAGE ||
+        !noNameInUrl(response.location, productName, substanceName)
+      ) {
+        return { ok: false, detail: `save: ${response.status} ${response.location}` };
+      }
+      const page = await requestPage(LEAFLET_ADD_PAGE, { jar: flow.jarA });
+      const noMatch = page.status === 200 && pageContains(page.body, MEDICATION_COPY.leaflet.noMatch);
+      const field = leafletSubstanceFieldOf(page.body);
+      const filled = field !== null && field.includes(`value="${escapeHtml(substanceName)}"`);
+      return {
+        ok: noMatch && filled,
+        detail: `save: ${response.status} ${response.location}; page ${page.status}, no-match text ${
+          noMatch ? "present" : "missing"
+        }, substance ${filled ? "in the field" : "NOT in the field"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+  [
+    "medications: a leaflet save with an empty name returns with only the error code in the address",
+    async () => {
+      const substanceName = `Smoketestum ${Date.now()}`;
+      const response = await addMedication({ source: "leaflet", productName: "", substanceName }, LEAFLET_ADD_PAGE);
+      const expected = `${LEAFLET_ADD_PAGE}?error=productNameRequired`;
+      const nameOut = noNameInUrl(response.location, substanceName);
+      return {
+        ok: [302, 303].includes(response.status) && response.location === expected && nameOut,
+        detail: `${response.status} ${response.location}; substance ${nameOut ? "not in the address" : "IN the address"}`,
       };
     },
     EXPECT_OK,
@@ -2274,15 +2415,31 @@ const accountDeletionSteps = accountDeletionSkipReason
 // --- Registry suggestions (S-02, phase 6) ----------------------------------
 //
 // The JSON route behind the suggestions under the name field. Read-only, so it runs in both modes, signed in with the
-// main account. The request carries only the cookie, like the page's same-origin fetch. "ibu" is a prefix the
-// registry seed must keep (ibuprofen products).
+// main account. The typed text goes in a JSON POST body, never in the URL. The request carries only the cookie and
+// the JSON content type, like the page's same-origin fetch. "ibu" is a prefix the registry seed must keep (ibuprofen
+// products).
 
-const REGISTRY_SUGGESTIONS_PATH = "/api/registry/search?q=ibu";
+const REGISTRY_SUGGESTIONS_PATH = "/api/registry/search";
+const REGISTRY_SUGGESTIONS_QUERY = "ibu";
+
+// Filled by the suggestions step: one name and its productId, searched for by the draft step below.
+const registry = { name: null, productId: null };
+
+async function postSuggestions(q, cookieJar = jar) {
+  const response = await fetch(BASE_URL + REGISTRY_SUGGESTIONS_PATH, {
+    method: "POST",
+    redirect: "manual",
+    headers: { Cookie: cookieHeader(cookieJar), "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ q }),
+  });
+  storeCookies(response, cookieJar);
+  return { status: response.status, location: response.headers.get("location") ?? "", body: await response.text() };
+}
 
 const registrySuggestionsStep = [
-  "registry suggestions: signed-in user gets a non-empty list of names",
+  "registry suggestions: signed-in user gets a non-empty list of names with product ids",
   async () => {
-    const page = await requestPage(REGISTRY_SUGGESTIONS_PATH);
+    const page = await postSuggestions(REGISTRY_SUGGESTIONS_QUERY);
     if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
     let names;
     try {
@@ -2294,8 +2451,85 @@ const registrySuggestionsStep = [
       Array.isArray(names) &&
       names.length > 0 &&
       names.length <= 10 &&
-      names.every((group) => typeof group?.name === "string" && typeof group?.variants === "number");
+      names.every(
+        (group) =>
+          typeof group?.name === "string" &&
+          typeof group?.variants === "number" &&
+          typeof group?.productId === "string" &&
+          /^[0-9a-f-]{36}$/i.test(group.productId),
+      );
+    if (valid) {
+      registry.name = names[0].name;
+      registry.productId = names[0].productId;
+    }
     return { ok: valid, detail: `200, ${Array.isArray(names) ? names.length : "no"} name(s)` };
+  },
+  EXPECT_OK,
+];
+
+// The search form posts the text to the draft route, which keeps it in a cookie and returns to the bare page address;
+// the page then finds the name from that cookie. Origin as the browser derives it from the search page's policy.
+const registrySearchDraftStep = [
+  "registry search: the search form returns to /leki/nowy without the text, and the page finds the name",
+  async () => {
+    if (!registry.name) return { ok: false, detail: "check did not run: no name from the suggestions step" };
+    const draft = await request("/api/medications/draft", {
+      method: "POST",
+      origin: await formOrigin(MEDICATION_ADD_PAGE),
+      form: { kind: "search", q: registry.name },
+    });
+    if (draft.status !== 303 || draft.location !== MEDICATION_ADD_PAGE || !noNameInUrl(draft.location, registry.name)) {
+      return { ok: false, detail: `draft ${draft.status} ${draft.location}` };
+    }
+    const page = await requestPage(MEDICATION_ADD_PAGE);
+    // The id appears only in the results: as the ?wariant= link of the name, or as a variant radio when the search
+    // finds only this name. The search field alone echoing the text would not put it there.
+    const found = page.status === 200 && page.body.includes(registry.productId);
+    return {
+      ok: found,
+      detail: `draft 303 ${draft.location}; page ${page.status}, name ${found ? "found" : "missing"}`,
+    };
+  },
+  EXPECT_OK,
+];
+
+// The leaflet form's fields posted to the draft route return to the bare form address; the page reads them back from
+// the cookie. Runs before sign-out, so the sign-out step deletes a draft that exists.
+const leafletDraftStep = [
+  "leaflet draft: the draft route returns to /leki/nowy/z-ulotki without the name or substance, and the form keeps them",
+  async () => {
+    const productName = "Smoke Test Preparat szkic";
+    const substanceName = `Smoketestum ${Date.now()}`;
+    const draft = await request("/api/medications/draft", {
+      method: "POST",
+      origin: await formOrigin(LEAFLET_ADD_PAGE),
+      form: { kind: "leaflet", productName, substanceName, startedOn: todayInWarsaw() },
+    });
+    const nameOut = noNameInUrl(draft.location, productName, substanceName);
+    if (draft.status !== 303 || draft.location !== LEAFLET_ADD_PAGE || !nameOut) {
+      return { ok: false, detail: `draft ${draft.status} ${draft.location}` };
+    }
+    const page = await requestPage(LEAFLET_ADD_PAGE);
+    const field = leafletSubstanceFieldOf(page.body);
+    const kept = page.status === 200 && field !== null && field.includes(`value="${escapeHtml(substanceName)}"`);
+    return {
+      ok: kept,
+      detail: `draft 303 ${draft.location}; page ${page.status}, substance ${kept ? "in the field" : "NOT in the field"}`,
+    };
+  },
+  EXPECT_OK,
+];
+
+// Sign-out deletes the session cookies and both medication drafts, each with its own Path.
+const signOutStep = [
+  "signout clears session and both medication draft cookies",
+  async () => {
+    const response = await request("/api/auth/signout", { method: "POST" });
+    const clears = draftCookieClears(response.setCookies);
+    return {
+      ok: response.status === 302 && response.location === "/" && clears.every(({ cleared }) => cleared),
+      detail: `${response.status} ${response.location}; ${describeClears(clears)}`,
+    };
   },
   EXPECT_OK,
 ];
@@ -2303,7 +2537,7 @@ const registrySuggestionsStep = [
 // Exactly 401: a redirect to sign-in or a 500 would mean the route never decided on the missing session.
 const registrySuggestionsAnonymousStep = [
   "registry suggestions: no session gets 401",
-  () => requestPage(REGISTRY_SUGGESTIONS_PATH),
+  () => postSuggestions(REGISTRY_SUGGESTIONS_QUERY),
   { status: 401 },
 ];
 
@@ -2458,7 +2692,9 @@ const steps = [
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   registrySuggestionsStep,
-  ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+  registrySearchDraftStep,
+  leafletDraftStep,
+  signOutStep,
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   registrySuggestionsAnonymousStep,
   ...isolationSteps,
