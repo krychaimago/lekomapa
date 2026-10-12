@@ -204,6 +204,13 @@ Supabase wysyła przez Brevo, szablony są polskie, a reset hasła i potwierdzen
 
 **Contract**: W `password-recovery/plan.md` wiersze Progress 3.7 i 3.8 odznaczone z SHA commita tej fazy (tytuły bez zmian). Zamknięcie 5.5 z zarchiwizowanej zmiany — notatka w `email-sender-smtp/change.md` (archiwum jest niezmienne). Wpis w `## Historia operacyjna` w `infrastructure.md` z datą przełączenia.
 
+#### Dopisek po wdrożeniu (12.10.2026, impl-review F5)
+
+Poza kontraktem powyżej, wynik pomiarów w tej fazie (szczegóły: `change.md`, „Phase 3 — przełączenie”):
+
+- Śledzenia w Brevo nie da się wyłączyć na darmowym koncie (krok 1). Strona prywatności (`src/lib/copy/terms.ts`) ma więc dodatkowe zdanie o śledzeniu otwarć i kliknięć w trybie anonimowym.
+- Rejestr ryzyk w `infrastructure.md` ma trzy dodatkowe wiersze: klucz SMTP wygasa po 90 dniach bez wysyłki, nagłówek wypisu blokuje późniejsze maile, odnośniki z tokenem przechodzą przez przekierowanie Brevo.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -310,4 +317,4 @@ Supabase wysyła przez Brevo, szablony są polskie, a reset hasła i potwierdzen
 - [x] 3.7 Poczta polska spoza zespołu: oba maile w odebranych — 96b18ea
 - [x] 3.8 Odnotowane, czy jest dopisek „Sent with Brevo” — 96b18ea
 - [x] 3.9 Konta testowe usunięte — 96b18ea
-- [ ] 3.10 Brevo: śledzenie kliknięć i otwarć wyłączone; odnośnik w mailu testowym prowadzi wprost na `lekomapa.pl`
+- [ ] 3.10 Brevo: śledzenie kliknięć i otwarć wyłączone; odnośnik w mailu testowym prowadzi wprost na `lekomapa.pl` — niewykonalne na darmowym Brevo, zaakceptowane 12.10.2026, patrz rejestr ryzyk w `infrastructure.md`
