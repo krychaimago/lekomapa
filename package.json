@@ -15,6 +15,7 @@
     "test": "node --experimental-strip-types --test \"scripts/**/*.test.mjs\"",
     "test:mutation": "stryker run",
     "typecheck": "astro check",
+    "cf-typegen": "wrangler types",
     "prepare": "husky"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
 
@@ -39,7 +40,11 @@ export const POST: APIRoute = async (context) => {
   // adding `otp` to NORMAL_SESSION_METHODS, which would open the interior to reset-link sessions too.
   const { error: signOutError } = await supabase.auth.signOut();
   if (signOutError) {
-    console.error("Sign-out after email confirmation failed", { code: signOutError.code, status: signOutError.status });
+    reportError("auth.email-confirm-sign-out", {
+      code: signOutError.code,
+      status: signOutError.status,
+      route: context.routePattern,
+    });
   }
   return context.redirect(CONFIRMED_PATH);
 };

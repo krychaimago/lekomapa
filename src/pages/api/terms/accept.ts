@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { TERMS_ACCEPTANCE_PATH } from "@/lib/auth/terms-gate";
 import { CURRENT_TERMS_VERSION } from "@/lib/copy/terms";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
 
@@ -20,7 +21,7 @@ export const POST: APIRoute = async (context) => {
 
   // 23505: this version is already accepted (double click, a second tab) — the outcome the person wanted.
   if (error && error.code !== "23505") {
-    console.error("Accepting the terms failed", { code: error.code });
+    reportError("terms.accept", { code: error.code, route: context.routePattern });
     return context.redirect(`${TERMS_ACCEPTANCE_PATH}?error=unknown`, 303);
   }
   return context.redirect("/", 303);

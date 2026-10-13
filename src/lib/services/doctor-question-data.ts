@@ -3,6 +3,7 @@
 // its node tests. Every read goes through RLS, so only the signed-in person's rows take part. The medications read is
 // shared with the doctor visit section (./visit-summary-data.ts), so both screens line up the same dosage history.
 import type { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { composeDoctorQuestion } from "@/lib/services/doctor-question";
 import type { DoctorQuestion, DoctorQuestionMedication, DosagePeriod, Medication, RegistryProduct } from "@/types";
 
@@ -31,7 +32,7 @@ export type DoctorQuestionsResult = { questions: DoctorQuestion[]; skippedSympto
 
 // One question per symptom of the entry, in the order of the entry card (alphabetically by symptom name). A symptom
 // with no medication in its window gets no question and is counted in `skippedSymptoms`. Any failed read gives
-// `{ error: true }`; only the error code is logged, never the data.
+// `{ error: true }`; only the error code is reported, never the data.
 export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: string): Promise<DoctorQuestionsResult> {
   const entry = await supabase
     .from("symptom_entries")
@@ -40,7 +41,7 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
     .single()
     .overrideTypes<EntryRow, { merge: false }>();
   if (entry.error) {
-    console.error("Loading the entry for the doctor question failed", { code: entry.error.code });
+    reportError("doctor-question.load-entry", { code: entry.error.code });
     return { error: true };
   }
 
@@ -61,7 +62,7 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
     loadQuestionMedications(supabase),
   ]);
   if (occurrences.error) {
-    console.error("Loading data for the doctor question failed", { occurrencesCode: occurrences.error.code });
+    reportError("doctor-question.load-occurrences", { code: occurrences.error.code });
     return { error: true };
   }
   if ("error" in questionMedications) return { error: true };
@@ -84,7 +85,7 @@ export async function loadDoctorQuestions(supabase: SupabaseClient, entryId: str
 }
 
 // Every medication of the signed-in person, ended ones included, with its dosage periods. Only the error code is
-// logged, never the data.
+// reported, never the data.
 export async function loadQuestionMedications(
   supabase: SupabaseClient,
 ): Promise<DoctorQuestionMedication[] | { error: true }> {
@@ -95,7 +96,7 @@ export async function loadQuestionMedications(
     )
     .overrideTypes<MedicationRow[], { merge: false }>();
   if (medications.error) {
-    console.error("Loading medications for the doctor question failed", { code: medications.error.code });
+    reportError("doctor-question.load-medications", { code: medications.error.code });
     return { error: true };
   }
   return medications.data.map((row) => ({

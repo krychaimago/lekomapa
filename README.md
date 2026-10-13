@@ -238,3 +238,11 @@ npx wrangler deploy
 ```
 
 `SUPABASE_URL` i `SUPABASE_KEY` ustaw jako sekrety w panelu Cloudflare albo przez `npx wrangler secret put`.
+
+Raporty błędów i zadanie co 15 minut (F-06) potrzebują trzech kolejnych sekretów, ustawianych tak samo:
+
+- `SENTRY_DSN` — adres DSN projektu Sentry (region UE). Bez niego błędy są tylko logowane, a zadanie nie wysyła check-inów.
+- `CLOUDFLARE_ANALYTICS_TOKEN` — token Cloudflare z uprawnieniem „Account Analytics: Read”, nic poza tym. Służy zadaniu liczącemu przebiegi przerwane za przekroczenie limitu CPU (błąd 1102).
+- `CLOUDFLARE_ACCOUNT_ID` — identyfikator konta Cloudflare dla tego samego zadania.
+
+Po `wrangler secret put` potwierdź, że runtime widzi niepustą wartość — dowodem jest check-in `ok` monitora `exceeded-cpu-check` w Sentry Crons w ciągu 30 minut, nie obecność klucza na liście.

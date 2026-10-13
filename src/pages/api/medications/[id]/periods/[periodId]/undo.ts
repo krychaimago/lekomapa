@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { MedicationApiErrorCode } from "@/lib/copy/medications";
 
 export const prerender = false;
@@ -53,7 +54,7 @@ export const POST: APIRoute = async (context) => {
     .eq("medication_id", medicationId)
     .maybeSingle();
   if (owner.error) {
-    console.error("Reading a dosage period for an undo failed", { code: owner.error.code });
+    reportError("dosage.undo-read-period", { code: owner.error.code, route: context.routePattern });
     return context.redirect(errorRedirect(medicationId, periodId, GENERIC));
   }
   if (!owner.data) {
@@ -66,7 +67,7 @@ export const POST: APIRoute = async (context) => {
 
   if (error) {
     // Only the code: the details may carry the dose.
-    console.error("Undoing a dose change failed", { code: error.code });
+    reportError("dosage.undo", { code: error.code, route: context.routePattern });
     return context.redirect(
       errorRedirect(
         medicationId,

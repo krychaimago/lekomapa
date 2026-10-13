@@ -50,7 +50,7 @@ export function formatEffectiveOn(isoDate: string): string {
   return isoDate.split("-").reverse().join(".");
 }
 
-// Privacy page /prywatnosc (plan appendix A.2). Lists only what is deployed: the error tracker joins the list with F-06.
+// Privacy page /prywatnosc (plan appendix A.2). Lists only what is deployed.
 export const PRIVACY_COPY = {
   title: "Prywatność w lekomapie",
   intro: "Lekomapa jest prototypem w wersji demonstracyjnej. Wpisuj wyłącznie dane przykładowe.",
@@ -74,6 +74,7 @@ export const PRIVACY_COPY = {
         "Konta i wpisy przechowuje Supabase, w regionie Frankfurt nad Menem (Niemcy).",
         "Aplikację uruchamia Cloudflare. Przy każdym połączeniu Cloudflare przetwarza dane techniczne, takie jak adres IP.",
         "Maile z odnośnikami wysyła Brevo (Francja). Odnośnik w mailu przechodzi przez serwer Brevo, który liczy otwarcia i kliknięcia bez łączenia ich z adresem e-mail. Odpowiedzi na maile Cloudflare przekazuje do skrzynki Gmail (Google) osoby odpowiedzialnej za serwis.",
+        "Raporty błędów serwera trafiają do Sentry, w regionie Unii Europejskiej (Frankfurt nad Menem, Niemcy). Raport nie zawiera danych o zdrowiu, adresów stron ani danych konta.",
       ],
     },
     {

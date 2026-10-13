@@ -8,6 +8,7 @@ import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { formatIsoDate, lastDayOfPeriod } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { DosagePeriod, Medication } from "@/types";
 
 type EndedRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
@@ -32,7 +33,7 @@ if (supabase) {
     .overrideTypes<EndedRow[], { merge: false }>();
   if (result.error) {
     loadFailed = true;
-    console.error("Loading the ended medication list failed", { code: result.error.code });
+    reportError("medications.ended-list-load", { code: result.error.code, route: Astro.routePattern });
   } else {
     rows = result.data;
   }

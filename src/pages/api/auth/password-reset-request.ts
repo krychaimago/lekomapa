@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { ApiErrorCode } from "@/lib/copy/password-recovery";
 
 export const prerender = false;
@@ -34,7 +35,7 @@ export const POST: APIRoute = async (context) => {
   });
   if (error) {
     // Never log the address.
-    console.error("Password reset request failed", { code: error.code, status: error.status });
+    reportError("auth.password-reset-request", { code: error.code, status: error.status, route: context.routePattern });
   }
 
   return context.redirect(SENT_PATH);

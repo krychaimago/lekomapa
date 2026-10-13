@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { MEDICATION_COPY, type MedicationApiErrorCode } from "@/lib/copy/medications";
 import { todayInWarsaw } from "@/lib/services/medications";
 
@@ -97,7 +98,7 @@ export const POST: APIRoute = async (context) => {
 
   if (error) {
     // Only the code: the details may carry the dose.
-    console.error("Changing a dosage failed", { code: error.code });
+    reportError("dosage.change", { code: error.code, route: context.routePattern });
     return context.redirect(
       errorRedirect(medicationId, Object.hasOwn(DB_ERROR_CODES, error.code) ? DB_ERROR_CODES[error.code] : GENERIC),
     );

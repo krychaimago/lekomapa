@@ -7,6 +7,7 @@ import NewEntryForm from "@/components/journal/NewEntryForm";
 import { JOURNAL_COPY } from "@/lib/copy/journal";
 import { earliestEntryLocal, groupSymptomsByCategory, nowInWarsawLocal } from "@/lib/services/journal";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { Symptom, SymptomSearchTerm } from "@/types";
 
 type SymptomRow = Pick<Symptom, "id" | "name" | "category" | "sort_order">;
@@ -27,10 +28,12 @@ if (supabase) {
   ]);
   if (symptomResult.error || termResult.error) {
     loadFailed = true;
-    console.error("Loading the symptom catalog failed", {
-      symptomsCode: symptomResult.error?.code,
-      termsCode: termResult.error?.code,
-    });
+    if (symptomResult.error) {
+      reportError("journal.new-catalog-symptoms", { code: symptomResult.error.code, route: Astro.routePattern });
+    }
+    if (termResult.error) {
+      reportError("journal.new-catalog-terms", { code: termResult.error.code, route: Astro.routePattern });
+    }
   } else {
     symptoms = symptomResult.data;
     terms = termResult.data;
@@ -39,9 +42,7 @@ if (supabase) {
       groupSymptomsByCategory(symptoms);
     } catch (error) {
       loadFailed = true;
-      console.error("The symptom catalog has a category the screen does not know", {
-        message: error instanceof Error ? error.message : String(error),
-      });
+      reportError("journal.new-catalog-unknown-category", { error, route: Astro.routePattern });
     }
   }
 } else {

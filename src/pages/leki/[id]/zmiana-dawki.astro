@@ -15,6 +15,7 @@ import {
   todayInWarsaw,
 } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { DosagePeriod, Medication, RegistryProduct, RegistryVariantOption } from "@/types";
 
 type MedicationRow = Pick<
@@ -53,7 +54,7 @@ if (supabase) {
     .overrideTypes<MedicationRow | null, { merge: false }>();
   if (result.error) {
     loadFailed = true;
-    console.error("Loading a medication for a dose change failed", { code: result.error.code });
+    reportError("dosage.change-load", { code: result.error.code, route: Astro.routePattern });
   } else {
     medication = result.data;
   }
@@ -88,12 +89,12 @@ if (supabase && medication && showForm && isRegistry) {
       .in("id", allowedIds)
       .overrideTypes<VariantRow[], { merge: false }>();
     if (result.error) {
-      console.error("Reading registry variants for a dose change failed", { code: result.error.code });
+      reportError("dosage.change-variants", { code: result.error.code, route: Astro.routePattern });
     } else {
       rows = result.data;
     }
   } else {
-    console.error("Reading allowed registry variants for a dose change failed", { code: allowed.error?.code });
+    reportError("dosage.change-allowed-variants", { code: allowed.error?.code, route: Astro.routePattern });
   }
   if (rows === null) {
     loadFailed = true;

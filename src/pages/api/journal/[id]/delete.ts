@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { JournalApiErrorCode } from "@/lib/copy/journal";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
 
@@ -53,7 +54,7 @@ export const POST: APIRoute = async (context) => {
 
   if (error) {
     // Only the code: the details may carry data about the entry.
-    console.error("Deleting a journal entry failed", { code: error.code });
+    reportError("journal.delete", { code: error.code, route: context.routePattern });
     return redirect(
       errorRedirect(entryId, Object.hasOwn(DB_ERROR_CODES, error.code) ? DB_ERROR_CODES[error.code] : GENERIC),
     );

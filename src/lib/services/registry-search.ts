@@ -2,16 +2,11 @@
 // (/api/registry/search), so both find the same names for the same text. Kept out of ./medications.ts, which stays
 // free of the Supabase client for its node tests.
 import type { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { type RegistryNameGroup, escapeLikePattern, groupRegistryResults } from "@/lib/services/medications";
 import type { RegistryProduct } from "@/types";
 
 type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
-
-// Bounds of the text the suggestions route accepts, shared with the hook so it never asks for what the route
-// rejects. One letter matches too much of the registry to be a useful suggestion.
-export const SUGGESTION_QUERY_MIN = 2;
-export const SUGGESTION_QUERY_MAX = 60;
-export const MAX_SUGGESTIONS = 10;
 
 // Rows read for one search. Grouping needs every variant of a name to count it; a name has far fewer variants
 // than this, so the first names of the result are complete.
@@ -24,7 +19,7 @@ export function likeLiteral(input: string): string {
 }
 
 // Every trade name containing `query` (case-insensitive), grouped by name with the id of its first row, sorted
-// alphabetically. `null` when the query failed; the error code is logged here, never the message.
+// alphabetically. `null` when the query failed; the error code is reported here, never the message.
 export async function searchRegistryNames(
   supabase: SupabaseClient,
   query: string,
@@ -39,7 +34,7 @@ export async function searchRegistryNames(
     .limit(MAX_SEARCH_ROWS)
     .overrideTypes<Pick<RegistryProduct, "id" | "product_name">[], { merge: false }>();
   if (error) {
-    console.error("Searching the registry failed", { code: error.code });
+    reportError("registry.search", { code: error.code });
     return null;
   }
   return groupRegistryResults(data);

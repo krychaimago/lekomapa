@@ -10,6 +10,7 @@ import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
 import { formatIsoDate, orderMedications, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { cn } from "@/lib/utils";
 import type { DosagePeriod, Medication, MedicationInteraction } from "@/types";
 
@@ -49,16 +50,18 @@ if (supabase) {
     supabase.from("medications").select("id", { count: "exact", head: true }).not("discontinued_on", "is", null),
   ]);
   if (ended.error) {
-    console.error("Counting ended medications failed", { code: ended.error.code });
+    reportError("medications.count-ended", { code: ended.error.code, route: Astro.routePattern });
   } else {
     endedCount = ended.count;
   }
   if (medications.error || interactions.error) {
     loadFailed = true;
-    console.error("Loading the medication list failed", {
-      medicationsCode: medications.error?.code,
-      interactionsCode: interactions.error?.code,
-    });
+    if (medications.error) {
+      reportError("medications.list-load", { code: medications.error.code, route: Astro.routePattern });
+    }
+    if (interactions.error) {
+      reportError("medications.list-interactions", { code: interactions.error.code, route: Astro.routePattern });
+    }
   } else {
     rows = medications.data;
     // Untyped client: the setof result is typed as a single row, so the rows are cast here.

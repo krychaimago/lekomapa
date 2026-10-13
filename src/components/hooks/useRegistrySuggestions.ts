@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { RegistryNameGroup } from "@/lib/services/medications";
-import { SUGGESTION_QUERY_MAX, SUGGESTION_QUERY_MIN } from "@/lib/services/registry-search";
+import { SUGGESTION_QUERY_MAX, SUGGESTION_QUERY_MIN } from "@/lib/registry-suggestions";
 
 const DEBOUNCE_MS = 250;
 const SEARCH_PATH = "/api/registry/search";
@@ -48,7 +48,7 @@ export function useRegistrySuggestions(query: string): RegistrySuggestions {
             body: JSON.stringify({ q: text }),
           });
           if (!response.ok) return;
-          const body = (await response.json()) as { names?: unknown };
+          const body: { names?: unknown } = await response.json();
           if (controller.signal.aborted || !Array.isArray(body.names)) return;
           setAnswer({ text, names: body.names.filter(isNameGroup) });
         } catch {
