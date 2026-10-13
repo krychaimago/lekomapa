@@ -606,7 +606,7 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 
 #### Automated
 
-- [x] 5.1 Pełny zestaw testów, typy, lint i build przechodzą
+- [x] 5.1 Pełny zestaw testów, typy, lint i build przechodzą — 181e62b
 - [ ] 5.2 Migracja health_ping widoczna lokalnie i zdalnie
 - [ ] 5.3 Produkcyjne /api/health zwraca status ok
 
