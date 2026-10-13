@@ -17,7 +17,8 @@ export interface SentryEvent {
   platform: "javascript";
   level: "error";
   environment: string;
-  tags: { where: string; code: string; route: string };
+  // `count` only on the cron.exceeded-cpu event: the number of Worker runs killed for exceeding CPU (Cloudflare 1102).
+  tags: { where: string; code: string; route: string; count?: string };
   fingerprint: string[];
   exception: {
     values: [{ type: string; value: "redacted"; stacktrace: { frames: SentryFrame[] } }];
@@ -41,6 +42,7 @@ export interface ErrorEventInput {
   code?: string | number;
   error?: unknown;
   route?: string;
+  count?: number;
   environment: string;
   now: Date;
   eventId: string;
@@ -131,7 +133,7 @@ export function buildErrorEvent(input: ErrorEventInput): SentryEvent {
     platform: "javascript",
     level: "error",
     environment: input.environment,
-    tags: { where: input.where, code, route },
+    tags: { where: input.where, code, route, ...(input.count === undefined ? {} : { count: String(input.count) }) },
     // The route is part of the group, so the same error on another route opens a new issue and sends a mail.
     fingerprint: [input.where, code, type, route],
     exception: {

@@ -579,28 +579,28 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 
 #### Automated
 
-- [x] 3.1 Migracja wchodzi czysto
-- [x] 3.2 Bramki SQL przechodzą, w tym nowa
-- [x] 3.3 Smoke przechodzi z nowym krokiem
-- [x] 3.4 Pełny zestaw testów, typy, lint i build przechodzą
+- [x] 3.1 Migracja wchodzi czysto — 7047150
+- [x] 3.2 Bramki SQL przechodzą, w tym nowa — 7047150
+- [x] 3.3 Smoke przechodzi z nowym krokiem — 7047150
+- [x] 3.4 Pełny zestaw testów, typy, lint i build przechodzą — 7047150
 
 #### Manual
 
-- [x] 3.5 Przy zatrzymanym Supabase /api/health zwraca 503
+- [x] 3.5 Przy zatrzymanym Supabase /api/health zwraca 503 — 7047150
 
 ### Phase 4: Zadanie 1102
 
 #### Automated
 
-- [ ] 4.1 Testy zadania przechodzą
-- [ ] 4.2 Pełny zestaw testów, typy, lint i build przechodzą
-- [ ] 4.3 Zbudowany wrangler.json ma harmonogram co 15 minut
-- [ ] 4.4 Smoke przechodzi na buildzie z nowym plikiem startowym
+- [x] 4.1 Testy zadania przechodzą
+- [x] 4.2 Pełny zestaw testów, typy, lint i build przechodzą
+- [x] 4.3 Zbudowany wrangler.json ma harmonogram co 15 minut
+- [x] 4.4 Smoke przechodzi na buildzie z nowym plikiem startowym
 
 #### Manual
 
-- [ ] 4.5 Pomiar dostępności statystyk na darmowym planie
-- [ ] 4.6 Zadanie z fałszywym tokenem kończy się check-failed
+- [x] 4.5 Pomiar dostępności statystyk na darmowym planie
+- [x] 4.6 Zadanie z fałszywym tokenem kończy się check-failed
 
 ### Phase 5: Wdrożenie produkcyjne
 

@@ -114,6 +114,15 @@ describe("buildErrorEvent and buildEnvelope", () => {
     }
   });
 
+  test("count is the only extra tag, present only when given", () => {
+    const event = build({ where: "cron.exceeded-cpu", code: 1102, count: 3, error: undefined, route: undefined });
+    assert.deepEqual(Object.keys(event).sort(), TOP_LEVEL_KEYS);
+    assert.deepEqual(Object.keys(event.tags).sort(), ["code", "count", "route", "where"]);
+    assert.equal(event.tags.count, "3");
+    assert.equal(event.tags.code, "1102");
+    assert.ok(!("count" in build({ error: new Error("x") }).tags));
+  });
+
   test("the error text is replaced with a fixed value", () => {
     for (const error of Object.values(leakyErrors())) {
       assert.equal(build({ error }).exception.values[0].value, "redacted");

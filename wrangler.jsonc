@@ -1,13 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lekomapa",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-05-08",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist",
     "not_found_handling": "404-page",
+  },
+  // Every 15 minutes: count runs killed for exceeding the CPU limit (src/worker.ts, scheduled).
+  "triggers": {
+    "crons": ["*/15 * * * *"],
   },
   "observability": {
     "enabled": true,
