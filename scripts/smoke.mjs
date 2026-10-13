@@ -2541,6 +2541,25 @@ const registrySuggestionsAnonymousStep = [
   { status: 401 },
 ];
 
+// The uptime monitor's request: a GET with no cookie and no Origin, as a monitor sends it. Exactly 200 with exactly
+// {"status":"ok"}: a redirect to sign-in or a 403 would mean the route is not public, and any other body could carry
+// data. no-store, so no cache answers "ok" for a database that is down.
+const healthSteps = [
+  [
+    'health: no session gets 200 {"status":"ok"} with no-store',
+    async () => {
+      const response = await fetch(`${BASE_URL}/api/health`, { redirect: "manual" });
+      const body = await response.text();
+      const cacheControl = response.headers.get("cache-control") ?? "";
+      return {
+        ok: response.status === 200 && body === '{"status":"ok"}' && cacheControl.includes("no-store"),
+        detail: `${response.status} ${body}; cache-control: ${cacheControl || "(none)"}`,
+      };
+    },
+    EXPECT_OK,
+  ],
+];
+
 // --- Steps -----------------------------------------------------------------
 
 // The sign-up form as a browser sends it with the terms box ticked (S-01).
@@ -2678,6 +2697,7 @@ const steps = [
     () => request(TERMS_ACCEPTANCE_PATH),
     { status: 302, location: "/auth/signin", exact: true },
   ],
+  ...healthSteps,
   ...(usesExistingAccount ? [existingAccountTermsStep] : signupSteps),
   ...emailConfirmSteps,
   [

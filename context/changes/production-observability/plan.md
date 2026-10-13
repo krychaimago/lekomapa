@@ -565,28 +565,28 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 
 #### Automated
 
-- [x] 2.1 Test zakazu przechodzi
-- [x] 2.2 Brak console.error w src poza src/lib/observability
-- [x] 2.3 Pełny zestaw testów przechodzi
-- [x] 2.4 Typy, lint i build przechodzą
-- [x] 2.5 Smoke przechodzi przeciw lokalnemu Supabase
+- [x] 2.1 Test zakazu przechodzi — b750c0a
+- [x] 2.2 Brak console.error w src poza src/lib/observability — b750c0a
+- [x] 2.3 Pełny zestaw testów przechodzi — b750c0a
+- [x] 2.4 Typy, lint i build przechodzą — b750c0a
+- [x] 2.5 Smoke przechodzi przeciw lokalnemu Supabase — b750c0a
 
 #### Manual
 
-- [x] 2.6 Przy odebranym prawie odczytu /leki pokazuje błąd, log ma etykietę i kod bez nazw leków
+- [x] 2.6 Przy odebranym prawie odczytu /leki pokazuje błąd, log ma etykietę i kod bez nazw leków — b750c0a
 
 ### Phase 3: Strona kontrolna
 
 #### Automated
 
-- [ ] 3.1 Migracja wchodzi czysto
-- [ ] 3.2 Bramki SQL przechodzą, w tym nowa
-- [ ] 3.3 Smoke przechodzi z nowym krokiem
-- [ ] 3.4 Pełny zestaw testów, typy, lint i build przechodzą
+- [x] 3.1 Migracja wchodzi czysto
+- [x] 3.2 Bramki SQL przechodzą, w tym nowa
+- [x] 3.3 Smoke przechodzi z nowym krokiem
+- [x] 3.4 Pełny zestaw testów, typy, lint i build przechodzą
 
 #### Manual
 
-- [ ] 3.5 Przy zatrzymanym Supabase /api/health zwraca 503
+- [x] 3.5 Przy zatrzymanym Supabase /api/health zwraca 503
 
 ### Phase 4: Zadanie 1102
 
