@@ -114,6 +114,10 @@ describe("buildErrorEvent and buildEnvelope", () => {
     }
   });
 
+  test("the platform is node, so Sentry does not treat the event as a browser one and derive a location from the IP", () => {
+    assert.equal(build({ error: new Error("x") }).platform, "node");
+  });
+
   test("count is the only extra tag, present only when given", () => {
     const event = build({ where: "cron.exceeded-cpu", code: 1102, count: 3, error: undefined, route: undefined });
     assert.deepEqual(Object.keys(event).sort(), TOP_LEVEL_KEYS);
@@ -144,7 +148,7 @@ describe("buildErrorEvent and buildEnvelope", () => {
     for (const error of ["Ibuprofen 400 mg", null]) {
       const event = build({ error });
       assert.equal(event.exception.values[0].type, "NonError");
-      assert.deepEqual(event.exception.values[0].stacktrace.frames, []);
+      assert.deepEqual(Object.keys(event.exception.values[0]).sort(), ["type", "value"]);
       assert.ok(!JSON.stringify(event).includes("Ibuprofen"));
     }
   });

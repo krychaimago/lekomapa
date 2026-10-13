@@ -14,14 +14,16 @@ export interface SentryFrame {
 export interface SentryEvent {
   event_id: string;
   timestamp: number;
-  platform: "javascript";
+  // A server event: "javascript" makes Sentry treat it as a browser one.
+  platform: "node";
   level: "error";
   environment: string;
   // `count` only on the cron.exceeded-cpu event: the number of Worker runs killed for exceeding CPU (Cloudflare 1102).
   tags: { where: string; code: string; route: string; count?: string };
   fingerprint: string[];
   exception: {
-    values: [{ type: string; value: "redacted"; stacktrace: { frames: SentryFrame[] } }];
+    // No stacktrace when nothing was parsed: Sentry rejects an empty frame list as invalid data.
+    values: [{ type: string; value: "redacted"; stacktrace?: { frames: SentryFrame[] } }];
   };
 }
 
@@ -127,17 +129,18 @@ export function buildErrorEvent(input: ErrorEventInput): SentryEvent {
   const type = errorType(input.error);
   const code = input.code === undefined ? "" : String(input.code);
   const route = input.route ?? "";
+  const frames = stackFrames(input.error);
   return {
     event_id: input.eventId,
     timestamp: input.now.getTime() / 1000,
-    platform: "javascript",
+    platform: "node",
     level: "error",
     environment: input.environment,
     tags: { where: input.where, code, route, ...(input.count === undefined ? {} : { count: String(input.count) }) },
     // The route is part of the group, so the same error on another route opens a new issue and sends a mail.
     fingerprint: [input.where, code, type, route],
     exception: {
-      values: [{ type, value: REDACTED, stacktrace: { frames: stackFrames(input.error) } }],
+      values: [{ type, value: REDACTED, ...(frames.length === 0 ? {} : { stacktrace: { frames } }) }],
     },
   };
 }
