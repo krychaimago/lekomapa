@@ -592,21 +592,21 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 
 #### Automated
 
-- [x] 4.1 Testy zadania przechodzą
-- [x] 4.2 Pełny zestaw testów, typy, lint i build przechodzą
-- [x] 4.3 Zbudowany wrangler.json ma harmonogram co 15 minut
-- [x] 4.4 Smoke przechodzi na buildzie z nowym plikiem startowym
+- [x] 4.1 Testy zadania przechodzą — 8890f4b
+- [x] 4.2 Pełny zestaw testów, typy, lint i build przechodzą — 8890f4b
+- [x] 4.3 Zbudowany wrangler.json ma harmonogram co 15 minut — 8890f4b
+- [x] 4.4 Smoke przechodzi na buildzie z nowym plikiem startowym — 8890f4b
 
 #### Manual
 
-- [x] 4.5 Pomiar dostępności statystyk na darmowym planie
-- [x] 4.6 Zadanie z fałszywym tokenem kończy się check-failed
+- [x] 4.5 Pomiar dostępności statystyk na darmowym planie — 8890f4b
+- [x] 4.6 Zadanie z fałszywym tokenem kończy się check-failed — 8890f4b
 
 ### Phase 5: Wdrożenie produkcyjne
 
 #### Automated
 
-- [ ] 5.1 Pełny zestaw testów, typy, lint i build przechodzą
+- [x] 5.1 Pełny zestaw testów, typy, lint i build przechodzą
 - [ ] 5.2 Migracja health_ping widoczna lokalnie i zdalnie
 - [ ] 5.3 Produkcyjne /api/health zwraca status ok
 
