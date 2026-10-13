@@ -3,7 +3,7 @@ project: lekomapa
 version: 2
 status: draft
 created: 2026-09-21
-updated: 2026-10-12
+updated: 2026-10-13
 prd_version: 1
 main_goal: speed
 top_blocker: skills
@@ -44,25 +44,25 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                       | Prerequisites                      | PRD refs                                   | Status |
-| ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | ------ |
-| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done   |
-| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done   |
-| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done   |
-| F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done   |
-| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | done   |
-| F-06 | production-observability             | (fundament) błąd i przerwa w działaniu produkcji docierają do autorki mailem         | —                                  | NFR progów szybkości, błędów i dostępności | ready  |
-| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | done   |
-| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | done   |
-| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done   |
-| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done   |
-| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done   |
-| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done   |
-| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done   |
-| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done   |
-| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done   |
-| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done   |
-| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | done   |
+| ID   | Change ID                            | Outcome (użytkowniczka może …)                                                       | Prerequisites                      | PRD refs                                   | Status      |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------ | ----------- |
+| F-01 | medication-schema-rls                | (fundament) schemat leków i okresów dawkowania z RLS i ścieżką weryfikacji           | —                                  | FR-003, FR-004, NFR izolacji               | done        |
+| F-02 | interaction-rules-seed               | (fundament) pary kolizji na grupach ATC i rejestr leków dostarczone z produktem      | —                                  | FR-003, FR-006                             | done        |
+| F-03 | symptom-catalog-seed                 | (fundament) katalog 34 objawów w 8 kategoriach ze słowami wyszukiwania               | —                                  | FR-008                                     | done        |
+| F-04 | app-shell-visual-foundation          | (fundament) nazwane kolory, polski interfejs, pasek demonstracyjny, szkielet wnętrza | —                                  | MS-01, MS-02, NFR czytelności na telefonie | done        |
+| F-05 | email-sender-smtp                    | (fundament) maile z odnośnikami dochodzą na adres każdej osoby, nie tylko zespołu    | —                                  | FR-001, FR-002                             | done        |
+| F-06 | production-observability             | (fundament) błąd i przerwa w działaniu produkcji docierają do autorki mailem         | —                                  | NFR progów szybkości, błędów i dostępności | in-progress |
+| S-01 | terms-acceptance-on-signup           | założyć konto, akceptując warunki „prototyp”, po przeczytaniu strony prywatności     | F-04                               | FR-001, FR-002, MS-02, MS-03               | done        |
+| S-10 | password-recovery                    | odzyskać dostęp do konta, ustawiając nowe hasło                                      | F-04                               | FR-002, MS-03                              | done        |
+| S-02 | add-medication-with-interaction-flag | dodać lek po nazwie handlowej i zobaczyć znacznik możliwej kolizji                   | F-01, F-02, F-04                   | US-01, FR-003, FR-006, FR-007, FR-012      | done        |
+| S-03 | dosage-period-history                | zmienić dawkowanie tak, że stary okres się zamyka, a nowy otwiera                    | S-02                               | US-04, FR-004                              | done        |
+| S-04 | discontinue-medication               | zakończyć przyjmowanie leku z datą odstawienia                                       | S-02                               | FR-005                                     | done        |
+| S-05 | symptom-journal-entry                | zapisać wpis o samopoczuciu z datą, godziną i objawami z listy                       | F-01, F-03, F-04                   | US-02, FR-008                              | done        |
+| S-06 | symptom-question-composer            | zobaczyć po zapisaniu objawu gotowe pytanie do lekarza                               | S-03, S-05                         | US-02, FR-010, FR-012                      | done        |
+| S-07 | journal-correction-window            | poprawić wpis dzienniczka w oknie korekty                                            | S-05                               | FR-009                                     | done        |
+| S-08 | doctor-visit-summary                 | otworzyć sekcję „Wizyta" przed wizytą                                                | S-02, S-06                         | US-03, FR-011, FR-012                      | done        |
+| S-09 | account-deletion-cascade             | usunąć konto tak, że wszystkie powiązane dane znikają bezpowrotnie                   | S-01, S-02, S-05, S-06             | FR-001, NFR usunięcia konta                | done        |
+| S-11 | dark-mode                            | korzystać z produktu w trybie ciemnym                                                | S-01, S-04, S-07, S-08, S-09, S-10 | MS-04, NFR czytelności na telefonie        | done        |
 
 ## Streams
 
@@ -174,7 +174,7 @@ Co jest już w repozytorium na dzień `2026-09-26` (sprawdzone w kodzie; w wersj
 - **Unknowns:**
   - Jakim zapytaniem strona kontrolna dotyka bazy bez sesji? Katalog objawów i rejestr nie mają polityk dla `anon` i mają ich nie dostać. Kierunek: funkcja zwracająca stałą wartość, udostępniona `anon`, bez dostępu do tabel. — Owner: plan. Block: no.
 - **Risk:** Dopisane 2026-10-06 (#6). Sentry wyłącznie po stronie serwera — po stronie przeglądarki dokładałby JavaScript ważący na progu 2,5 s i drugie miejsce, w którym trzeba wycinać dane o zdrowiu. Konto Sentry zakładane od razu w regionie EU, bo wyboru regionu nie da się później zmienić. Raport błędu nie niesie adresu z parametrami, treści żądania, ciasteczek ani śladu działań; pilnuje tego test, który wywołuje błąd z nazwą leku i sprawdza, że nazwa nie wychodzi — nie komentarz. Klucz Sentry jako sekret Workera: po ustawieniu potwierdzić, że runtime widzi niepustą wartość (lesson o sekretach). SDK dokłada pracy przy każdym żądaniu, więc narzut CPU mierzony po podpięciu wobec limitu 10 ms. Strona kontrolna (np. `/api/health`) jest publiczna i zwraca wyłącznie stan, bez danych. Monitor dostępności Sentry odpytuje ją co 5–15 minut — ok. 100–300 żądań dziennie przy limicie 100 tys. Pomiar progu szybkości (Lighthouse Mobile, LCP ≤ 2,5 s) dla listy leków i zapisu objawu należy do tej pozycji; ekran z S-08 mierzony w S-08. Narzut: 2–3 wieczory jednorazowo, ~15 minut tygodniowo na przegląd zgłoszeń. Ping z GitHub Actions odrzucony — GitHub wyłącza zaplanowane zadania po 60 dniach bez aktywności w repozytorium. Przy wdrożeniu dopisuje Sentry do `/prywatnosc` (`src/lib/copy/terms.ts`, `PRIVACY_COPY`) z informacją, że raporty błędów nie zawierają danych o zdrowiu — `S-01` wymienia tylko to, co już działa.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Slices
 

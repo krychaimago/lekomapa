@@ -1,5 +1,6 @@
-import { defineMiddleware } from "astro:middleware";
+import { defineMiddleware, sequence } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { INTERIOR_ROUTES, matchesNavHref } from "@/lib/navigation";
 import { CURRENT_TERMS_VERSION } from "@/lib/copy/terms";
 import { latestAcceptedTermsVersion } from "@/lib/services/terms-acceptance";
@@ -16,7 +17,27 @@ import {
 // the terms gate. Add here only signed-in screens outside the interior, such as terms acceptance.
 const PROTECTED_ROUTES = [...INTERIOR_ROUTES, TERMS_ACCEPTANCE_PATH];
 
-export const onRequest = defineMiddleware(async (context, next) => {
+// The health route answers 503 on purpose when the database is down; the uptime monitor alarms on it, so reporting
+// that response too would send a second mail about the same outage. A throw on that route is still reported.
+const HEALTH_ROUTE = "/api/health";
+
+// Outer layer: catches every throw and every 5xx response, including from the session logic below. It reads only the
+// route pattern (`/leki/[id]`), never the address, headers, cookies or the request body.
+const reportServerErrors = defineMiddleware(async (context, next) => {
+  let response: Response;
+  try {
+    response = await next();
+  } catch (error) {
+    reportError("request.exception", { error, route: context.routePattern });
+    throw error;
+  }
+  if (response.status >= 500 && context.routePattern !== HEALTH_ROUTE) {
+    reportError("request.5xx", { status: response.status, route: context.routePattern });
+  }
+  return response;
+});
+
+const sessionAndAccess = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
 
   context.locals.user = null;
@@ -81,3 +102,5 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   return next();
 });
+
+export const onRequest = sequence(reportServerErrors, sessionAndAccess);

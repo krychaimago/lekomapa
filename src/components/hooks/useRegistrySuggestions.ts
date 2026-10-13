@@ -48,7 +48,7 @@ export function useRegistrySuggestions(query: string): RegistrySuggestions {
             body: JSON.stringify({ q: text }),
           });
           if (!response.ok) return;
-          const body = (await response.json()) as { names?: unknown };
+          const body: { names?: unknown } = await response.json();
           if (controller.signal.aborted || !Array.isArray(body.names)) return;
           setAnswer({ text, names: body.names.filter(isNameGroup) });
         } catch {
