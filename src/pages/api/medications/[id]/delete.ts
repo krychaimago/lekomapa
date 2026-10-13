@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { MedicationApiErrorCode } from "@/lib/copy/medications";
 
 export const prerender = false;
@@ -46,7 +47,7 @@ export const POST: APIRoute = async (context) => {
 
   if (error) {
     // Only the code: the details may carry data about the medication.
-    console.error("Deleting a medication failed", { code: error.code });
+    reportError("medications.delete", { code: error.code, route: context.routePattern });
     return context.redirect(
       errorRedirect(medicationId, Object.hasOwn(DB_ERROR_CODES, error.code) ? DB_ERROR_CODES[error.code] : GENERIC),
     );

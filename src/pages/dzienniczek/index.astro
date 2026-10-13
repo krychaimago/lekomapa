@@ -18,6 +18,7 @@ import { doctorQuestionText } from "@/lib/services/doctor-question";
 import { type DoctorQuestionsResult, loadDoctorQuestions } from "@/lib/services/doctor-question-data";
 import { formatCorrectionDeadline, formatWarsawDateTime } from "@/lib/services/journal";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { cn } from "@/lib/utils";
 import { SYMPTOM_SEVERITIES, type Symptom, type SymptomEntry, type SymptomSeverity } from "@/types";
 
@@ -64,7 +65,7 @@ if (supabase) {
     .overrideTypes<EntryRow[], { merge: false }>();
   if (result.error) {
     loadFailed = true;
-    console.error("Loading the symptom journal failed", { code: result.error.code });
+    reportError("journal.list-load", { code: result.error.code, route: Astro.routePattern });
   } else {
     entries = result.data.map((row) => ({
       id: row.id,

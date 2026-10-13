@@ -1,4 +1,5 @@
 import { defineMiddleware, sequence } from "astro:middleware";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import { reportError } from "@/lib/observability/report";
 import { INTERIOR_ROUTES, matchesNavHref } from "@/lib/navigation";
@@ -46,21 +47,31 @@ const sessionAndAccess = defineMiddleware(async (context, next) => {
   if (supabase) {
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
     context.locals.user = user ?? null;
+    // An outage of the auth service does not throw: it returns an error and the person lands on sign-in as if signed
+    // out. A missing, expired or invalid session (4xx) is ordinary traffic and is not reported.
+    if (userError && (isAuthRetryableFetchError(userError) || (userError.status ?? 0) >= 500)) {
+      reportError("auth.get-user", { code: userError.code, status: userError.status, route: context.routePattern });
+    }
 
     if (user) {
       // Decided on the signed `amr` claim, never on a cookie the browser could set.
       // An error or a throw fails closed: missing claims count as recovery and lock the interior.
-      // Log only code/status/name, never the address or the token.
+      // Report only code/status/error type, never the address or the token.
       try {
         const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
         if (claimsError) {
-          console.error("Reading session claims failed", { code: claimsError.code, status: claimsError.status });
+          reportError("auth.claims", {
+            code: claimsError.code,
+            status: claimsError.status,
+            route: context.routePattern,
+          });
         }
         context.locals.recoverySession = isRecoverySession(claimsData?.claims);
       } catch (thrown) {
-        console.error("Reading session claims threw", { name: thrown instanceof Error ? thrown.name : typeof thrown });
+        reportError("auth.claims-threw", { error: thrown, route: context.routePattern });
         context.locals.recoverySession = true;
       }
     }

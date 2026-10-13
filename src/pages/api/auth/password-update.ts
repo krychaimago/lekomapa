@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { RECOVERY_EXPIRED_PATH, RESET_PASSWORD_PATH, isRecoverySession } from "@/lib/auth/recovery-session";
 import { MIN_PASSWORD_LENGTH, type ApiErrorCode } from "@/lib/copy/password-recovery";
 
@@ -73,9 +74,10 @@ export const POST: APIRoute = async (context) => {
   if (signOutError) {
     // Password is already changed and the local session is gone; other sessions may survive.
     // Never log the address.
-    console.error("Global sign-out after password reset failed", {
+    reportError("auth.password-update-sign-out", {
       code: signOutError.code,
       status: signOutError.status,
+      route: context.routePattern,
     });
   }
 

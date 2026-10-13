@@ -3,6 +3,7 @@
 // from the same composeDoctorQuestion as the journal. symptom_occurrences() returns one row per symptom with all its
 // entry dates, so PostgREST's max_rows never cuts off the first entry of a window.
 import type { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { loadQuestionMedications } from "@/lib/services/doctor-question-data";
 import { todayInWarsaw } from "@/lib/services/medications";
 import {
@@ -22,19 +23,17 @@ interface SymptomOccurrenceRow {
   occurrences: string[];
 }
 
-// Any failed read gives `{ error: true }`; only error codes are logged, never the data.
+// Any failed read gives `{ error: true }`; only error codes are reported, never the data.
 export async function loadVisitSummary(supabase: SupabaseClient): Promise<VisitSummary | { error: true }> {
   const [symptoms, medications, interactions] = await Promise.all([
     supabase.rpc("symptom_occurrences"),
     loadQuestionMedications(supabase),
     supabase.rpc("medication_interactions"),
   ]);
+  // A failed medications read is reported inside loadQuestionMedications.
+  if (symptoms.error) reportError("visit-summary.load-symptoms", { code: symptoms.error.code });
+  if (interactions.error) reportError("visit-summary.load-interactions", { code: interactions.error.code });
   if (symptoms.error || interactions.error || "error" in medications) {
-    console.error("Loading the doctor visit section failed", {
-      symptomsCode: symptoms.error?.code,
-      medicationsFailed: "error" in medications,
-      interactionsCode: interactions.error?.code,
-    });
     return { error: true };
   }
 

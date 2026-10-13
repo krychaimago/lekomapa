@@ -12,6 +12,7 @@ import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
 import { earliestChangeDate, formatIsoDate, lastDayOfPeriod, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { cn } from "@/lib/utils";
 import type { DosagePeriod, Medication } from "@/types";
 
@@ -45,7 +46,7 @@ if (supabase) {
     .overrideTypes<MedicationRow | null, { merge: false }>();
   if (result.error) {
     loadFailed = true;
-    console.error("Loading a medication for ending it failed", { code: result.error.code });
+    reportError("discontinuation.load", { code: result.error.code, route: Astro.routePattern });
   } else {
     medication = result.data;
   }

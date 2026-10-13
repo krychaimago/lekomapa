@@ -18,6 +18,7 @@ import {
   toWarsawLocal,
 } from "@/lib/services/journal";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { SYMPTOM_SEVERITIES, type Symptom, type SymptomSearchTerm, type SymptomSeverity } from "@/types";
 
 interface EntryRow {
@@ -60,7 +61,7 @@ if (supabase) {
     .overrideTypes<EntryRow | null, { merge: false }>();
   if (result.error) {
     loadFailed = true;
-    console.error("Loading a journal entry failed", { code: result.error.code });
+    reportError("journal.entry-load", { code: result.error.code, route: Astro.routePattern });
   } else {
     entry = result.data;
   }
@@ -70,7 +71,7 @@ if (supabase) {
 // the screen must not offer a correction it cannot vouch for.
 if (entry?.correction_window_ends_at === null) {
   loadFailed = true;
-  console.error("A journal entry came without the end of its correction window");
+  reportError("journal.entry-missing-window-end", { route: Astro.routePattern });
 }
 
 // One "now" for the whole page, from the server's clock.
@@ -89,10 +90,12 @@ if (supabase && entry && windowOpen && !loadFailed) {
   ]);
   if (symptomResult.error || termResult.error) {
     loadFailed = true;
-    console.error("Loading the symptom catalog failed", {
-      symptomsCode: symptomResult.error?.code,
-      termsCode: termResult.error?.code,
-    });
+    if (symptomResult.error) {
+      reportError("journal.correction-catalog-symptoms", { code: symptomResult.error.code, route: Astro.routePattern });
+    }
+    if (termResult.error) {
+      reportError("journal.correction-catalog-terms", { code: termResult.error.code, route: Astro.routePattern });
+    }
   } else {
     symptoms = symptomResult.data;
     terms = termResult.data;
@@ -101,9 +104,7 @@ if (supabase && entry && windowOpen && !loadFailed) {
       groupSymptomsByCategory(symptoms);
     } catch (error) {
       loadFailed = true;
-      console.error("The symptom catalog has a category the screen does not know", {
-        message: error instanceof Error ? error.message : String(error),
-      });
+      reportError("journal.correction-catalog-unknown-category", { error, route: Astro.routePattern });
     }
     if (symptoms.length === 0) loadFailed = true;
   }

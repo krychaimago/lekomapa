@@ -14,6 +14,7 @@ import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
 import { readLeafletDraft } from "@/lib/medication-draft";
 import { similarSubstances, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 const copy = MEDICATION_COPY.leaflet;
 const error = apiErrorMessage(Astro.url.searchParams.get("error"));
@@ -34,7 +35,7 @@ let loadFailed: boolean;
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (supabase) {
   const response = await supabase.rpc("coded_substance_names");
-  if (response.error) console.error("Reading the substance dictionary failed", { code: response.error.code });
+  if (response.error) reportError("registry.read-substances", { code: response.error.code, route: Astro.routePattern });
   const names: unknown = response.error ? null : response.data;
   // A missing or empty dictionary would hide names and push the user towards saving without a code: fail visibly.
   const isNameList = (value: unknown): value is string[] =>

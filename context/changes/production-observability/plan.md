@@ -551,29 +551,29 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 
 #### Automated
 
-- [x] 1.1 Test zgłoszenia przechodzi
-- [x] 1.2 Pełny zestaw testów przechodzi
-- [x] 1.3 Typy przechodzą
-- [x] 1.4 Lint przechodzi
-- [x] 1.5 Build przechodzi
+- [x] 1.1 Test zgłoszenia przechodzi — dcfbad9
+- [x] 1.2 Pełny zestaw testów przechodzi — dcfbad9
+- [x] 1.3 Typy przechodzą — dcfbad9
+- [x] 1.4 Lint przechodzi — dcfbad9
+- [x] 1.5 Build przechodzi — dcfbad9
 
 #### Manual
 
-- [x] 1.6 Lokalnie bez SENTRY_DSN aplikacja działa jak dotąd
+- [x] 1.6 Lokalnie bez SENTRY_DSN aplikacja działa jak dotąd — dcfbad9
 
 ### Phase 2: Podmiana console.error na reportError
 
 #### Automated
 
-- [ ] 2.1 Test zakazu przechodzi
-- [ ] 2.2 Brak console.error w src poza src/lib/observability
-- [ ] 2.3 Pełny zestaw testów przechodzi
-- [ ] 2.4 Typy, lint i build przechodzą
-- [ ] 2.5 Smoke przechodzi przeciw lokalnemu Supabase
+- [x] 2.1 Test zakazu przechodzi
+- [x] 2.2 Brak console.error w src poza src/lib/observability
+- [x] 2.3 Pełny zestaw testów przechodzi
+- [x] 2.4 Typy, lint i build przechodzą
+- [x] 2.5 Smoke przechodzi przeciw lokalnemu Supabase
 
 #### Manual
 
-- [ ] 2.6 Przy odebranym prawie odczytu /leki pokazuje błąd, log ma etykietę i kod bez nazw leków
+- [x] 2.6 Przy odebranym prawie odczytu /leki pokazuje błąd, log ma etykietę i kod bez nazw leków
 
 ### Phase 3: Strona kontrolna
 

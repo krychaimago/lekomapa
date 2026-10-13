@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { RegistryNameGroup } from "@/lib/services/medications";
-import { SUGGESTION_QUERY_MAX, SUGGESTION_QUERY_MIN } from "@/lib/services/registry-search";
+import { SUGGESTION_QUERY_MAX, SUGGESTION_QUERY_MIN } from "@/lib/registry-suggestions";
 
 const DEBOUNCE_MS = 250;
 const SEARCH_PATH = "/api/registry/search";

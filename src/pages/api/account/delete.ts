@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { AccountApiErrorCode } from "@/lib/copy/account";
 import { clearMedicationDrafts } from "@/lib/medication-draft";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
 
@@ -83,18 +84,22 @@ export const POST: APIRoute = async (context) => {
   const signIn = await supabase.auth.signInWithPassword({ email: user.email, password: parsed.data.password });
   if (signIn.error) {
     // Only code and status: never the password nor the address.
-    console.error("Account deletion: password check failed", { code: signIn.error.code, status: signIn.error.status });
+    reportError("account.delete-password-check", {
+      code: signIn.error.code,
+      status: signIn.error.status,
+      route: context.routePattern,
+    });
     return redirect(errorLocation(signInErrorKey(signIn.error.code, signIn.error.status)));
   }
   if (signIn.data.user.id !== user.id) {
-    console.error("Account deletion: signed-in account differs from the session", { code: "user_mismatch" });
+    reportError("account.delete-user-mismatch", { code: "user_mismatch", route: context.routePattern });
     return redirect(errorLocation(GENERIC));
   }
 
   // One call deletes the auth.users row; the existing cascade removes every row of the account.
   const { error } = await supabase.rpc("delete_own_account");
   if (error) {
-    console.error("Account deletion failed", { code: error.code });
+    reportError("account.delete", { code: error.code, route: context.routePattern });
     return redirect(errorLocation(Object.hasOwn(DB_ERROR_CODES, error.code) ? DB_ERROR_CODES[error.code] : GENERIC));
   }
 
@@ -103,15 +108,14 @@ export const POST: APIRoute = async (context) => {
   try {
     const { error: signOutError } = await supabase.auth.signOut();
     if (signOutError) {
-      console.error("Account deletion: sign-out after deletion failed", {
+      reportError("account.delete-sign-out", {
         code: signOutError.code,
         status: signOutError.status,
+        route: context.routePattern,
       });
     }
   } catch (thrown) {
-    console.error("Account deletion: sign-out after deletion threw", {
-      name: thrown instanceof Error ? thrown.name : typeof thrown,
-    });
+    reportError("account.delete-sign-out-threw", { error: thrown, route: context.routePattern });
   }
   for (const name of sessionCookieNames(context)) {
     context.cookies.delete(name, { path: "/" });

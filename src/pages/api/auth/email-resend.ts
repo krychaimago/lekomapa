@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
 
@@ -27,7 +28,7 @@ export const POST: APIRoute = async (context) => {
   });
   if (error) {
     // Never log the address.
-    console.error("Confirmation resend failed", { code: error.code, status: error.status });
+    reportError("auth.email-resend", { code: error.code, status: error.status, route: context.routePattern });
   }
 
   return context.redirect(CHECK_INBOX_PATH);

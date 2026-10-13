@@ -24,6 +24,7 @@ import {
 } from "@/lib/services/medications";
 import { likeLiteral, searchRegistryNames } from "@/lib/services/registry-search";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import type { RegistryProduct, RegistryVariantOption } from "@/types";
 
 type VariantRow = Pick<RegistryProduct, "id" | "product_name" | "strength" | "pharmaceutical_form"> & {
@@ -63,7 +64,7 @@ if (supabase && requestedVariant) {
     .overrideTypes<Pick<RegistryProduct, "product_name">, { merge: false }>();
   if (productError) {
     loadFailed = true;
-    console.error("Reading a registry product failed", { code: productError.code });
+    reportError("registry.read-product", { code: productError.code, route: Astro.routePattern });
   } else if (data) {
     name = data.product_name;
   } else {
@@ -95,7 +96,7 @@ if (supabase && name && !loadFailed) {
     .overrideTypes<VariantRow[], { merge: false }>();
   if (variantsError) {
     loadFailed = true;
-    console.error("Reading registry variants failed", { code: variantsError.code });
+    reportError("registry.read-variants", { code: variantsError.code, route: Astro.routePattern });
   } else {
     variants = data
       .map((row) => ({

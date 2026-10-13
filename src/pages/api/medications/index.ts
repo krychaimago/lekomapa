@@ -1,6 +1,7 @@
 import type { APIRoute, AstroCookies } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 import { MEDICATION_COPY, type MedicationApiErrorCode } from "@/lib/copy/medications";
 import { clearMedicationDrafts, writeLeafletDraft } from "@/lib/medication-draft";
 import { todayInWarsaw } from "@/lib/services/medications";
@@ -178,7 +179,7 @@ export const POST: APIRoute = async (context) => {
       .not("atc_code", "is", null)
       .limit(1);
     if (match.error) {
-      console.error("Matching a leaflet substance failed", { code: match.error.code });
+      reportError("medications.create-leaflet-match", { code: match.error.code, route: context.routePattern });
       return redirect(errorRedirect(GENERIC, form, draft));
     }
     const verified = match.data.length > 0;
@@ -200,7 +201,11 @@ export const POST: APIRoute = async (context) => {
   const { error } = response;
   if (error) {
     // Only the code: the message may carry the product id or the substance, and the details the dose.
-    console.error("Adding a medication failed", { source: command.source, code: error.code });
+    if (command.source === "registry") {
+      reportError("medications.create-registry", { code: error.code, route: context.routePattern });
+    } else {
+      reportError("medications.create-leaflet", { code: error.code, route: context.routePattern });
+    }
     return redirect(
       errorRedirect(
         command.source === "registry" && Object.hasOwn(DB_ERROR_CODES, error.code)
@@ -214,7 +219,11 @@ export const POST: APIRoute = async (context) => {
 
   const medicationId = z.uuid().safeParse(response.data as unknown);
   if (!medicationId.success) {
-    console.error("Adding a medication returned no id", { source: command.source });
+    if (command.source === "registry") {
+      reportError("medications.create-registry-no-id", { route: context.routePattern });
+    } else {
+      reportError("medications.create-leaflet-no-id", { route: context.routePattern });
+    }
     return redirect(errorRedirect(GENERIC, form, draft));
   }
 

@@ -1,11 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import {
-  MAX_SUGGESTIONS,
-  SUGGESTION_QUERY_MAX,
-  SUGGESTION_QUERY_MIN,
-  searchRegistryNames,
-} from "@/lib/services/registry-search";
+import { MAX_SUGGESTIONS, SUGGESTION_QUERY_MAX, SUGGESTION_QUERY_MIN } from "@/lib/registry-suggestions";
+import { searchRegistryNames } from "@/lib/services/registry-search";
 import { createClient } from "@/lib/supabase";
 
 export const prerender = false;

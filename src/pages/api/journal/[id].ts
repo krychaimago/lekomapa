@@ -11,6 +11,7 @@ import {
   toErrorCode,
 } from "@/lib/services/journal-api";
 import { createClient } from "@/lib/supabase";
+import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
 
@@ -97,7 +98,7 @@ export const POST: APIRoute = async (context) => {
 
   if (error) {
     // Only the code: the details may carry the symptoms or the note.
-    console.error("Correcting a journal entry failed", { code: error.code });
+    reportError("journal.correct", { code: error.code, route: context.routePattern });
     if (Object.hasOwn(DB_ERROR_CODES, error.code)) {
       const key = DB_ERROR_CODES[error.code];
       return json({ error: key }, statusOf(key));
@@ -106,7 +107,7 @@ export const POST: APIRoute = async (context) => {
   }
 
   if (typeof data !== "string") {
-    console.error("Correcting a journal entry returned no id");
+    reportError("journal.correct-no-id", { route: context.routePattern });
     return json({ error: "unknown" satisfies JournalApiErrorCode }, 500);
   }
 
