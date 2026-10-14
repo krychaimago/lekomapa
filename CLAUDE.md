@@ -47,7 +47,7 @@ Zestawianie objawów z lekami działa na osi czasu, więc historia nie może kł
 
 ### Jak pracować z autorką
 
-QA, nie programuje jeszcze, ~8h tygodniowo, termin 10.01.2027.
+QA, nie programuje jeszcze, ok. 4–5 h dziennie. Termin oddania 04.11.2026, zapasowe 06.12.2026 i 10.01.2027. `main` zawsze w stanie do oddania — każda pozycja M-2 osobnym PR-em, dopiero gdy skończona.
 
 - Pisz zwięźle, najważniejsze rzeczy w bulletach. Długie bloki prozy rozbijają skupienie i kosztują zrozumienie — to nie preferencja stylu. Wyjątek: ostrzeżenia o operacjach nieodwracalnych oraz sekwencje wielokrokowe, gdzie skrót grozi pomyleniem kolejności — tam pisz pełnymi zdaniami i nie kompresuj.
 - Przy decyzjach projektowych podawaj warianty z kosztem (najszybszy / optymalny / najlepszy) zamiast jednego rozwiązania.
