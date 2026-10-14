@@ -170,28 +170,28 @@ Bramka w `npm test`, która pozwala na czerwony przycisk wyłącznie w plikach z
 
 #### Automated
 
-- [x] 1.1 Testy przechodzą (w tym kontrast tokenów i bramka kolorów na sztywno): `npm test`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Lint przechodzi: `npm run lint`
-- [x] 1.4 Build przechodzi: `npm run build`
+- [x] 1.1 Testy przechodzą (w tym kontrast tokenów i bramka kolorów na sztywno): `npm test` — f566304
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — f566304
+- [x] 1.3 Lint przechodzi: `npm run lint` — f566304
+- [x] 1.4 Build przechodzi: `npm run build` — f566304
 
 #### Manual
 
-- [x] 1.5 `/konto` w trybie jasnym i ciemnym: odnośnik „Usuń konto” ma czerwone obramowanie i tekst, po najechaniu jasnoczerwone tło, fokus z klawiatury widoczny
-- [x] 1.6 `/konto/usun` w trybie jasnym i ciemnym: przycisk „Usuń konto” na pełnej czerwieni, tekst czytelny także po najechaniu
-- [x] 1.7 `/konto/usun?error=wrongPassword`: komunikat błędu i czerwony przycisk dają się od siebie odróżnić
-- [x] 1.8 Żaden inny ekran (w tym usuwanie leku) nie zmienił wyglądu
+- [x] 1.5 `/konto` w trybie jasnym i ciemnym: odnośnik „Usuń konto” ma czerwone obramowanie i tekst, po najechaniu jasnoczerwone tło, fokus z klawiatury widoczny — f566304
+- [x] 1.6 `/konto/usun` w trybie jasnym i ciemnym: przycisk „Usuń konto” na pełnej czerwieni, tekst czytelny także po najechaniu — f566304
+- [x] 1.7 `/konto/usun?error=wrongPassword`: komunikat błędu i czerwony przycisk dają się od siebie odróżnić — f566304
+- [x] 1.8 Żaden inny ekran (w tym usuwanie leku) nie zmienił wyglądu — f566304
 
 ### Phase 2: Test pilnujący wyjątku
 
 #### Automated
 
-- [ ] 2.1 Nowy test przechodzi w `npm test`
-- [ ] 2.2 Test pada, gdy do `src/pages/leki/[id]/usun.astro` wpisać `variant: "destructive"` (sprawdzone ręcznie i cofnięte)
-- [ ] 2.3 Test pada, gdy na `src/pages/konto/usun.astro` wrócić do `variant: "outline"` (sprawdzone ręcznie i cofnięte)
-- [ ] 2.4 Typy przechodzą: `npm run typecheck`
-- [ ] 2.5 Lint przechodzi: `npm run lint`
+- [x] 2.1 Nowy test przechodzi w `npm test`
+- [x] 2.2 Test pada, gdy do `src/pages/leki/[id]/usun.astro` wpisać `variant: "destructive"` (sprawdzone ręcznie i cofnięte)
+- [x] 2.3 Test pada, gdy na `src/pages/konto/usun.astro` wrócić do `variant: "outline"` (sprawdzone ręcznie i cofnięte)
+- [x] 2.4 Typy przechodzą: `npm run typecheck`
+- [x] 2.5 Lint przechodzi: `npm run lint`
 
 #### Manual
 
-- [ ] 2.6 Komunikat porażki testu jest zrozumiały bez czytania kodu testu (autorka czyta jeden z wywołanych celowo komunikatów)
+- [x] 2.6 Komunikat porażki testu jest zrozumiały bez czytania kodu testu (autorka czyta jeden z wywołanych celowo komunikatów)
