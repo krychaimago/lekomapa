@@ -177,6 +177,14 @@ Funkcja składająca zgłoszenie z listy dozwolonych pól, wysyłka do Sentry i 
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase. Phase blocks use plain bullets — the corresponding `- [ ]` checkboxes for these items live in the `## Progress` section at the bottom of the plan.
 
+### Aneks po wdrożeniu (14.10.2026)
+
+Odstępstwa od kontraktu powyżej, przyjęte w impl-review (F4):
+
+- Zdarzenie ma `platform: "node"`; `exception.values[0].stacktrace` jest pomijane, gdy nie ma żadnej ramki — Sentry odrzucał pustą listę `frames` (commit 8f5b2b6, `verification.md`).
+- `tags.code` przechodzi tylko przy wzorcu `^[\w.-]{1,64}$`, inaczej `"invalid"` — ochrona przed treścią błędu przekazaną omyłkowo jako kod (impl-review F2).
+- `src/lib/observability/exceeded-cpu.ts` woła `console.error` wprost: zadanie 1102 działa poza Astro, a `report.ts` importuje `astro:env`. To drugie, obok `report.ts`, dozwolone miejsce `console.error`.
+
 ---
 
 ## Phase 2: Podmiana console.error na reportError
@@ -607,23 +615,23 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 #### Automated
 
 - [x] 5.1 Pełny zestaw testów, typy, lint i build przechodzą — 181e62b
-- [ ] 5.2 Migracja health_ping widoczna lokalnie i zdalnie
-- [ ] 5.3 Produkcyjne /api/health zwraca status ok
+- [x] 5.2 Migracja health_ping widoczna lokalnie i zdalnie — bc200a7
+- [x] 5.3 Produkcyjne /api/health zwraca status ok — bc200a7
 
 #### Manual
 
-- [ ] 5.4 Strona prywatności wymienia Sentry przed ustawieniem DSN
-- [ ] 5.5 Organizacja Sentry w EU z ochroną danych
-- [ ] 5.6 JSON prawdziwego zgłoszenia bez danych o zdrowiu
-- [ ] 5.7 Check-in ok z produkcji w Sentry Crons
-- [ ] 5.8 Monitor dostępności ustawiony i mail przychodzi
-- [ ] 5.9 Reguła maili dla nowych i powracających zgłoszeń
-- [ ] 5.10 Narzut CPU zmierzony i zapisany
+- [x] 5.4 Strona prywatności wymienia Sentry przed ustawieniem DSN — bc200a7
+- [x] 5.5 Organizacja Sentry w EU z ochroną danych — bc200a7
+- [x] 5.6 JSON prawdziwego zgłoszenia bez danych o zdrowiu — bc200a7
+- [x] 5.7 Check-in ok z produkcji w Sentry Crons — bc200a7
+- [x] 5.8 Monitor dostępności ustawiony i mail przychodzi — bc200a7
+- [x] 5.9 Reguła maili dla nowych i powracających zgłoszeń — bc200a7
+- [x] 5.10 Narzut CPU zmierzony i zapisany — bc200a7
 
 ### Phase 6: Pomiar szybkości
 
 #### Manual
 
-- [ ] 6.1 LCP /leki zmierzony i zapisany
-- [ ] 6.2 LCP /dzienniczek/nowy zmierzony i zapisany
-- [ ] 6.3 Przekroczenie progu dopisane do roadmapy
+- [x] 6.1 LCP /leki zmierzony i zapisany — d6f8e34
+- [x] 6.2 LCP /dzienniczek/nowy zmierzony i zapisany — d6f8e34
+- [x] 6.3 Przekroczenie progu dopisane do roadmapy — d6f8e34

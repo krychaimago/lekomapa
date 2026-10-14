@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
@@ -26,8 +27,8 @@ export const POST: APIRoute = async (context) => {
     email: parsed.data.email,
     options: { emailRedirectTo: `${context.url.origin}/auth/confirm` },
   });
-  if (error) {
-    // Never log the address.
+  // A rate limit or an invalid address (4xx) is ordinary traffic and is not reported. Never log the address.
+  if (error && (isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500)) {
     reportError("auth.email-resend", { code: error.code, status: error.status, route: context.routePattern });
   }
 

@@ -5,6 +5,8 @@ import { SUPABASE_URL, SUPABASE_KEY } from "astro:env/server";
 export const prerender = false;
 
 const HEADERS = { "content-type": "application/json", "cache-control": "no-store" };
+// Shorter than the monitor's 5 s, so a hung database gives a clear 503 instead of a timeout.
+const DATABASE_TIMEOUT_MS = 3000;
 
 function answer(status: 200 | 503): Response {
   return new Response(JSON.stringify({ status: status === 200 ? "ok" : "unavailable" }), { status, headers: HEADERS });
@@ -24,7 +26,9 @@ export const GET: APIRoute = async () => {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
     // Untyped client, so `data` is unknown here; only the exact constant counts as an answer from the database.
-    const response: { data: unknown; error: unknown } = await supabase.rpc("health_ping");
+    const response: { data: unknown; error: unknown } = await supabase
+      .rpc("health_ping")
+      .abortSignal(AbortSignal.timeout(DATABASE_TIMEOUT_MS));
     return answer(!response.error && response.data === 1 ? 200 : 503);
   } catch {
     return answer(503);

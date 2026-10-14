@@ -21,10 +21,11 @@ export default defineConfig({
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       // No value means the error is only logged, never a failure.
       SENTRY_DSN: envField.string({ context: "server", access: "secret", optional: true }),
-      // Production sets nothing; the developer machine sets "local" in .dev.vars.
+      // Production sets nothing; the developer machine sets "local" in .dev.vars. Secret, so it is read at runtime like
+      // the cron task reads it, never baked into the bundle by the build.
       SENTRY_ENVIRONMENT: envField.string({
         context: "server",
-        access: "public",
+        access: "secret",
         optional: true,
         default: "production",
       }),
