@@ -186,12 +186,12 @@ Bramka w `npm test`, która pozwala na czerwony przycisk wyłącznie w plikach z
 
 #### Automated
 
-- [x] 2.1 Nowy test przechodzi w `npm test`
-- [x] 2.2 Test pada, gdy do `src/pages/leki/[id]/usun.astro` wpisać `variant: "destructive"` (sprawdzone ręcznie i cofnięte)
-- [x] 2.3 Test pada, gdy na `src/pages/konto/usun.astro` wrócić do `variant: "outline"` (sprawdzone ręcznie i cofnięte)
-- [x] 2.4 Typy przechodzą: `npm run typecheck`
-- [x] 2.5 Lint przechodzi: `npm run lint`
+- [x] 2.1 Nowy test przechodzi w `npm test` — cac9dad
+- [x] 2.2 Test pada, gdy do `src/pages/leki/[id]/usun.astro` wpisać `variant: "destructive"` (sprawdzone ręcznie i cofnięte) — cac9dad
+- [x] 2.3 Test pada, gdy na `src/pages/konto/usun.astro` wrócić do `variant: "outline"` (sprawdzone ręcznie i cofnięte) — cac9dad
+- [x] 2.4 Typy przechodzą: `npm run typecheck` — cac9dad
+- [x] 2.5 Lint przechodzi: `npm run lint` — cac9dad
 
 #### Manual
 
-- [x] 2.6 Komunikat porażki testu jest zrozumiały bez czytania kodu testu (autorka czyta jeden z wywołanych celowo komunikatów)
+- [x] 2.6 Komunikat porażki testu jest zrozumiały bez czytania kodu testu (autorka czyta jeden z wywołanych celowo komunikatów) — cac9dad
