@@ -615,18 +615,18 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 #### Automated
 
 - [x] 5.1 Pełny zestaw testów, typy, lint i build przechodzą — 181e62b
-- [x] 5.2 Migracja health_ping widoczna lokalnie i zdalnie
-- [x] 5.3 Produkcyjne /api/health zwraca status ok
+- [x] 5.2 Migracja health_ping widoczna lokalnie i zdalnie — bc200a7
+- [x] 5.3 Produkcyjne /api/health zwraca status ok — bc200a7
 
 #### Manual
 
-- [x] 5.4 Strona prywatności wymienia Sentry przed ustawieniem DSN
-- [x] 5.5 Organizacja Sentry w EU z ochroną danych
-- [x] 5.6 JSON prawdziwego zgłoszenia bez danych o zdrowiu
-- [x] 5.7 Check-in ok z produkcji w Sentry Crons
-- [x] 5.8 Monitor dostępności ustawiony i mail przychodzi
-- [x] 5.9 Reguła maili dla nowych i powracających zgłoszeń
-- [x] 5.10 Narzut CPU zmierzony i zapisany
+- [x] 5.4 Strona prywatności wymienia Sentry przed ustawieniem DSN — bc200a7
+- [x] 5.5 Organizacja Sentry w EU z ochroną danych — bc200a7
+- [x] 5.6 JSON prawdziwego zgłoszenia bez danych o zdrowiu — bc200a7
+- [x] 5.7 Check-in ok z produkcji w Sentry Crons — bc200a7
+- [x] 5.8 Monitor dostępności ustawiony i mail przychodzi — bc200a7
+- [x] 5.9 Reguła maili dla nowych i powracających zgłoszeń — bc200a7
+- [x] 5.10 Narzut CPU zmierzony i zapisany — bc200a7
 
 ### Phase 6: Pomiar szybkości
 
