@@ -1,7 +1,7 @@
 ---
 change_id: delete-account-button-emphasis
 title: Delete account button emphasis
-status: implemented
+status: impl_reviewed
 created: 2026-10-14
 updated: 2026-10-14
 archived_at: null

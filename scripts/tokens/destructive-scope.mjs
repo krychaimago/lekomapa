@@ -6,6 +6,9 @@
 //
 // Error messages keep their tokens and are not matched: text-destructive, bg-destructive-surface,
 // border-destructive-border, aria-invalid:border-destructive, and border-destructive on an invalid input.
+// Known limit: a red outline written by hand (border-destructive text-destructive) is not caught, because the
+// same classes mark error messages and invalid inputs. Use buttonVariants for every button; the rule in CLAUDE.md
+// covers the hand-written case.
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -27,8 +30,9 @@ export const ACCOUNT_ACTION_SCREENS = [
 
 export const ALLOWED_FILES = new Set([...VARIANT_DEFINITIONS, ...ACCOUNT_ACTION_SCREENS.map((screen) => screen.path)]);
 
-// variant: "destructive", variant="destructive-outline", variant={"destructive"}.
-const VARIANT_PICK = /\bvariant\s*[:=]\s*\{?\s*["'`](destructive(?:-outline)?)["'`]/g;
+// Any quoted "destructive" or "destructive-outline", so a variant picked in a condition
+// (variant: cond ? "destructive" : "outline") or held in a const is caught too.
+const VARIANT_PICK = /["'`](destructive(?:-outline)?)["'`]/g;
 // bg-destructive and its state forms (hover:bg-destructive/90), never bg-destructive-surface.
 const FULL_RED_CLASS = /(?<![\w-])(?:[\w[\]&*=-]+:)*bg-destructive(?:\/(?:\d+|\[[^\]\s]+\]))?(?![\w-])/g;
 

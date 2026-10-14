@@ -20,12 +20,15 @@ const matches = (content) => findRedButtons(content).map((redButton) => redButto
 
 test("every way of picking a red button is detected", () => {
   const samples = [
-    ['buttonVariants({ variant: "destructive" })', 'variant: "destructive"', "destructive"],
-    ['buttonVariants({ variant: "destructive-outline" })', 'variant: "destructive-outline"', "destructive-outline"],
-    ["buttonVariants({ variant: 'destructive' })", "variant: 'destructive'", "destructive"],
-    ['<Button variant="destructive">', 'variant="destructive"', "destructive"],
-    ['<Button variant={"destructive-outline"}>', 'variant={"destructive-outline"', "destructive-outline"],
-    ['<Badge variant = "destructive">', 'variant = "destructive"', "destructive"],
+    ['buttonVariants({ variant: "destructive" })', '"destructive"', "destructive"],
+    ['buttonVariants({ variant: "destructive-outline" })', '"destructive-outline"', "destructive-outline"],
+    ["buttonVariants({ variant: 'destructive' })", "'destructive'", "destructive"],
+    ['<Button variant="destructive">', '"destructive"', "destructive"],
+    ['<Button variant={"destructive-outline"}>', '"destructive-outline"', "destructive-outline"],
+    ['<Badge variant = "destructive">', '"destructive"', "destructive"],
+    // A variant picked in a condition.
+    ['buttonVariants({ variant: cond ? "destructive" : "outline" })', '"destructive"', "destructive"],
+    ['<Button variant={x ? "destructive" : "ghost"}>', '"destructive"', "destructive"],
     ['<button class="bg-destructive text-destructive-foreground">', "bg-destructive", null],
     ['<a class="rounded-lg hover:bg-destructive/90">', "hover:bg-destructive/90", null],
   ];
@@ -59,11 +62,11 @@ test("error message tokens and other variants are not red buttons", () => {
 
 test("red buttons carry their line number", () => {
   assert.deepEqual(findRedButtons('<div>\n  <Button variant="destructive">\n</div>'), [
-    { line: 2, match: 'variant="destructive"', variant: "destructive" },
+    { line: 2, match: '"destructive"', variant: "destructive" },
   ]);
   assert.equal(
-    formatRedButton({ file: "src/x.astro", line: 2, match: 'variant="destructive"' }),
-    'src/x.astro:2  variant="destructive"',
+    formatRedButton({ file: "src/x.astro", line: 2, match: '"destructive"' }),
+    'src/x.astro:2  "destructive"',
   );
 });
 
