@@ -624,6 +624,6 @@ Jednorazowy pomiar progu LCP ≤ 2,5 s z PRD na dwóch ekranach należących do 
 
 #### Manual
 
-- [ ] 6.1 LCP /leki zmierzony i zapisany
-- [ ] 6.2 LCP /dzienniczek/nowy zmierzony i zapisany
-- [ ] 6.3 Przekroczenie progu dopisane do roadmapy
+- [x] 6.1 LCP /leki zmierzony i zapisany
+- [x] 6.2 LCP /dzienniczek/nowy zmierzony i zapisany
+- [x] 6.3 Przekroczenie progu dopisane do roadmapy
