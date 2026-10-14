@@ -177,6 +177,14 @@ Funkcja składająca zgłoszenie z listy dozwolonych pól, wysyłka do Sentry i 
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase. Phase blocks use plain bullets — the corresponding `- [ ]` checkboxes for these items live in the `## Progress` section at the bottom of the plan.
 
+### Aneks po wdrożeniu (14.10.2026)
+
+Odstępstwa od kontraktu powyżej, przyjęte w impl-review (F4):
+
+- Zdarzenie ma `platform: "node"`; `exception.values[0].stacktrace` jest pomijane, gdy nie ma żadnej ramki — Sentry odrzucał pustą listę `frames` (commit 8f5b2b6, `verification.md`).
+- `tags.code` przechodzi tylko przy wzorcu `^[\w.-]{1,64}$`, inaczej `"invalid"` — ochrona przed treścią błędu przekazaną omyłkowo jako kod (impl-review F2).
+- `src/lib/observability/exceeded-cpu.ts` woła `console.error` wprost: zadanie 1102 działa poza Astro, a `report.ts` importuje `astro:env`. To drugie, obok `report.ts`, dozwolone miejsce `console.error`.
+
 ---
 
 ## Phase 2: Podmiana console.error na reportError

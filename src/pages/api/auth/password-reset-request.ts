@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { reportError } from "@/lib/observability/report";
 import type { ApiErrorCode } from "@/lib/copy/password-recovery";
 
@@ -33,8 +34,8 @@ export const POST: APIRoute = async (context) => {
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${context.url.origin}/auth/reset-password/confirm`,
   });
-  if (error) {
-    // Never log the address.
+  // A rate limit or an invalid address (4xx) is ordinary traffic and is not reported. Never log the address.
+  if (error && (isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500)) {
     reportError("auth.password-reset-request", { code: error.code, status: error.status, route: context.routePattern });
   }
 

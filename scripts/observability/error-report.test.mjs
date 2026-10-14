@@ -96,6 +96,19 @@ describe("buildErrorEvent and buildEnvelope", () => {
     });
   });
 
+  test("message text left in the stack after the message changed does not become a file name", () => {
+    const error = errorWithStack(
+      new Error("x"),
+      "Error: Ibuprofen 400 mg\n    at Ibuprofen 400 mg\n    at handler (400 mg:1:1)",
+    );
+    const event = build({ error });
+    assert.deepEqual(
+      event.exception.values[0].stacktrace.frames.map((frame) => frame.filename),
+      ["?", "?"],
+    );
+    assert.ok(!JSON.stringify(event).includes("400 mg"));
+  });
+
   test("the event has exactly the allowed keys at the top level, in tags and in every frame", () => {
     const { plain } = leakyErrors();
     const event = build({ error: plain });
@@ -158,6 +171,12 @@ describe("buildErrorEvent and buildEnvelope", () => {
     const onJournal = build({ error: new TypeError("a"), route: "/dzienniczek" });
     assert.deepEqual(onList.fingerprint, ["medications.create", "42501", "TypeError", "/leki"]);
     assert.notDeepEqual(onList.fingerprint, onJournal.fingerprint);
+  });
+
+  test("a code that is not a short token goes out as a fixed value", () => {
+    const event = build({ code: "Ibuprofen 400 mg" });
+    assert.equal(event.tags.code, "invalid");
+    assert.ok(!JSON.stringify(event).includes("Ibuprofen"));
   });
 
   test("a numeric status code lands in tags.code and in the fingerprint", () => {

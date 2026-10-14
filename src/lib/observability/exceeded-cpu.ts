@@ -13,6 +13,7 @@ import type { SentryDsn, SentryEnvelope } from "./error-report.ts";
 export const SCRIPT_NAME = "lekomapa";
 export const MONITOR_SLUG = "exceeded-cpu-check";
 export const GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql";
+const QUERY_TIMEOUT_MS = 10_000;
 
 const WINDOW_MS = 15 * 60 * 1000;
 // Cloudflare statistics reach the API a few minutes late, so the window ends this long before the scheduled time.
@@ -183,6 +184,7 @@ async function queryStatistics(
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
       body: JSON.stringify(buildQuery(accountId, SCRIPT_NAME, window)),
+      signal: AbortSignal.timeout(QUERY_TIMEOUT_MS),
     });
     let body: unknown = null;
     try {

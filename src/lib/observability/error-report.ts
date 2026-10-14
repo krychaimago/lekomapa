@@ -53,9 +53,17 @@ export interface ErrorEventInput {
 const NON_ERROR_TYPE = "NonError";
 const REDACTED = "redacted";
 const MAX_FRAMES = 50;
+const SEND_TIMEOUT_MS = 10_000;
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 // V8 function names in a stack: identifiers joined by dots, plus `<anonymous>`, `new `, `async ` and `[as x]`.
 const FRAME_FUNCTION = /^[\w$.<> [\]]+$/;
+// A location is a URL or path (`https://…/chunks/x.mjs`, `node:internal/…`, `<anonymous>`). A space or other text means
+// the line was not a real frame, for example message text left in the stack after the message changed.
+const FRAME_FILENAME = /^[\w./:@<>-]+$/;
+// A code is a short token (`42501`, `P0001`, `over_email_send_rate_limit`, `1102`). Anything else, such as an error
+// message passed by mistake, could carry a medication name, so it goes out as a fixed value.
+const CODE = /^[\w.-]{1,64}$/;
+const INVALID_CODE = "invalid";
 
 // The class name only when it is a plain identifier. `error.name` is never read: any code can set it to any text.
 export function errorType(error: unknown): string {
@@ -112,7 +120,7 @@ function stackFrames(error: unknown): SentryFrame[] {
     const functionName = withFunction ? withFunction[1] : "";
     const location = parseLocation(withFunction ? withFunction[2] : body);
     frames.push({
-      filename: location.filename,
+      filename: FRAME_FILENAME.test(location.filename) ? location.filename : "?",
       function: functionName && FRAME_FUNCTION.test(functionName) ? functionName : "?",
       ...(location.lineno === undefined ? {} : { lineno: location.lineno }),
       ...(location.colno === undefined ? {} : { colno: location.colno }),
@@ -127,7 +135,8 @@ function stackFrames(error: unknown): SentryFrame[] {
 
 export function buildErrorEvent(input: ErrorEventInput): SentryEvent {
   const type = errorType(input.error);
-  const code = input.code === undefined ? "" : String(input.code);
+  const rawCode = input.code === undefined ? "" : String(input.code);
+  const code = rawCode === "" || CODE.test(rawCode) ? rawCode : INVALID_CODE;
   const route = input.route ?? "";
   const frames = stackFrames(input.error);
   return {
@@ -183,7 +192,12 @@ export function buildEnvelope(event: SentryEvent, dsn: SentryDsn): SentryEnvelop
 // Never rejects: a failed report ends with a warning that names no content, and the response is not affected.
 export async function sendEvent(envelope: SentryEnvelope, fetchImpl: typeof fetch): Promise<void> {
   try {
-    const response = await fetchImpl(envelope.url, { method: "POST", headers: envelope.headers, body: envelope.body });
+    const response = await fetchImpl(envelope.url, {
+      method: "POST",
+      headers: envelope.headers,
+      body: envelope.body,
+      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+    });
     if (!response.ok) {
       console.warn("Sentry report not accepted", { status: response.status });
     }

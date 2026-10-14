@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { AccountApiErrorCode } from "@/lib/copy/account";
 import { clearMedicationDrafts } from "@/lib/medication-draft";
 import { createClient } from "@/lib/supabase";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { reportError } from "@/lib/observability/report";
 
 export const prerender = false;
@@ -83,12 +84,15 @@ export const POST: APIRoute = async (context) => {
   // Supabase counts the attempts and applies its own rate limit. A wrong password leaves the current session as is.
   const signIn = await supabase.auth.signInWithPassword({ email: user.email, password: parsed.data.password });
   if (signIn.error) {
+    // A wrong password or a rate limit (4xx) is ordinary traffic and is not reported.
     // Only code and status: never the password nor the address.
-    reportError("account.delete-password-check", {
-      code: signIn.error.code,
-      status: signIn.error.status,
-      route: context.routePattern,
-    });
+    if (isAuthRetryableFetchError(signIn.error) || (signIn.error.status ?? 0) >= 500) {
+      reportError("account.delete-password-check", {
+        code: signIn.error.code,
+        status: signIn.error.status,
+        route: context.routePattern,
+      });
+    }
     return redirect(errorLocation(signInErrorKey(signIn.error.code, signIn.error.status)));
   }
   if (signIn.data.user.id !== user.id) {
