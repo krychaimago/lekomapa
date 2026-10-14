@@ -1,10 +1,10 @@
 ---
 change_id: production-observability
 title: Production observability
-status: impl_reviewed
+status: archived
 created: 2026-10-13
 updated: 2026-10-14
-archived_at: null
+archived_at: 2026-10-14T19:08:12Z
 ---
 
 ## Notes
