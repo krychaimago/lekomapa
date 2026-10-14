@@ -29,6 +29,8 @@
   --accent-foreground: #1e241f;
   --accent-border: #b9d0c0;
   /* destructive*: form and technical errors only, never health content.
+     One exception: the button of an irreversible account action (today only deleting the account, /konto and
+     /konto/usun); full red only on the button that performs it. Guarded by scripts/tokens/destructive-scope.test.mjs.
      A possible interaction has its own amber interaction* role. */
   --destructive: #7f2a22;
   --destructive-foreground: #ffffff;

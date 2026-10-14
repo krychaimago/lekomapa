@@ -53,10 +53,14 @@ const cardClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p
     <section class:list={cardClass}>
       <h2 class="text-xl font-semibold">{copy.deleteHeading}</h2>
       <p>{copy.deleteIntro}</p>
-      {/* Outline, not destructive: destructive tokens are for form and technical errors only. */}
+      {/* Red outline, not full red: this link only leads to the confirmation. Deleting the account is the one
+          exception to "destructive* for errors only" (CLAUDE.md, Konwencje kodu). */}
       <a
         href="/konto/usun"
-        class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto sm:self-start")}
+        class:list={cn(
+          buttonVariants({ variant: "destructive-outline" }),
+          "w-full rounded-lg text-base sm:w-auto sm:self-start",
+        )}
       >
         {copy.deleteLink}
       </a>

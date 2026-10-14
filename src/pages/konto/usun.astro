@@ -61,10 +61,11 @@ const cardClass = "flex flex-col gap-3 rounded-xl border border-border bg-card p
           </p>
         </div>
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-          {/* Outline, not destructive: destructive tokens are for form and technical errors only. */}
+          {/* Full red only here: this click deletes the account for good. Deleting the account is the one exception
+              to "destructive* for errors only" (CLAUDE.md, Konwencje kodu). */}
           <button
             type="submit"
-            class:list={cn(buttonVariants({ variant: "outline" }), "w-full rounded-lg text-base sm:w-auto")}
+            class:list={cn(buttonVariants({ variant: "destructive" }), "w-full rounded-lg text-base sm:w-auto")}
           >
             {copy.submit}
           </button>
