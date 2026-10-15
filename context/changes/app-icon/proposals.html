@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propozycje znaku lekomapy</title>
+<style>
+  /* Colors copied from src/styles/global.css (light and dark blocks) and typical browser tab bars. */
+  :root {
+    --page: #f7f8f4; --ink: #1e241f; --muted: #4a524c;
+    --primary-l: #2c4a33; --primary-fg-l: #ffffff;
+    --primary-d: #b4d6bc; --primary-fg-d: #13201a;
+    --sidebar-l: #cfc9b4; --sidebar-fg-l: #1e241f;
+    --sidebar-d: #38342a; --sidebar-fg-d: #ede8d8;
+    --tabbar-l: #dee1e6; --tab-l: #ffffff; --tabtext-l: #1f1f1f;
+    --tabbar-d: #202124; --tab-d: #35363a; --tabtext-d: #e8eaed;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--page); color: var(--ink);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 22px; margin: 0 0 4px; }
+  h3 { font-size: 15px; margin: 16px 0 8px; color: var(--muted); font-weight: 600; }
+  .intro { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+  .proposal { background: #fff; border: 1px solid #d9dcd5; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .about { margin: 0 0 8px; max-width: 70ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+
+  .tabbar { display: flex; align-items: flex-end; padding: 8px 8px 0; border-radius: 8px 8px 0 0; min-width: 260px; }
+  .tab { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px 8px 0 0; font-size: 13px; }
+  .tabbar.light { background: var(--tabbar-l); } .tabbar.light .tab { background: var(--tab-l); color: var(--tabtext-l); }
+  .tabbar.dark { background: var(--tabbar-d); } .tabbar.dark .tab { background: var(--tab-d); color: var(--tabtext-d); }
+  .tab .other { opacity: .6; }
+  .size-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .phone { width: 260px; padding: 28px 20px; border-radius: 28px;
+           background: linear-gradient(160deg, #6d7f9a, #b59a86); display: flex; gap: 24px; }
+  .phone.dark { background: linear-gradient(160deg, #1d2430, #3b2f2a); }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #fff; font-size: 12px;
+         text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+  .app svg { width: 64px; height: 64px; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+
+  .sidebar { width: 260px; padding: 24px; border-radius: 8px; }
+  .sidebar.light { background: var(--sidebar-l); color: var(--sidebar-fg-l); }
+  .sidebar.dark { background: var(--sidebar-d); color: var(--sidebar-fg-d); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .brand.big { font-size: 24px; } .brand.small { font-size: 20px; }
+  .brand svg { width: 1.25em; height: 1.25em; border-radius: .25em; flex-shrink: 0; }
+  .nav { margin-top: 20px; font-size: 15px; display: grid; gap: 10px; }
+
+  .large { display: flex; gap: 16px; align-items: flex-end; }
+  .large svg { border-radius: 22%; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Propozycje znaku lekomapy</h1>
+  <p class="intro">
+    Druga runda: trzy nowe znaki, każdy pokazany tam, gdzie będzie widoczny: w karcie przeglądarki (16 i 32 px, jasny i ciemny pasek kart),
+    na ekranie telefonu i obok nazwy na pasku bocznym w trybie jasnym i ciemnym. Ikona w karcie i na telefonie ma stałe
+    kolory — jasny znak na ciemnozielonym kwadracie. Znak obok nazwy bierze kolory z trybu aplikacji.
+  </p>
+  <div id="proposals"></div>
+</main>
+
+<script>
+  // Each mark is drawn in a 24x24 box with a single fill and the even-odd rule, so holes are part of the shape.
+  // Phase 2 copies the chosen paths into src/lib/brand-mark.ts unchanged.
+  // Round 2 (15.10.2026): A, B and C rejected — A's capsule read as a head at small sizes, C pointed to travel.
+  const MARKS = [
+    {
+      id: "D",
+      name: "Kapsułka dwuczęściowa",
+      about: "Poprawiona B: grubsza kapsułka, obie połówki rozdzielone szczeliną, jedna pełna, druga obrysowana. Wygląda jak prawdziwa kapsułka, a nie jak pasek.",
+      paths: [
+        "M14.758 15.606L11.293 19.071A4.5 4.5 0 0 1 4.929 12.707L8.394 9.242z",
+        "M9.242 8.394L12.707 4.929A4.5 4.5 0 0 1 19.071 11.293L15.606 14.758z",
+        "M11.788 8.394L13.98 6.202A2.7 2.7 0 0 1 17.798 10.02L15.606 12.212z",
+      ],
+    },
+    {
+      id: "E",
+      name: "Tabletka i kapsułka",
+      about: "Okrągła tabletka z rowkiem i mała kapsułka obok. Dwa leki, czyli to, czym lekomapa się zajmuje: kilka leków naraz.",
+      paths: [
+        "M2.536 14.9A5 5 0 0 1 12.464 14.9z",
+        "M2.536 16.1A5 5 0 0 0 12.464 16.1z",
+        "M16.854 11.389L20.389 7.854A3 3 0 0 0 16.146 3.611L12.611 7.146A3 3 0 0 0 16.854 11.389z",
+      ],
+    },
+    {
+      id: "F",
+      name: "Blister",
+      about: "Opakowanie tabletek: pięć pełnych, jedno miejsce puste. Kojarzy się z codziennym przyjmowaniem leków i dzienniczkiem.",
+      paths: [
+        "M5 4h14a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z",
+        "M5 5.8h14a1.2 1.2 0 0 1 1.2 1.2v10a1.2 1.2 0 0 1-1.2 1.2H5a1.2 1.2 0 0 1-1.2-1.2V7A1.2 1.2 0 0 1 5 5.8z",
+        "M5.1 9.5a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0-3.8 0z",
+        "M10.1 9.5a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0-3.8 0z",
+        "M15.1 9.5a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0-3.8 0z",
+        "M5.1 14.5a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0-3.8 0z",
+        "M10.1 14.5a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0-3.8 0z",
+        "M15.1 14.5a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0-3.8 0z",
+        "M16.1 14.5a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0-1.8 0z",
+      ],
+    },
+  ];
+
+  // Round 1 (15.10.2026), rejected by the author; kept so the choice can return to one of them.
+  const ROUND_1 = [
+    {
+      id: "A",
+      name: "Pinezka z kapsułką",
+      about: "Odrzucona: kapsułka w małym rozmiarze nie wygląda jak kapsułka.",
+      paths: [
+        "M12 2a8 8 0 0 0-8 8c0 5.5 8 12 8 12s8-6.5 8-12a8 8 0 0 0-8-8z",
+        "M9.5 7.5h5a2.5 2.5 0 0 1 0 5h-5a2.5 2.5 0 0 1 0-5z",
+      ],
+    },
+    {
+      id: "B",
+      name: "Kapsułka",
+      about: "Najbliżej, ale „tak średnio” — punkt wyjścia dla D.",
+      paths: [
+        "M10.586 19.071L19.071 10.586A4 4 0 0 0 13.414 4.929L4.929 13.414A4 4 0 0 0 10.586 19.071z",
+        "M14.828 12L17.657 9.172A2 2 0 0 0 14.828 6.343L12 9.172z",
+      ],
+    },
+    {
+      id: "C",
+      name: "Złożona mapa",
+      about: "Odrzucona: kojarzy się z inną tematyką aplikacji.",
+      paths: [
+        "M3 6.5L8.5 4.5V18L3 20z",
+        "M9.75 4.5L14.25 6.5V20L9.75 18z",
+        "M15.5 6.5L21 4.5V18L15.5 20z",
+      ],
+    },
+  ];
+
+  // Builds a square tile: background color, mark scaled to `scale` of the tile and centred.
+  function tile(mark, size, bg, fg, scale) {
+    const offset = (24 * (1 - scale)) / 2;
+    // One <path> for all subpaths: the even-odd rule only cuts holes within a single path element.
+    const paths = `<path d="${mark.paths.join(" ")}"/>`;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">` +
+      `<rect width="24" height="24" fill="${bg}"/>` +
+      `<g fill="${fg}" fill-rule="evenodd" transform="translate(${offset} ${offset}) scale(${scale})">${paths}</g></svg>`;
+  }
+
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function tabBar(mark, mode, size) {
+    const icon = tile(mark, size, css("--primary-l"), css("--primary-fg-l"), 0.8);
+    return `<div><div class="tabbar ${mode}"><div class="tab">${icon}<span>Leki · lekomapa</span></div>` +
+      `<div class="tab other" style="background:transparent">Inna karta</div></div>` +
+      `<div class="size-label">${mode === "light" ? "Jasny" : "Ciemny"} pasek kart, ${size} px</div></div>`;
+  }
+
+  function phone(mark, mode) {
+    const icon = tile(mark, 64, css("--primary-l"), css("--primary-fg-l"), 0.64);
+    return `<div><div class="phone ${mode}"><div class="app">${icon}<span>lekomapa</span></div>` +
+      `<div class="app"><svg viewBox="0 0 24 24"><rect width="24" height="24" fill="#e9e4dc"/></svg><span>Notatki</span></div></div>` +
+      `<div class="size-label">Ekran telefonu, ${mode === "light" ? "jasna" : "ciemna"} tapeta</div></div>`;
+  }
+
+  function sidebar(mark, mode) {
+    const suffix = mode === "light" ? "l" : "d";
+    const icon = tile(mark, 24, css(`--primary-${suffix}`), css(`--primary-fg-${suffix}`), 0.72);
+    return `<div><div class="sidebar ${mode}"><div class="brand big">${icon}<span>lekomapa</span></div>` +
+      `<div class="nav"><span>Leki</span><span>Dzienniczek</span><span>Wizyta</span></div></div>` +
+      `<div class="size-label">Pasek boczny, tryb ${mode === "light" ? "jasny" : "ciemny"}</div></div>`;
+  }
+
+  function large(mark) {
+    return `<div class="large">` +
+      tile(mark, 180, css("--primary-l"), css("--primary-fg-l"), 0.64) +
+      tile(mark, 64, css("--primary-l"), css("--primary-fg-l"), 0.8) +
+      tile(mark, 32, css("--primary-l"), css("--primary-fg-l"), 0.8) +
+      tile(mark, 16, css("--primary-l"), css("--primary-fg-l"), 0.8) +
+      `</div><div class="size-label">180, 64, 32 i 16 px</div>`;
+  }
+
+  const section = (mark) => `
+    <section class="proposal">
+      <h2>${mark.id}. ${mark.name}</h2>
+      <p class="about">${mark.about}</p>
+      <h3>Rozmiary</h3>${large(mark)}
+      <h3>Karta przeglądarki</h3>
+      <div class="row">${tabBar(mark, "light", 16)}${tabBar(mark, "dark", 16)}${tabBar(mark, "light", 32)}${tabBar(mark, "dark", 32)}</div>
+      <h3>Ekran telefonu</h3>
+      <div class="row">${phone(mark, "light")}${phone(mark, "dark")}</div>
+      <h3>Obok nazwy</h3>
+      <div class="row">${sidebar(mark, "light")}${sidebar(mark, "dark")}</div>
+    </section>`;
+
+  document.getElementById("proposals").innerHTML =
+    MARKS.map(section).join("") +
+    `<h2 style="margin:40px 0 12px">Runda 1 — odrzucone</h2>` +
+    ROUND_1.map(section).join("");
+</script>
+</body>
+</html>

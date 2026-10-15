@@ -52,19 +52,19 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status   |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | -------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done     |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done     |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | ready    |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | ready    |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | ready    |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | ready    |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked  |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | in-progress |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | ready       |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | ready       |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | ready       |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed    |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed    |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed    |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked     |
 
 ## Streams
 
@@ -154,7 +154,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Miejsca: favicon (dziś `public/favicon.png` ze startera), pasek boczny (dziś sam tekst, `src/layouts/AppLayout.astro:27,60`), ikona na ekranie telefonu (brak `apple-touch-icon` i pliku `manifest`). — Owner: plan. Block: no.
 - **Risk:** Ikona w karcie i na ekranie telefonu ma stały kolor, niezależny od trybu jasnego i ciemnego — to przesądza wybór kolorów znaku. Znak na pasku bocznym korzysta z tokenów. Znak nie może kojarzyć się z ostrzeżeniem (FR-012).
 - **Termin:** konieczne przed 04.11.2026.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-05: Czytelna „Wizyta” z listą bieżących leków
 
