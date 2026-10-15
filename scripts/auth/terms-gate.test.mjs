@@ -23,7 +23,7 @@ const EXEMPT_PATHS = [
   "/auth/reset-password",
 ];
 
-const INTERIOR_PATHS = ["/dashboard", "/leki", `/leki/${UUID}`, "/dzienniczek", "/dzienniczek/nowy"];
+const INTERIOR_PATHS = ["/wizyta", "/leki", `/leki/${UUID}`, "/dzienniczek", "/dzienniczek/nowy"];
 
 const API_PATHS = ["/api/journal", `/api/medications/${UUID}/dosage`, "/api/registry/search"];
 
@@ -67,7 +67,7 @@ test("an account with the current or a newer version is allowed everywhere", () 
 });
 
 test(".html and trailing slash variants are gated and exempted like the plain path", () => {
-  for (const path of ["/leki.html", "/leki/", "/dashboard.html", "/dzienniczek/nowy/"]) {
+  for (const path of ["/leki.html", "/leki/", "/wizyta.html", "/dzienniczek/nowy/"]) {
     assert.equal(isTermsGatedPath(path), true, path);
     assert.equal(termsGateAction(path, null, CURRENT), "redirect", path);
   }
