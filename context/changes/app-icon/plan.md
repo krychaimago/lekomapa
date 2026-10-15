@@ -300,8 +300,8 @@ Brak migracji bazy. Przeglądarki trzymają stary favicon w pamięci — po wdro
 #### Manual
 
 - [x] 2.6 Karta w Chrome i Safari pokazuje nowy znak przy jasnym i ciemnym motywie przeglądarki — ee46819
-- [ ] 2.7 Na iPhonie „Do ekranu początkowego” daje ikonę lekomapy z podpisem „lekomapa”, a stuknięcie otwiera Safari
-- [ ] 2.8 Na Androidzie „Dodaj do ekranu głównego” daje ikonę lekomapy bez obciętego znaku, a stuknięcie otwiera kartę przeglądarki
+- [x] 2.7 Na iPhonie „Do ekranu początkowego” daje ikonę lekomapy z podpisem „lekomapa”, a stuknięcie otwiera Safari
+- [x] 2.8 Na Androidzie „Dodaj do ekranu głównego” daje ikonę lekomapy bez obciętego znaku, a stuknięcie otwiera kartę przeglądarki
 - [x] 2.9 Znak ze zmiany zgadza się z propozycją wybraną w fazie 1 — ee46819
 
 ### Phase 3: Znak obok nazwy
