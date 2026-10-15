@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "smoke": "node --experimental-strip-types --env-file-if-exists=.env scripts/smoke.mjs",
     "db:check": "node scripts/db-checks.mjs",
+    "icons": "node --experimental-strip-types scripts/icons/generate-icons.mjs",
     "test": "node --experimental-strip-types --test \"scripts/**/*.test.mjs\"",
     "test:mutation": "stryker run",
     "typecheck": "astro check",

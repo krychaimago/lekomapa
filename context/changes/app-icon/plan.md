@@ -279,30 +279,30 @@ Brak migracji bazy. Przeglądarki trzymają stary favicon w pamięci — po wdro
 
 #### Automated
 
-- [x] 1.1 `context/changes/app-icon/proposals.html` istnieje i zawiera 2–3 propozycje
+- [x] 1.1 `context/changes/app-icon/proposals.html` istnieje i zawiera 2–3 propozycje — 92c69a0
 
 #### Manual
 
-- [x] 1.2 Autorka obejrzała propozycje w rozmiarze 16 px, 180 px i na pasku bocznym w obu trybach
-- [x] 1.3 Żadna propozycja nie kojarzy się z ostrzeżeniem ani poradą medyczną (FR-012)
-- [x] 1.4 Wybór zapisany w `change.md`
+- [x] 1.2 Autorka obejrzała propozycje w rozmiarze 16 px, 180 px i na pasku bocznym w obu trybach — 92c69a0
+- [x] 1.3 Żadna propozycja nie kojarzy się z ostrzeżeniem ani poradą medyczną (FR-012) — 92c69a0
+- [x] 1.4 Wybór zapisany w `change.md` — 92c69a0
 
 ### Phase 2: Ikona w karcie i na telefonie
 
 #### Automated
 
-- [ ] 2.1 `npm run icons` generuje pliki bez błędów, a ponowny bieg nie zmienia ich zawartości (`git status` czysty)
-- [ ] 2.2 `npm test` przechodzi, w tym `scripts/icons/icons.test.mjs`
-- [ ] 2.3 `npm run typecheck` przechodzi
-- [ ] 2.4 `npm run lint` przechodzi
-- [ ] 2.5 `npm run build` przechodzi, a `dist/` zawiera `favicon.svg`, `apple-touch-icon.png` i `manifest.webmanifest`
+- [x] 2.1 `npm run icons` generuje pliki bez błędów, a ponowny bieg nie zmienia ich zawartości (`git status` czysty)
+- [x] 2.2 `npm test` przechodzi, w tym `scripts/icons/icons.test.mjs`
+- [x] 2.3 `npm run typecheck` przechodzi
+- [x] 2.4 `npm run lint` przechodzi
+- [x] 2.5 `npm run build` przechodzi, a `dist/` zawiera `favicon.svg`, `apple-touch-icon.png` i `manifest.webmanifest`
 
 #### Manual
 
-- [ ] 2.6 Karta w Chrome i Safari pokazuje nowy znak przy jasnym i ciemnym motywie przeglądarki
+- [x] 2.6 Karta w Chrome i Safari pokazuje nowy znak przy jasnym i ciemnym motywie przeglądarki
 - [ ] 2.7 Na iPhonie „Do ekranu początkowego” daje ikonę lekomapy z podpisem „lekomapa”, a stuknięcie otwiera Safari
 - [ ] 2.8 Na Androidzie „Dodaj do ekranu głównego” daje ikonę lekomapy bez obciętego znaku, a stuknięcie otwiera kartę przeglądarki
-- [ ] 2.9 Znak ze zmiany zgadza się z propozycją wybraną w fazie 1
+- [x] 2.9 Znak ze zmiany zgadza się z propozycją wybraną w fazie 1
 
 ### Phase 3: Znak obok nazwy
 
