@@ -19,3 +19,14 @@ export const BRAND_MARK: BrandMark = {
     "M11.788 8.394L13.98 6.202A2.7 2.7 0 0 1 17.798 10.02L15.606 12.212z",
   ],
 };
+
+// The rounded tile behind the mark in the browser tab icon and next to the product name (BrandName.astro).
+// Phone icons use a full square with their own padding (scripts/icons/generate-icons.mjs).
+export const BRAND_TILE = {
+  // Side of the square viewBox, in BRAND_MARK units.
+  box: 24,
+  // Empty margin on each side, as a fraction of the tile: the mark fills the middle 80%.
+  padding: 0.1,
+  // Corner radius in viewBox units: slightly rounded, not a circle.
+  cornerRadius: 3,
+} as const;

@@ -1,24 +1,24 @@
 ---
 // The lekomapa mark next to the product name, the one place that draws them together.
-// No React: nothing here holds state or handles events. The geometry comes from BRAND_MARK; the colors are
+// No React: nothing here holds state or handles events. The geometry comes from BRAND_MARK and BRAND_TILE; the colors are
 // token classes only (fill-primary, text-primary-foreground), so the dark mode follows the .dark token block.
 // The mark mirrors the tab icon (scripts/icons/generate-icons.mjs): a rounded square with the mark inset by 10%.
 // The SVG is aria-hidden: the name next to it is text, so a screen reader reads "lekomapa" once.
-import { BRAND_MARK } from "@/lib/brand-mark";
+import { BRAND_MARK, BRAND_TILE } from "@/lib/brand-mark";
+import { AUTH_COPY } from "@/lib/copy/auth";
 import { cn } from "@/lib/utils";
 
 interface Props {
   class?: string;
   name?: string;
+  // Classes for the name text only, e.g. hiding it visually on narrow screens while screen readers still read it.
+  nameClass?: string;
 }
 
-const { class: className, name = "lekomapa" } = Astro.props;
+const { class: className, name = AUTH_COPY.spread.productName, nameClass } = Astro.props;
 
-const MARK_BOX = 24;
-const PADDING = 0.1;
-const CORNER_RADIUS = 3;
-const scale = 1 - 2 * PADDING;
-const offset = MARK_BOX * PADDING;
+const scale = 1 - 2 * BRAND_TILE.padding;
+const offset = BRAND_TILE.box * BRAND_TILE.padding;
 const markPath = BRAND_MARK.paths.join(" ");
 ---
 
@@ -30,7 +30,7 @@ const markPath = BRAND_MARK.paths.join(" ");
     aria-hidden="true"
     focusable="false"
   >
-    <rect width={MARK_BOX} height={MARK_BOX} rx={CORNER_RADIUS} class="fill-primary"></rect>
+    <rect width={BRAND_TILE.box} height={BRAND_TILE.box} rx={BRAND_TILE.cornerRadius} class="fill-primary"></rect>
     <g
       class="text-primary-foreground"
       fill="currentColor"
@@ -40,5 +40,5 @@ const markPath = BRAND_MARK.paths.join(" ");
       <path d={markPath}></path>
     </g>
   </svg>
-  <span>{name}</span>
+  <span class:list={cn(nameClass)}>{name}</span>
 </p>

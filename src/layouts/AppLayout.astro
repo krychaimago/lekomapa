@@ -58,7 +58,8 @@ const signOutClass = cn(
     </aside>
 
     <header class="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4 py-2 text-sidebar-foreground lg:hidden">
-      <BrandName class="text-xl font-bold" />
+      {/* Below 360 px the name does not fit next to the sign-out button (measured 342 px needed at 320 px). */}
+      <BrandName class="text-xl font-bold" nameClass="max-[359px]:sr-only" />
       <div class="flex shrink-0 items-center gap-2">
         <ThemeToggle />
         <form method="POST" action="/api/auth/signout">

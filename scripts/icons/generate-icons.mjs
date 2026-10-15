@@ -10,20 +10,20 @@ import path from "node:path";
 
 import sharp from "sharp";
 
-import { BRAND_MARK } from "../../src/lib/brand-mark.ts";
+import { BRAND_MARK, BRAND_TILE } from "../../src/lib/brand-mark.ts";
 import { REPO_ROOT, loadTokenBlocks } from "../tokens/contrast.mjs";
 
 export const PUBLIC_DIR = path.join(REPO_ROOT, "public");
 
 // Side of the square viewBox the mark is drawn in.
-const MARK_BOX = 24;
+export const MARK_BOX = BRAND_TILE.box;
 // Corner radius of the rounded tab icon, in viewBox units: slightly rounded, not a circle.
-const CORNER_RADIUS = 3;
+const CORNER_RADIUS = BRAND_TILE.cornerRadius;
 
 // Padding is the empty margin on each side, as a fraction of the tile.
 // Tab icon: the mark fills the middle 80%. Phone icons: the middle 64%, inside the maskable safe zone
 // (a circle of 80% diameter), so launchers that crop to a circle or squircle do not cut the mark.
-export const TAB_PADDING = 0.1;
+export const TAB_PADDING = BRAND_TILE.padding;
 export const PHONE_PADDING = 0.18;
 
 export const RASTER_ICONS = [
