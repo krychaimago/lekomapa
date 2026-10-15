@@ -207,29 +207,29 @@ Test w przeglądarce sprawdza całą drogę: formularz logowania → `/api/auth/
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.2 Lint przechodzi: `npm run lint`
-- [x] 1.3 Typy przechodzą: `npm run typecheck`
-- [x] 1.4 Build przechodzi: `npm run build`
-- [x] 1.5 Build zawiera regułę przekierowania: `grep -F "/dashboard /leki 302" dist/client/_redirects`
-- [x] 1.6 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke`
-- [x] 1.7 Żadnego odwołania do `/dashboard` poza przekierowaniem, krokiem smoke i `CLAUDE.md`
-- [x] 1.8 Test pokrycia galerii przechodzi
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 5ce9a6f
+- [x] 1.2 Lint przechodzi: `npm run lint` — 5ce9a6f
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — 5ce9a6f
+- [x] 1.4 Build przechodzi: `npm run build` — 5ce9a6f
+- [x] 1.5 Build zawiera regułę przekierowania: `grep -F "/dashboard /leki 302" dist/client/_redirects` — 5ce9a6f
+- [x] 1.6 Smoke przechodzi przeciw lokalnemu Supabase: `npm run smoke` — 5ce9a6f
+- [x] 1.7 Żadnego odwołania do `/dashboard` poza przekierowaniem, krokiem smoke i `CLAUDE.md` — 5ce9a6f
+- [x] 1.8 Test pokrycia galerii przechodzi — 5ce9a6f
 
 #### Manual
 
-- [x] 1.9 Logowanie w przeglądarce kończy się na liście leków
-- [x] 1.10 Zakładka z `/dashboard` (zalogowana) otwiera listę leków
-- [x] 1.11 `/dashboard` po wylogowaniu prowadzi do ekranu logowania
+- [x] 1.9 Logowanie w przeglądarce kończy się na liście leków — 5ce9a6f
+- [x] 1.10 Zakładka z `/dashboard` (zalogowana) otwiera listę leków — 5ce9a6f
+- [x] 1.11 `/dashboard` po wylogowaniu prowadzi do ekranu logowania — 5ce9a6f
 
 ### Phase 2: Test E2E — logowanie kończy się na liście leków
 
 #### Automated
 
-- [ ] 2.1 Test przechodzi przeciw lokalnemu Supabase
-- [ ] 2.2 Test pada, gdy `src/pages/index.astro` kieruje zalogowaną na inną trasę
-- [ ] 2.3 Pełny zestaw E2E przechodzi: `npx playwright test`
+- [x] 2.1 Test przechodzi przeciw lokalnemu Supabase
+- [x] 2.2 Test pada, gdy `src/pages/index.astro` kieruje zalogowaną na inną trasę
+- [x] 2.3 Pełny zestaw E2E przechodzi: `npx playwright test`
 
 #### Manual
 
-- [ ] 2.4 Autorka czyta test i potwierdza, że sprawdza to, co mówi jego nazwa
+- [x] 2.4 Autorka czyta test i potwierdza, że sprawdza to, co mówi jego nazwa
