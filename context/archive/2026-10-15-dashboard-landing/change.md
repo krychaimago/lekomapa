@@ -1,10 +1,10 @@
 ---
 change_id: dashboard-landing
 title: Dashboard landing
-status: impl_reviewed
+status: archived
 created: 2026-10-15
 updated: 2026-10-15
-archived_at: null
+archived_at: 2026-10-15T18:18:37Z
 ---
 
 ## Notes
