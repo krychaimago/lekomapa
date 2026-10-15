@@ -132,12 +132,11 @@ const ENTRIES: Entry[] = [
   { page: "warunki", session: false, path: () => "/warunki" },
 
   // --- Interior, signed-in test account ---
-  { page: "index", state: "signed-in-redirects-to-dashboard", session: true, path: () => "/" },
-  { page: "dashboard", session: true, path: () => "/dashboard" },
+  { page: "index", state: "signed-in-redirects-to-leki", session: true, path: () => "/" },
   // The test account has accepted the current terms, so the screen sends it back into the app.
   {
     page: "warunki/akceptacja",
-    state: "accepted-account-redirects-to-dashboard",
+    state: "accepted-account-redirects-to-leki",
     session: true,
     path: () => "/warunki/akceptacja",
   },

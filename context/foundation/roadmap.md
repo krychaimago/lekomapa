@@ -55,8 +55,8 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
 | ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
 | S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | in-progress |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | ready       |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | in-progress |
 | S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | ready       |
 | S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | ready       |
 | S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | ready       |
@@ -123,7 +123,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Zakres zmiany nazwy: tylko etykieta menu (`src/lib/navigation.ts:11`) i tytuł ekranu (`src/lib/copy/journal.ts:10`), czy także pozostałe teksty („Dzienniczek leków i samopoczucia” w `src/lib/copy/auth.ts:11`, wzmianki w `src/pages/wizyta.astro`). — Owner: plan. Block: no.
 - **Risk:** Adresy `/dzienniczek/*` zostają — zmiana adresu psułaby zakładki, smoke i testy bez zysku dla użytkowniczki. PRD i dokumenty mówią dalej „dzienniczek”; zmiana dotyczy tekstu widocznego w interfejsie.
 - **Termin:** konieczne przed 04.11.2026.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-03: Start na liście leków zamiast pustego `/dashboard`
 
@@ -138,7 +138,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Co z adresem `/dashboard` z zakładek i historii: przekierowanie na `/leki` czy brak strony. — Owner: plan. Block: no.
 - **Risk:** Rozstrzygnięte 14.10.2026: usunąć i startować na `/leki` (najszybszy wariant). Odrzucone: start na `/wizyta` (czekałby na S-05) i osobny ekran „Start” (piąta zakładka na telefonie, trzecia kopia listy leków). Przesądza: produkt nie ma osobnego ekranu startowego; dodanie go później to nowa trasa, bez przeróbek. Zmiana dotyka drogi po zalogowaniu i kontroli warunków (`INTERIOR_ROUTES`), a odwołania do `/dashboard` w `scripts/smoke.mjs`, `scripts/auth/terms-gate.test.mjs` i `tests/e2e/dark-gallery.spec.ts` trzeba przepiąć — inaczej bramki padną albo przestaną sprawdzać to, co deklarują. Kandydat na test E2E: logowanie kończy się na liście leków.
 - **Termin:** konieczne przed 04.11.2026.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-04: Ikona lekomapy
 
@@ -311,3 +311,4 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 (Pusta na starcie M-2. `/10x-archive` dopisuje tu wpis i przestawia status pozycji na `done`, gdy zarchiwizowana zmiana ma pasujący Change ID.)
 
 - **S-01: Użytkowniczka może od razu rozpoznać „Usuń konto” jako akcję nieodwracalną — na ekranie konta (przycisk prowadzący do potwierdzenia) i na ekranie potwierdzenia hasłem (przycisk, który faktycznie usuwa).** — Archived 2026-10-14 → `context/archive/2026-10-14-delete-account-button-emphasis/`. Lesson: —.
+- **S-02: Użytkowniczka może widzieć w menu krótszą nazwę „Dziennik”, która mieści się na małym ekranie.** — Archived 2026-10-15 → `context/archive/2026-10-15-journal-tab-rename/`. Lesson: —.

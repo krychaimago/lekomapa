@@ -87,7 +87,8 @@ API routes eksportują `export const prerender = false` mimo że przy `output: "
 - `delete_own_account` żąda świeżego (do 60 sekund) wpisu `password` w `amr` tokenu. Nowa metoda logowania nie daje prawa do usunięcia konta bez osobnej decyzji — nie dopisuj jej do warunku funkcji przy okazji wpisu w `NORMAL_SESSION_METHODS`.
 - Ręczne usuwanie konta w panelu Supabase zostaje drogą awaryjną (osoba nie może się zalogować albo nie akceptuje nowej wersji warunków — kontakt mailowy na `/prywatnosc`) i drogą sprzątania kont smoke.
 - Szablony maili z odnośnikiem: `supabase/templates/{recovery,confirmation}.html` działają tylko lokalnie. Produkcja ma własną kopię w panelu Supabase — przy każdej zmianie pliku przenieś temat i treść ręcznie do panelu (kroki w `README.md`, sekcja Supabase).
-- Przykład strony chronionej: `src/pages/dashboard.astro`
+- Przykład strony chronionej: `src/pages/leki/index.astro`
+- Start po zalogowaniu to `/leki` (`src/pages/index.astro`); `/dashboard` to wyłącznie przekierowanie 302 w `astro.config.mjs`, obsługiwane przez Cloudflare z `_redirects` przed Workerem (middleware go nie widzi) — nie przywracaj ekranu ani nie dopisuj tam sprawdzeń.
 
 Starter pokrywa FR-001 i FR-002 (rejestracja, logowanie, odzyskiwanie dostępu) — nie pisz warstwy auth od zera.
 

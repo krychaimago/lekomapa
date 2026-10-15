@@ -1911,7 +1911,7 @@ const termsGateFlowSteps = [
     },
     EXPECT_OK,
   ],
-  ...["/leki", "/dashboard", "/dzienniczek/nowy"].map((path) => [
+  ...["/leki", "/wizyta", "/dzienniczek/nowy"].map((path) => [
     `terms gate: ${path} redirects to the acceptance screen`,
     () => request(path, { jar: termsGate.jar }),
     { status: 302, location: TERMS_ACCEPTANCE_PATH, exact: true },
@@ -2185,7 +2185,7 @@ const recoverySteps = [
   ],
   [
     "recovery: session from the link cannot reach the interior",
-    () => request("/dashboard"),
+    () => request("/leki"),
     { status: 302, location: "/auth/reset-password", exact: true },
   ],
   [
@@ -2223,8 +2223,8 @@ const recoverySteps = [
     { status: 302, location: "/auth/signin?reset=done", exact: true },
   ],
   [
-    "recovery: dashboard redirects after the password change",
-    () => request("/dashboard"),
+    "recovery: interior redirects after the password change",
+    () => request("/leki"),
     { status: 302, location: "/auth/signin", exact: true },
   ],
   [
@@ -2685,13 +2685,9 @@ const emailConfirmSteps = [
 
 const steps = [
   ["home redirects anonymous user", () => request("/"), { status: 302, location: "/auth/signin" }],
-  ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["/dashboard redirects to /leki", () => request("/dashboard"), { status: 302, location: "/leki", exact: true }],
   ["visit summary redirects anonymous user", () => request("/wizyta"), { status: 302, location: "/auth/signin" }],
-  [
-    "dashboard.html redirects anonymous user",
-    () => request("/dashboard.html"),
-    { status: 302, location: "/auth/signin" },
-  ],
+  ["leki.html redirects anonymous user", () => request("/leki.html"), { status: 302, location: "/auth/signin" }],
   [
     "acceptance screen redirects anonymous user",
     () => request(TERMS_ACCEPTANCE_PATH),
@@ -2710,12 +2706,13 @@ const steps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
     { status: 302, location: "/" },
   ],
-  ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["home sends signed-in user to /leki", () => request("/"), { status: 302, location: "/leki", exact: true }],
+  ["medication list renders for signed-in user", () => request("/leki"), { status: 200 }],
   registrySuggestionsStep,
   registrySearchDraftStep,
   leafletDraftStep,
   signOutStep,
-  ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["interior redirects after signout", () => request("/leki"), { status: 302, location: "/auth/signin" }],
   registrySuggestionsAnonymousStep,
   ...isolationSteps,
   ...medicationSteps,

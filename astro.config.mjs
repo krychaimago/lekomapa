@@ -10,6 +10,11 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
   site: "https://lekomapa.pl",
   output: "server",
+  // The former start screen. 302, not 301: browsers cache a 301 permanently, so if /dashboard ever returned as a
+  // screen, old browsers would keep fleeing it. Served by Cloudflare from _redirects before the Worker runs.
+  redirects: {
+    "/dashboard": { status: 302, destination: "/leki" },
+  },
   integrations: [react(), sitemap()],
   vite: {
     plugins: [tailwindcss()],
