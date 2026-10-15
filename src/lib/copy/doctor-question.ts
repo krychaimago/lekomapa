@@ -30,7 +30,7 @@ export const DOCTOR_QUESTION_COPY = {
   othersLabel: "Pozostałe leki ({liczba})",
   takenLabel: "Przyjmowane leki:",
   otherItem: "{lek} — od {data}, {ilość}",
-  note: "Pytanie zestawia daty z dzienniczka i z listy leków. Nie jest oceną ani diagnozą. O każdy lek i każdy objaw możesz zapytać lekarza lub farmaceutę.",
+  note: "Pytanie zestawia daty z dziennika i z listy leków. Nie jest oceną ani diagnozą. O każdy lek i każdy objaw możesz zapytać lekarza lub farmaceutę.",
   noQuestion:
     "Pytanie do lekarza powstaje, gdy w czasie objawu albo do 90 dni przed pierwszym wpisem z tym objawem masz na liście jakiś lek.",
   loadError: "Nie udało się przygotować pytania do lekarza. Odśwież stronę.",

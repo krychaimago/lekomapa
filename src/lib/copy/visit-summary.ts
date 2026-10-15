@@ -9,7 +9,7 @@
 
 export const VISIT_SUMMARY_COPY = {
   title: "Wizyta",
-  intro: "Tu zbiorą się możliwe interakcje między Twoimi lekami i pytania do lekarza o objawy z dzienniczka.",
+  intro: "Tu zbiorą się możliwe interakcje między Twoimi lekami i pytania do lekarza o objawy z dziennika.",
   introAddMedication: "Dodaj lek",
   introAddSymptom: "Zapisz objaw",
   pairLabel: "{lek} i {drugi}",
@@ -17,10 +17,10 @@ export const VISIT_SUMMARY_COPY = {
   oneMedication: "Przyjmujesz obecnie jeden lek. Pary sprawdzane są, gdy na liście są co najmniej dwa bieżące leki.",
   noPairFound: "Wśród Twoich bieżących leków nie znaleziono sprawdzanej pary.",
   questionsHeading: "Pytania do lekarza",
-  noQuestions: "Pytania pojawią się po zapisaniu objawu w dzienniczku.",
-  journalLink: "Przejdź do dzienniczka",
+  noQuestions: "Pytania pojawią się po zapisaniu objawu w dzienniku.",
+  journalLink: "Przejdź do dziennika",
   withoutQuestion: "Bez pytania: {objawy}.",
   askDoctorOrPharmacist: "O każdy lek i objaw możesz zapytać lekarza lub farmaceutę.",
-  questionsNote: "Pytania zestawiają daty z dzienniczka oraz listy leków. Nie są oceną ani diagnozą.",
+  questionsNote: "Pytania zestawiają daty z dziennika oraz listy leków. Nie są oceną ani diagnozą.",
   loadError: "Nie udało się wczytać sekcji. Odśwież stronę.",
 } as const;
