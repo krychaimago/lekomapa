@@ -308,14 +308,14 @@ Brak migracji bazy. Przeglądarki trzymają stary favicon w pamięci — po wdro
 
 #### Automated
 
-- [x] 3.1 `npm test` przechodzi, w tym `scripts/tokens/hardcoded-colors.mjs` (brak koloru na sztywno w `BrandName.astro`)
-- [x] 3.2 `npm run typecheck` przechodzi
-- [x] 3.3 `npm run lint` przechodzi
-- [x] 3.4 `npm run build` przechodzi
+- [x] 3.1 `npm test` przechodzi, w tym `scripts/tokens/hardcoded-colors.mjs` (brak koloru na sztywno w `BrandName.astro`) — 94a495f
+- [x] 3.2 `npm run typecheck` przechodzi — 94a495f
+- [x] 3.3 `npm run lint` przechodzi — 94a495f
+- [x] 3.4 `npm run build` przechodzi — 94a495f
 
 #### Manual
 
-- [x] 3.5 Pasek boczny na dużym ekranie: znak obok nazwy, w trybie jasnym i ciemnym
-- [x] 3.6 Nagłówek wnętrza na telefonie: znak obok nazwy, bez zawijania wiersza i bez wypychania przełącznika trybu
-- [x] 3.7 Ekran logowania (telefon i duży ekran): znak obok nazwy w obu trybach
-- [x] 3.8 Czytnik ekranu czyta „lekomapa” raz, bez opisu grafiki
+- [x] 3.5 Pasek boczny na dużym ekranie: znak obok nazwy, w trybie jasnym i ciemnym — 94a495f
+- [x] 3.6 Nagłówek wnętrza na telefonie: znak obok nazwy, bez zawijania wiersza i bez wypychania przełącznika trybu — 94a495f
+- [x] 3.7 Ekran logowania (telefon i duży ekran): znak obok nazwy w obu trybach — 94a495f
+- [x] 3.8 Czytnik ekranu czyta „lekomapa” raz, bez opisu grafiki — 94a495f
