@@ -1,10 +1,10 @@
 ---
 change_id: journal-tab-rename
 title: Zmiana nazwy zakładki „Dzienniczek” na „Dziennik”
-status: impl_reviewed
+status: archived
 created: 2026-10-15
 updated: 2026-10-15
-archived_at: null
+archived_at: 2026-10-15T10:42:23Z
 ---
 
 ## Notes
