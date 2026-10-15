@@ -50,7 +50,7 @@ test("the confirmation says what goes and that it cannot be undone", () => {
   const all = collectTexts(deletion)
     .map(([, text]) => text)
     .join(" ");
-  for (const fragment of ["leki", "historią zmian", "dzienniczka", "akceptacji warunków", "Pytania do lekarza"]) {
+  for (const fragment of ["leki", "historią zmian", "dziennika", "akceptacji warunków", "Pytania do lekarza"]) {
     assert.ok(all.includes(fragment), fragment);
   }
   assert.ok(deletion.irreversible.includes("kopia"));

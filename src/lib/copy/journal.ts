@@ -7,7 +7,7 @@
 
 export const JOURNAL_COPY = {
   list: {
-    title: "Dzienniczek",
+    title: "Dziennik",
     add: "Nowy wpis",
     empty: "Nie masz jeszcze żadnego wpisu. Zapisz pierwszy, gdy coś poczujesz.",
     // `{objawy}` lists the symptoms of the saved entry ("ból głowy, nudności"), so the message says which entry it
@@ -17,7 +17,7 @@ export const JOURNAL_COPY = {
     savedMoreSymptoms: "i jeszcze {liczba}",
     correctableUntil: "Możesz poprawić do {do}",
     noteLabel: "Notatka",
-    loadError: "Nie udało się wczytać dzienniczka. Odśwież stronę.",
+    loadError: "Nie udało się wczytać dziennika. Odśwież stronę.",
     // After a correction (S-07), `?poprawiono=<uuid>`. Markers as in saved / savedWithDeadline; `{do}` is the end of
     // the correction window, which does not move with a correction (24 hours from the first save).
     corrected: "Poprawiono wpis: {objawy}.",
@@ -28,7 +28,7 @@ export const JOURNAL_COPY = {
   },
   // Screen of one entry (S-07), /dzienniczek/<id>: correcting it while the window is open, the note always.
   entry: {
-    title: "Wpis w dzienniczku",
+    title: "Wpis w dzienniku",
     // Link on every card of the list: `open` while the window is open, `openClosed` after it closes (only the note
     // can still change).
     open: "Popraw wpis",
@@ -44,7 +44,7 @@ export const JOURNAL_COPY = {
     submit: "Zapisz poprawkę",
     submitNote: "Zapisz notatkę",
     delete: "Usuń wpis dodany przez pomyłkę",
-    notFound: "Nie ma takiego wpisu w dzienniczku.",
+    notFound: "Nie ma takiego wpisu w dzienniku.",
     loadError: "Nie udało się wczytać wpisu. Odśwież stronę.",
   },
   // Screen confirming the deletion of an entry added by mistake (S-07), /dzienniczek/<id>/usun. Plain wording, no
@@ -61,7 +61,7 @@ export const JOURNAL_COPY = {
   },
   form: {
     title: "Nowy wpis",
-    backToList: "Wróć do dzienniczka",
+    backToList: "Wróć do dziennika",
     occurredLabel: "Data i godzina",
     occurredHint:
       "Bez zmiany zapisze się chwila zapisu wpisu. Datę i godzinę możesz cofnąć najwyżej o 14 dni, od {od}.",
@@ -102,7 +102,7 @@ export const JOURNAL_COPY = {
     sessionExpired: "Sesja wygasła. Zaloguj się ponownie.",
     // Codes raised by correct_symptom_entry, set_symptom_entry_note and delete_symptom_entry
     // (supabase/migrations/20261009120000_journal_correction.sql): SE006 and SE007. `{o}` is the end of the window.
-    entryNotFound: "Nie ma takiego wpisu w dzienniczku. Odśwież stronę.",
+    entryNotFound: "Nie ma takiego wpisu w dzienniku. Odśwież stronę.",
     correctionWindowClosed:
       "Okno korekty tego wpisu zamknęło się {o}. Data, godzina, objawy i nasilenie są już częścią historii. Notatkę możesz zmienić po odświeżeniu strony.",
     deleteWindowClosed:

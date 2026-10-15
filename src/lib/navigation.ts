@@ -7,7 +7,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/leki", label: "Leki" },
-  { href: "/dzienniczek", label: "Dzienniczek" },
+  { href: "/dzienniczek", label: "Dziennik" },
   { href: "/wizyta", label: "Wizyta" },
   { href: "/konto", label: "Konto" },
 ];

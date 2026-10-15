@@ -20,7 +20,7 @@ export const ACCOUNT_COPY = {
     // One string per list item, in the order the screen shows them.
     items: {
       medications: "leki razem z całą historią zmian,",
-      journal: "wpisy dzienniczka razem z objawami i notatkami,",
+      journal: "wpisy dziennika razem z objawami i notatkami,",
       terms: "zapis akceptacji warunków korzystania.",
     },
     questions: "Pytania do lekarza powstają z tych danych, więc znikną razem z nimi.",
