@@ -226,10 +226,10 @@ Test w przeglądarce sprawdza całą drogę: formularz logowania → `/api/auth/
 
 #### Automated
 
-- [x] 2.1 Test przechodzi przeciw lokalnemu Supabase
-- [x] 2.2 Test pada, gdy `src/pages/index.astro` kieruje zalogowaną na inną trasę
-- [x] 2.3 Pełny zestaw E2E przechodzi: `npx playwright test`
+- [x] 2.1 Test przechodzi przeciw lokalnemu Supabase — f75e735
+- [x] 2.2 Test pada, gdy `src/pages/index.astro` kieruje zalogowaną na inną trasę — f75e735
+- [x] 2.3 Pełny zestaw E2E przechodzi: `npx playwright test` — f75e735
 
 #### Manual
 
-- [x] 2.4 Autorka czyta test i potwierdza, że sprawdza to, co mówi jego nazwa
+- [x] 2.4 Autorka czyta test i potwierdza, że sprawdza to, co mówi jego nazwa — f75e735
