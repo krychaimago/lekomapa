@@ -4,13 +4,10 @@
 // on the entry screens (AUTH_COPY.spread.heading), which describes the product, not the tab.
 
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 import { test } from "node:test";
 
-import { ACCOUNT_COPY } from "../../src/lib/copy/account.ts";
-import { AUTH_COPY } from "../../src/lib/copy/auth.ts";
-import { DOCTOR_QUESTION_COPY } from "../../src/lib/copy/doctor-question.ts";
 import { JOURNAL_COPY } from "../../src/lib/copy/journal.ts";
-import { VISIT_SUMMARY_COPY } from "../../src/lib/copy/visit-summary.ts";
 import { NAV_ITEMS } from "../../src/lib/navigation.ts";
 
 // The stem shared by every form: "Dzienniczek", "dzienniczka", "dzienniczku". "dzienniczk" would miss the nominative.
@@ -26,13 +23,15 @@ function collectTexts(value, path) {
   return [];
 }
 
-const texts = [
-  ...collectTexts(ACCOUNT_COPY, ["ACCOUNT_COPY"]),
-  ...collectTexts(AUTH_COPY, ["AUTH_COPY"]),
-  ...collectTexts(DOCTOR_QUESTION_COPY, ["DOCTOR_QUESTION_COPY"]),
-  ...collectTexts(JOURNAL_COPY, ["JOURNAL_COPY"]),
-  ...collectTexts(VISIT_SUMMARY_COPY, ["VISIT_SUMMARY_COPY"]),
-];
+// Every module in src/lib/copy/, so a new sentence in any of them is covered, not only the ones that named the
+// journal when the tab was renamed. Paths start at the export name ("AUTH_COPY.spread.heading").
+const COPY_DIR = new URL("../../src/lib/copy/", import.meta.url);
+const copyModules = readdirSync(COPY_DIR).filter((name) => name.endsWith(".ts"));
+const texts = [];
+for (const name of copyModules) {
+  const module = await import(new URL(name, COPY_DIR).href);
+  for (const [exportName, value] of Object.entries(module)) texts.push(...collectTexts(value, [exportName]));
+}
 
 test("the journal menu item is labelled Dziennik and keeps its address", () => {
   const item = NAV_ITEMS.find(({ href }) => href === "/dzienniczek");
@@ -45,6 +44,7 @@ test("the journal screen title is Dziennik", () => {
 });
 
 test("no interior text uses the old name, except the product tagline", () => {
+  assert.ok(copyModules.length >= 10, `only ${copyModules.length} copy modules found`);
   assert.ok(texts.length > 0, "no texts collected");
   const offenders = texts.filter(([path, text]) => OLD_NAME.test(text) && !ALLOWED_OLD_NAME.has(path));
   assert.deepEqual(offenders, []);

@@ -21,7 +21,7 @@ Zakładka „Dzienniczek” nie mieści się w menu na małym ekranie (MS-02, ro
 
 - Menu pokazuje „Dziennik”; na telefonie (360 px) wszystkie pozycje mieszczą się w jednej linii.
 - Nagłówek i tytuł ekranu listy brzmią „Dziennik”.
-- Żaden tekst wnętrza aplikacji nie zawiera „dzienniczk…”; wyjątek to hasło `AUTH_COPY.spread.heading`.
+- Żaden tekst wnętrza aplikacji nie zawiera „dziennicz…”; wyjątek to hasło `AUTH_COPY.spread.heading`.
 - Adresy `/dzienniczek/*` działają bez zmian.
 - Test pilnuje nazwy, więc powrót do starej formy w nowym tekście wywraca `npm test`.
 
@@ -83,7 +83,8 @@ Wszystkie teksty wnętrza aplikacji mówią „Dziennik”; test pilnuje, żeby 
 **Contract**:
 
 - `account-copy.test.mjs:53` — fragment „dzienniczka” → „dziennika”.
-- Nowy test: (a) pozycja `NAV_ITEMS` z `href: "/dzienniczek"` ma `label` „Dziennik”; (b) żaden tekst z `JOURNAL_COPY`, `VISIT_SUMMARY_COPY`, `DOCTOR_QUESTION_COPY`, `ACCOUNT_COPY` ani `AUTH_COPY` nie zawiera `/dzienniczk/i` — z wyjątkiem `AUTH_COPY.spread.heading`, wyłączonego jawnie po kluczu. Teksty zbierane rekurencyjnie jak w `collectTexts`.
+- Nowy test: (a) pozycja `NAV_ITEMS` z `href: "/dzienniczek"` ma `label` „Dziennik”; (b) żaden tekst z `JOURNAL_COPY`, `VISIT_SUMMARY_COPY`, `DOCTOR_QUESTION_COPY`, `ACCOUNT_COPY` ani `AUTH_COPY` nie zawiera `/dziennicz/i` — z wyjątkiem `AUTH_COPY.spread.heading`, wyłączonego jawnie po kluczu. Teksty zbierane rekurencyjnie jak w `collectTexts`.
+- Poprawka po impl-review (F1): pierwotnie plan podawał `/dzienniczk/i`, który nie pasuje do mianownika „Dzienniczek” (dziennicz-ek). Wspólny rdzeń wszystkich form to `dziennicz`.
 
 ### Success Criteria:
 
@@ -110,7 +111,7 @@ Wszystkie teksty wnętrza aplikacji mówią „Dziennik”; test pilnuje, żeby 
 ### Unit Tests:
 
 - Etykieta menu „Dziennik”.
-- Brak „dzienniczk…” w tekstach wnętrza; jedyny wyjątek po kluczu.
+- Brak „dziennicz…” w tekstach wnętrza; jedyny wyjątek po kluczu.
 
 ### Manual Testing Steps:
 

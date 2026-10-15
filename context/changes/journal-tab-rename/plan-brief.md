@@ -21,7 +21,7 @@ Menu i nagłówek mówią „Dziennik”, zdania „dziennika / w dzienniku”, 
 | Adresy         | `/dzienniczek/*` zostają                  | Zmiana psułaby zakładki, smoke i testy bez zysku dla użytkowniczki.   | Roadmap |
 | Dokumenty      | PRD i dokumenty dalej mówią „dzienniczek” | Zmiana dotyczy tekstu w interfejsie.                                  | Roadmap |
 | Zakres tekstów | Całe UI bez hasła z ekranu logowania      | Jedna nazwa wewnątrz aplikacji; hasło to opis produktu, nie zakładka. | Plan    |
-| Ochrona nazwy  | Nowy test: etykieta + brak „dzienniczk…”  | Nowy tekst w starej formie wywróci `npm test`.                        | Plan    |
+| Ochrona nazwy  | Nowy test: etykieta + brak „dziennicz…”   | Nowy tekst w starej formie wywróci `npm test`.                        | Plan    |
 
 ## Scope
 
@@ -39,7 +39,7 @@ Menu i nagłówek mówią „Dziennik”, zdania „dziennika / w dzienniku”, 
 
 ## Architecture / Approach
 
-Podmiana tekstów w obiektach copy i `NAV_ITEMS`. Test zbiera teksty rekurencyjnie (wzorzec `collectTexts`) i odrzuca „dzienniczk…”, z jednym wyjątkiem wskazanym po kluczu.
+Podmiana tekstów w obiektach copy i `NAV_ITEMS`. Test zbiera teksty rekurencyjnie (wzorzec `collectTexts`) i odrzuca rdzeń „dziennicz…” (wspólny dla „Dzienniczek”, „dzienniczka”, „dzienniczku”), z jednym wyjątkiem wskazanym po kluczu.
 
 ## Phases at a Glance
 
