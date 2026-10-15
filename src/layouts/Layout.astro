@@ -29,7 +29,11 @@ const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
       })();
     </script>}
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="lekomapa" />
     <title>{title}</title>
   </head>
   <body>

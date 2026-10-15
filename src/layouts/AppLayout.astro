@@ -2,6 +2,7 @@
 // Shared frame of the signed-in screens: sidebar on large screens, header and bottom tabs on phones.
 // No React: the frame holds no state and handles no events; sign-out and the color mode icon are plain form POSTs.
 import Layout from "@/layouts/Layout.astro";
+import BrandName from "@/components/BrandName.astro";
 import ThemeToggle from "@/components/ThemeToggle.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { NAV_ITEMS, findActiveNavItem } from "@/lib/navigation";
@@ -24,7 +25,7 @@ const signOutClass = cn(
 <Layout title={title}>
   <div class="flex min-h-dvh flex-col lg:min-h-[calc(100dvh-var(--demo-bar-height))] lg:flex-row">
     <aside class="hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-(--demo-bar-height) lg:flex lg:h-[calc(100dvh-var(--demo-bar-height))] lg:w-[22%] lg:min-w-60 lg:shrink-0 lg:flex-col lg:gap-8 lg:p-6">
-      <p class="text-2xl font-bold">lekomapa</p>
+      <BrandName class="text-2xl font-bold" />
       <nav aria-label="Menu główne" class="-m-1 min-h-0 flex-1 overflow-y-auto p-1">
         <ul class="flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
@@ -57,7 +58,8 @@ const signOutClass = cn(
     </aside>
 
     <header class="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4 py-2 text-sidebar-foreground lg:hidden">
-      <p class="text-xl font-bold">lekomapa</p>
+      {/* Below 360 px the name does not fit next to the sign-out button (measured 342 px needed at 320 px). */}
+      <BrandName class="text-xl font-bold" nameClass="max-[359px]:sr-only" />
       <div class="flex shrink-0 items-center gap-2">
         <ThemeToggle />
         <form method="POST" action="/api/auth/signout">

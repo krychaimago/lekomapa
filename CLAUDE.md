@@ -126,6 +126,7 @@ Setup środowiska, Supabase i deploy: @README.md. Dwie rzeczy, których tam nie 
 
 - Node.js 22.14.0 wg `.nvmrc`. Sprawdzone na v24.13.0: mimo ostrzeżenia `EBADENGINE` przy instalacji (`astro-eslint-parser` i `eslint-plugin-astro` deklarują `^22.22.3 || ^24.16.0 || >=26.3.0`) lint i build przechodzą czysto.
 - **`@emnapi/core` i `@emnapi/runtime` w `devDependencies` są celowe — nie usuwaj.** Żaden kod ich nie importuje. Są tam, żeby trafiły do `package-lock.json`: wymagają ich warianty `wasm32` pakietów `sharp` i `@tailwindcss/oxide`, których npm na macOS nie wybiera, a npm na Linuksie tak. Bez nich `npm ci` w CI odmawia instalacji komunikatem `Missing: @emnapi/runtime from lock file`, a lokalnie wszystko wygląda poprawnie.
+- **`sharp` w `devDependencies` jest celowy — nie usuwaj.** Importują go `scripts/icons/generate-icons.mjs` (`npm run icons`) i `scripts/icons/icons.test.mjs` (w `npm test`). Wcześniej był tylko zależnością pośrednią miniflare; aktualizacja miniflare albo astro mogła go usunąć i wywrócić `npm test` w CI. Wersja przypięta do tej z miniflare, żeby nie było drugiej kopii.
 
 ### CI
 
