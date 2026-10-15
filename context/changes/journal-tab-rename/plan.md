@@ -131,14 +131,14 @@ Wszystkie teksty wnętrza aplikacji mówią „Dziennik”; test pilnuje, żeby 
 
 #### Automated
 
-- [x] 1.1 Nowy test nazwy przechodzi, a przed zmianą tekstów pada
-- [x] 1.2 Testy przechodzą: `npm test`
-- [x] 1.3 Typy: `npm run typecheck`
-- [x] 1.4 Lint: `npm run lint`
+- [x] 1.1 Nowy test nazwy przechodzi, a przed zmianą tekstów pada — 9e9e9c5
+- [x] 1.2 Testy przechodzą: `npm test` — 9e9e9c5
+- [x] 1.3 Typy: `npm run typecheck` — 9e9e9c5
+- [x] 1.4 Lint: `npm run lint` — 9e9e9c5
 
 #### Manual
 
-- [x] 1.5 Menu na telefonie (360 px, jasny i ciemny) pokazuje „Dziennik”, pozycje w jednej linii
-- [x] 1.6 Ekran `/dzienniczek` ma nagłówek i tytuł karty „Dziennik”
-- [x] 1.7 W Wizycie „Przejdź do dziennika” prowadzi do `/dzienniczek`
-- [x] 1.8 Ekran logowania dalej pokazuje „Dzienniczek leków i samopoczucia”
+- [x] 1.5 Menu na telefonie (360 px, jasny i ciemny) pokazuje „Dziennik”, pozycje w jednej linii — 9e9e9c5
+- [x] 1.6 Ekran `/dzienniczek` ma nagłówek i tytuł karty „Dziennik” — 9e9e9c5
+- [x] 1.7 W Wizycie „Przejdź do dziennika” prowadzi do `/dzienniczek` — 9e9e9c5
+- [x] 1.8 Ekran logowania dalej pokazuje „Dzienniczek leków i samopoczucia” — 9e9e9c5
