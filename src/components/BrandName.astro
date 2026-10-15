@@ -1,0 +1,44 @@
+---
+// The lekomapa mark next to the product name, the one place that draws them together.
+// No React: nothing here holds state or handles events. The geometry comes from BRAND_MARK; the colors are
+// token classes only (fill-primary, text-primary-foreground), so the dark mode follows the .dark token block.
+// The mark mirrors the tab icon (scripts/icons/generate-icons.mjs): a rounded square with the mark inset by 10%.
+// The SVG is aria-hidden: the name next to it is text, so a screen reader reads "lekomapa" once.
+import { BRAND_MARK } from "@/lib/brand-mark";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  class?: string;
+  name?: string;
+}
+
+const { class: className, name = "lekomapa" } = Astro.props;
+
+const MARK_BOX = 24;
+const PADDING = 0.1;
+const CORNER_RADIUS = 3;
+const scale = 1 - 2 * PADDING;
+const offset = MARK_BOX * PADDING;
+const markPath = BRAND_MARK.paths.join(" ");
+---
+
+<p class:list={cn("inline-flex items-center gap-2 whitespace-nowrap", className)}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox={BRAND_MARK.viewBox}
+    class="size-[1.25em] shrink-0"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <rect width={MARK_BOX} height={MARK_BOX} rx={CORNER_RADIUS} class="fill-primary"></rect>
+    <g
+      class="text-primary-foreground"
+      fill="currentColor"
+      fill-rule="evenodd"
+      transform={`translate(${offset} ${offset}) scale(${scale})`}
+    >
+      <path d={markPath}></path>
+    </g>
+  </svg>
+  <span>{name}</span>
+</p>

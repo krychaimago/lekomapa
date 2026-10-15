@@ -291,31 +291,31 @@ Brak migracji bazy. Przeglądarki trzymają stary favicon w pamięci — po wdro
 
 #### Automated
 
-- [x] 2.1 `npm run icons` generuje pliki bez błędów, a ponowny bieg nie zmienia ich zawartości (`git status` czysty)
-- [x] 2.2 `npm test` przechodzi, w tym `scripts/icons/icons.test.mjs`
-- [x] 2.3 `npm run typecheck` przechodzi
-- [x] 2.4 `npm run lint` przechodzi
-- [x] 2.5 `npm run build` przechodzi, a `dist/` zawiera `favicon.svg`, `apple-touch-icon.png` i `manifest.webmanifest`
+- [x] 2.1 `npm run icons` generuje pliki bez błędów, a ponowny bieg nie zmienia ich zawartości (`git status` czysty) — ee46819
+- [x] 2.2 `npm test` przechodzi, w tym `scripts/icons/icons.test.mjs` — ee46819
+- [x] 2.3 `npm run typecheck` przechodzi — ee46819
+- [x] 2.4 `npm run lint` przechodzi — ee46819
+- [x] 2.5 `npm run build` przechodzi, a `dist/` zawiera `favicon.svg`, `apple-touch-icon.png` i `manifest.webmanifest` — ee46819
 
 #### Manual
 
-- [x] 2.6 Karta w Chrome i Safari pokazuje nowy znak przy jasnym i ciemnym motywie przeglądarki
+- [x] 2.6 Karta w Chrome i Safari pokazuje nowy znak przy jasnym i ciemnym motywie przeglądarki — ee46819
 - [ ] 2.7 Na iPhonie „Do ekranu początkowego” daje ikonę lekomapy z podpisem „lekomapa”, a stuknięcie otwiera Safari
 - [ ] 2.8 Na Androidzie „Dodaj do ekranu głównego” daje ikonę lekomapy bez obciętego znaku, a stuknięcie otwiera kartę przeglądarki
-- [x] 2.9 Znak ze zmiany zgadza się z propozycją wybraną w fazie 1
+- [x] 2.9 Znak ze zmiany zgadza się z propozycją wybraną w fazie 1 — ee46819
 
 ### Phase 3: Znak obok nazwy
 
 #### Automated
 
-- [ ] 3.1 `npm test` przechodzi, w tym `scripts/tokens/hardcoded-colors.mjs` (brak koloru na sztywno w `BrandName.astro`)
-- [ ] 3.2 `npm run typecheck` przechodzi
-- [ ] 3.3 `npm run lint` przechodzi
-- [ ] 3.4 `npm run build` przechodzi
+- [x] 3.1 `npm test` przechodzi, w tym `scripts/tokens/hardcoded-colors.mjs` (brak koloru na sztywno w `BrandName.astro`)
+- [x] 3.2 `npm run typecheck` przechodzi
+- [x] 3.3 `npm run lint` przechodzi
+- [x] 3.4 `npm run build` przechodzi
 
 #### Manual
 
-- [ ] 3.5 Pasek boczny na dużym ekranie: znak obok nazwy, w trybie jasnym i ciemnym
-- [ ] 3.6 Nagłówek wnętrza na telefonie: znak obok nazwy, bez zawijania wiersza i bez wypychania przełącznika trybu
-- [ ] 3.7 Ekran logowania (telefon i duży ekran): znak obok nazwy w obu trybach
-- [ ] 3.8 Czytnik ekranu czyta „lekomapa” raz, bez opisu grafiki
+- [x] 3.5 Pasek boczny na dużym ekranie: znak obok nazwy, w trybie jasnym i ciemnym
+- [x] 3.6 Nagłówek wnętrza na telefonie: znak obok nazwy, bez zawijania wiersza i bez wypychania przełącznika trybu
+- [x] 3.7 Ekran logowania (telefon i duży ekran): znak obok nazwy w obu trybach
+- [x] 3.8 Czytnik ekranu czyta „lekomapa” raz, bez opisu grafiki
