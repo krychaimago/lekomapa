@@ -61,7 +61,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
 | S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done     |
 | S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done     |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | ready    |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done     |
 | S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
 | S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed |
 | S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed |
@@ -202,7 +202,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Układ (zwinięcie opisów, lista zamiast kart, jedna nota dla listy) — Owner: plan (`/10x-ui`). Block: no. Nota pokazana raz wymaga tej samej zmiany FR-007 co S-05; jeśli S-05 ją wprowadzi, S-07 z niej korzysta.
 - **Risk:** Karty są dziś wpisane bezpośrednio w `src/pages/leki/[id].astro` i każda powtarza notę; „Wizyta” robi to samo osobno. Wspólny element dla obu ekranów zmniejsza dryf, ale zwiększa zakres — decyzja w planie. Kolejność kolizji nie może zależeć od ich „wagi” (FR-012). Graf z S-10 może później przejąć część tej roli; S-07 nie czeka na niego, bo graf jest na terminie zapasowym.
 - **Termin:** przed 04.11.2026, jeśli zostanie czas.
-- **Status:** ready
+- **Status:** done
 
 ### S-08: Ekrany, które nie są puste
 
@@ -335,3 +335,4 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **S-04: Użytkowniczka może rozpoznać lekomapę po ikonie — w karcie przeglądarki, na pasku bocznym obok nazwy i na ekranie telefonu po dodaniu skrótu.** — Archived 2026-10-15 → `context/archive/2026-10-15-app-icon/`. Lesson: —.
 - **S-05: Użytkowniczka może przeczytać „Wizytę” także przy wielu lekach i objawach: widzi listę bieżących leków z dawkami, notę poglądową bez powtórek przy każdej karcie, a pytania do lekarza bez tych samych leków powtarzanych w każdym z nich.** — Archived 2026-10-16 → `context/archive/2026-10-16-visit-readable-with-current-meds/`. Lesson: —.
 - **S-06: Użytkowniczka może wybrać nasilenie tuż przy zaznaczonym objawie i widzi ten wybór na telefonie także wtedy, gdy zaznaczyła objaw z końca listy.** — Archived 2026-10-16 → `context/archive/2026-10-16-severity-next-to-symptom/`. Lesson: —.
+- **S-07: Użytkowniczka może przejrzeć wiele możliwych kolizji leku bez długiego przewijania.** — Archived 2026-10-16 → `context/archive/2026-10-16-medication-interactions-compact/`. Lesson: —.
