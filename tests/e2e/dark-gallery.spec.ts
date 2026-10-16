@@ -13,6 +13,7 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
+import { pickSymptom } from "./journal-helpers";
 
 const GALLERY_DIR = path.join("test-results", "dark-gallery");
 const AUTH_FILE = "playwright/.auth/user.json";
@@ -387,7 +388,7 @@ test.describe("dark-mode gallery", () => {
       // Journal entry now, with the run marker in the note (the note never travels in a URL).
       await page.goto("/dzienniczek/nowy");
       await waitForIslands(page);
-      await page.getByRole("checkbox", { name: JOURNAL_SYMPTOM, exact: true }).check();
+      await pickSymptom(page, JOURNAL_SYMPTOM);
       await page.getByRole("textbox", { name: "Notatka" }).fill(RUN_MARKER);
       await page.getByRole("button", { name: "Zapisz wpis" }).click();
       await page.waitForURL(new RegExp(`/dzienniczek\\?dodano=${UUID}$`));

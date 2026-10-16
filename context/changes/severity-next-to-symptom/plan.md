@@ -277,32 +277,32 @@ Nie dotyczy — bez migracji i zmian API.
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.2 Typy: `npm run typecheck`
-- [x] 1.3 Lint: `npm run lint`
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 3a81264
+- [x] 1.2 Typy: `npm run typecheck` — 3a81264
+- [x] 1.3 Lint: `npm run lint` — 3a81264
 
 #### Manual
 
-- [x] 1.4 Autorka czyta listę przypadków testowych i potwierdza, że oddają zachowanie ze szkicu (przypięte, odmiana licznika)
+- [x] 1.4 Autorka czyta listę przypadków testowych i potwierdza, że oddają zachowanie ze szkicu (przypięte, odmiana licznika) — 3a81264
 
 ### Phase 2: Widok wyboru objawów
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe i filtr FR-012: `npm test`
-- [ ] 2.2 Typy: `npm run typecheck`
-- [ ] 2.3 Lint: `npm run lint`
-- [ ] 2.4 Build: `npm run build`
-- [ ] 2.5 Skan wartości wpisanych na sztywno na plikach widoku: 0 trafień (`SymptomPicker.tsx`, `NewEntryForm.tsx`, `EditEntryForm.tsx`)
-- [ ] 2.6 Istniejące testy E2E przechodzą przeciw lokalnemu Supabase: `npx playwright test visit-readable`
+- [x] 2.1 Testy jednostkowe i filtr FR-012: `npm test`
+- [x] 2.2 Typy: `npm run typecheck`
+- [x] 2.3 Lint: `npm run lint`
+- [x] 2.4 Build: `npm run build`
+- [x] 2.5 Skan wartości wpisanych na sztywno na plikach widoku: 0 trafień (`SymptomPicker.tsx`, `NewEntryForm.tsx`, `EditEntryForm.tsx`)
+- [x] 2.6 Istniejące testy E2E przechodzą przeciw lokalnemu Supabase: `npx playwright test visit-readable`
 
 #### Manual
 
-- [ ] 2.7 Zrzut 390 px i 1280 px, oba tryby: grupy zwinięte, liczniki, nasilenie pod zaznaczonym objawem, podsumowanie na dole
-- [ ] 2.8 Na 390 px: rozwinięcie „pozostałe”, zaznaczenie „spadek libido” — przyciski widoczne bez przewijania; lista nad palcem nie przesuwa się
-- [ ] 2.9 Wyszukiwanie „kasz” przy zaznaczonym „bólu głowy”: „Ból głowy” z przyciskami pod „Zaznaczone”, „Kaszel” pod „Pasujące objawy”
-- [ ] 2.10 Poprawa istniejącego wpisu (`/dzienniczek/[id]`): liczniki pokazują zapisane objawy, zmiana nasilenia i zapis działają
-- [ ] 2.11 Obsługa klawiaturą: Tab po nagłówkach grup, Enter/Spacja rozwija, widoczny pierścień fokusu
+- [x] 2.7 Zrzut 390 px i 1280 px, oba tryby: grupy zwinięte, liczniki, nasilenie pod zaznaczonym objawem, podsumowanie na dole
+- [x] 2.8 Na 390 px: rozwinięcie „pozostałe”, zaznaczenie „spadek libido” — przyciski widoczne bez przewijania; lista nad palcem nie przesuwa się
+- [x] 2.9 Wyszukiwanie „kasz” przy zaznaczonym „bólu głowy”: „Ból głowy” z przyciskami pod „Zaznaczone”, „Kaszel” pod „Pasujące objawy”
+- [x] 2.10 Poprawa istniejącego wpisu (`/dzienniczek/[id]`): liczniki pokazują zapisane objawy, zmiana nasilenia i zapis działają
+- [x] 2.11 Obsługa klawiaturą: Tab po nagłówkach grup, Enter/Spacja rozwija, widoczny pierścień fokusu
 
 ### Phase 3: Stany, bramka wizualna i test na telefonie
 

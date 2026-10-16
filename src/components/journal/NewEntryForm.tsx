@@ -130,7 +130,7 @@ export default function NewEntryForm({ symptoms, terms, defaultOccurred, minOccu
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="note">
-              {copy.noteLabel} <span className="text-muted-foreground font-normal">{copy.severityOptional}</span>
+              {copy.noteLabel} <span className="text-muted-foreground font-normal">{copy.noteOptional}</span>
             </Label>
             <textarea
               id="note"

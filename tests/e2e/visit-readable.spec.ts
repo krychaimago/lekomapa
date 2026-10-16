@@ -12,6 +12,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { INTERACTION_COPY } from "../../src/lib/copy/interactions";
 import { JOURNAL_COPY } from "../../src/lib/copy/journal";
 import { VISIT_SUMMARY_COPY } from "../../src/lib/copy/visit-summary";
+import { pickSymptom } from "./journal-helpers";
 
 // The account is created by the test itself, so it starts without the saved session.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -56,7 +57,7 @@ async function waitForIslands(page: Page) {
 async function saveSymptom(page: Page, symptom: string, occurredLocal: string) {
   await page.goto("/dzienniczek/nowy");
   await waitForIslands(page);
-  await page.getByRole("checkbox", { name: symptom, exact: true }).check();
+  await pickSymptom(page, symptom);
   await page.getByLabel(JOURNAL_COPY.form.occurredLabel).fill(occurredLocal);
   await page.getByRole("button", { name: JOURNAL_COPY.form.submit }).click();
   await page.waitForURL(new RegExp(`/dzienniczek\\?dodano=${UUID}$`));
