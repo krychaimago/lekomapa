@@ -221,11 +221,11 @@ Nie dotyczy. Bez zmian w bazie.
 
 #### Automated
 
-- [x] 2.1 Nowy spec przechodzi przeciw lokalnemu Supabase: `npx playwright test tests/e2e/medication-interactions-compact.spec.ts`
-- [x] 2.2 Spec pada, gdy nota jest tymczasowo wewnątrz `<details>`; zmiana cofnięta, spec znów przechodzi
-- [x] 2.3 Pozostałe testy E2E przechodzą (w tym `visit-readable` i `dark-gallery`): `npx playwright test`
-- [x] 2.4 Lint i typy przechodzą: `npm run lint`, `npm run typecheck`
+- [x] 2.1 Nowy spec przechodzi przeciw lokalnemu Supabase: `npx playwright test tests/e2e/medication-interactions-compact.spec.ts` — d409de8
+- [x] 2.2 Spec pada, gdy nota jest tymczasowo wewnątrz `<details>`; zmiana cofnięta, spec znów przechodzi — d409de8
+- [x] 2.3 Pozostałe testy E2E przechodzą (w tym `visit-readable` i `dark-gallery`): `npx playwright test` — d409de8
+- [x] 2.4 Lint i typy przechodzą: `npm run lint`, `npm run typecheck` — d409de8
 
 #### Manual
 
-- [x] 2.5 Przegląd zrzutów `dark-gallery` dla szczegółów leku z kolizją w obu trybach: karty zwinięte, nota widoczna
+- [x] 2.5 Przegląd zrzutów `dark-gallery` dla szczegółów leku z kolizją w obu trybach: karty zwinięte, nota widoczna — d409de8
