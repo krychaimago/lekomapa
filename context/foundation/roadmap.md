@@ -3,7 +3,7 @@ project: lekomapa
 version: 3
 status: draft
 created: 2026-09-21
-updated: 2026-10-15
+updated: 2026-10-16
 prd_version: 1
 main_goal: quality
 top_blocker: time
@@ -17,7 +17,7 @@ milestone_status: open
 > Wyprowadzona z opisu autorki z 14.10.2026 (lista pozycji na M-2), `context/foundation/prd.md` (v1) dla pozycji odłożonych w M-1 oraz sprawdzonego stanu repozytorium. Pełna treść M-1 (pozycje, długi, rozstrzygnięcia) zostaje w historii gita: `context/foundation/roadmap.md` w commicie `68a936b`.
 > Edytowana w miejscu; archiwizowana, gdy przestanie obowiązywać.
 > Pozycje poniżej są ułożone w kolejności zależności. Tabela „At a glance” jest indeksem.
-> Realizacja prowadzona jest w GitHub Issues (`krychaimago/lekomapa`, milestone `M-2: Szlif i czytelność ekranów`, #104–#114); numery issue przy pozycjach i w tabeli „Backlog Handoff”. Roadmapa pozostaje źródłem prawdy o zakresie kamienia milowego.
+> Realizacja prowadzona jest w GitHub Issues (`krychaimago/lekomapa`, milestone `M-2: Szlif i czytelność ekranów`, #104–#114 i #120); numery issue przy pozycjach i w tabeli „Backlog Handoff”. Roadmapa pozostaje źródłem prawdy o zakresie kamienia milowego.
 
 ## Milestone
 
@@ -39,6 +39,7 @@ milestone_status: open
   - MS-10 (10): elementy graficzne, żeby ekrany nie były puste; ilustracje nie straszą i nie sugerują zagrożenia (FR-012).
   - MS-11 (11): lista bieżących leków z dawkami w „Wizycie”; rozszerza FR-011.
   - MS-12 (12): eksport własnych danych — opcjonalnie, tylko jeśli zostanie czas.
+  - MS-13 (zgłoszenie autorki z 15.10.2026, #120): na telefonie nagłówek z „Wyloguj się” i przełącznikiem trybu zostaje na ekranie przy przewijaniu, tak jak pasek wersji demonstracyjnej.
 
 ## Vision recap
 
@@ -52,30 +53,31 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status   |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | -------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done     |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done     |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | ready    |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | ready    |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | ready    |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked  |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done        |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | in-progress |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | ready       |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | ready       |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed    |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed    |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed    |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked     |
+| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | ready       |
 
 ## Streams
 
 Pomoc nawigacyjna — grupuje pozycje dzielące łańcuch wymagań wstępnych albo temat. Kolejność obowiązująca nadal żyje w grafie zależności poniżej. ∥ = pozycje wzajemnie niezależne.
 
-| Stream | Theme                 | Chain                             | Note                                                                                                                      |
-| ------ | --------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| A      | Szybkie poprawki      | `S-01` ∥ `S-02` ∥ `S-03` ∥ `S-04` | Pierwsze, bo małe i widoczne od razu; każda osobnym PR-em.                                                                |
-| B      | Wizyta i wizualizacje | `S-05` → `S-09` → `S-10`          | Gwiazda przewodnia, potem nowe funkcje; `S-09` wybiera sposób rysowania, `S-10` z niego korzysta.                         |
-| C      | Czytelność ekranów    | `S-06` ∥ `S-07` → `S-08`          | `S-06` i `S-07` niezależne; `S-08` dołącza do A przy `S-03` i do B przy `S-05`, bo ilustracje trafiają w ich puste stany. |
-| D      | Dane na zewnątrz      | `S-11`                            | Tylko jeśli zostanie czas; zablokowane do rozstrzygnięcia zasady z PRD o danych, które „nie opuszczają produktu”.         |
+| Stream | Theme                 | Chain                                      | Note                                                                                                                      |
+| ------ | --------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| A      | Szybkie poprawki      | `S-01` ∥ `S-02` ∥ `S-03` ∥ `S-04` ∥ `S-12` | Pierwsze, bo małe i widoczne od razu; każda osobnym PR-em. `S-12` dopisana 15.10.2026 ze zgłoszenia #120.                 |
+| B      | Wizyta i wizualizacje | `S-05` → `S-09` → `S-10`                   | Gwiazda przewodnia, potem nowe funkcje; `S-09` wybiera sposób rysowania, `S-10` z niego korzysta.                         |
+| C      | Czytelność ekranów    | `S-06` ∥ `S-07` → `S-08`                   | `S-06` i `S-07` niezależne; `S-08` dołącza do A przy `S-03` i do B przy `S-05`, bo ilustracje trafiają w ich puste stany. |
+| D      | Dane na zewnątrz      | `S-11`                                     | Tylko jeśli zostanie czas; zablokowane do rozstrzygnięcia zasady z PRD o danych, które „nie opuszczają produktu”.         |
 
 ## Baseline
 
@@ -170,7 +172,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Kolejność na liście bieżących leków (np. alfabetycznie albo według daty rozpoczęcia) — Owner: plan. Block: no. Nigdy według kolizji (FR-012).
 - **Risk:** Wymaga jawnej zmiany PRD przed implementacją. FR-011 dostaje listę bieżących leków z dawkami — sekcja przestaje tylko zbierać gotowe treści. FR-007 („nota przy każdej informacji o kolizji”) — tylko jeśli nota ma się pokazywać raz. Granice nienaruszone: sekcja niczego nie liczy od nowa; jedno aktualne pytanie na objaw; pusty stan nie brzmi jak potwierdzenie bezpieczeństwa; nota zawsze w tym samym widoku co informacja o kolizji, nigdy pod zwinięciem; pytanie po zapisaniu objawu (FR-010) bez zmian. Próg szybkości z PRD (LCP ≤ 2,5 s) obowiązuje ten ekran — pomiar po zmianie. Kandydat na test E2E: przy wielu lekach i objawach nota i lista bieżących leków są widoczne.
 - **Termin:** konieczne przed 04.11.2026 (gwiazda przewodnia).
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-06: Nasilenie przy samym objawie
 
@@ -265,6 +267,21 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **Termin:** tylko jeśli zostanie czas.
 - **Status:** blocked
 
+### S-12: Przyklejony nagłówek na telefonie
+
+- **Outcome:** Użytkowniczka może na telefonie przewijać treść ekranu, a nagłówek ze znakiem, przełącznikiem trybu i „Wyloguj się” zostaje na górze ekranu, pod paskiem wersji demonstracyjnej.
+- **Change ID:** `mobile-header-sticky`
+- **Issue:** #120
+- **PRD refs:** MS-13
+- **Prerequisites:** —
+- **Parallel with:** S-05, S-06, S-07
+- **Blockers:** —
+- **Unknowns:**
+  - Przesunięcie nagłówka pod paskiem demo: pasek ma stałą wysokość (`--demo-bar-height`) tylko od `lg`, na telefonie zawija się do dwóch wierszy. Najszybszy: oba paski w jednym przyklejonym kontenerze. Optymalny: stała wysokość paska demo także na telefonie. — Owner: plan. Block: no.
+- **Risk:** Zmiana wyłącznie układu na telefonie (`src/layouts/AppLayout.astro`, `src/components/DemoBar.astro`); duży ekran działa poprawnie i nie może się zmienić. Na górze dwa przyklejone paski, na dole przyklejone menu — treść nie może chować się pod żadnym z nich, a przy 320 px zostaje mniej miejsca na treść. Sprawdzić przy 320, 360 i 375 px, w obu trybach. Kandydat na test E2E w widoku telefonu: po przewinięciu „Wyloguj się” jest widoczne.
+- **Termin:** konieczne przed 04.11.2026.
+- **Status:** ready
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                          | Suggested issue title                            | Ready for `/10x-plan` | Notes                                                                | Issue |
@@ -280,6 +297,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 | S-09       | `medication-symptom-timeline`      | Oś czasu leków i objawów                         | no                    | zapasowy; czeka na S-05; nowe FR                                     | #112  |
 | S-10       | `interaction-graph`                | Graf leków i możliwych interakcji                | no                    | zapasowy; czeka na S-09; nowe FR                                     | #113  |
 | S-11       | `data-export`                      | Eksport własnych danych                          | no                    | tylko jeśli zostanie czas; zablokowane pytaniem 1                    | #114  |
+| S-12       | `mobile-header-sticky`             | Przyklejony nagłówek na telefonie                | yes                   | przed 04.11; błąd zgłoszony 15.10.2026                               | #120  |
 
 ## Open Roadmap Questions
 
@@ -301,6 +319,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **Wiele profilów w jednym koncie** — Why parked: PRD `## Non-Goals`; jedno konto to jedna osoba.
 - **Pełna warstwa prawna przetwarzania danych (RODO)** — Why parked: PRD `## Non-Goals`; warunek powrotu: wyjście z fazy prototypu.
 - **Techniczne ograniczenia prototypu: automatyczne czyszczenie kont, rejestracja z zaproszeniem** — Why parked: PRD `## Non-Goals`; koszt ponad potrzebę prototypu.
+- **Szukanie objawu z konkretnego dnia w „Dzienniku”** (filtr albo skok po dacie) — Why parked: wydzielone 16.10.2026 z S-05 (`context/changes/visit-readable-with-current-meds/frame.md`); „Wizyta” jest ułożona według objawów, nie dni, a potrzeba wróci przy codziennych wpisach. Nazwa objawu nigdy w URL; parametr daty wymaga świadomego wpisu w `ALLOWED_URL_PARAMS`.
 
 ## Milestone History
 

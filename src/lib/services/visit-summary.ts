@@ -1,10 +1,18 @@
 // The "Wizyta" section (S-08, US-03, FR-011): gathers what S-02 and S-06 already produce and decides
 // only which entry is the newest, the order of symptoms, which pairs show once and which empty state appears.
+// S-05 adds the list of current medications, built from the same medication rows as the questions.
 // No `@/` imports and no Supabase client, so scripts/visit-summary/visit-summary.test.mjs can load this file directly
 // under `node --experimental-strip-types`.
 
-import type { DoctorQuestion, DoctorQuestionMedication, MedicationInteraction } from "../../types.ts";
-import { composeDoctorQuestion } from "./doctor-question.ts";
+import { VISIT_SUMMARY_COPY as copy } from "../copy/visit-summary.ts";
+import type {
+  DoctorQuestion,
+  DoctorQuestionMedication,
+  MedicationInteraction,
+  VisitCurrentMedication,
+} from "../../types.ts";
+import { composeDoctorQuestion, fill } from "./doctor-question.ts";
+import { formatIsoDate, variantText } from "./medications.ts";
 
 export interface VisitSymptom {
   symptomId: string;
@@ -72,6 +80,40 @@ export function uniqueInteractions(
 // ISO dates compare correctly as strings.
 export function isCurrentMedication(discontinuedOn: string | null, today: string): boolean {
   return discontinuedOn === null || discontinuedOn > today;
+}
+
+// Each current medication once (S-05), with the dose of its latest period — the same rows the questions are built
+// from, nothing read anew. A medication with no period is left out instead of failing. Alphabetical, then by the
+// start of the current dose; never by suspicion (FR-012). The result never depends on the order of the input arrays.
+export function currentMedications(medications: DoctorQuestionMedication[], today: string): VisitCurrentMedication[] {
+  const items: VisitCurrentMedication[] = [];
+  for (const medication of medications) {
+    if (!isCurrentMedication(medication.discontinuedOn, today)) continue;
+    const current = medication.periods.reduce<DoctorQuestionMedication["periods"][number] | undefined>(
+      (latest, period) => (latest === undefined || period.startedOn > latest.startedOn ? period : latest),
+      undefined,
+    );
+    if (!current) continue;
+    items.push({
+      name: medication.name,
+      since: current.startedOn,
+      doseText: current.doseText,
+      strength: current.strength,
+      pharmaceuticalForm: current.pharmaceuticalForm,
+    });
+  }
+  return items.sort(
+    (a, b) => byName(a.name, b.name) || a.since.localeCompare(b.since) || byName(a.doseText, b.doseText),
+  );
+}
+
+// One line of the current medications list; the variant in brackets only when the registry gave any part of it.
+export function currentMedicationText(item: VisitCurrentMedication): string {
+  const variant = variantText({ strength: item.strength, pharmaceutical_form: item.pharmaceuticalForm });
+  const values = { lek: item.name, data: formatIsoDate(item.since), ilość: item.doseText };
+  return variant
+    ? fill(copy.currentMedicationItemWithVariant, { ...values, wariant: variant })
+    : fill(copy.currentMedicationItem, values);
 }
 
 // "No checked pair found" is only true with at least two current medications to compare.

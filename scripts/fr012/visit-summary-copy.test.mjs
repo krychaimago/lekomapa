@@ -45,6 +45,11 @@ test("every text the section needs exists and is not empty", () => {
     "askDoctorOrPharmacist",
     "questionsNote",
     "loadError",
+    "currentMedicationsHeading",
+    "currentMedicationItem",
+    "currentMedicationItemWithVariant",
+    "currentMedicationsEmpty",
+    "interactionsHeadingCount",
   ];
   for (const key of keys) {
     assert.equal(typeof VISIT_SUMMARY_COPY[key], "string", key);
@@ -55,4 +60,7 @@ test("every text the section needs exists and is not empty", () => {
 test("templates carry the markers the screen replaces", () => {
   assert.match(VISIT_SUMMARY_COPY.pairLabel, /\{lek\}.*\{drugi\}/u);
   assert.match(VISIT_SUMMARY_COPY.withoutQuestion, /\{objawy\}/u);
+  assert.match(VISIT_SUMMARY_COPY.currentMedicationItem, /\{lek\}.*\{data\}.*\{ilość\}/u);
+  assert.match(VISIT_SUMMARY_COPY.currentMedicationItemWithVariant, /\{lek\}.*\{wariant\}.*\{data\}.*\{ilość\}/u);
+  assert.match(VISIT_SUMMARY_COPY.interactionsHeadingCount, /\{liczba\}/u);
 });

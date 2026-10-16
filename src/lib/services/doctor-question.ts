@@ -146,7 +146,7 @@ export interface DoctorQuestionText {
 
 // Every `{marker}` of the template in one pass, so a value is inserted as it is: "$&" or "{po}" in a typed name is
 // neither a replacement pattern nor a marker. A marker without a value stays as it is.
-function fill(template: string, values: Record<string, string | number>): string {
+export function fill(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{([^}]+)\}/gu, (marker, key: string) =>
     Object.hasOwn(values, key) ? String(values[key]) : marker,
   );

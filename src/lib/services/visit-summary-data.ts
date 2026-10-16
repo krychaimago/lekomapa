@@ -8,6 +8,7 @@ import { loadQuestionMedications } from "@/lib/services/doctor-question-data";
 import { todayInWarsaw } from "@/lib/services/medications";
 import {
   composeVisitQuestions,
+  currentMedications,
   interactionsEmptyState,
   isCurrentMedication,
   showIntro,
@@ -52,6 +53,7 @@ export async function loadVisitSummary(supabase: SupabaseClient): Promise<VisitS
 
   return {
     showIntro: showIntro(medications.length, symptomRows.length),
+    currentMedications: currentMedications(medications, today),
     interactions: pairs,
     interactionsEmptyState: interactionsEmptyState(currentCount, pairs.length),
     questions,
