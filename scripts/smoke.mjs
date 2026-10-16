@@ -1554,6 +1554,31 @@ const journalFlowSteps = [
     },
     EXPECT_OK,
   ],
+  [
+    "visit summary: current medications list shows the smoke medication",
+    async () => {
+      if (!fixtures.a) return { ok: false, detail: "check did not run: no fixture account" };
+      journal.paths.push(VISIT_SUMMARY_PAGE);
+      const page = await requestPage(VISIT_SUMMARY_PAGE, { jar: journal.jar });
+      if (page.status !== 200) return { ok: false, detail: `${page.status} ${page.location}` };
+      // The list part alone, so the name is proven inside the list, not in the interactions or the questions. A missing
+      // part and a missing medication fail with different details: an absent section is not an empty list.
+      const start = page.body.indexOf("data-visit-current-medications");
+      const end = start === -1 ? -1 : page.body.indexOf("</section>", start);
+      const section = end === -1 ? null : page.body.slice(start, end);
+      if (section === null) return { ok: false, detail: "current medications section missing" };
+      const medicationName = fixtures.a.medication.product_name;
+      const heading = pageContains(section, VISIT_SUMMARY_COPY.currentMedicationsHeading);
+      const medication = pageContains(section, medicationName);
+      return {
+        ok: heading && medication,
+        detail: `section present; heading ${heading ? "present" : "missing"}; ${medicationName} ${
+          medication ? "present" : "missing"
+        }`,
+      };
+    },
+    EXPECT_OK,
+  ],
   // --- Correcting, the note and deleting (S-07) ---
   //
   // The correction and the note change go as the screen's fetch will: a JSON body, the Origin a browser derives from

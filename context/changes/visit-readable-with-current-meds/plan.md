@@ -280,35 +280,35 @@ Brak migracji.
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe listy bieżących leków przechodzą: `npm test`
-- [x] 1.2 Filtr FR-012 przyjmuje nowe teksty: `npm test` (`scripts/fr012/visit-summary-copy.test.mjs`)
-- [x] 1.3 Typy przechodzą: `npm run typecheck`
-- [x] 1.4 Lint przechodzi: `npm run lint`
+- [x] 1.1 Testy jednostkowe listy bieżących leków przechodzą: `npm test` — 61dcb33
+- [x] 1.2 Filtr FR-012 przyjmuje nowe teksty: `npm test` (`scripts/fr012/visit-summary-copy.test.mjs`) — 61dcb33
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — 61dcb33
+- [x] 1.4 Lint przechodzi: `npm run lint` — 61dcb33
 
 #### Manual
 
-- [x] 1.5 Autorka zatwierdza brzmienie nowych tekstów w `src/lib/copy/visit-summary.ts`
-- [x] 1.6 Autorka zatwierdza zmianę FR-011 w PRD
+- [x] 1.5 Autorka zatwierdza brzmienie nowych tekstów w `src/lib/copy/visit-summary.ts` — 61dcb33
+- [x] 1.6 Autorka zatwierdza zmianę FR-011 w PRD — 61dcb33
 
 ### Phase 2: Ekran „Wizyta”
 
 #### Automated
 
-- [ ] 2.1 Typy przechodzą: `npm run typecheck`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
-- [ ] 2.3 Testy jednostkowe i bramki tokenów przechodzą: `npm test`
-- [ ] 2.4 Build przechodzi: `npm run build`
-- [ ] 2.5 Smoke przeciw lokalnemu Supabase przechodzi, z nowym krokiem listy leków: `npm run smoke`
-- [ ] 2.6 Galeria trybu ciemnego przechodzi z nowym stanem: `npx playwright test tests/e2e/dark-gallery.spec.ts`
+- [x] 2.1 Typy przechodzą: `npm run typecheck`
+- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.3 Testy jednostkowe i bramki tokenów przechodzą: `npm test`
+- [x] 2.4 Build przechodzi: `npm run build`
+- [x] 2.5 Smoke przeciw lokalnemu Supabase przechodzi, z nowym krokiem listy leków: `npm run smoke`
+- [x] 2.6 Galeria trybu ciemnego przechodzi z nowym stanem: `npx playwright test tests/e2e/dark-gallery.spec.ts`
 
 #### Manual
 
-- [ ] 2.7 Przy 320, 360 i 375 px, w trybie jasnym i ciemnym: lista leków czytelna, tytuł interakcji z liczbą i nota widoczne przy zwiniętej sekcji, treść nie chowa się pod przyklejonym menu
-- [ ] 2.8 Klawiatura: Tab dochodzi do tytułu interakcji i pytań, Enter/spacja zwija i rozwija
-- [ ] 2.9 Przy 6 parach i 10 objawach ekran po wejściu: lista leków, rozwinięte interakcje, jedno rozwinięte pytanie, reszta jednolinijkowa
-- [ ] 2.10 Przy koncie bez bieżących leków: tekst listy i odnośnik „Dodaj lek”; pusty stan interakcji jak dotąd
-- [ ] 2.11 Dziennik: karta pytania po zapisaniu objawu wygląda jak przed zmianą
-- [ ] 2.12 LCP `/wizyta` ≤ 2,5 s (Lighthouse Mobile) na koncie z wieloma lekami i objawami
+- [x] 2.7 Przy 320, 360 i 375 px, w trybie jasnym i ciemnym: lista leków czytelna, tytuł interakcji z liczbą i nota widoczne przy zwiniętej sekcji, treść nie chowa się pod przyklejonym menu
+- [x] 2.8 Klawiatura: Tab dochodzi do tytułu interakcji i pytań, Enter/spacja zwija i rozwija
+- [x] 2.9 Przy 6 parach i 10 objawach ekran po wejściu: lista leków, rozwinięte interakcje, jedno rozwinięte pytanie, reszta jednolinijkowa
+- [x] 2.10 Przy koncie bez bieżących leków: tekst listy i odnośnik „Dodaj lek”; pusty stan interakcji jak dotąd
+- [x] 2.11 Dziennik: karta pytania po zapisaniu objawu wygląda jak przed zmianą
+- [x] 2.12 LCP `/wizyta` ≤ 2,5 s (Lighthouse Mobile) na koncie z wieloma lekami i objawami
 
 ### Phase 3: Test E2E — wiele leków i objawów
 
