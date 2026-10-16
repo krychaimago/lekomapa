@@ -13,6 +13,7 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
+import { pickSymptom } from "./journal-helpers";
 
 const GALLERY_DIR = path.join("test-results", "dark-gallery");
 const AUTH_FILE = "playwright/.auth/user.json";
@@ -224,6 +225,36 @@ const ENTRIES: Entry[] = [
       await expect(page.getByText("Wybierz co najmniej jeden objaw.")).toBeVisible();
     },
   },
+  // One group unfolded with a ticked symptom and its severity under it; a second symptom ticked through the search, its
+  // group folded again (its count on the heading), without severity. Nothing is saved, so the account keeps no entry from this state.
+  {
+    page: "dzienniczek/nowy",
+    state: "with-selected",
+    session: true,
+    path: () => "/dzienniczek/nowy",
+    prepare: async (page) => {
+      await waitForIslands(page);
+      const nervous = page.getByRole("button", { name: "nerwowy", exact: true });
+      await nervous.click();
+      await expect(nervous).toHaveAttribute("aria-expanded", "true");
+      await page.getByRole("checkbox", { name: "ból głowy", exact: true }).check();
+      const severity = page.getByRole("group", { name: "Nasilenie: ból głowy" });
+      await severity.getByRole("button", { name: "umiarkowane", exact: true }).click();
+      await expect(severity.getByRole("button", { name: "umiarkowane", exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await pickSymptom(page, JOURNAL_SYMPTOM);
+      // Ticked in the search results, so its group unfolds (impl-review F4); fold it to show the count on the heading.
+      const digestive = page.getByRole("button", { name: /^pokarmowy\s+1 wybrany$/ });
+      await expect(digestive).toHaveAttribute("aria-expanded", "true");
+      await digestive.click();
+      await expect(digestive).toHaveAttribute("aria-expanded", "false");
+      // The pointer would stay on the heading and the screenshot would show its hover background.
+      await page.mouse.move(0, 0);
+      await expect(page.getByRole("region", { name: "Wybrane objawy" }).getByRole("listitem")).toHaveCount(2);
+    },
+  },
   {
     page: "dzienniczek/[id]",
     session: true,
@@ -387,7 +418,7 @@ test.describe("dark-mode gallery", () => {
       // Journal entry now, with the run marker in the note (the note never travels in a URL).
       await page.goto("/dzienniczek/nowy");
       await waitForIslands(page);
-      await page.getByRole("checkbox", { name: JOURNAL_SYMPTOM, exact: true }).check();
+      await pickSymptom(page, JOURNAL_SYMPTOM);
       await page.getByRole("textbox", { name: "Notatka" }).fill(RUN_MARKER);
       await page.getByRole("button", { name: "Zapisz wpis" }).click();
       await page.waitForURL(new RegExp(`/dzienniczek\\?dodano=${UUID}$`));

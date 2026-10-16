@@ -150,7 +150,7 @@ export default function EditEntryForm({
   const noteField = (
     <div className="flex flex-col gap-2">
       <Label htmlFor="note">
-        {formCopy.noteLabel} <span className="text-muted-foreground font-normal">{formCopy.severityOptional}</span>
+        {formCopy.noteLabel} <span className="text-muted-foreground font-normal">{formCopy.noteOptional}</span>
       </Label>
       <textarea
         id="note"

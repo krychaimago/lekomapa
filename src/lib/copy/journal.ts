@@ -74,10 +74,19 @@ export const JOURNAL_COPY = {
     severityOptional: "(opcjonalne)",
     searchLabel: "Szukaj objawu",
     searchHint: "Na przykład: ból głowy. Możesz pisać bez polskich znaków.",
+    // Search results: ticked symptoms the query does not find stand first under pinnedHeading, with their severity
+    // buttons; the symptoms found follow under resultsLabel.
+    pinnedHeading: "Zaznaczone",
     resultsLabel: "Pasujące objawy",
+    // Count of ticked symptoms next to a collapsed category heading. Polish plural: 1 / 2–4 (not 12–14) / the rest.
+    selectedCountOne: "{n} wybrany",
+    selectedCountFew: "{n} wybrane",
+    selectedCountMany: "{n} wybranych",
     noMatch: "Nie ma takiego objawu na liście. Opisz go w notatce.",
     notFoundHint: "Nie znalazłaś objawu? Opisz go w notatce.",
     noteLabel: "Notatka",
+    // Its own key, not severityOptional: a later change of the severity wording must not change the note label.
+    noteOptional: "(opcjonalne)",
     noteHint: "Na przykład: po kolacji. Najwyżej 200 znaków.",
     submit: "Zapisz wpis",
     pending: "Zapisywanie...",
