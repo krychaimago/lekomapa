@@ -84,7 +84,7 @@ export function isCurrentMedication(discontinuedOn: string | null, today: string
 
 // Each current medication once (S-05), with the dose of its latest period — the same rows the questions are built
 // from, nothing read anew. A medication with no period is left out instead of failing. Alphabetical, then by the
-// start of the current dose; never by suspicion (FR-012). The result never depends on the order of the input arrays.
+// start of the current dose, then by the dose and the whole line (variant included); never by suspicion (FR-012). The result never depends on the order of the input arrays.
 export function currentMedications(medications: DoctorQuestionMedication[], today: string): VisitCurrentMedication[] {
   const items: VisitCurrentMedication[] = [];
   for (const medication of medications) {
@@ -103,7 +103,11 @@ export function currentMedications(medications: DoctorQuestionMedication[], toda
     });
   }
   return items.sort(
-    (a, b) => byName(a.name, b.name) || a.since.localeCompare(b.since) || byName(a.doseText, b.doseText),
+    (a, b) =>
+      byName(a.name, b.name) ||
+      a.since.localeCompare(b.since) ||
+      byName(a.doseText, b.doseText) ||
+      byName(currentMedicationText(a), currentMedicationText(b)),
   );
 }
 

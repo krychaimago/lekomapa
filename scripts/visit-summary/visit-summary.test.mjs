@@ -239,6 +239,19 @@ test("the result does not depend on the order of the periods or the medications"
   );
 });
 
+test("two medications that differ only by variant keep one order, whatever the input order", () => {
+  const meds = [
+    medication("Ibuprom", [period("2026-09-01", null, "1 tabletka", "400 mg", "tabletki")]),
+    medication("Ibuprom", [period("2026-09-01", null, "1 tabletka", "200 mg", "tabletki")]),
+  ];
+  const expected = [
+    "Ibuprom (Moc: 200 mg · Postać: tabletki) — od 01.09.2026, 1 tabletka",
+    "Ibuprom (Moc: 400 mg · Postać: tabletki) — od 01.09.2026, 1 tabletka",
+  ];
+  assert.deepEqual(lines(meds), expected);
+  assert.deepEqual(lines([...meds].reverse()), expected);
+});
+
 test("a medication with no dosage period is left out", () => {
   const meds = [medication("Apap", []), medication("Ibuprom", [period("2026-09-02", null, "2 tabletki")])];
   assert.deepEqual(lines(meds), ["Ibuprom — od 02.09.2026, 2 tabletki"]);

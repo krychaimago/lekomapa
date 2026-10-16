@@ -126,14 +126,7 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
                 {INTERACTION_COPY.detailsHeading}
               </h2>
               <div class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
-                {summary.interactionsEmptyState === "noMedications" && (
-                  <>
-                    <p>{copy.noCurrentMedications}</p>
-                    <a href="/leki/nowy" class:list={linkClass}>
-                      {copy.introAddMedication}
-                    </a>
-                  </>
-                )}
+                {summary.interactionsEmptyState === "noMedications" && <p>{copy.noCurrentMedications}</p>}
                 {summary.interactionsEmptyState === "oneMedication" && <p>{copy.oneMedication}</p>}
                 {summary.interactionsEmptyState === "noPair" && (
                   <>
@@ -159,7 +152,7 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
               ))}
               {summary.withoutQuestion.length > 0 && (
                 <div class="flex flex-col gap-1 text-sm text-muted-foreground">
-                  <p>{copy.withoutQuestion.replace("{objawy}", summary.withoutQuestion.join(", "))}</p>
+                  <p>{fill(copy.withoutQuestion, { objawy: summary.withoutQuestion.join(", ") })}</p>
                   <p>{DOCTOR_QUESTION_COPY.noQuestion}</p>
                 </div>
               )}

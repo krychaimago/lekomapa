@@ -244,7 +244,7 @@ const ENTRIES: Entry[] = [
     prepare: async (page) => {
       const interactions = page.locator("[data-visit-interactions] details");
       await expect(interactions).toHaveAttribute("open", "");
-      await page.getByText(/^Możliwe interakcje \(\d+\)$/).click();
+      await interactions.locator("summary").click();
       await expect(interactions).not.toHaveAttribute("open");
     },
   },
