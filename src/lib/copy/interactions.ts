@@ -9,7 +9,11 @@ export const INTERACTION_COPY = {
   note: "Informacja poglądowa — w razie niepokoju skonsultuj z lekarzem lub farmaceutą.",
   noWarningIsNotSafe: "Brak oznaczenia nie znaczy, że połączenie jest bezpieczne.",
   detailsHeading: "Możliwe interakcje",
+  // Medication details (S-07): the section title with the number of folded cards.
+  detailsHeadingCount: "Możliwe interakcje ({liczba})",
   withMedication: "z lekiem {nazwa}",
+  // Inside an unfolded card: the link to the other medication, kept out of the clickable heading.
+  openOtherMedication: "Przejdź do leku {nazwa}",
   noInteractionsForMedication: "Wśród Twoich bieżących leków nie znaleziono sprawdzanej pary z tym lekiem.",
   substanceNotCovered: "Ta substancja nie jest objęta żadną sprawdzaną parą.",
   // On the page of ended medications (S-04): they carry no flag because they are not compared, not because they passed.
