@@ -250,6 +250,8 @@ const ENTRIES: Entry[] = [
       await expect(digestive).toHaveAttribute("aria-expanded", "true");
       await digestive.click();
       await expect(digestive).toHaveAttribute("aria-expanded", "false");
+      // The pointer would stay on the heading and the screenshot would show its hover background.
+      await page.mouse.move(0, 0);
       await expect(page.getByRole("region", { name: "Wybrane objawy" }).getByRole("listitem")).toHaveCount(2);
     },
   },
