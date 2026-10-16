@@ -38,24 +38,28 @@ Two-way UI audit (`/10x-ui`) of the journal symptom picker: why the per-symptom 
 - **Where**: `src/components/journal/SymptomPicker.tsx:105-143` (severity inside the "selected" block), `:166-189` (list below), `:80-97` (list row has only the checkbox).
 - **User effect**: On a phone she ticks a symptom near the end of the list and nothing near her finger offers severity; the buttons appear ~2k px above, off-screen, so she either saves without severity or does not know it exists.
 - **Evidence**: block order in JSX; 34 rows from `supabase/migrations/20260926120100_symptom_catalog_seed.sql:26-59`; category order `src/types.ts:239-253`.
+- **Status**: rozwiązany w fazie 2 — nasilenie stoi pod zaznaczonym objawem, w tym samym wierszu listy; ryzyko na telefonie pilnuje `tests/e2e/severity-on-phone.spec.ts` (faza 3).
 
 ### C2 — Ticking a symptom shifts the list under the finger (accidental architecture, inference)
 
 - **Where**: `SymptomPicker.tsx:112-141`. Each ticked symptom adds a card with a name row, the "Nasilenie (opcjonalne)" caption and a row of `h-12` buttons (`button.tsx` size `sm` = `h-12`) **above** the search field and list.
 - **User effect**: After each tick the whole list moves down by the height of the new card (roughly 100px+), so the row she wanted to tap next slides away and the next tap can land on a different symptom.
-- **Status**: inferred from the DOM order; not yet observed in a browser. Verify on a phone width before planning on it.
+- **Evidence (research)**: inferred from the DOM order; not yet observed in a browser. Verify on a phone width before planning on it.
+- **Status**: rozwiązany w fazie 2 — nad listą nie ma już bloku, który rośnie po każdym zaznaczeniu; podsumowanie „Wybrane objawy” stoi pod listą, więc lista nad palcem się nie przesuwa.
 
 ### C3 — The same choice shown twice in two styles (missing shared component)
 
 - **Where**: list row selected style `SymptomPicker.tsx:29-32` (`has-[:checked]:border-primary ring-2 ring-primary`) and selected card `:117-120` (`border-primary`, no ring).
 - **User effect**: With a symptom ticked, the screen shows it twice — as a ringed row in the list and as a card at the top — and it is not obvious that they are one thing or where to act.
 - **Note**: whichever variant the plan picks, one "ticked symptom" presentation should own the severity control; the other becomes a short summary or disappears.
+- **Status**: rozwiązany w fazie 2 — jedno miejsce wyboru nasilenia (wiersz objawu); podsumowanie na dole pokazuje tylko „nazwa · nasilenie” i przycisk usunięcia, bez przycisków nasilenia.
 
 ### C4 — Severity caption repeated per symptom; note reuses the severity copy key (copy, low)
 
 - **Where**: `SymptomPicker.tsx:53-55` renders "Nasilenie (opcjonalne)" inside every selected card; `NewEntryForm.tsx:133` labels the note with `copy.severityOptional`.
 - **User effect**: With several symptoms ticked the same caption repeats per card and adds height (feeds C2). The note label is correct text today, but under a severity key — a later wording change for severity would silently change the note label.
 - **Proposal**: candidate for **deferred** unless the chosen variant already touches these lines.
+- **Status**: rozwiązany w fazie 2 — notatka ma własny klucz `noteOptional`. Podpis „Nasilenie (opcjonalne)” przy każdym zaznaczonym objawie zostaje świadomie: stoi teraz przy objawie, nie w stosie kart nad listą.
 
 ## Detailed Findings
 

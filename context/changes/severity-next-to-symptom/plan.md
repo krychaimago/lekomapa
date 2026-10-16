@@ -289,32 +289,32 @@ Nie dotyczy — bez migracji i zmian API.
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe i filtr FR-012: `npm test`
-- [x] 2.2 Typy: `npm run typecheck`
-- [x] 2.3 Lint: `npm run lint`
-- [x] 2.4 Build: `npm run build`
-- [x] 2.5 Skan wartości wpisanych na sztywno na plikach widoku: 0 trafień (`SymptomPicker.tsx`, `NewEntryForm.tsx`, `EditEntryForm.tsx`)
-- [x] 2.6 Istniejące testy E2E przechodzą przeciw lokalnemu Supabase: `npx playwright test visit-readable`
+- [x] 2.1 Testy jednostkowe i filtr FR-012: `npm test` — 210118e
+- [x] 2.2 Typy: `npm run typecheck` — 210118e
+- [x] 2.3 Lint: `npm run lint` — 210118e
+- [x] 2.4 Build: `npm run build` — 210118e
+- [x] 2.5 Skan wartości wpisanych na sztywno na plikach widoku: 0 trafień (`SymptomPicker.tsx`, `NewEntryForm.tsx`, `EditEntryForm.tsx`) — 210118e
+- [x] 2.6 Istniejące testy E2E przechodzą przeciw lokalnemu Supabase: `npx playwright test visit-readable` — 210118e
 
 #### Manual
 
-- [x] 2.7 Zrzut 390 px i 1280 px, oba tryby: grupy zwinięte, liczniki, nasilenie pod zaznaczonym objawem, podsumowanie na dole
-- [x] 2.8 Na 390 px: rozwinięcie „pozostałe”, zaznaczenie „spadek libido” — przyciski widoczne bez przewijania; lista nad palcem nie przesuwa się
-- [x] 2.9 Wyszukiwanie „kasz” przy zaznaczonym „bólu głowy”: „Ból głowy” z przyciskami pod „Zaznaczone”, „Kaszel” pod „Pasujące objawy”
-- [x] 2.10 Poprawa istniejącego wpisu (`/dzienniczek/[id]`): liczniki pokazują zapisane objawy, zmiana nasilenia i zapis działają
-- [x] 2.11 Obsługa klawiaturą: Tab po nagłówkach grup, Enter/Spacja rozwija, widoczny pierścień fokusu
+- [x] 2.7 Zrzut 390 px i 1280 px, oba tryby: grupy zwinięte, liczniki, nasilenie pod zaznaczonym objawem, podsumowanie na dole — 210118e
+- [x] 2.8 Na 390 px: rozwinięcie „pozostałe”, zaznaczenie „spadek libido” — przyciski widoczne bez przewijania; lista nad palcem nie przesuwa się — 210118e
+- [x] 2.9 Wyszukiwanie „kasz” przy zaznaczonym „bólu głowy”: „Ból głowy” z przyciskami pod „Zaznaczone”, „Kaszel” pod „Pasujące objawy” — 210118e
+- [x] 2.10 Poprawa istniejącego wpisu (`/dzienniczek/[id]`): liczniki pokazują zapisane objawy, zmiana nasilenia i zapis działają — 210118e
+- [x] 2.11 Obsługa klawiaturą: Tab po nagłówkach grup, Enter/Spacja rozwija, widoczny pierścień fokusu — 210118e
 
 ### Phase 3: Stany, bramka wizualna i test na telefonie
 
 #### Automated
 
-- [ ] 3.1 Nowy test przechodzi: `npx playwright test severity-on-phone`
-- [ ] 3.2 Pełny zestaw E2E przechodzi przeciw lokalnemu Supabase: `npx playwright test`
-- [ ] 3.3 Galeria generuje stan `with-selected`: `DARK_GALLERY=1 npx playwright test dark-gallery`
-- [ ] 3.4 `npm test`, `npm run typecheck`, `npm run lint` zielone
+- [x] 3.1 Nowy test przechodzi: `npx playwright test severity-on-phone`
+- [x] 3.2 Pełny zestaw E2E przechodzi przeciw lokalnemu Supabase: `npx playwright test`
+- [x] 3.3 Galeria generuje stan `with-selected`: `DARK_GALLERY=1 npx playwright test dark-gallery`
+- [x] 3.4 `npm test`, `npm run typecheck`, `npm run lint` zielone
 
 #### Manual
 
-- [ ] 3.5 Matryca 7 stanów na zrzutach z galerii: default (tokeny i komponenty ui), hover (nagłówek grupy, przyciski), focus-visible (nagłówek, pole wyboru, przyciski nasilenia, usuń w podsumowaniu), disabled — N/A (brak takich kontrolek), error — bez zmian (`ServerError` na górze formularza), empty (`noneSelected`, `noMatch`), loading — bez skoku układu po hydratacji
-- [ ] 3.6 Test telefonu padł na układzie sprzed fazy 2 (adnotacja w commicie)
-- [ ] 3.7 Wpis w `CLAUDE.md` czytelny dla autorki
+- [x] 3.5 Matryca 7 stanów na zrzutach z galerii: default (tokeny i komponenty ui), hover (nagłówek grupy, przyciski), focus-visible (nagłówek, pole wyboru, przyciski nasilenia, usuń w podsumowaniu), disabled — N/A (brak takich kontrolek), error — bez zmian (`ServerError` na górze formularza), empty (`noneSelected`, `noMatch`), loading — bez skoku układu po hydratacji
+- [x] 3.6 Test telefonu padł na układzie sprzed fazy 2 (adnotacja w commicie)
+- [x] 3.7 Wpis w `CLAUDE.md` czytelny dla autorki

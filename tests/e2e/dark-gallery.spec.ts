@@ -225,6 +225,33 @@ const ENTRIES: Entry[] = [
       await expect(page.getByText("Wybierz co najmniej jeden objaw.")).toBeVisible();
     },
   },
+  // One group unfolded with a ticked symptom and its severity under it; a second symptom ticked in a folded group
+  // (its count on the heading), without severity. Nothing is saved, so the account keeps no entry from this state.
+  {
+    page: "dzienniczek/nowy",
+    state: "with-selected",
+    session: true,
+    path: () => "/dzienniczek/nowy",
+    prepare: async (page) => {
+      await waitForIslands(page);
+      const nervous = page.getByRole("button", { name: "nerwowy", exact: true });
+      await nervous.click();
+      await expect(nervous).toHaveAttribute("aria-expanded", "true");
+      await page.getByRole("checkbox", { name: "ból głowy", exact: true }).check();
+      const severity = page.getByRole("group", { name: "Nasilenie: ból głowy" });
+      await severity.getByRole("button", { name: "umiarkowane", exact: true }).click();
+      await expect(severity.getByRole("button", { name: "umiarkowane", exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await pickSymptom(page, JOURNAL_SYMPTOM);
+      await expect(page.getByRole("button", { name: /^pokarmowy\s*1 wybrany$/ })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+      await expect(page.getByRole("region", { name: "Wybrane objawy" }).getByRole("listitem")).toHaveCount(2);
+    },
+  },
   {
     page: "dzienniczek/[id]",
     session: true,
