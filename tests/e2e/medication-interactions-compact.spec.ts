@@ -161,5 +161,13 @@ test.describe("folded interaction cards on medication details", () => {
     await expect(page.getByText(INTERACTION_COPY.note, { exact: true }).filter({ visible: true })).toHaveCount(
       OTHERS.length,
     );
+
+    // The keyboard unfolds a card too: Enter on the focused heading shows that pair's description, the note stays.
+    // `<summary>` has no reliable role in Playwright, so it is located by its tag.
+    const keyboardCard = cardOf(folded[0].name);
+    await keyboardCard.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(keyboardCard.getByText(folded[0].description, { exact: true })).toBeVisible();
+    await expect(keyboardCard.getByText(INTERACTION_COPY.note, { exact: true })).toBeVisible();
   });
 });

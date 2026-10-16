@@ -2,8 +2,8 @@
 // Medication details (S-02, FR-006, FR-007): dose, start date, the full composition and every possible interaction
 // with another current medication, each with the note. Interactions are ordered alphabetically by the other
 // medication's name, never by suspicion (FR-012). Each interaction card is folded to its heading (S-07); the note
-// stays outside the fold, so it is visible at every card whether folded or not (FR-007). RLS limits every read to the signed-in person, so another
-// account's medication reads as missing and gets the same 404 as an unknown id.
+// stays outside the fold, so it is visible at every card whether folded or not (FR-007). RLS limits every read to
+// the signed-in person, so another account's medication reads as missing and gets the same 404 as an unknown id.
 import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
