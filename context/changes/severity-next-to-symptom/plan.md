@@ -308,13 +308,13 @@ Nie dotyczy — bez migracji i zmian API.
 
 #### Automated
 
-- [x] 3.1 Nowy test przechodzi: `npx playwright test severity-on-phone`
-- [x] 3.2 Pełny zestaw E2E przechodzi przeciw lokalnemu Supabase: `npx playwright test`
-- [x] 3.3 Galeria generuje stan `with-selected`: `DARK_GALLERY=1 npx playwright test dark-gallery`
-- [x] 3.4 `npm test`, `npm run typecheck`, `npm run lint` zielone
+- [x] 3.1 Nowy test przechodzi: `npx playwright test severity-on-phone` — a1f1a64
+- [x] 3.2 Pełny zestaw E2E przechodzi przeciw lokalnemu Supabase: `npx playwright test` — a1f1a64
+- [x] 3.3 Galeria generuje stan `with-selected`: `DARK_GALLERY=1 npx playwright test dark-gallery` — a1f1a64
+- [x] 3.4 `npm test`, `npm run typecheck`, `npm run lint` zielone — a1f1a64
 
 #### Manual
 
-- [x] 3.5 Matryca 7 stanów na zrzutach z galerii: default (tokeny i komponenty ui), hover (nagłówek grupy, przyciski), focus-visible (nagłówek, pole wyboru, przyciski nasilenia, usuń w podsumowaniu), disabled — N/A (brak takich kontrolek), error — bez zmian (`ServerError` na górze formularza), empty (`noneSelected`, `noMatch`), loading — bez skoku układu po hydratacji
-- [x] 3.6 Test telefonu padł na układzie sprzed fazy 2 (adnotacja w commicie)
-- [x] 3.7 Wpis w `CLAUDE.md` czytelny dla autorki
+- [x] 3.5 Matryca 7 stanów na zrzutach z galerii: default (tokeny i komponenty ui), hover (nagłówek grupy, przyciski), focus-visible (nagłówek, pole wyboru, przyciski nasilenia, usuń w podsumowaniu), disabled — N/A (brak takich kontrolek), error — bez zmian (`ServerError` na górze formularza), empty (`noneSelected`, `noMatch`), loading — bez skoku układu po hydratacji — a1f1a64
+- [x] 3.6 Test telefonu padł na układzie sprzed fazy 2 (adnotacja w commicie) — a1f1a64
+- [x] 3.7 Wpis w `CLAUDE.md` czytelny dla autorki — a1f1a64
