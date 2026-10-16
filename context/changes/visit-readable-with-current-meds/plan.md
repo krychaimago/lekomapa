@@ -314,10 +314,10 @@ Brak migracji.
 
 #### Automated
 
-- [x] 3.1 Test przechodzi: `npx playwright test tests/e2e/visit-readable.spec.ts`
-- [x] 3.2 Test pada, gdy nota zostanie przeniesiona do treści zwijanej sekcji (sprawdzenie w trakcie `/10x-e2e`, zmiana cofnięta)
-- [x] 3.3 Pełny zestaw E2E przechodzi: `npx playwright test`
+- [x] 3.1 Test przechodzi: `npx playwright test tests/e2e/visit-readable.spec.ts` — 2c1062b
+- [x] 3.2 Test pada, gdy nota zostanie przeniesiona do treści zwijanej sekcji (sprawdzenie w trakcie `/10x-e2e`, zmiana cofnięta) — 2c1062b
+- [x] 3.3 Pełny zestaw E2E przechodzi: `npx playwright test` — 2c1062b
 
 #### Manual
 
-- [x] 3.4 Autorka przegląda test i potwierdza, że sprawdza zachowanie z „Desired End State”
+- [x] 3.4 Autorka przegląda test i potwierdza, że sprawdza zachowanie z „Desired End State” — 2c1062b
