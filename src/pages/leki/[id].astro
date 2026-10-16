@@ -1,13 +1,15 @@
 ---
 // Medication details (S-02, FR-006, FR-007): dose, start date, the full composition and every possible interaction
 // with another current medication, each with the note. Interactions are ordered alphabetically by the other
-// medication's name, never by suspicion (FR-012). RLS limits every read to the signed-in person, so another
-// account's medication reads as missing and gets the same 404 as an unknown id.
+// medication's name, never by suspicion (FR-012). Each interaction card is folded to its heading (S-07); the note
+// stays outside the fold, so it is visible at every card whether folded or not (FR-007). RLS limits every read to
+// the signed-in person, so another account's medication reads as missing and gets the same 404 as an unknown id.
 import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { buttonVariants } from "@/components/ui/button";
+import { fill } from "@/lib/services/doctor-question";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
 import { formatIsoDate, lastDayOfPeriod, todayInWarsaw, variantText } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
@@ -212,7 +214,6 @@ const deletionDeadline = medication ? deadlineOf(medication) : null;
 const backHref = medication && !isCurrent ? "/leki/zakonczone" : "/leki";
 const backText = medication && !isCurrent ? copy.backToEndedList : copy.backToList;
 
-const [withBefore, withAfter] = INTERACTION_COPY.withMedication.split("{nazwa}");
 const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
 ---
 
@@ -372,21 +373,50 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
 
         {interactions.length > 0 ? (
           <section class="flex flex-col gap-3">
-            <h2 class="text-xl font-semibold">{INTERACTION_COPY.detailsHeading}</h2>
+            <h2 class="text-xl font-semibold">
+              {fill(INTERACTION_COPY.detailsHeadingCount, { liczba: interactions.length })}
+            </h2>
             <ul class="flex flex-col gap-3">
               {interactions.map((item) => (
                 <li
                   data-other-medication-id={item.otherId}
                   class="flex flex-col gap-2 rounded-xl border border-interaction-border bg-interaction p-4 text-interaction-foreground"
                 >
-                  <p class="font-semibold">
-                    {withBefore}
-                    <a href={`/leki/${item.otherId}`} class="underline underline-offset-4 hover:no-underline">
-                      {item.otherName}
-                    </a>
-                    {withAfter}
-                  </p>
-                  <p>{item.description}</p>
+                  {/* No link in the summary: it is a button itself, a link inside would be a second target. */}
+                  <details class="group">
+                    <summary
+                      class:list={[
+                        "grid min-h-11 cursor-pointer list-none grid-cols-[1fr_auto] items-center gap-x-3 rounded-md",
+                        "outline-none focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
+                      ]}
+                    >
+                      <span class="min-w-0 font-semibold break-words">
+                        {fill(INTERACTION_COPY.withMedication, { nazwa: item.otherName })}
+                      </span>
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="size-6 shrink-0 transition-transform group-open:rotate-180"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </summary>
+                    <div class="mt-2 flex flex-col gap-2">
+                      <p>{item.description}</p>
+                      <a
+                        href={`/leki/${item.otherId}`}
+                        class="self-start break-words underline underline-offset-4 hover:no-underline"
+                      >
+                        {fill(INTERACTION_COPY.openOtherMedication, { nazwa: item.otherName })}
+                      </a>
+                    </div>
+                  </details>
+                  {/* Outside the fold on purpose: folding the card must never hide the note (FR-007). */}
                   <p class="text-sm">{INTERACTION_COPY.note}</p>
                 </li>
               ))}
