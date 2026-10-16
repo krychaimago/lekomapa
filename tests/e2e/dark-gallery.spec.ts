@@ -225,8 +225,8 @@ const ENTRIES: Entry[] = [
       await expect(page.getByText("Wybierz co najmniej jeden objaw.")).toBeVisible();
     },
   },
-  // One group unfolded with a ticked symptom and its severity under it; a second symptom ticked in a folded group
-  // (its count on the heading), without severity. Nothing is saved, so the account keeps no entry from this state.
+  // One group unfolded with a ticked symptom and its severity under it; a second symptom ticked through the search, its
+  // group folded again (its count on the heading), without severity. Nothing is saved, so the account keeps no entry from this state.
   {
     page: "dzienniczek/nowy",
     state: "with-selected",
@@ -245,10 +245,11 @@ const ENTRIES: Entry[] = [
         "true",
       );
       await pickSymptom(page, JOURNAL_SYMPTOM);
-      await expect(page.getByRole("button", { name: /^pokarmowy\s*1 wybrany$/ })).toHaveAttribute(
-        "aria-expanded",
-        "false",
-      );
+      // Ticked in the search results, so its group unfolds (impl-review F4); fold it to show the count on the heading.
+      const digestive = page.getByRole("button", { name: /^pokarmowy\s+1 wybrany$/ });
+      await expect(digestive).toHaveAttribute("aria-expanded", "true");
+      await digestive.click();
+      await expect(digestive).toHaveAttribute("aria-expanded", "false");
       await expect(page.getByRole("region", { name: "Wybrane objawy" }).getByRole("listitem")).toHaveCount(2);
     },
   },

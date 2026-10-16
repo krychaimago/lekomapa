@@ -9,14 +9,19 @@
 // only (playwright.config.ts keeps the preview off .env).
 import { test, expect, type Page } from "@playwright/test";
 import { JOURNAL_COPY } from "../../src/lib/copy/journal";
+import { pickSymptom } from "./journal-helpers";
 
 // The account is created by the test itself, so it starts without the saved session.
 test.use({ storageState: { cookies: [], origins: [] }, viewport: { width: 390, height: 844 } });
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const STAMP = `${Date.now()}`;
-const email = `e2e-severity-phone-${STAMP}@example.test`;
 const password = `Haslo-e2e-${STAMP}`;
+// One account per test: the tests of this file run in parallel (fullyParallel).
+let email = "";
+test.beforeEach(() => {
+  email = `e2e-severity-phone-${STAMP}-${test.info().testId}@example.test`;
+});
 
 // The last group of the catalog and its last symptom (supabase/migrations/20260926120100_symptom_catalog_seed.sql):
 // the row furthest from the old block above the list.
@@ -33,6 +38,23 @@ function originOf(baseURL: string | undefined): { Origin: string } {
 // The journal form is a React island: input typed before it hydrates is lost.
 async function waitForIslands(page: Page) {
   await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
+}
+
+// A fresh account, signed in in this page's context.
+async function signUpAndSignIn(page: Page, baseURL: string | undefined) {
+  const headers = originOf(baseURL);
+  const signedUp = await page.request.post("/api/auth/signup", {
+    form: { email, password, confirmPassword: password, terms: "accepted" },
+    headers,
+    maxRedirects: 0,
+  });
+  expect(signedUp.headers().location).toBe("/auth/confirm-email");
+  const signedIn = await page.request.post("/api/auth/signin", {
+    form: { email, password },
+    headers,
+    maxRedirects: 0,
+  });
+  expect(signedIn.headers().location).toBe("/");
 }
 
 // Runs also when the test fails: the account and, through the cascade, every entry go with it.
@@ -53,21 +75,7 @@ test.describe("severity on a phone", () => {
   }) => {
     test.setTimeout(60_000);
     test.info().annotations.push({ type: "test-data", description: email });
-    const headers = originOf(baseURL);
-
-    // Set up: a fresh account, signed in in this page's context.
-    const signedUp = await page.request.post("/api/auth/signup", {
-      form: { email, password, confirmPassword: password, terms: "accepted" },
-      headers,
-      maxRedirects: 0,
-    });
-    expect(signedUp.headers().location).toBe("/auth/confirm-email");
-    const signedIn = await page.request.post("/api/auth/signin", {
-      form: { email, password },
-      headers,
-      maxRedirects: 0,
-    });
-    expect(signedIn.headers().location).toBe("/");
+    await signUpAndSignIn(page, baseURL);
 
     await page.goto("/dzienniczek/nowy");
     await waitForIslands(page);
@@ -80,9 +88,12 @@ test.describe("severity on a phone", () => {
 
     // Tick the last symptom straight from the list. Its severity must be in view right away: no scrolling before the
     // check (the tick itself may bring the checkbox into view, as a finger would).
-    await page.getByRole("checkbox", { name: SYMPTOM, exact: true }).check();
-    const severity = page.getByRole("group", { name: `${JOURNAL_COPY.form.severityLegend}: ${SYMPTOM}` });
-    await expect(severity).toBeInViewport();
+    const checkbox = page.getByRole("checkbox", { name: SYMPTOM, exact: true });
+    await checkbox.check();
+    // Severity must stand in the symptom's own row and be wholly in view, not one pixel of it.
+    const row = page.getByRole("listitem").filter({ has: checkbox });
+    const severity = row.getByRole("group", { name: `${JOURNAL_COPY.form.severityLegend}: ${SYMPTOM}` });
+    await expect(severity).toBeInViewport({ ratio: 1 });
 
     const strong = severity.getByRole("button", { name: SEVERITY, exact: true });
     await strong.click();
@@ -100,5 +111,32 @@ test.describe("severity on a phone", () => {
     const entry = page.locator("li[data-entry-id]");
     await expect(entry).toHaveCount(1);
     await expect(entry.getByRole("listitem")).toHaveText([`${SYMPTOM} · ${SEVERITY}`]);
+  });
+
+  // Unticking a symptom pinned under "Zaznaczone" during a search removes its row (impl-review F2). The focus must not
+  // fall back to the top of the page with it: a keyboard or screen reader user goes on from the search field.
+  test("unticking a pinned symptom with the keyboard leaves the focus in the search field", async ({
+    page,
+    baseURL,
+  }) => {
+    test.setTimeout(60_000);
+    test.info().annotations.push({ type: "test-data", description: email });
+    await signUpAndSignIn(page, baseURL);
+
+    await page.goto("/dzienniczek/nowy");
+    await waitForIslands(page);
+
+    await pickSymptom(page, SYMPTOM);
+    const search = page.getByRole("searchbox", { name: JOURNAL_COPY.form.searchLabel });
+    await search.fill("ból");
+
+    const pinned = page.getByRole("region", { name: JOURNAL_COPY.form.pinnedHeading });
+    const checkbox = pinned.getByRole("checkbox", { name: SYMPTOM, exact: true });
+    await expect(checkbox).toBeChecked();
+    await checkbox.focus();
+    await page.keyboard.press("Space");
+
+    await expect(pinned).toHaveCount(0);
+    await expect(search).toBeFocused();
   });
 });

@@ -53,7 +53,7 @@ Logika najpierw jako czyste funkcje w `journal.ts` z testami (faza 1, nadaje si�
 ## Critical Implementation Details
 
 - **Przypięte w wyszukiwaniu**: kolejność przypiętych = kolejność zaznaczania (`selected`), nie alfabet — tak, by objaw zaznaczony przed chwilą nie przeskakiwał. Objaw pasujący do tekstu nie trafia do przypiętych (jeden komplet przycisków na objaw, jedna dostępna nazwa grupy „Nasilenie: <objaw>”).
-- **Stan zwinięcia** żyje w `SymptomPicker` i przetrwa wpisanie i wyczyszczenie wyszukiwarki (po wyczyszczeniu grupy wracają do stanu sprzed wyszukiwania).
+- **Stan zwinięcia** żyje w `SymptomPicker` i przetrwa wpisanie i wyczyszczenie wyszukiwarki (po wyczyszczeniu grupy wracają do stanu sprzed wyszukiwania). Wyjątek dopisany po impl-review (F4, 16.10.2026): grupa objawu zaznaczonego w wynikach wyszukiwania się rozwija, żeby nasilenie zostało osiągalne po wyczyszczeniu pola.
 
 ## Faza 1: Logika wyszukiwania i licznika
 

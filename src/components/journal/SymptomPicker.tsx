@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,10 @@ const listClass = "grid items-start gap-2 sm:grid-cols-2";
 // folded at the start, so the screen never shows a flat list of the whole catalog.
 export default function SymptomPicker({ symptoms, terms, selected, onToggle, onSeverityChange }: Props) {
   const [query, setQuery] = useState("");
-  // Lives here, not in the query: typing and clearing a search brings the groups back as they were before it.
+  // Lives here, not in the query: typing and clearing a search brings the groups back as they were before it, except
+  // the group of a symptom ticked in the results, which unfolds (impl-review F4).
   const [expanded, setExpanded] = useState<ReadonlySet<SymptomCategory>>(() => new Set());
+  const searchRef = useRef<HTMLInputElement>(null);
   const baseId = useId();
   const searchId = `${baseId}-search`;
   const hintId = `${baseId}-hint`;
@@ -106,7 +108,7 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
     </div>
   );
 
-  const option = (symptom: PickerSymptom) => {
+  const option = (symptom: PickerSymptom, pinned: boolean) => {
     const item = selectedById.get(symptom.id);
     return (
       <li key={symptom.id} className={optionClass}>
@@ -116,6 +118,12 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
             checked={item !== undefined}
             onChange={() => {
               onToggle(symptom.id);
+              // Ticked from the search results: unfold its group, so after clearing the search the severity stays in view.
+              if (results !== null && item === undefined) {
+                setExpanded((current) => new Set(current).add(symptom.category));
+              }
+              // Unticking a pinned symptom removes its row, and the focus with it: send it back to the search field.
+              if (pinned) searchRef.current?.focus();
             }}
             className="accent-primary size-5 shrink-0"
           />
@@ -158,11 +166,17 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
                     className={cn("transition-transform motion-reduce:transition-none", open && "rotate-90")}
                   />
                   <span className="first-letter:uppercase">{group.label}</span>
-                  {count && <Badge variant="secondary">{count}</Badge>}
+                  {/* A real space, not only CSS gap: otherwise the button's name reads "pokarmowy1 wybrany". */}
+                  {count && (
+                    <>
+                      {" "}
+                      <Badge variant="secondary">{count}</Badge>
+                    </>
+                  )}
                 </Button>
               </h3>
               <ul id={listId} hidden={!open} className={listClass}>
-                {group.symptoms.map(option)}
+                {group.symptoms.map((symptom) => option(symptom, false))}
               </ul>
             </section>
           );
@@ -179,14 +193,18 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
             <h3 id={`${baseId}-pinned`} className="font-semibold">
               {copy.pinnedHeading}
             </h3>
-            <ul className={listClass}>{results.pinned.map(option)}</ul>
+            <ul className={listClass}>{results.pinned.map((symptom) => option(symptom, true))}</ul>
           </section>
         )}
         <section aria-labelledby={`${baseId}-results`} className="flex flex-col gap-2">
           <h3 id={`${baseId}-results`} className="font-semibold">
             {copy.resultsLabel}
           </h3>
-          {results.matches.length === 0 ? noMatch : <ul className={listClass}>{results.matches.map(option)}</ul>}
+          {results.matches.length === 0 ? (
+            noMatch
+          ) : (
+            <ul className={listClass}>{results.matches.map((symptom) => option(symptom, false))}</ul>
+          )}
         </section>
       </div>
     );
@@ -201,6 +219,7 @@ export default function SymptomPicker({ symptoms, terms, selected, onToggle, onS
       <div className="flex flex-col gap-2">
         <Label htmlFor={searchId}>{copy.searchLabel}</Label>
         <Input
+          ref={searchRef}
           id={searchId}
           type="search"
           value={query}
