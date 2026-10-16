@@ -235,6 +235,19 @@ const ENTRIES: Entry[] = [
     path: () => `/dzienniczek/${need(data.journalId, "journal entry")}/usun`,
   },
   { page: "wizyta", state: "with-question-and-interaction", session: true, path: () => "/wizyta" },
+  // The interactions part folded through its title: the count, the note under it and the turned chevron stay in view.
+  {
+    page: "wizyta",
+    state: "interactions-collapsed",
+    session: true,
+    path: () => "/wizyta",
+    prepare: async (page) => {
+      const interactions = page.locator("[data-visit-interactions] details");
+      await expect(interactions).toHaveAttribute("open", "");
+      await interactions.locator("summary").click();
+      await expect(interactions).not.toHaveAttribute("open");
+    },
+  },
   { page: "konto", session: true, path: () => "/konto" },
   { page: "konto/usun", session: true, path: () => "/konto/usun" },
   // The error key the route sends back after a wrong password. Opened by URL: posting the deletion form from a script

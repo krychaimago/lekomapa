@@ -374,12 +374,27 @@ export interface DoctorQuestion {
 }
 
 /**
+ * One current medication in the doctor visit section (S-05, FR-011): the dose of its latest dosage period and the
+ * registry variant of that period (null for a leaflet medication or an unknown part of the variant).
+ */
+export interface VisitCurrentMedication {
+  name: string;
+  /** Start of the current dose, ISO `YYYY-MM-DD`. */
+  since: string;
+  doseText: string;
+  strength: string | null;
+  pharmaceuticalForm: string | null;
+}
+
+/**
  * Content of the doctor visit section `/wizyta` (S-08, FR-011), gathered from what S-02 and S-06 produce.
  * `interactions` holds each pair once, alphabetically — never by suspicion (FR-012). `questions` holds one question
  * per symptom from its newest entry; `withoutQuestion` names the symptoms with no medication in their window.
+ * `currentMedications` lists each current medication once, alphabetically — never by suspicion (S-05, FR-012).
  */
 export interface VisitSummary {
   showIntro: boolean;
+  currentMedications: VisitCurrentMedication[];
   interactions: { firstName: string; secondName: string; description: string }[];
   interactionsEmptyState: "noMedications" | "oneMedication" | "noPair" | null;
   questions: DoctorQuestion[];

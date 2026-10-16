@@ -23,4 +23,10 @@ export const VISIT_SUMMARY_COPY = {
   askDoctorOrPharmacist: "O każdy lek i objaw możesz zapytać lekarza lub farmaceutę.",
   questionsNote: "Pytania zestawiają daty z dziennika oraz listy leków. Nie są oceną ani diagnozą.",
   loadError: "Nie udało się wczytać sekcji. Odśwież stronę.",
+  // S-05: the dose goes in through the `{ilość}` marker, so no template carries the filtered stem itself.
+  currentMedicationsHeading: "Bieżące leki",
+  currentMedicationItem: "{lek} — od {data}, {ilość}",
+  currentMedicationItemWithVariant: "{lek} ({wariant}) — od {data}, {ilość}",
+  currentMedicationsEmpty: "Na liście nie ma bieżących leków.",
+  interactionsHeadingCount: "Możliwe interakcje ({liczba})",
 } as const;

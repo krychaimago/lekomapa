@@ -8,6 +8,8 @@ import { test } from "node:test";
 
 import {
   composeVisitQuestions,
+  currentMedicationText,
+  currentMedications,
   interactionsEmptyState,
   isCurrentMedication,
   showIntro,
@@ -159,4 +161,138 @@ test("a medication discontinued today is no longer current; one discontinued tom
   assert.equal(isCurrentMedication("2026-10-09", "2026-10-09"), false);
   assert.equal(isCurrentMedication("2026-10-08", "2026-10-09"), false);
   assert.equal(isCurrentMedication("2026-10-10", "2026-10-09"), true);
+});
+
+// S-05: the list of current medications. Expected lines are written out by hand from the plan's wording, never built
+// with the code under test.
+const period = (startedOn, endedOn, doseText, strength = null, pharmaceuticalForm = null) => ({
+  startedOn,
+  endedOn,
+  doseText,
+  strength,
+  pharmaceuticalForm,
+});
+const medication = (name, periods, discontinuedOn = null) => ({ id: `med-${name}`, name, discontinuedOn, periods });
+const TODAY = "2026-10-16";
+const lines = (medications) => currentMedications(medications, TODAY).map(currentMedicationText);
+
+test("a medication discontinued today is not on the list; one discontinued tomorrow and one never discontinued are", () => {
+  const meds = [
+    medication("Apap", [period("2026-09-01", null, "1 tabletka")], "2026-10-16"),
+    medication("Ibuprom", [period("2026-09-02", null, "2 tabletki")], "2026-10-17"),
+    medication("Metformax", [period("2026-09-03", null, "1 tabletka 2 razy dziennie")]),
+  ];
+  assert.deepEqual(lines(meds), [
+    "Ibuprom — od 02.09.2026, 2 tabletki",
+    "Metformax — od 03.09.2026, 1 tabletka 2 razy dziennie",
+  ]);
+});
+
+test("after a dose change the line shows the new dose, its variant and the date of the change", () => {
+  const meds = [
+    medication("Metformax", [
+      period("2026-10-01", null, "1 tabletka 2 razy dziennie", "850 mg", "tabletki powlekane"),
+      period("2026-08-01", "2026-10-01", "1 tabletka", "500 mg", "tabletki"),
+    ]),
+  ];
+  assert.deepEqual(lines(meds), [
+    "Metformax (Moc: 850 mg · Postać: tabletki powlekane) — od 01.10.2026, 1 tabletka 2 razy dziennie",
+  ]);
+});
+
+test("the full line with a known variant", () => {
+  const meds = [
+    medication("Metformax", [period("2026-09-03", null, "1 tabletka 2 razy dziennie", "500 mg", "tabletki")]),
+  ];
+  assert.deepEqual(lines(meds), [
+    "Metformax (Moc: 500 mg · Postać: tabletki) — od 03.09.2026, 1 tabletka 2 razy dziennie",
+  ]);
+});
+
+test("medications go alphabetically in Polish collation, whatever the input order", () => {
+  const meds = [
+    medication("Metformax", [period("2026-09-03", null, "1 tabletka")]),
+    medication("Łaxil", [period("2026-09-05", null, "1 saszetka")]),
+    medication("Lamisil", [period("2026-09-04", null, "1 tabletka")]),
+  ];
+  const expected = [
+    "Lamisil — od 04.09.2026, 1 tabletka",
+    "Łaxil — od 05.09.2026, 1 saszetka",
+    "Metformax — od 03.09.2026, 1 tabletka",
+  ];
+  assert.deepEqual(lines(meds), expected);
+  assert.deepEqual(lines([...meds].reverse()), expected);
+});
+
+test("the result does not depend on the order of the periods or the medications", () => {
+  const periods = [
+    period("2026-08-01", "2026-09-01", "1 tabletka"),
+    period("2026-09-01", "2026-10-01", "2 tabletki"),
+    period("2026-10-01", null, "3 tabletki"),
+  ];
+  const meds = [medication("Apap", periods), medication("Apap", [period("2026-07-01", null, "1 czopek")])];
+  const expected = ["Apap — od 01.07.2026, 1 czopek", "Apap — od 01.10.2026, 3 tabletki"];
+  assert.deepEqual(lines(meds), expected);
+  assert.deepEqual(
+    lines([...meds].reverse().map((med) => ({ ...med, periods: [...med.periods].reverse() }))),
+    expected,
+  );
+});
+
+test("two medications that differ only by variant keep one order, whatever the input order", () => {
+  const meds = [
+    medication("Ibuprom", [period("2026-09-01", null, "1 tabletka", "400 mg", "tabletki")]),
+    medication("Ibuprom", [period("2026-09-01", null, "1 tabletka", "200 mg", "tabletki")]),
+  ];
+  const expected = [
+    "Ibuprom (Moc: 200 mg · Postać: tabletki) — od 01.09.2026, 1 tabletka",
+    "Ibuprom (Moc: 400 mg · Postać: tabletki) — od 01.09.2026, 1 tabletka",
+  ];
+  assert.deepEqual(lines(meds), expected);
+  assert.deepEqual(lines([...meds].reverse()), expected);
+});
+
+test("a medication with no dosage period is left out", () => {
+  const meds = [medication("Apap", []), medication("Ibuprom", [period("2026-09-02", null, "2 tabletki")])];
+  assert.deepEqual(lines(meds), ["Ibuprom — od 02.09.2026, 2 tabletki"]);
+});
+
+test("a line without strength and form has no brackets; with strength alone, only the strength", () => {
+  assert.equal(
+    currentMedicationText({
+      name: "Apap",
+      since: "2026-09-01",
+      doseText: "1 tabletka",
+      strength: null,
+      pharmaceuticalForm: null,
+    }),
+    "Apap — od 01.09.2026, 1 tabletka",
+  );
+  assert.equal(
+    currentMedicationText({
+      name: "Apap",
+      since: "2026-09-01",
+      doseText: "1 tabletka",
+      strength: "500 mg",
+      pharmaceuticalForm: null,
+    }),
+    "Apap (Moc: 500 mg) — od 01.09.2026, 1 tabletka",
+  );
+});
+
+test("a typed name with $& or a marker is inserted as it is", () => {
+  assert.equal(
+    currentMedicationText({
+      name: "Lek $& {data}",
+      since: "2026-09-01",
+      doseText: "1 {ilość} $1",
+      strength: null,
+      pharmaceuticalForm: null,
+    }),
+    "Lek $& {data} — od 01.09.2026, 1 {ilość} $1",
+  );
+});
+
+test("no medications give an empty list", () => {
+  assert.deepEqual(currentMedications([], TODAY), []);
 });

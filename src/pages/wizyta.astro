@@ -1,16 +1,20 @@
 ---
-// Doctor visit section (S-08, US-03, FR-011): possible interactions between current medications (S-02) and one current
-// question for the doctor per journal symptom (S-06), gathered in one place. Nothing is computed anew — the pairs come
-// from medication_interactions() as on /leki, the questions from composeDoctorQuestion as in the journal. Pairs go
-// alphabetically, never by suspicion, each with the note; the page never says a medication causes a symptom and never
-// suggests stopping or changing a dose (FR-012). No URL parameters: links lead only to fixed routes.
+// Doctor visit section (S-08, US-03, FR-011): the current medications (S-05), possible interactions between them (S-02)
+// and one current question for the doctor per journal symptom (S-06), gathered in one place, in that order. Nothing is
+// computed anew — the list and the pairs come from loadVisitSummary, the pairs from medication_interactions() as on
+// /leki, the questions from composeDoctorQuestion as in the journal. The page only lays them out. Medications and pairs
+// go alphabetically, never by suspicion, each pair with the note; the interactions part folds as a whole, and the note
+// sits in its <summary> under the title with the count, so it stays in view also when folded. Only the newest symptom's
+// question is open. The page never says a medication causes a symptom and never suggests stopping or changing a dose
+// (FR-012). No URL parameters: links lead only to fixed routes.
 import AppLayout from "@/layouts/AppLayout.astro";
 import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { VISIT_SUMMARY_COPY as copy } from "@/lib/copy/visit-summary";
-import { doctorQuestionText } from "@/lib/services/doctor-question";
+import { doctorQuestionText, fill } from "@/lib/services/doctor-question";
+import { currentMedicationText } from "@/lib/services/visit-summary";
 import { loadVisitSummary } from "@/lib/services/visit-summary-data";
 import { createClient } from "@/lib/supabase";
 import type { VisitSummary } from "@/types";
@@ -50,45 +54,89 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
       </section>
     ) : (
       <>
-        <section data-visit-interactions aria-labelledby="visit-interactions-title" class="flex flex-col gap-3">
-          <h2 id="visit-interactions-title" class="text-xl font-semibold">
-            {INTERACTION_COPY.detailsHeading}
+        <section
+          data-visit-current-medications
+          aria-labelledby="visit-current-medications-title"
+          class="flex flex-col gap-3"
+        >
+          <h2 id="visit-current-medications-title" class="text-xl font-semibold">
+            {copy.currentMedicationsHeading}
           </h2>
-          {summary.interactions.length > 0 ? (
-            <>
-              <ul class="flex flex-col gap-3">
-                {summary.interactions.map((item) => (
-                  <li class="flex flex-col gap-2 rounded-xl border border-interaction-border bg-interaction p-4 text-interaction-foreground">
-                    <p class="font-semibold">
-                      {copy.pairLabel.replace("{lek}", item.firstName).replace("{drugi}", item.secondName)}
-                    </p>
-                    <p>{item.description}</p>
-                    <p class="text-sm">{INTERACTION_COPY.note}</p>
-                  </li>
-                ))}
-              </ul>
-              <p class="text-sm text-muted-foreground">{INTERACTION_COPY.rulesIncomplete}</p>
-              <p class="text-sm text-muted-foreground">{INTERACTION_COPY.noWarningIsNotSafe}</p>
-            </>
+          {summary.currentMedications.length > 0 ? (
+            <ul class="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+              {summary.currentMedications.map((item) => (
+                <li>{currentMedicationText(item)}</li>
+              ))}
+            </ul>
           ) : (
             <div class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
-              {summary.interactionsEmptyState === "noMedications" && (
-                <>
-                  <p>{copy.noCurrentMedications}</p>
-                  <a href="/leki/nowy" class:list={linkClass}>
-                    {copy.introAddMedication}
-                  </a>
-                </>
-              )}
-              {summary.interactionsEmptyState === "oneMedication" && <p>{copy.oneMedication}</p>}
-              {summary.interactionsEmptyState === "noPair" && (
-                <>
-                  <p>{copy.noPairFound}</p>
-                  <p>{INTERACTION_COPY.rulesIncomplete}</p>
-                  <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
-                </>
-              )}
+              <p>{copy.currentMedicationsEmpty}</p>
+              <a href="/leki/nowy" class:list={linkClass}>
+                {copy.introAddMedication}
+              </a>
             </div>
+          )}
+        </section>
+
+        <section data-visit-interactions aria-labelledby="visit-interactions-title" class="flex flex-col gap-3">
+          {summary.interactions.length > 0 ? (
+            <details open class="group">
+              <summary
+                class:list={[
+                  "grid min-h-11 cursor-pointer list-none grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 rounded-md",
+                  "outline-none focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
+                ]}
+              >
+                <h2 id="visit-interactions-title" class="text-xl font-semibold">
+                  {fill(copy.interactionsHeadingCount, { liczba: summary.interactions.length })}
+                </h2>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-6 shrink-0 transition-transform group-open:rotate-180"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+                <span class="col-span-2 text-sm text-muted-foreground">{INTERACTION_COPY.note}</span>
+              </summary>
+              <div class="mt-3 flex flex-col gap-3">
+                <ul class="flex flex-col gap-3">
+                  {summary.interactions.map((item) => (
+                    <li class="flex flex-col gap-2 rounded-xl border border-interaction-border bg-interaction p-4 text-interaction-foreground">
+                      <p class="font-semibold">
+                        {fill(copy.pairLabel, { lek: item.firstName, drugi: item.secondName })}
+                      </p>
+                      <p>{item.description}</p>
+                      <p class="text-sm">{INTERACTION_COPY.note}</p>
+                    </li>
+                  ))}
+                </ul>
+                <p class="text-sm text-muted-foreground">{INTERACTION_COPY.rulesIncomplete}</p>
+                <p class="text-sm text-muted-foreground">{INTERACTION_COPY.noWarningIsNotSafe}</p>
+              </div>
+            </details>
+          ) : (
+            <>
+              <h2 id="visit-interactions-title" class="text-xl font-semibold">
+                {INTERACTION_COPY.detailsHeading}
+              </h2>
+              <div class="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 text-sm text-card-foreground shadow-sm">
+                {summary.interactionsEmptyState === "noMedications" && <p>{copy.noCurrentMedications}</p>}
+                {summary.interactionsEmptyState === "oneMedication" && <p>{copy.oneMedication}</p>}
+                {summary.interactionsEmptyState === "noPair" && (
+                  <>
+                    <p>{copy.noPairFound}</p>
+                    <p>{INTERACTION_COPY.rulesIncomplete}</p>
+                    <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
+                  </>
+                )}
+              </div>
+            </>
           )}
         </section>
 
@@ -99,12 +147,12 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           {hasSymptoms ? (
             <>
               {questionTexts.length > 0 && <p class="text-sm text-muted-foreground">{copy.questionsNote}</p>}
-              {questionTexts.map((text) => (
-                <DoctorQuestionCard text={text} open />
+              {questionTexts.map((text, index) => (
+                <DoctorQuestionCard text={text} open={index === 0} />
               ))}
               {summary.withoutQuestion.length > 0 && (
                 <div class="flex flex-col gap-1 text-sm text-muted-foreground">
-                  <p>{copy.withoutQuestion.replace("{objawy}", summary.withoutQuestion.join(", "))}</p>
+                  <p>{fill(copy.withoutQuestion, { objawy: summary.withoutQuestion.join(", ") })}</p>
                   <p>{DOCTOR_QUESTION_COPY.noQuestion}</p>
                 </div>
               )}
