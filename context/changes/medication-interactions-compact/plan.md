@@ -204,28 +204,28 @@ Nie dotyczy. Bez zmian w bazie.
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe i bramki kopii przechodzą (w tym filtr FR-012 dla nowych tekstów): `npm test`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Lint przechodzi: `npm run lint`
-- [x] 1.4 Build przechodzi: `npm run build`
+- [x] 1.1 Testy jednostkowe i bramki kopii przechodzą (w tym filtr FR-012 dla nowych tekstów): `npm test` — 1c50e3d
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — 1c50e3d
+- [x] 1.3 Lint przechodzi: `npm run lint` — 1c50e3d
+- [x] 1.4 Build przechodzi: `npm run build` — 1c50e3d
 
 #### Manual
 
-- [x] 1.5 Lek z co najmniej trzema kolizjami: tytuł „Możliwe interakcje (N)”, wszystkie karty zwinięte, nota widoczna przy każdej, opisy schowane
-- [x] 1.6 Kliknięcie i klawiatura rozwijają kartę: widać opis i link „Przejdź do leku X”, link prowadzi do szczegółów drugiego leku
-- [x] 1.7 Przy 320 px nagłówek z długą nazwą leku zawija się, nie wychodzi poza kartę, a chevron zostaje na swoim miejscu
-- [x] 1.8 Tryb jasny i ciemny: karta, chevron i focus ring czytelne
-- [x] 1.9 Lek bez kolizji i lek zakończony: pusty stan jak dotąd; „Wizyta” wygląda jak przed zmianą
+- [x] 1.5 Lek z co najmniej trzema kolizjami: tytuł „Możliwe interakcje (N)”, wszystkie karty zwinięte, nota widoczna przy każdej, opisy schowane — 1c50e3d
+- [x] 1.6 Kliknięcie i klawiatura rozwijają kartę: widać opis i link „Przejdź do leku X”, link prowadzi do szczegółów drugiego leku — 1c50e3d
+- [x] 1.7 Przy 320 px nagłówek z długą nazwą leku zawija się, nie wychodzi poza kartę, a chevron zostaje na swoim miejscu — 1c50e3d
+- [x] 1.8 Tryb jasny i ciemny: karta, chevron i focus ring czytelne — 1c50e3d
+- [x] 1.9 Lek bez kolizji i lek zakończony: pusty stan jak dotąd; „Wizyta” wygląda jak przed zmianą — 1c50e3d
 
 ### Phase 2: Test E2E — zwinięcie nie chowa noty
 
 #### Automated
 
-- [ ] 2.1 Nowy spec przechodzi przeciw lokalnemu Supabase: `npx playwright test tests/e2e/medication-interactions-compact.spec.ts`
-- [ ] 2.2 Spec pada, gdy nota jest tymczasowo wewnątrz `<details>`; zmiana cofnięta, spec znów przechodzi
-- [ ] 2.3 Pozostałe testy E2E przechodzą (w tym `visit-readable` i `dark-gallery`): `npx playwright test`
-- [ ] 2.4 Lint i typy przechodzą: `npm run lint`, `npm run typecheck`
+- [x] 2.1 Nowy spec przechodzi przeciw lokalnemu Supabase: `npx playwright test tests/e2e/medication-interactions-compact.spec.ts`
+- [x] 2.2 Spec pada, gdy nota jest tymczasowo wewnątrz `<details>`; zmiana cofnięta, spec znów przechodzi
+- [x] 2.3 Pozostałe testy E2E przechodzą (w tym `visit-readable` i `dark-gallery`): `npx playwright test`
+- [x] 2.4 Lint i typy przechodzą: `npm run lint`, `npm run typecheck`
 
 #### Manual
 
-- [ ] 2.5 Przegląd zrzutów `dark-gallery` dla szczegółów leku z kolizją w obu trybach: karty zwinięte, nota widoczna
+- [x] 2.5 Przegląd zrzutów `dark-gallery` dla szczegółów leku z kolizją w obu trybach: karty zwinięte, nota widoczna
