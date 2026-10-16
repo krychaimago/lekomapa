@@ -294,30 +294,30 @@ Brak migracji.
 
 #### Automated
 
-- [x] 2.1 Typy przechodzą: `npm run typecheck`
-- [x] 2.2 Lint przechodzi: `npm run lint`
-- [x] 2.3 Testy jednostkowe i bramki tokenów przechodzą: `npm test`
-- [x] 2.4 Build przechodzi: `npm run build`
-- [x] 2.5 Smoke przeciw lokalnemu Supabase przechodzi, z nowym krokiem listy leków: `npm run smoke`
-- [x] 2.6 Galeria trybu ciemnego przechodzi z nowym stanem: `npx playwright test tests/e2e/dark-gallery.spec.ts`
+- [x] 2.1 Typy przechodzą: `npm run typecheck` — d2b74b5
+- [x] 2.2 Lint przechodzi: `npm run lint` — d2b74b5
+- [x] 2.3 Testy jednostkowe i bramki tokenów przechodzą: `npm test` — d2b74b5
+- [x] 2.4 Build przechodzi: `npm run build` — d2b74b5
+- [x] 2.5 Smoke przeciw lokalnemu Supabase przechodzi, z nowym krokiem listy leków: `npm run smoke` — d2b74b5
+- [x] 2.6 Galeria trybu ciemnego przechodzi z nowym stanem: `npx playwright test tests/e2e/dark-gallery.spec.ts` — d2b74b5
 
 #### Manual
 
-- [x] 2.7 Przy 320, 360 i 375 px, w trybie jasnym i ciemnym: lista leków czytelna, tytuł interakcji z liczbą i nota widoczne przy zwiniętej sekcji, treść nie chowa się pod przyklejonym menu
-- [x] 2.8 Klawiatura: Tab dochodzi do tytułu interakcji i pytań, Enter/spacja zwija i rozwija
-- [x] 2.9 Przy 6 parach i 10 objawach ekran po wejściu: lista leków, rozwinięte interakcje, jedno rozwinięte pytanie, reszta jednolinijkowa
-- [x] 2.10 Przy koncie bez bieżących leków: tekst listy i odnośnik „Dodaj lek”; pusty stan interakcji jak dotąd
-- [x] 2.11 Dziennik: karta pytania po zapisaniu objawu wygląda jak przed zmianą
-- [x] 2.12 LCP `/wizyta` ≤ 2,5 s (Lighthouse Mobile) na koncie z wieloma lekami i objawami
+- [x] 2.7 Przy 320, 360 i 375 px, w trybie jasnym i ciemnym: lista leków czytelna, tytuł interakcji z liczbą i nota widoczne przy zwiniętej sekcji, treść nie chowa się pod przyklejonym menu — d2b74b5
+- [x] 2.8 Klawiatura: Tab dochodzi do tytułu interakcji i pytań, Enter/spacja zwija i rozwija — d2b74b5
+- [x] 2.9 Przy 6 parach i 10 objawach ekran po wejściu: lista leków, rozwinięte interakcje, jedno rozwinięte pytanie, reszta jednolinijkowa — d2b74b5
+- [x] 2.10 Przy koncie bez bieżących leków: tekst listy i odnośnik „Dodaj lek”; pusty stan interakcji jak dotąd — d2b74b5
+- [x] 2.11 Dziennik: karta pytania po zapisaniu objawu wygląda jak przed zmianą — d2b74b5
+- [x] 2.12 LCP `/wizyta` ≤ 2,5 s (Lighthouse Mobile) na koncie z wieloma lekami i objawami — d2b74b5
 
 ### Phase 3: Test E2E — wiele leków i objawów
 
 #### Automated
 
-- [ ] 3.1 Test przechodzi: `npx playwright test tests/e2e/visit-readable.spec.ts`
-- [ ] 3.2 Test pada, gdy nota zostanie przeniesiona do treści zwijanej sekcji (sprawdzenie w trakcie `/10x-e2e`, zmiana cofnięta)
-- [ ] 3.3 Pełny zestaw E2E przechodzi: `npx playwright test`
+- [x] 3.1 Test przechodzi: `npx playwright test tests/e2e/visit-readable.spec.ts`
+- [x] 3.2 Test pada, gdy nota zostanie przeniesiona do treści zwijanej sekcji (sprawdzenie w trakcie `/10x-e2e`, zmiana cofnięta)
+- [x] 3.3 Pełny zestaw E2E przechodzi: `npx playwright test`
 
 #### Manual
 
-- [ ] 3.4 Autorka przegląda test i potwierdza, że sprawdza zachowanie z „Desired End State”
+- [x] 3.4 Autorka przegląda test i potwierdza, że sprawdza zachowanie z „Desired End State”
