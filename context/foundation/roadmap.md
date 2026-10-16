@@ -60,7 +60,7 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 | S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
 | S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
 | S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done     |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | ready    |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | planning |
 | S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | ready    |
 | S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
 | S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed |
@@ -187,7 +187,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Forma: przyciski nasilenia rozwijane przy polu wyboru objawu czy rozwijana lista. — Owner: plan (`/10x-ui`). Block: no.
 - **Risk:** Zmiana samego układu: nasilenie jest już zapisywane osobno dla każdego objawu, w bazie i w interfejsie, ale przyciski stoją w sekcji „zaznaczone” nad wyszukiwarką i listą (`src/components/journal/SymptomPicker.tsx`), więc na telefonie są poza ekranem. Baza i FR-008 bez zmian. Objaw wychodzi wyłącznie na wąskim ekranie — kandydat na test E2E w widoku telefonu.
 - **Termin:** konieczne przed 04.11.2026.
-- **Status:** ready
+- **Status:** planning
 
 ### S-07: Zwarte kolizje w szczegółach leku
 

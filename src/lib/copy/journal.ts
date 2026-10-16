@@ -75,6 +75,10 @@ export const JOURNAL_COPY = {
     searchLabel: "Szukaj objawu",
     searchHint: "Na przykład: ból głowy. Możesz pisać bez polskich znaków.",
     resultsLabel: "Pasujące objawy",
+    // Count of ticked symptoms next to a collapsed category heading. Polish plural: 1 / 2–4 (not 12–14) / the rest.
+    selectedCountOne: "{n} wybrany",
+    selectedCountFew: "{n} wybrane",
+    selectedCountMany: "{n} wybranych",
     noMatch: "Nie ma takiego objawu na liście. Opisz go w notatce.",
     notFoundHint: "Nie znalazłaś objawu? Opisz go w notatce.",
     noteLabel: "Notatka",

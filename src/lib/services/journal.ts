@@ -2,6 +2,7 @@
 // scripts/journal/journal.test.mjs can load this file directly under `node --experimental-strip-types`.
 
 import { foldForSearch } from "./text-fold.ts";
+import { JOURNAL_COPY } from "../copy/journal.ts";
 import { SYMPTOM_CATEGORIES, type SymptomCategory } from "../../types.ts";
 
 // How far back an entry may be dated. Mirrors SE003 (c_max_days_back) in symptom_entries_guard_occurred_at,
@@ -50,6 +51,45 @@ export function filterSymptoms<T extends SearchableSymptom>(
         (termsBySymptom.get(symptom.id) ?? []).some((term) => term.includes(folded)),
     )
     .sort((a, b) => a.name.localeCompare(b.name, "pl"));
+}
+
+export interface SymptomSearchResult<T> {
+  pinned: T[];
+  matches: T[];
+}
+
+// Search that keeps every ticked symptom reachable (impl-review F5 of the first journal version): `matches` is the
+// filterSymptoms result, `pinned` the ticked symptoms it does not contain, in the order they were ticked, so a symptom
+// ticked a moment ago does not jump. Ids outside the catalog are skipped. An empty query gives null, as in
+// filterSymptoms.
+export function searchSymptoms<T extends SearchableSymptom>(
+  catalog: readonly T[],
+  terms: readonly SearchTerm[],
+  query: string,
+  selectedIds: readonly string[],
+): SymptomSearchResult<T> | null {
+  const matches = filterSymptoms(catalog, terms, query);
+  if (matches === null) return null;
+
+  const matchedIds = new Set(matches.map((symptom) => symptom.id));
+  const byId = new Map(catalog.map((symptom) => [symptom.id, symptom]));
+  const pinned = selectedIds
+    .filter((id) => !matchedIds.has(id))
+    .map((id) => byId.get(id))
+    .filter((symptom): symptom is T => symptom !== undefined);
+  return { pinned, matches };
+}
+
+// Count of ticked symptoms next to a category heading, in Polish plural: "1 wybrany", "2 wybrane", "5 wybranych",
+// "12 wybranych", "22 wybrane". Zero gives null: no count is shown.
+export function selectedCountLabel(count: number): string | null {
+  if (count === 0) return null;
+  const { selectedCountOne, selectedCountFew, selectedCountMany } = JOURNAL_COPY.form;
+  const lastDigit = count % 10;
+  const lastTwo = count % 100;
+  const few = lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14);
+  const template: string = count === 1 ? selectedCountOne : few ? selectedCountFew : selectedCountMany;
+  return template.replace("{n}", String(count));
 }
 
 export interface GroupableSymptom {

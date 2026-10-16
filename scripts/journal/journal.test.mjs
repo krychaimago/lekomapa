@@ -16,6 +16,8 @@ import {
   groupSymptomsByCategory,
   minOccurredLocal,
   nowInWarsawLocal,
+  searchSymptoms,
+  selectedCountLabel,
 } from "../../src/lib/services/journal.ts";
 import { foldForSearch } from "../../src/lib/services/text-fold.ts";
 
@@ -66,6 +68,54 @@ test("an empty or blank query gives null (grouped view), an unknown word an empt
   assert.equal(filterSymptoms(catalog, terms, ""), null);
   assert.equal(filterSymptoms(catalog, terms, "   "), null);
   assert.deepEqual(filterSymptoms(catalog, terms, "xyzzy"), []);
+});
+
+// Search keeps every ticked symptom reachable (impl-review F5 of the first journal version): a ticked symptom the
+// query does not find is pinned above the matches, so its severity buttons stay on screen while searching.
+test("an empty or blank query gives null, so the screen shows the grouped list", () => {
+  assert.equal(searchSymptoms(catalog, terms, "", ["headache"]), null);
+  assert.equal(searchSymptoms(catalog, terms, "   ", ["headache"]), null);
+});
+
+test("a ticked symptom the query does not find is pinned; the matches are the plain search result", () => {
+  const result = searchSymptoms(catalog, terms, "biegunka", ["headache"]);
+  assert.deepEqual(ids(result.pinned), ["headache"]);
+  assert.deepEqual(ids(result.matches), ["diarrhea"]);
+});
+
+test("a ticked symptom the query finds stays only among the matches, never twice", () => {
+  const result = searchSymptoms(catalog, terms, "głowy", ["headache", "rash"]);
+  assert.deepEqual(ids(result.pinned), ["rash"]);
+  assert.deepEqual(ids(result.matches), ["headache", "dizziness"]);
+});
+
+test("pinned symptoms keep the order they were ticked in, not the alphabet", () => {
+  const result = searchSymptoms(catalog, terms, "sraczka", ["rash", "headache", "nausea"]);
+  assert.deepEqual(ids(result.pinned), ["rash", "headache", "nausea"]);
+});
+
+test("an id outside the catalog is skipped; with nothing ticked nothing is pinned", () => {
+  assert.deepEqual(ids(searchSymptoms(catalog, terms, "wysypka", ["gone", "headache"]).pinned), ["headache"]);
+  assert.deepEqual(searchSymptoms(catalog, terms, "wysypka", []).pinned, []);
+});
+
+test("the count next to a category heading is Polish: none at zero, 1 wybrany, 2–4 wybrane, 5+ and 12–14 wybranych", () => {
+  assert.equal(selectedCountLabel(0), null);
+  const expected = {
+    1: "1 wybrany",
+    2: "2 wybrane",
+    4: "4 wybrane",
+    5: "5 wybranych",
+    11: "11 wybranych",
+    12: "12 wybranych",
+    14: "14 wybranych",
+    21: "21 wybranych",
+    22: "22 wybrane",
+    25: "25 wybranych",
+  };
+  for (const [count, label] of Object.entries(expected)) {
+    assert.equal(selectedCountLabel(Number(count)), label, `count ${count}`);
+  }
 });
 
 test("grouping follows the category order of the screen and sort_order inside a category", () => {
