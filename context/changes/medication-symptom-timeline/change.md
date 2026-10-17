@@ -55,8 +55,8 @@ Wyniki pomiarów z faz 2 i 3 (szczegóły wyżej):
 
 Limit CPU po wdrożeniu (Sentry `cron.exceeded-cpu` / Workers Analytics):
 
-- Data sprawdzenia: TODO
-- Wynik: TODO
+- Data sprawdzenia: nie sprawdzono przed archiwizacją (17.10.2026, decyzja autorki).
+- Wynik: brak. Krok 4.7 zostaje otwarty; siatką bezpieczeństwa jest zadanie `cron.exceeded-cpu` w `src/worker.ts`, które zgłasza przekroczenie do Sentry.
 
 ### Przyjęte ograniczenie: przeglądarki bez `:has()` (impl-review F2, 17.10.2026)
 
@@ -76,9 +76,9 @@ Kroki (iPhone, Safari, po wdrożeniu — razem z krokiem 4.7):
 3. Odznacz jeden lek w filtrze leków.
 4. Posłuchaj, czy VoiceOver sam odczyta „Część leków jest ukryta.” bez przesuwania palcem do komunikatu.
 
-- Data sprawdzenia: TODO
-- Wynik: TODO
-- Jeśli komunikat nie pada: osobna zmiana. Bez JavaScriptu nie da się wymusić ogłoszenia.
+- Data sprawdzenia: 17.10.2026 (autorka, iPhone, Safari).
+- Wynik: komunikat nie jest odczytywany. Po odznaczeniu leku VoiceOver czyta tylko przycisk „Pokaż wszystkie”.
+- Decyzja: zaparkowane (wersja demonstracyjna; PRD `## Non-Goals` — formalna zgodność ze standardami dostępności). Pozycja w `## Parked` roadmapy z wariantami powrotu.
 
 ### Kroki po merge'u (impl-review F9)
 
@@ -88,5 +88,7 @@ Kolejność ma znaczenie — oś czyta funkcję `symptom_timeline()` z migracji,
 2. Sprawdź listę migracji (`npx supabase migration list`) i potwierdź, że ta migracja jest po stronie zdalnej.
 3. Otwórz `/wizyta/os-czasu` na produkcji i potwierdź, że oś się ładuje.
 4. Uzupełnij wyżej wynik limitu CPU (krok 4.7) i sprawdzenia VoiceOver (F3).
+
+Wykonanie 17.10.2026: kroki 1–2 zrobione po deployu `aaeb4be` (migracja widoczna lokalnie i zdalnie); krok 3 — trasa odpowiada przekierowaniem 302 na logowanie, ekran po zalogowaniu sprawdza autorka; krok 4 — VoiceOver wpisany, limit CPU nie sprawdzony przed archiwizacją.
 
 Uwaga na później: `scripts/timeline/render-bench.mjs` nie jest w CI, a zapas do progu 7 ms to ok. 1 ms (mediana 5,98 ms po poprawkach z przeglądu, 17.10.2026). Każda zmiana `TimelineView.astro` albo `TimelineChart.astro` wymaga ręcznego biegu pomiaru.
