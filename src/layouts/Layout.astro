@@ -37,7 +37,12 @@ const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
     <title>{title}</title>
   </head>
   <body>
-    <DemoBar />
+    {/* One sticky block for every top bar: the browser stacks a layout's slotted bar right under the demo bar,
+        so nothing needs to know the demo bar's height, which wraps to 2-3 lines on phones. */}
+    <div class="sticky top-0 z-50">
+      <DemoBar />
+      <slot name="sticky-top" />
+    </div>
     {missingConfigs.map((cfg) => (
       <Banner>
         <strong>Uwaga:</strong> {cfg.message}
@@ -65,8 +70,8 @@ const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
   html {
     height: 100%;
   }
-  /* min-height, not height: a body capped at the window height ends the sticky demo bar's range
-     there, so on a long page the bar scrolled away after one screen. */
+  /* min-height, not height: a body capped at the window height ends the sticky top block's range
+     there, so on a long page the block scrolled away after one screen. */
   body {
     min-height: 100%;
   }

@@ -1,11 +1,12 @@
 ---
-// Standing notice that this is a prototype. Rendered by Layout on every page, signed in or not.
+// Standing notice that this is a prototype. Rendered by Layout on every page, signed in or not,
+// inside Layout's sticky top block, which owns the stickiness.
 import { LEGAL_LINKS_COPY } from "@/lib/copy/terms";
 ---
 
 <div
   role="note"
-  class="sticky top-0 z-50 border-b border-demo-bar-border bg-demo-bar px-4 py-2 text-center text-sm text-demo-bar-foreground lg:h-(--demo-bar-height)"
+  class="border-b border-demo-bar-border bg-demo-bar px-4 py-2 text-center text-sm text-demo-bar-foreground lg:h-(--demo-bar-height)"
 >
   <strong>Wersja demonstracyjna.</strong> Nie wpisuj prawdziwych danych o zdrowiu.{" "}
   <a href="/prywatnosc" class="underline underline-offset-4 hover:no-underline">
