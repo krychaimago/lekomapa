@@ -368,31 +368,31 @@ Jedna nowa funkcja bazy, bez nowej tabeli i bez zmian danych. Po merge'u: `npx s
 
 #### Automated
 
-- [x] 2.1 Testy logiki osi przechodzą: `npm test`
-- [x] 2.2 Pomiar wypisuje medianę ≤ 2 ms: `node --experimental-strip-types scripts/timeline/bench.mjs`
-- [x] 2.3 Typy przechodzą: `npm run typecheck`
-- [x] 2.4 Lint przechodzi: `npm run lint`
+- [x] 2.1 Testy logiki osi przechodzą: `npm test` — 815e49d
+- [x] 2.2 Pomiar wypisuje medianę ≤ 2 ms: `node --experimental-strip-types scripts/timeline/bench.mjs` — 815e49d
+- [x] 2.3 Typy przechodzą: `npm run typecheck` — 815e49d
+- [x] 2.4 Lint przechodzi: `npm run lint` — 815e49d
 
 #### Manual
 
-- [x] 2.5 Wynik pomiaru (mediana, 95. percentyl) zapisany w `change.md`
+- [x] 2.5 Wynik pomiaru (mediana, 95. percentyl) zapisany w `change.md` — 815e49d
 
 ### Phase 3: Ekran osi czasu
 
 #### Automated
 
-- [ ] 3.1 Testy, w tym FR-012 nowego modułu copy, tytuł strony, parametry adresu, pokrycie tras i bramka kolorów: `npm test`
-- [ ] 3.2 Typy przechodzą: `npm run typecheck`
-- [ ] 3.3 Lint przechodzi: `npm run lint`
-- [ ] 3.4 Build przechodzi: `npm run build`
-- [ ] 3.5 Pomiar renderu całej strony na ciężkim koncie wypisuje medianę ≤ 5 ms: `node scripts/timeline/render-bench.mjs`
+- [x] 3.1 Testy, w tym FR-012 nowego modułu copy, tytuł strony, parametry adresu, pokrycie tras i bramka kolorów: `npm test`
+- [x] 3.2 Typy przechodzą: `npm run typecheck`
+- [x] 3.3 Lint przechodzi: `npm run lint`
+- [x] 3.4 Build przechodzi: `npm run build`
+- [x] 3.5 Pomiar renderu całej strony na ciężkim koncie wypisuje medianę ≤ 5 ms: `node scripts/timeline/render-bench.mjs`
 
 #### Manual
 
-- [ ] 3.6 Na telefonie (360 px) i komputerze, w trybie jasnym i ciemnym: przełącznik zakresu, wybór objawu, ukrycie leku i „Pokaż wszystkie” działają bez przeładowania, lista tekstowa pokazuje tylko wybrane leki i objaw
-- [ ] 3.7 Odnośnik „Zobacz na osi czasu” w „Wizycie” i „Dzienniku” prowadzi na oś, a w menu podświetla się „Wizyta”
-- [ ] 3.8 Puste stany (konto bez danych, same leki, same wpisy) mówią, skąd bierze się brak treści
-- [ ] 3.9 Autorka akceptuje brzmienie tekstów ekranu, w tym noty
+- [x] 3.6 Na telefonie (360 px) i komputerze, w trybie jasnym i ciemnym: przełącznik zakresu, wybór objawu, ukrycie leku i „Pokaż wszystkie” działają bez przeładowania, lista tekstowa pokazuje tylko wybrane leki i objaw
+- [x] 3.7 Odnośnik „Zobacz na osi czasu” w „Wizycie” i „Dzienniku” prowadzi na oś, a w menu podświetla się „Wizyta”
+- [x] 3.8 Puste stany (konto bez danych, same leki, same wpisy) mówią, skąd bierze się brak treści
+- [x] 3.9 Autorka akceptuje brzmienie tekstów ekranu, w tym noty
 
 ### Phase 4: Test przeglądarkowy i pomiary
 
