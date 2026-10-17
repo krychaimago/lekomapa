@@ -411,3 +411,20 @@ export interface TermsAcceptance {
   version: number;
   accepted_at: string;
 }
+
+// ---------------------------------------------------------------------------
+// Medication and symptom timeline (S-09, FR-013), page `/wizyta/os-czasu`.
+// Source of truth: supabase/migrations/20261017120000_symptom_timeline.sql. The timeline shows dates, not relations:
+// nothing here carries interaction pairs or any rating (FR-012).
+
+/** Every entry of one symptom of the signed-in person, oldest first, each with its own optional severity. */
+export interface TimelineSymptomEntries {
+  symptomId: string;
+  /** Current catalog name. */
+  name: string;
+  entries: {
+    /** When the symptom was felt, ISO timestamp (UTC). */
+    occurredAt: string;
+    severity: SymptomSeverity | null;
+  }[];
+}

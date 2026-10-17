@@ -53,20 +53,20 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status   |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | -------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done     |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done     |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done     |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done     |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done     |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked  |
-| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done     |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done        |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done        |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done        |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done        |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed    |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | in-progress |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed    |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked     |
+| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done        |
 
 ## Streams
 
@@ -234,7 +234,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Gdzie oś czasu stoi: osobny ekran z pozycją w menu czy część istniejącego ekranu. — Owner: użytkowniczka przy planie. Block: no. Piąta zakładka na telefonie zderza się z powodem S-02.
 - **Risk:** Nowa funkcja — wymaga jawnej zmiany PRD: oś czasu jest dziś drugorzędnym Kryterium sukcesu, bez wymagania funkcjonalnego, więc dochodzi nowe FR. Granice nienaruszone: FR-012 (oś nie wyróżnia zbieżności objawu z lekiem, nie podpowiada związku, nie porządkuje leków według podejrzenia — kolejność np. według daty rozpoczęcia), historia okresów bez zmian, dane wyłącznie z konta pod RLS, żadnej nazwy leku ani objawu w adresie. Po S-05, bo przy celu `quality` szlif istniejących ekranów ma pierwszeństwo. Odczyt wszystkich wpisów konta trafia na limit `max_rows = 1000` (`supabase/config.toml`) — do uwzględnienia w planie.
 - **Termin:** zapasowy.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-10: Graf leków i możliwych interakcji
 
