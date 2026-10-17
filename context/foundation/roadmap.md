@@ -320,6 +320,8 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **Pełna warstwa prawna przetwarzania danych (RODO)** — Why parked: PRD `## Non-Goals`; warunek powrotu: wyjście z fazy prototypu.
 - **Techniczne ograniczenia prototypu: automatyczne czyszczenie kont, rejestracja z zaproszeniem** — Why parked: PRD `## Non-Goals`; koszt ponad potrzebę prototypu.
 - **Szukanie objawu z konkretnego dnia w „Dzienniku”** (filtr albo skok po dacie) — Why parked: wydzielone 16.10.2026 z S-05 (`context/changes/visit-readable-with-current-meds/frame.md`); „Wizyta” jest ułożona według objawów, nie dni, a potrzeba wróci przy codziennych wpisach. Nazwa objawu nigdy w URL; parametr daty wymaga świadomego wpisu w `ALLOWED_URL_PARAMS`.
+- **Pole z fokusem pod dolnym menu na telefonie** — Why parked: wydzielone 17.10.2026 z S-12 (impl-review `mobile-header-sticky`, F2). Luka sprzed S-12: pole wybrane Tabem albo nasilenie przy objawie na dole ekranu może stanąć pod dolnym menu (pomiar przed zmianą: ok. 40 px). `scroll-padding-bottom` wypychał nasilenie objawu poza ekran (`severity-on-phone.spec.ts`), więc potrzebne inne rozwiązanie.
+- **Górny blok zajmuje większość ekranu przy powiększonym tekście** — Why parked: wydzielone 17.10.2026 z S-12 (impl-review `mobile-header-sticky`, F1). Pomiar: przy 320 px i tekście 200% przyklejony pasek demo z nagłówkiem ma 392 z 568 px wysokości ekranu, na treść zostaje 176 px. Kierunek do rozważenia: pasek demo nieprzyklejony albo zwinięty na telefonie.
 
 ## Milestone History
 

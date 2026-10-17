@@ -4,9 +4,9 @@
 // phone widths and requires both buttons in view, with the header's top edge on the demo bar's bottom edge (no gap,
 // no overlap).
 //
-// Data: none. The test only reads /konto with the saved session of the shared E2E account; /konto is long enough to
-// scroll at a 568 px high window without any entries. Local Supabase only (playwright.config.ts keeps the preview off
-// .env).
+// Data: none. The test only reads /konto with the saved session of the shared E2E account. Below lg every interior
+// screen scrolls, because the top block stands outside the min-h-dvh container; the scrollY precondition below
+// checks that it really did. Local Supabase only (playwright.config.ts keeps the preview off .env).
 import { test, expect, type Locator } from "@playwright/test";
 
 const SIGN_OUT = "Wyloguj się";

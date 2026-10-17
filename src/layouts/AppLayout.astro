@@ -109,14 +109,16 @@ const signOutClass = cn(
 <style is:global>
   /* Below lg the sticky top block covers the top of the window, so keep focused and scrolled-to elements
      clear of it. Measured 16.10.2026: at 320 px the demo bar is 85 px (3 lines) and the header 65 px,
-     about 150 px together. rem grows with enlarged text along with the bars. Change this together with
-     the bar heights.
+     about 150 px together. rem grows with enlarged text, but the demo bar wraps to more lines, so the block
+     outgrows rem. Measured 17.10.2026 at 320 px: 9.34rem at 100% text, 9.71rem at 150%, 12.25rem at 200%
+     (10.84rem at 360/375 px and 200%). 12.5rem covers 200% text at every phone width. Change this together
+     with the bar heights.
      No scroll-padding-bottom for the bottom tabs: it scrolled a ticked symptom down to just above the tabs,
      which pushed its severity buttons below the window (severity-on-phone.spec.ts). Keeping the focus
      clear of the bottom tabs is a separate change. */
   @media (width < 64rem) {
     html {
-      scroll-padding-top: 9.5rem;
+      scroll-padding-top: 12.5rem;
     }
   }
 </style>
