@@ -109,8 +109,10 @@ export interface BuildTimelineInput {
 // Polish short month names (user-visible), January first.
 const MONTH_LABELS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"] as const;
 
-const SEVERITY_RANK: Record<SymptomSeverity, number> = { mild: 1, moderate: 2, severe: 3 };
-const rankOf = (severity: SymptomSeverity | null) => (severity === null ? 0 : SEVERITY_RANK[severity]);
+// Partial on purpose: the severity comes from an unchecked rpc cast, and a value added by a future migration must
+// draw as "no severity" instead of NaN in the SVG path.
+const SEVERITY_RANK: Partial<Record<SymptomSeverity, number>> = { mild: 1, moderate: 2, severe: 3 };
+const rankOf = (severity: SymptomSeverity | null) => (severity === null ? 0 : (SEVERITY_RANK[severity] ?? 0));
 
 const MS_PER_DAY = 86_400_000;
 
@@ -356,7 +358,10 @@ export const TIMELINE_DOM = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Only ids of this shape reach the filter rules; the page should render rows and options only for these ids too. */
+/**
+ * Only ids of this shape reach the filter rules. Components render every id as is: ids come from the database and are
+ * always uuids, so a row with any other id would never be hidden by a filter.
+ */
 export function isUuid(value: string): boolean {
   return UUID.test(value);
 }

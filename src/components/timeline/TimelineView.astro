@@ -272,7 +272,7 @@ const selectClass = cn(
         <div class:list={cn("mt-3 flex flex-col gap-3", TIMELINE_DOM.rangeClass(range.key))}>
           {hasMedications && (
             <div class="flex flex-col gap-1">
-              <h3 class="text-sm font-semibold">{copy.medicationsHeading}</h3>
+              <h2 class="text-sm font-semibold">{copy.medicationsHeading}</h2>
               {range.medications.length === 0 ? (
                 <p class="text-sm">{copy.noMedicationsInRange}</p>
               ) : (
@@ -286,7 +286,7 @@ const selectClass = cn(
           )}
           {hasSymptoms && (
             <div class="flex flex-col gap-1">
-              <h3 class="text-sm font-semibold">{copy.symptomHeading}</h3>
+              <h2 class="text-sm font-semibold">{copy.symptomHeading}</h2>
               <p class:list={cn(TIMELINE_DOM.symptomHintClass, "text-sm")}>{copy.symptomHint}</p>
               {range.symptoms.map((item) => (
                 <p data-s={item.id}>{item.text}</p>

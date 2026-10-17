@@ -231,7 +231,7 @@ Strona `/wizyta/os-czasu` z wykresem SVG, filtrami CSS, listą tekstową i pusty
 
 **Intent**: Zmierzyć przed merge'em to, co faktycznie może przebić limit 10 ms CPU: render całego ciała strony z wszystkimi zakresami, oboma układami i wierszami wszystkich objawów, na koncie ciężkim, nie testowym.
 
-**Contract**: Skrypt poza `npm test`. Generuje te same dane co `bench.mjs` (20 leków po 3 okresy, 1000 wpisów na 8 objawów w ciągu roku; generator wspólny, nie skopiowany), liczy `buildTimeline` i renderuje `TimelineView.astro` przez Astro Container API (`experimental_AstroContainer` z `astro/container`), uruchomione w Vite, bo `node` sam nie ładuje `.astro`. 200 renderów po rozgrzewce, mediana i 95. percentyl w ms (logika + render). Próg: mediana ≤ 5 ms — zapas na Supabase, middleware i różnicę Node ↔ workerd (niezmierzoną). Przekroczenie progu albo brak możliwości uruchomienia Container API = stop i decyzja autorki przed wdrożeniem, bez cichej zmiany techniki. Wynik i rozmiar HTML w `change.md` → `## Notes`.
+**Contract**: Skrypt poza `npm test`. Generuje te same dane co `bench.mjs` (20 leków po 3 okresy, 1000 wpisów na 8 objawów w ciągu roku; generator wspólny, nie skopiowany), liczy `buildTimeline` i renderuje `TimelineView.astro` przez Astro Container API (`experimental_AstroContainer` z `astro/container`), uruchomione w Vite, bo `node` sam nie ładuje `.astro`. 200 renderów po rozgrzewce, mediana i 95. percentyl w ms (logika + render). Próg: mediana ≤ 7 ms (decyzja autorki 17.10.2026, `change.md`) — zapas na Supabase, middleware i różnicę Node ↔ workerd (niezmierzoną). Przekroczenie progu albo brak możliwości uruchomienia Container API = stop i decyzja autorki przed wdrożeniem, bez cichej zmiany techniki. Wynik i rozmiar HTML w `change.md` → `## Notes`.
 
 ### Success Criteria:
 
@@ -241,7 +241,7 @@ Strona `/wizyta/os-czasu` z wykresem SVG, filtrami CSS, listą tekstową i pusty
 - Typy przechodzą: `npm run typecheck`
 - Lint przechodzi: `npm run lint`
 - Build przechodzi: `npm run build`
-- Pomiar renderu całej strony na ciężkim koncie wypisuje medianę ≤ 5 ms: `node scripts/timeline/render-bench.mjs`
+- Pomiar renderu całej strony na ciężkim koncie wypisuje medianę ≤ 7 ms (decyzja autorki 17.10.2026, `change.md`): `node scripts/timeline/render-bench.mjs`
 
 #### Manual Verification:
 
@@ -330,7 +330,7 @@ Test E2E na ryzyku „filtr ukrywa dane, a obraz pokazany lekarzowi jest niepeł
 
 ## Performance Considerations
 
-Strona renderuje trzy zakresy w dwóch układach i wszystkie objawy naraz, więc praca serwera rośnie ok. sześciokrotnie względem jednego widoku. Pomiary przed merge'em na ciężkim koncie (20 leków, 1000 wpisów, 8 objawów): logika w fazie 2 (mediana ≤ 2 ms), render całej strony w fazie 3 (mediana ≤ 5 ms), LCP w fazie 4. Po wdrożeniu istniejące zadanie `cron.exceeded-cpu` jest siatką bezpieczeństwa, nie pierwszym pomiarem. Przekroczenie progu to stop i nowa decyzja autorki (np. rysowanie w przeglądarce, które czysta funkcja umożliwia bez przepisywania), nie cicha zmiana techniki.
+Strona renderuje trzy zakresy w dwóch układach i wszystkie objawy naraz, więc praca serwera rośnie ok. sześciokrotnie względem jednego widoku. Pomiary przed merge'em na ciężkim koncie (20 leków, 1000 wpisów, 8 objawów): logika w fazie 2 (mediana ≤ 2 ms), render całej strony w fazie 3 (mediana ≤ 7 ms, decyzja autorki 17.10.2026, `change.md`), LCP w fazie 4. Po wdrożeniu istniejące zadanie `cron.exceeded-cpu` jest siatką bezpieczeństwa, nie pierwszym pomiarem. Przekroczenie progu to stop i nowa decyzja autorki (np. rysowanie w przeglądarce, które czysta funkcja umożliwia bez przepisywania), nie cicha zmiana techniki.
 
 ## Migration Notes
 
@@ -398,13 +398,13 @@ Jedna nowa funkcja bazy, bez nowej tabeli i bez zmian danych. Po merge'u: `npx s
 
 #### Automated
 
-- [x] 4.1 Test E2E osi przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/medication-symptom-timeline.spec.ts`
-- [x] 4.2 Galeria trybu ciemnego przechodzi: `npx playwright test tests/e2e/dark-gallery.spec.ts`
-- [x] 4.3 Testy, typy i lint przechodzą: `npm test && npm run typecheck && npm run lint`
+- [x] 4.1 Test E2E osi przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/medication-symptom-timeline.spec.ts` — a2e7c09
+- [x] 4.2 Galeria trybu ciemnego przechodzi: `npx playwright test tests/e2e/dark-gallery.spec.ts` — a2e7c09
+- [x] 4.3 Testy, typy i lint przechodzą: `npm test && npm run typecheck && npm run lint` — a2e7c09
 
 #### Manual
 
-- [x] 4.4 Test E2E pada po celowym usunięciu reguły „Część leków jest ukryta.” i przechodzi po jej przywróceniu
-- [x] 4.5 Mediana LCP z 3 przebiegów Lighthouse Mobile ≤ 2,5 s na ciężkim koncie, zapisana w `change.md`
-- [x] 4.6 Autorka przegląda stan osi w galerii trybu ciemnego (telefon i komputer)
+- [x] 4.4 Test E2E pada po celowym usunięciu reguły „Część leków jest ukryta.” i przechodzi po jej przywróceniu — a2e7c09
+- [x] 4.5 Mediana LCP z 3 przebiegów Lighthouse Mobile ≤ 2,5 s na ciężkim koncie, zapisana w `change.md` — a2e7c09
+- [x] 4.6 Autorka przegląda stan osi w galerii trybu ciemnego (telefon i komputer) — a2e7c09
 - [ ] 4.7 Po wdrożeniu i otwarciu osi na produkcji brak przekroczeń limitu CPU, wynik zapisany w `change.md`

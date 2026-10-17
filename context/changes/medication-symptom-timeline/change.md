@@ -1,7 +1,7 @@
 ---
 change_id: medication-symptom-timeline
 title: Medication symptom timeline
-status: implementing
+status: impl_reviewed
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null
@@ -57,3 +57,36 @@ Limit CPU po wdrożeniu (Sentry `cron.exceeded-cpu` / Workers Analytics):
 
 - Data sprawdzenia: TODO
 - Wynik: TODO
+
+### Przyjęte ograniczenie: przeglądarki bez `:has()` (impl-review F2, 17.10.2026)
+
+- Filtry osi (zakres, objaw, leki, komunikat o ukryciu leków) działają wyłącznie przez selektor `:has()`.
+- Przeglądarka bez `:has()` (Firefox < 121, Safari < 15.4) pokazuje trzy zakresy w obu układach i wszystkie objawy jeden pod drugim, a kontrolki nic nie zmieniają.
+- Żadne dane nie znikają — ryzyko ukrycia danych bez ostrzeżenia nie zachodzi. Ekran jest tylko mało czytelny.
+- Przyjęte bez widoku zastępczego. Przesądza: jeśli kiedyś dojdzie `@supports not selector(:has(*))`, potrzebny będzie tekst z testem FR-012 i ponowny pomiar renderu.
+
+### Sprawdzenie ręczne: komunikat o ukrytych lekach w VoiceOver (impl-review F3)
+
+Komunikat „Część leków jest ukryta.” ma `role="status"`, ale pojawia się przez zmianę `display` w CSS. Część czytników ekranu nie ogłasza regionu, który był ukryty od początku. Test E2E sprawdza tylko widoczność.
+
+Kroki (iPhone, Safari, po wdrożeniu — razem z krokiem 4.7):
+
+1. Włącz VoiceOver (Ustawienia → Dostępność → VoiceOver).
+2. Otwórz `/wizyta/os-czasu` na koncie, które ma co najmniej dwa leki.
+3. Odznacz jeden lek w filtrze leków.
+4. Posłuchaj, czy VoiceOver sam odczyta „Część leków jest ukryta.” bez przesuwania palcem do komunikatu.
+
+- Data sprawdzenia: TODO
+- Wynik: TODO
+- Jeśli komunikat nie pada: osobna zmiana. Bez JavaScriptu nie da się wymusić ogłoszenia.
+
+### Kroki po merge'u (impl-review F9)
+
+Kolejność ma znaczenie — oś czyta funkcję `symptom_timeline()` z migracji, więc przed krokiem 1 ekran na produkcji pokaże błąd ładowania mimo zielonego CI.
+
+1. Po zielonym deployu uruchom `npx supabase db push` (migracja `20261017120000_symptom_timeline.sql`).
+2. Sprawdź listę migracji (`npx supabase migration list`) i potwierdź, że ta migracja jest po stronie zdalnej.
+3. Otwórz `/wizyta/os-czasu` na produkcji i potwierdź, że oś się ładuje.
+4. Uzupełnij wyżej wynik limitu CPU (krok 4.7) i sprawdzenia VoiceOver (F3).
+
+Uwaga na później: `scripts/timeline/render-bench.mjs` nie jest w CI, a zapas do progu 7 ms to ok. 1 ms (mediana 5,98 ms po poprawkach z przeglądu, 17.10.2026). Każda zmiana `TimelineView.astro` albo `TimelineChart.astro` wymaga ręcznego biegu pomiaru.
