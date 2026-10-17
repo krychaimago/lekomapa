@@ -381,30 +381,30 @@ Jedna nowa funkcja bazy, bez nowej tabeli i bez zmian danych. Po merge'u: `npx s
 
 #### Automated
 
-- [x] 3.1 Testy, w tym FR-012 nowego modułu copy, tytuł strony, parametry adresu, pokrycie tras i bramka kolorów: `npm test`
-- [x] 3.2 Typy przechodzą: `npm run typecheck`
-- [x] 3.3 Lint przechodzi: `npm run lint`
-- [x] 3.4 Build przechodzi: `npm run build`
-- [x] 3.5 Pomiar renderu całej strony na ciężkim koncie wypisuje medianę ≤ 5 ms: `node scripts/timeline/render-bench.mjs`
+- [x] 3.1 Testy, w tym FR-012 nowego modułu copy, tytuł strony, parametry adresu, pokrycie tras i bramka kolorów: `npm test` — 95116eb
+- [x] 3.2 Typy przechodzą: `npm run typecheck` — 95116eb
+- [x] 3.3 Lint przechodzi: `npm run lint` — 95116eb
+- [x] 3.4 Build przechodzi: `npm run build` — 95116eb
+- [x] 3.5 Pomiar renderu całej strony na ciężkim koncie wypisuje medianę ≤ 5 ms: `node scripts/timeline/render-bench.mjs` — 95116eb
 
 #### Manual
 
-- [x] 3.6 Na telefonie (360 px) i komputerze, w trybie jasnym i ciemnym: przełącznik zakresu, wybór objawu, ukrycie leku i „Pokaż wszystkie” działają bez przeładowania, lista tekstowa pokazuje tylko wybrane leki i objaw
-- [x] 3.7 Odnośnik „Zobacz na osi czasu” w „Wizycie” i „Dzienniku” prowadzi na oś, a w menu podświetla się „Wizyta”
-- [x] 3.8 Puste stany (konto bez danych, same leki, same wpisy) mówią, skąd bierze się brak treści
-- [x] 3.9 Autorka akceptuje brzmienie tekstów ekranu, w tym noty
+- [x] 3.6 Na telefonie (360 px) i komputerze, w trybie jasnym i ciemnym: przełącznik zakresu, wybór objawu, ukrycie leku i „Pokaż wszystkie” działają bez przeładowania, lista tekstowa pokazuje tylko wybrane leki i objaw — 95116eb
+- [x] 3.7 Odnośnik „Zobacz na osi czasu” w „Wizycie” i „Dzienniku” prowadzi na oś, a w menu podświetla się „Wizyta” — 95116eb
+- [x] 3.8 Puste stany (konto bez danych, same leki, same wpisy) mówią, skąd bierze się brak treści — 95116eb
+- [x] 3.9 Autorka akceptuje brzmienie tekstów ekranu, w tym noty — 95116eb
 
 ### Phase 4: Test przeglądarkowy i pomiary
 
 #### Automated
 
-- [ ] 4.1 Test E2E osi przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/medication-symptom-timeline.spec.ts`
-- [ ] 4.2 Galeria trybu ciemnego przechodzi: `npx playwright test tests/e2e/dark-gallery.spec.ts`
-- [ ] 4.3 Testy, typy i lint przechodzą: `npm test && npm run typecheck && npm run lint`
+- [x] 4.1 Test E2E osi przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/medication-symptom-timeline.spec.ts`
+- [x] 4.2 Galeria trybu ciemnego przechodzi: `npx playwright test tests/e2e/dark-gallery.spec.ts`
+- [x] 4.3 Testy, typy i lint przechodzą: `npm test && npm run typecheck && npm run lint`
 
 #### Manual
 
-- [ ] 4.4 Test E2E pada po celowym usunięciu reguły „Część leków jest ukryta.” i przechodzi po jej przywróceniu
-- [ ] 4.5 Mediana LCP z 3 przebiegów Lighthouse Mobile ≤ 2,5 s na ciężkim koncie, zapisana w `change.md`
-- [ ] 4.6 Autorka przegląda stan osi w galerii trybu ciemnego (telefon i komputer)
+- [x] 4.4 Test E2E pada po celowym usunięciu reguły „Część leków jest ukryta.” i przechodzi po jej przywróceniu
+- [x] 4.5 Mediana LCP z 3 przebiegów Lighthouse Mobile ≤ 2,5 s na ciężkim koncie, zapisana w `change.md`
+- [x] 4.6 Autorka przegląda stan osi w galerii trybu ciemnego (telefon i komputer)
 - [ ] 4.7 Po wdrożeniu i otwarciu osi na produkcji brak przekroczeń limitu CPU, wynik zapisany w `change.md`
