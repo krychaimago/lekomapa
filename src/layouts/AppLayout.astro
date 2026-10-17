@@ -23,6 +23,22 @@ const signOutClass = cn(
 ---
 
 <Layout title={title}>
+  {/* Phone header sits in Layout's sticky top block, right under the demo bar. */}
+  <header
+    slot="sticky-top"
+    class="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4 py-2 text-sidebar-foreground lg:hidden"
+  >
+    {/* Below 360 px the name does not fit next to the sign-out button (measured 342 px needed at 320 px). */}
+    <BrandName class="text-xl font-bold" nameClass="max-[359px]:sr-only" />
+    <div class="flex shrink-0 items-center gap-2">
+      <ThemeToggle />
+      <form method="POST" action="/api/auth/signout">
+        <button type="submit" class:list={signOutClass}>
+          Wyloguj się
+        </button>
+      </form>
+    </div>
+  </header>
   <div class="flex min-h-dvh flex-col lg:min-h-[calc(100dvh-var(--demo-bar-height))] lg:flex-row">
     <aside class="hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-(--demo-bar-height) lg:flex lg:h-[calc(100dvh-var(--demo-bar-height))] lg:w-[22%] lg:min-w-60 lg:shrink-0 lg:flex-col lg:gap-8 lg:p-6">
       <BrandName class="text-2xl font-bold" />
@@ -57,19 +73,6 @@ const signOutClass = cn(
       </div>
     </aside>
 
-    <header class="flex items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4 py-2 text-sidebar-foreground lg:hidden">
-      {/* Below 360 px the name does not fit next to the sign-out button (measured 342 px needed at 320 px). */}
-      <BrandName class="text-xl font-bold" nameClass="max-[359px]:sr-only" />
-      <div class="flex shrink-0 items-center gap-2">
-        <ThemeToggle />
-        <form method="POST" action="/api/auth/signout">
-          <button type="submit" class:list={signOutClass}>
-            Wyloguj się
-          </button>
-        </form>
-      </div>
-    </header>
-
     <main class:list={cn("min-w-0 flex-1 bg-background p-4 lg:p-10", hasTabs && "pb-24 lg:pb-10")}>
       <slot />
     </main>
@@ -102,3 +105,20 @@ const signOutClass = cn(
     )}
   </div>
 </Layout>
+
+<style is:global>
+  /* Below lg the sticky top block covers the top of the window, so keep focused and scrolled-to elements
+     clear of it. Measured 16.10.2026: at 320 px the demo bar is 85 px (3 lines) and the header 65 px,
+     about 150 px together. rem grows with enlarged text, but the demo bar wraps to more lines, so the block
+     outgrows rem. Measured 17.10.2026 at 320 px: 9.34rem at 100% text, 9.71rem at 150%, 12.25rem at 200%
+     (10.84rem at 360/375 px and 200%). 12.5rem covers 200% text at every phone width. Change this together
+     with the bar heights.
+     No scroll-padding-bottom for the bottom tabs: it scrolled a ticked symptom down to just above the tabs,
+     which pushed its severity buttons below the window (severity-on-phone.spec.ts). Keeping the focus
+     clear of the bottom tabs is a separate change. */
+  @media (width < 64rem) {
+    html {
+      scroll-padding-top: 12.5rem;
+    }
+  }
+</style>

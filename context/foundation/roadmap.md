@@ -3,7 +3,7 @@ project: lekomapa
 version: 3
 status: draft
 created: 2026-09-21
-updated: 2026-10-16
+updated: 2026-10-17
 prd_version: 1
 main_goal: quality
 top_blocker: time
@@ -53,20 +53,20 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status   |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | -------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done     |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done     |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done     |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done     |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done     |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked  |
-| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | ready    |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done        |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done        |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done        |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done        |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed    |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | proposed    |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed    |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked     |
+| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | in-progress |
 
 ## Streams
 
@@ -280,7 +280,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Przesunięcie nagłówka pod paskiem demo: pasek ma stałą wysokość (`--demo-bar-height`) tylko od `lg`, na telefonie zawija się do dwóch wierszy. Najszybszy: oba paski w jednym przyklejonym kontenerze. Optymalny: stała wysokość paska demo także na telefonie. — Owner: plan. Block: no.
 - **Risk:** Zmiana wyłącznie układu na telefonie (`src/layouts/AppLayout.astro`, `src/components/DemoBar.astro`); duży ekran działa poprawnie i nie może się zmienić. Na górze dwa przyklejone paski, na dole przyklejone menu — treść nie może chować się pod żadnym z nich, a przy 320 px zostaje mniej miejsca na treść. Sprawdzić przy 320, 360 i 375 px, w obu trybach. Kandydat na test E2E w widoku telefonu: po przewinięciu „Wyloguj się” jest widoczne.
 - **Termin:** konieczne przed 04.11.2026.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Backlog Handoff
 
@@ -320,6 +320,8 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **Pełna warstwa prawna przetwarzania danych (RODO)** — Why parked: PRD `## Non-Goals`; warunek powrotu: wyjście z fazy prototypu.
 - **Techniczne ograniczenia prototypu: automatyczne czyszczenie kont, rejestracja z zaproszeniem** — Why parked: PRD `## Non-Goals`; koszt ponad potrzebę prototypu.
 - **Szukanie objawu z konkretnego dnia w „Dzienniku”** (filtr albo skok po dacie) — Why parked: wydzielone 16.10.2026 z S-05 (`context/changes/visit-readable-with-current-meds/frame.md`); „Wizyta” jest ułożona według objawów, nie dni, a potrzeba wróci przy codziennych wpisach. Nazwa objawu nigdy w URL; parametr daty wymaga świadomego wpisu w `ALLOWED_URL_PARAMS`.
+- **Pole z fokusem pod dolnym menu na telefonie** — Why parked: wydzielone 17.10.2026 z S-12 (impl-review `mobile-header-sticky`, F2). Luka sprzed S-12: pole wybrane Tabem albo nasilenie przy objawie na dole ekranu może stanąć pod dolnym menu (pomiar przed zmianą: ok. 40 px). `scroll-padding-bottom` wypychał nasilenie objawu poza ekran (`severity-on-phone.spec.ts`), więc potrzebne inne rozwiązanie.
+- **Górny blok zajmuje większość ekranu przy powiększonym tekście** — Why parked: wydzielone 17.10.2026 z S-12 (impl-review `mobile-header-sticky`, F1). Pomiar: przy 320 px i tekście 200% przyklejony pasek demo z nagłówkiem ma 392 z 568 px wysokości ekranu, na treść zostaje 176 px. Kierunek do rozważenia: pasek demo nieprzyklejony albo zwinięty na telefonie.
 
 ## Milestone History
 
