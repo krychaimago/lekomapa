@@ -1,7 +1,7 @@
 ---
 change_id: mobile-header-sticky
 title: Mobile header sticky
-status: implementing
+status: implemented
 created: 2026-10-16
 updated: 2026-10-17
 archived_at: null

@@ -189,11 +189,11 @@ Brak migracji i zmian danych.
 
 #### Automated
 
-- [x] 2.1 Nowy test przechodzi: `npx playwright test tests/e2e/mobile-header-sticky.spec.ts`
-- [x] 2.2 Nowy test pada po cofnięciu zmian fazy 1
-- [x] 2.3 Wszystkie testy E2E przechodzą, w tym galeria trybu ciemnego
-- [x] 2.4 Lint i typy przechodzą
+- [x] 2.1 Nowy test przechodzi: `npx playwright test tests/e2e/mobile-header-sticky.spec.ts` — 39ffc3e
+- [x] 2.2 Nowy test pada po cofnięciu zmian fazy 1 — 39ffc3e
+- [x] 2.3 Wszystkie testy E2E przechodzą, w tym galeria trybu ciemnego — 39ffc3e
+- [x] 2.4 Lint i typy przechodzą — 39ffc3e
 
 #### Manual
 
-- [x] 2.5 Zrzuty galerii trybu ciemnego dla telefonu: górny blok na górze strony
+- [x] 2.5 Zrzuty galerii trybu ciemnego dla telefonu: górny blok na górze strony — 39ffc3e
