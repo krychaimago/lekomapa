@@ -354,28 +354,28 @@ Jedna nowa funkcja bazy, bez nowej tabeli i bez zmian danych. Po merge'u: `npx s
 
 #### Automated
 
-- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
-- [x] 1.2 Sprawdzenia SQL przechodzą, w tym `GATE_COMPLETE symptom_timeline_checks`: `npm run db:check`
-- [x] 1.3 Testy i bramki repozytorium przechodzą: `npm test`
-- [x] 1.4 Typy przechodzą: `npm run typecheck`
-- [x] 1.5 Lint przechodzi: `npm run lint`
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset` — a5b06e2
+- [x] 1.2 Sprawdzenia SQL przechodzą, w tym `GATE_COMPLETE symptom_timeline_checks`: `npm run db:check` — a5b06e2
+- [x] 1.3 Testy i bramki repozytorium przechodzą: `npm test` — a5b06e2
+- [x] 1.4 Typy przechodzą: `npm run typecheck` — a5b06e2
+- [x] 1.5 Lint przechodzi: `npm run lint` — a5b06e2
 
 #### Manual
 
-- [x] 1.6 Autorka zatwierdza FR-013 w PRD
+- [x] 1.6 Autorka zatwierdza FR-013 w PRD — a5b06e2
 
 ### Phase 2: Logika osi
 
 #### Automated
 
-- [ ] 2.1 Testy logiki osi przechodzą: `npm test`
-- [ ] 2.2 Pomiar wypisuje medianę ≤ 2 ms: `node --experimental-strip-types scripts/timeline/bench.mjs`
-- [ ] 2.3 Typy przechodzą: `npm run typecheck`
-- [ ] 2.4 Lint przechodzi: `npm run lint`
+- [x] 2.1 Testy logiki osi przechodzą: `npm test`
+- [x] 2.2 Pomiar wypisuje medianę ≤ 2 ms: `node --experimental-strip-types scripts/timeline/bench.mjs`
+- [x] 2.3 Typy przechodzą: `npm run typecheck`
+- [x] 2.4 Lint przechodzi: `npm run lint`
 
 #### Manual
 
-- [ ] 2.5 Wynik pomiaru (mediana, 95. percentyl) zapisany w `change.md`
+- [x] 2.5 Wynik pomiaru (mediana, 95. percentyl) zapisany w `change.md`
 
 ### Phase 3: Ekran osi czasu
 
