@@ -172,28 +172,28 @@ Brak migracji i zmian danych.
 
 #### Automated
 
-- [x] 1.1 Lint przechodzi: `npm run lint`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.4 Build przechodzi: `npm run build`
+- [x] 1.1 Lint przechodzi: `npm run lint` — 15e8e67
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — 15e8e67
+- [x] 1.3 Testy jednostkowe przechodzą: `npm test` — 15e8e67
+- [x] 1.4 Build przechodzi: `npm run build` — 15e8e67
 
 #### Manual
 
-- [x] 1.5 Przy 320, 360 i 375 px na `/leki` i `/dzienniczek`, w trybie jasnym i ciemnym: górny blok przyklejony, nagłówek dokładnie pod paskiem, treść nie chowa się pod paskami
-- [x] 1.6 Po przewinięciu „Wyloguj się” wylogowuje, a przełącznik zmienia tryb
-- [x] 1.7 Tab przez formularz na `/dzienniczek/nowy` przy 360 px: pole z fokusem nie ląduje pod paskami
-- [x] 1.8 Przy 1280 px układ jak przed zmianą
-- [x] 1.9 `/auth/signin` przy 360 px: pasek demo przyklejony jak dziś
+- [x] 1.5 Przy 320, 360 i 375 px na `/leki` i `/dzienniczek`, w trybie jasnym i ciemnym: górny blok przyklejony, nagłówek dokładnie pod paskiem, treść nie chowa się pod paskami — 15e8e67
+- [x] 1.6 Po przewinięciu „Wyloguj się” wylogowuje, a przełącznik zmienia tryb — 15e8e67
+- [x] 1.7 Tab przez formularz na `/dzienniczek/nowy` przy 360 px: pole z fokusem nie ląduje pod paskami — 15e8e67
+- [x] 1.8 Przy 1280 px układ jak przed zmianą — 15e8e67
+- [x] 1.9 `/auth/signin` przy 360 px: pasek demo przyklejony jak dziś — 15e8e67
 
 ### Phase 2: Test E2E w widoku telefonu
 
 #### Automated
 
-- [ ] 2.1 Nowy test przechodzi: `npx playwright test tests/e2e/mobile-header-sticky.spec.ts`
-- [ ] 2.2 Nowy test pada po cofnięciu zmian fazy 1
-- [ ] 2.3 Wszystkie testy E2E przechodzą, w tym galeria trybu ciemnego
-- [ ] 2.4 Lint i typy przechodzą
+- [x] 2.1 Nowy test przechodzi: `npx playwright test tests/e2e/mobile-header-sticky.spec.ts`
+- [x] 2.2 Nowy test pada po cofnięciu zmian fazy 1
+- [x] 2.3 Wszystkie testy E2E przechodzą, w tym galeria trybu ciemnego
+- [x] 2.4 Lint i typy przechodzą
 
 #### Manual
 
-- [ ] 2.5 Zrzuty galerii trybu ciemnego dla telefonu: górny blok na górze strony
+- [x] 2.5 Zrzuty galerii trybu ciemnego dla telefonu: górny blok na górze strony

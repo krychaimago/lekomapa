@@ -107,14 +107,16 @@ const signOutClass = cn(
 </Layout>
 
 <style is:global>
-  /* Below lg the sticky top block and the fixed bottom tabs cover part of the window, so keep focused
-     and scrolled-to elements clear of both. Measured 16.10.2026: at 320 px the demo bar is 85 px
-     (3 lines) and the header 65 px, about 150 px together; the bottom tabs are about 57 px.
-     rem grows with enlarged text along with the bars. Change these together with the bar heights. */
+  /* Below lg the sticky top block covers the top of the window, so keep focused and scrolled-to elements
+     clear of it. Measured 16.10.2026: at 320 px the demo bar is 85 px (3 lines) and the header 65 px,
+     about 150 px together. rem grows with enlarged text along with the bars. Change this together with
+     the bar heights.
+     No scroll-padding-bottom for the bottom tabs: it scrolled a ticked symptom down to just above the tabs,
+     which pushed its severity buttons below the window (severity-on-phone.spec.ts). Keeping the focus
+     clear of the bottom tabs is a separate change. */
   @media (width < 64rem) {
     html {
       scroll-padding-top: 9.5rem;
-      scroll-padding-bottom: 4rem;
     }
   }
 </style>
