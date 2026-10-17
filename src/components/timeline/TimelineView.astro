@@ -1,0 +1,300 @@
+---
+// The body of the timeline page /wizyta/os-czasu (S-09, FR-013): controls, filter rules, the chart of every range in
+// both layouts and the same data as text. Takes only the model of buildTimeline, so scripts/timeline/render-bench.mjs
+// renders it without Supabase.
+//
+// Filters without JavaScript and without URL parameters: every range, every symptom row and every medication row is
+// in the HTML, and the rules of buildFilterCss (one <style> block, `:has()` on the controls) hide all but the chosen
+// combination. The range radios and the symptom drop-down stay outside form#tl-meds, so its reset button ("Pokaż
+// wszystkie") restores only the medications. That form has no submit button and no text field, so nothing sends it;
+// method="POST" only keeps a GET form out of the code (scripts/pages/url-params.test.mjs). autocomplete="off" keeps
+// a reload at the start state: browsers otherwise restore the last choice.
+//
+// Only uuids reach selectors and data-* attributes, never a name (buildFilterCss skips anything else). Dates, not
+// relations (FR-012): nothing links a symptom to a medication; medications go by the start of the first period.
+import TimelineChart from "@/components/timeline/TimelineChart.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { TIMELINE_COPY as copy } from "@/lib/copy/timeline";
+import { fill } from "@/lib/services/doctor-question";
+import { formatIsoDate } from "@/lib/services/medications";
+import {
+  TIMELINE_DOM,
+  TIMELINE_RANGE_KEYS,
+  buildFilterCss,
+  type TimelineModel,
+  type TimelineRangeKey,
+  type TimelineSymptomMark,
+} from "@/lib/services/timeline";
+import { cn } from "@/lib/utils";
+import { SYMPTOM_SEVERITIES } from "@/types";
+
+interface Props {
+  model: TimelineModel;
+}
+
+const { model } = Astro.props;
+
+const hasMedications = model.medicationOptions.length > 0;
+const hasSymptoms = model.symptomOptions.length > 0;
+const filterCss = buildFilterCss(model);
+
+const RANGE_LABELS: Record<TimelineRangeKey, string> = {
+  "90d": copy.range90d,
+  year: copy.rangeYear,
+  all: copy.rangeAll,
+};
+const DEFAULT_RANGE: TimelineRangeKey = "90d";
+const severityLabels = new Map(SYMPTOM_SEVERITIES.map(({ value, label }) => [value, label]));
+
+// One text per symptom day, made once: "całość" holds every day of every symptom, and the shorter ranges reuse it
+// (filling the template per day per range was a large share of the page render on the heavy account).
+const entryTexts = new Map<string, string>();
+for (const row of model.ranges.all.symptoms) {
+  for (const mark of row.marks) {
+    const key = `${mark.day}|${mark.severity ?? ""}`;
+    if (entryTexts.has(key)) continue;
+    entryTexts.set(
+      key,
+      mark.severity === null
+        ? formatIsoDate(mark.day)
+        : fill(copy.textEntryWithSeverity, {
+            data: formatIsoDate(mark.day),
+            nasilenie: severityLabels.get(mark.severity) ?? "",
+          }),
+    );
+  }
+}
+const entryText = (mark: TimelineSymptomMark) =>
+  entryTexts.get(`${mark.day}|${mark.severity ?? ""}`) ?? formatIsoDate(mark.day);
+
+// The text list, per range: medications with their periods, symptoms with their days. Same order as the chart.
+const textRanges = TIMELINE_RANGE_KEYS.map((key) => {
+  const range = model.ranges[key];
+  return {
+    key,
+    medications: range.medications.map((row) => ({
+      id: row.id,
+      text: fill(copy.textMedicationItem, {
+        lek: row.name,
+        okresy: row.periods
+          .map((period) =>
+            period.lastDayOn === null
+              ? fill(copy.textPeriodOngoing, { od: formatIsoDate(period.startedOn), ilość: period.doseText })
+              : fill(copy.textPeriod, {
+                  od: formatIsoDate(period.startedOn),
+                  do: formatIsoDate(period.lastDayOn),
+                  ilość: period.doseText,
+                }),
+          )
+          .join("; "),
+      }),
+    })),
+    symptoms: range.symptoms.map((row) => ({
+      id: row.id,
+      text: fill(copy.textSymptomItem, {
+        objaw: row.name,
+        wpisy: row.marks.length === 0 ? copy.noEntriesInRange : row.marks.map(entryText).join(", "),
+      }),
+    })),
+  };
+});
+
+const linkClass = "text-primary underline underline-offset-4 hover:no-underline";
+const selectClass = cn(
+  "h-12 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-base text-foreground shadow-xs outline-none",
+  "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+);
+---
+
+{!hasMedications && !hasSymptoms ? (
+  <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+    <p>{copy.emptyIntro}</p>
+    <div class="flex flex-wrap gap-3">
+      <a href="/leki/nowy" class:list={buttonVariants()}>
+        {copy.emptyAddMedication}
+      </a>
+      <a href="/dzienniczek/nowy" class:list={buttonVariants({ variant: "outline" })}>
+        {copy.emptyAddSymptom}
+      </a>
+    </div>
+  </section>
+) : (
+  <div id={TIMELINE_DOM.root} class="flex flex-col gap-6">
+    {/* eslint-disable-next-line astro/no-set-html-directive -- buildFilterCss inserts only uuid-shaped ids into fixed rule text; a plain <style> is compiled at build time and takes no expression. */}
+    <style is:inline set:html={filterCss}></style>
+
+    <div class="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+      <fieldset class="flex flex-col gap-2">
+        <legend class="mb-2 text-sm font-semibold">{copy.rangeLegend}</legend>
+        <div class="flex flex-wrap gap-2">
+          {TIMELINE_RANGE_KEYS.map((key) => (
+            <label
+              class:list={cn(
+                "flex min-h-11 cursor-pointer items-center rounded-lg border border-input px-4",
+                "has-checked:border-primary has-checked:bg-primary has-checked:text-primary-foreground",
+                "has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50",
+              )}
+            >
+              <input
+                type="radio"
+                name={TIMELINE_DOM.rangeName}
+                id={TIMELINE_DOM.rangeInput(key)}
+                value={key}
+                checked={key === DEFAULT_RANGE}
+                autocomplete="off"
+                class="sr-only"
+              />
+              {RANGE_LABELS[key]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div class="flex flex-col gap-2">
+        <label for={TIMELINE_DOM.symptomSelect} class="text-sm font-semibold">
+          {copy.symptomLabel}
+        </label>
+        <select id={TIMELINE_DOM.symptomSelect} autocomplete="off" class:list={selectClass}>
+          <option value="" selected>
+            {copy.symptomPlaceholder}
+          </option>
+          {model.symptomOptions.map((option) => (
+            <option value={option.id}>{option.name}</option>
+          ))}
+        </select>
+        {!hasSymptoms && (
+          <div class="flex flex-col gap-1 text-sm text-muted-foreground">
+            <p>{copy.noSymptoms}</p>
+            <a href="/dzienniczek" class:list={linkClass}>
+              {copy.journalLink}
+            </a>
+          </div>
+        )}
+      </div>
+
+      {hasMedications ? (
+        <form id={TIMELINE_DOM.medicationsForm} method="POST" autocomplete="off">
+          <details class="group">
+            <summary class="grid min-h-11 cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-x-3 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-details-marker]:hidden text-sm font-semibold">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="size-4 shrink-0 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+              <span>{copy.showMedications}</span>
+            </summary>
+            <ul class="mt-2 flex flex-col gap-1">
+              {model.medicationOptions.map((option) => (
+                <li>
+                  <label class="flex min-h-11 cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id={TIMELINE_DOM.medicationInput(option.id)}
+                      checked
+                      class="size-5 shrink-0 accent-primary"
+                    />
+                    <span class="break-words">{option.name}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </form>
+      ) : (
+        <div class="flex flex-col gap-1 text-sm text-muted-foreground">
+          <p>{copy.noMedications}</p>
+          <a href="/leki/nowy" class:list={linkClass}>
+            {copy.emptyAddMedication}
+          </a>
+        </div>
+      )}
+    </div>
+
+    {hasMedications && (
+      <div
+        role="status"
+        class:list={cn(
+          TIMELINE_DOM.medicationsHiddenClass,
+          "flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent-border bg-accent px-4 py-3 text-accent-foreground",
+        )}
+      >
+        <p>{copy.medicationsHidden}</p>
+        <button type="reset" form={TIMELINE_DOM.medicationsForm} class:list={buttonVariants({ variant: "outline" })}>
+          {copy.showAll}
+        </button>
+      </div>
+    )}
+
+    <section class="flex flex-col gap-6 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+      {TIMELINE_RANGE_KEYS.map((key) => (
+        <>
+          <TimelineChart
+            range={model.ranges[key]}
+            layout="phone"
+            hasMedications={hasMedications}
+            hasSymptoms={hasSymptoms}
+          />
+          <TimelineChart
+            range={model.ranges[key]}
+            layout="desktop"
+            hasMedications={hasMedications}
+            hasSymptoms={hasSymptoms}
+          />
+        </>
+      ))}
+      <p class="text-sm text-muted-foreground">{copy.note}</p>
+    </section>
+
+    <details class="group rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+      <summary class="grid min-h-11 cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-x-3 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-details-marker]:hidden font-semibold">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="size-4 shrink-0 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+        <span>{copy.textListSummary}</span>
+      </summary>
+      {textRanges.map((range) => (
+        <div class:list={cn("mt-3 flex flex-col gap-3", TIMELINE_DOM.rangeClass(range.key))}>
+          {hasMedications && (
+            <div class="flex flex-col gap-1">
+              <h2 class="text-sm font-semibold">{copy.medicationsHeading}</h2>
+              {range.medications.length === 0 ? (
+                <p class="text-sm">{copy.noMedicationsInRange}</p>
+              ) : (
+                <ul class="flex list-disc flex-col gap-1 pl-5">
+                  {range.medications.map((item) => (
+                    <li data-m={item.id}>{item.text}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          {hasSymptoms && (
+            <div class="flex flex-col gap-1">
+              <h2 class="text-sm font-semibold">{copy.symptomHeading}</h2>
+              <p class:list={cn(TIMELINE_DOM.symptomHintClass, "text-sm")}>{copy.symptomHint}</p>
+              {range.symptoms.map((item) => (
+                <p data-s={item.id}>{item.text}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </details>
+  </div>
+)}

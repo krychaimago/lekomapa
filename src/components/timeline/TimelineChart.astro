@@ -1,0 +1,299 @@
+---
+// One range of the timeline (S-09, FR-013) in one layout: medication rows, then the chosen symptom, then the month
+// axis and the legend of the marks. Every row is HTML with a narrow SVG of its own, so a row hidden by the filters
+// shortens the chart and a name is plain text that wraps instead of being cut. The SVGs draw the fractions of
+// buildTimeline (src/lib/services/timeline.ts) at a fixed viewBox width per layout and scale with the column.
+//
+// Dates, not relations (FR-012): nothing here puts a symptom mark on a medication bar, links the two or highlights a
+// medication taken on the day of a symptom. Medications keep the order of the model (start of the first period, then
+// name). Colours come only from tokens through var(--…), so the dark mode follows the token blocks.
+import { TIMELINE_COPY as copy } from "@/lib/copy/timeline";
+import { fill } from "@/lib/services/doctor-question";
+import { TIMELINE_DOM, labelFits, type TimelineRange, type TimelineSymptomMark } from "@/lib/services/timeline";
+import { cn } from "@/lib/utils";
+import { SYMPTOM_SEVERITIES } from "@/types";
+
+interface Props {
+  range: TimelineRange;
+  layout: "phone" | "desktop";
+  hasMedications: boolean;
+  hasSymptoms: boolean;
+}
+
+const { range, layout, hasMedications, hasSymptoms } = Astro.props;
+const isPhone = layout === "phone";
+const SEVERITY_LABELS = Object.fromEntries(SYMPTOM_SEVERITIES.map(({ value, label }) => [value, label]));
+
+// viewBox widths: about the drawn width in px at a 360 px phone and at the lg breakpoint, so labelFits measures close
+// to the real size.
+const WIDTH = isPhone ? 340 : 560;
+const BAR_ROW_HEIGHT = 24;
+const MARK_ROW_HEIGHT = 28;
+const AXIS_HEIGHT = 36;
+const FONT_SIZE = 11;
+// Room taken from each side of a segment that touches another, so a dose change shows as a narrow gap.
+const SEGMENT_GAP = 1;
+
+const round = (value: number) => Math.round(value * 10) / 10;
+const xOf = (fraction: number) => round(fraction * WIDTH);
+
+// Dots on the desktop at "90 dni" only; bars everywhere else (dots of a daily symptom merge on a phone).
+const useDots = !isPhone && range.key === "90d";
+const pxPerDay = WIDTH / range.days;
+const barWidth = round(Math.min(3, Math.max(1, pxPerDay * 0.7)));
+const BAR_HEIGHTS = { severe: 24, moderate: 16, mild: 8 } as const;
+const NO_SEVERITY_BAR_HEIGHT = 12;
+const DOT_RADIUS = 5;
+const DOT_CENTER = MARK_ROW_HEIGHT / 2;
+
+const monthLines = range.months.map((tick) => xOf(tick.position));
+
+// Month labels left to right, a label skipped when it would run into the previous one. January carries the year.
+const monthLabels: { x: number; text: string }[] = [];
+for (const tick of range.months) {
+  const x = xOf(tick.position);
+  const text = tick.label === "sty" ? `${tick.label} ${tick.year}` : tick.label;
+  const previous = monthLabels.at(-1);
+  if (x + text.length * 6.5 > WIDTH - 24) continue;
+  if (previous && !labelFits(x - previous.x, previous.text)) continue;
+  monthLabels.push({ x, text });
+}
+const todayX = xOf(range.todayPosition);
+
+// 1 lek, 2–4 (but not 12–14) leki, every other count leków.
+function endedBeforeText(count: number): string {
+  const lastDigit = count % 10;
+  const lastTwo = count % 100;
+  const template =
+    count === 1
+      ? copy.endedBeforeOne
+      : lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)
+        ? copy.endedBeforeFew
+        : copy.endedBeforeMany;
+  return fill(template, { liczba: count });
+}
+
+const medicationRows = range.medications.map((row) => ({
+  id: row.id,
+  name: row.name,
+  segments: row.segments.map((segment, index) => {
+    const touchesPrevious = index > 0 && row.segments[index - 1].endedOn === segment.startedOn;
+    const touchesNext = index < row.segments.length - 1 && row.segments[index + 1].startedOn === segment.endedOn;
+    const x = xOf(segment.start) + (touchesPrevious ? SEGMENT_GAP : 0);
+    const width = round(Math.max(1, xOf(segment.end) - (touchesNext ? SEGMENT_GAP : 0) - x));
+    return { x, width, doseText: labelFits(width, segment.doseText) ? segment.doseText : null };
+  }),
+}));
+
+// Every group of marks drawn the same way is one <path> of numbers only (no text of the person gets in), so a dense
+// symptom costs a handful of elements instead of one per day: the render of the whole page is what can break the
+// 10 ms CPU limit (scripts/timeline/render-bench.mjs). Bars are rectangles, dots are two arcs each.
+const barBase = MARK_ROW_HEIGHT - 2;
+const barPath = (x: number, height: number) =>
+  `M${round(x - barWidth / 2)} ${barBase - height}h${barWidth}v${height}h${-barWidth}z`;
+const circlePath = (x: number, r: number) =>
+  `M${round(x - r)} ${DOT_CENTER}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+const RING_RADIUS = DOT_RADIUS - 0.75;
+const INNER_DOT_RADIUS = 2.5;
+
+interface MarkPaths {
+  /** Filled with the foreground: bars of every severity, or full dots and the inner dots of "moderate". */
+  solid: string;
+  /** Dots only: outlined rings of "moderate" and "mild". */
+  rings: string;
+  /** Entries without severity: a dashed bar or a dashed ring in the muted foreground. */
+  none: string;
+}
+
+function markPaths(marks: TimelineSymptomMark[]): MarkPaths {
+  let solid = "";
+  let rings = "";
+  let none = "";
+  for (const mark of marks) {
+    const x = xOf(mark.position);
+    if (useDots) {
+      if (mark.severity === null) none += circlePath(x, RING_RADIUS);
+      else if (mark.severity === "severe") solid += circlePath(x, DOT_RADIUS);
+      else {
+        rings += circlePath(x, RING_RADIUS);
+        if (mark.severity === "moderate") solid += circlePath(x, INNER_DOT_RADIUS);
+      }
+    } else if (mark.severity === null) {
+      none += `M${x} ${barBase}v${-NO_SEVERITY_BAR_HEIGHT}`;
+    } else {
+      solid += barPath(x, BAR_HEIGHTS[mark.severity]);
+    }
+  }
+  return { solid, rings, none };
+}
+const symptomRows = range.symptoms.map((row) => ({
+  id: row.id,
+  name: row.name,
+  empty: row.marks.length === 0,
+  paths: markPaths(row.marks),
+}));
+
+// Month lines through a row, one path per row height.
+const monthPath = (height: number) => monthLines.map((x) => `M${x} 0V${height}`).join("");
+const barRowMonths = monthPath(BAR_ROW_HEIGHT);
+const markRowGrid = `${monthPath(MARK_ROW_HEIGHT)}M0 ${MARK_ROW_HEIGHT - 1}H${WIDTH}`;
+const axisTicks = `M0 4H${WIDTH}${monthLines.map((x) => `M${x} 0V9`).join("")}`;
+
+const rowClass = isPhone ? "flex flex-col gap-1" : "grid grid-cols-[10rem_minmax(0,1fr)] items-center gap-x-3";
+const svgClass = "block h-auto w-full overflow-visible";
+---
+
+<div
+  class:list={cn("flex flex-col gap-3", TIMELINE_DOM.rangeClass(range.key), isPhone ? "lg:hidden" : "hidden lg:flex")}
+>
+  {hasMedications && (
+    <div class="flex flex-col gap-2">
+      <h2 class="text-sm font-semibold">{copy.medicationsHeading}</h2>
+      {range.medications.length === 0 && <p class="text-sm text-muted-foreground">{copy.noMedicationsInRange}</p>}
+      {medicationRows.map((row) => (
+        <div data-m={row.id} class:list={rowClass}>
+          <p class="text-sm break-words">{row.name}</p>
+          <svg
+            viewBox={`0 0 ${WIDTH} ${BAR_ROW_HEIGHT}`}
+            class:list={svgClass}
+            aria-hidden="true"
+            font-size={FONT_SIZE}
+          >
+            {barRowMonths && <path d={barRowMonths} fill="none" stroke="var(--border)" />}
+            <g fill="var(--primary)">
+              {row.segments.map((segment) => (
+                <rect x={segment.x} y="3" width={segment.width} height="18" rx="3" />
+              ))}
+            </g>
+            <g fill="var(--primary-foreground)" dominant-baseline="central">
+              {row.segments.map(
+                (segment) =>
+                  segment.doseText && (
+                    <text x={segment.x + 4} y={BAR_ROW_HEIGHT / 2}>
+                      {segment.doseText}
+                    </text>
+                  ),
+              )}
+            </g>
+          </svg>
+        </div>
+      ))}
+      {range.endedBeforeCount > 0 && (
+        <p class="text-sm text-muted-foreground">{endedBeforeText(range.endedBeforeCount)}</p>
+      )}
+    </div>
+  )}
+
+  {hasSymptoms && (
+    <div class="flex flex-col gap-2">
+      <h2 class="text-sm font-semibold">{copy.symptomHeading}</h2>
+      <p class:list={cn(TIMELINE_DOM.symptomHintClass, "text-sm text-muted-foreground")}>{copy.symptomHint}</p>
+      {symptomRows.map((row) => (
+        <div data-s={row.id} class:list={rowClass}>
+          <p class="text-sm break-words">{row.name}</p>
+          {row.empty ? (
+            <p class="text-sm text-muted-foreground">{copy.noEntriesInRange}</p>
+          ) : (
+            <svg viewBox={`0 0 ${WIDTH} ${MARK_ROW_HEIGHT}`} class:list={svgClass} aria-hidden="true">
+              <path d={markRowGrid} fill="none" stroke="var(--border)" />
+              {row.paths.solid && <path d={row.paths.solid} fill="var(--foreground)" />}
+              {row.paths.rings && (
+                <path d={row.paths.rings} fill="none" stroke="var(--foreground)" stroke-width="1.5" />
+              )}
+              {row.paths.none && (
+                <path
+                  d={row.paths.none}
+                  fill="none"
+                  stroke="var(--muted-foreground)"
+                  stroke-width={useDots ? 1.5 : barWidth}
+                  stroke-dasharray="2 2"
+                />
+              )}
+            </svg>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+
+  <div class:list={rowClass}>
+    {!isPhone && <span aria-hidden="true"></span>}
+    <svg
+      viewBox={`0 0 ${WIDTH} ${AXIS_HEIGHT}`}
+      class:list={svgClass}
+      role="img"
+      aria-label={copy.chartLabel}
+      font-size={FONT_SIZE}
+    >
+      <path d={axisTicks} fill="none" stroke="var(--muted-foreground)" />
+      <path d={`M${todayX} 0V24`} fill="none" stroke="var(--foreground)" stroke-width="2" />
+      <g fill="var(--muted-foreground)">
+        {monthLabels.map((label) => (
+          <text x={label.x + 2} y="20">
+            {label.text}
+          </text>
+        ))}
+      </g>
+      <text x={WIDTH} y="34" text-anchor="end" fill="var(--foreground)" font-weight="600">
+        {copy.today}
+      </text>
+    </svg>
+  </div>
+
+  {hasSymptoms && (
+    <div class="flex flex-col gap-2 text-sm">
+      <p class="font-semibold">{copy.legendHeading}</p>
+      <p class="text-muted-foreground">{useDots ? copy.legendDots : copy.legendBars}</p>
+      <ul class="flex flex-wrap gap-x-4 gap-y-1">
+        {(["mild", "moderate", "severe", null] as const).map((severity) => (
+          <li class="flex items-center gap-1.5">
+            <svg viewBox="0 0 14 28" class="h-7 w-3.5 shrink-0" aria-hidden="true">
+              {useDots ? (
+                severity === null ? (
+                  <circle
+                    cx="7"
+                    cy="14"
+                    r="4.25"
+                    fill="none"
+                    stroke="var(--muted-foreground)"
+                    stroke-width="1.5"
+                    stroke-dasharray="2 2"
+                  />
+                ) : (
+                  <>
+                    {severity !== "mild" && (
+                      <circle cx="7" cy="14" r={severity === "severe" ? DOT_RADIUS : 2.5} fill="var(--foreground)" />
+                    )}
+                    {severity !== "severe" && (
+                      <circle cx="7" cy="14" r="4.25" fill="none" stroke="var(--foreground)" stroke-width="1.5" />
+                    )}
+                  </>
+                )
+              ) : severity === null ? (
+                <line
+                  x1="7"
+                  x2="7"
+                  y1={barBase}
+                  y2={barBase - NO_SEVERITY_BAR_HEIGHT}
+                  stroke="var(--muted-foreground)"
+                  stroke-width="3"
+                  stroke-dasharray="2 2"
+                />
+              ) : (
+                <rect
+                  x="5.5"
+                  y={barBase - BAR_HEIGHTS[severity]}
+                  width="3"
+                  height={BAR_HEIGHTS[severity]}
+                  fill="var(--foreground)"
+                />
+              )}
+            </svg>
+            <span>{severity === null ? copy.severityNone : SEVERITY_LABELS[severity]}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="text-muted-foreground">{copy.legendOneMarkPerDay}</p>
+    </div>
+  )}
+</div>

@@ -6,12 +6,13 @@
 // go alphabetically, never by suspicion, each pair with the note; the interactions part folds as a whole, and the note
 // sits in its <summary> under the title with the count, so it stays in view also when folded. Only the newest symptom's
 // question is open. The page never says a medication causes a symptom and never suggests stopping or changing a dose
-// (FR-012). No URL parameters: links lead only to fixed routes.
+// (FR-012). No URL parameters: links lead only to fixed routes, the timeline (S-09) among them.
 import AppLayout from "@/layouts/AppLayout.astro";
 import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
+import { TIMELINE_COPY } from "@/lib/copy/timeline";
 import { VISIT_SUMMARY_COPY as copy } from "@/lib/copy/visit-summary";
 import { doctorQuestionText, fill } from "@/lib/services/doctor-question";
 import { currentMedicationText } from "@/lib/services/visit-summary";
@@ -59,9 +60,14 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
           aria-labelledby="visit-current-medications-title"
           class="flex flex-col gap-3"
         >
-          <h2 id="visit-current-medications-title" class="text-xl font-semibold">
-            {copy.currentMedicationsHeading}
-          </h2>
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <h2 id="visit-current-medications-title" class="text-xl font-semibold">
+              {copy.currentMedicationsHeading}
+            </h2>
+            <a href="/wizyta/os-czasu" class:list={linkClass}>
+              {TIMELINE_COPY.timelineLink}
+            </a>
+          </div>
           {summary.currentMedications.length > 0 ? (
             <ul class="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
               {summary.currentMedications.map((item) => (

@@ -14,6 +14,7 @@ import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
 import { JOURNAL_COPY } from "@/lib/copy/journal";
+import { TIMELINE_COPY } from "@/lib/copy/timeline";
 import { doctorQuestionText } from "@/lib/services/doctor-question";
 import { type DoctorQuestionsResult, loadDoctorQuestions } from "@/lib/services/doctor-question-data";
 import { formatCorrectionDeadline, formatWarsawDateTime } from "@/lib/services/journal";
@@ -209,44 +210,51 @@ const questionTexts =
         </a>
       </section>
     ) : (
-      <ul class="flex flex-col gap-3">
-        {entries.map((entry) => {
-          const deadline = deadlineOf(entry);
-          return (
-            <li
-              data-entry-id={entry.id}
-              class:list={cn(
-                "flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm",
-                entry.id === highlightedId && "border-primary ring-2 ring-primary",
-              )}
-            >
-              <p class="text-lg font-semibold">
-                <time datetime={entry.occurredAt}>{formatWarsawDateTime(entry.occurredAt)}</time>
-              </p>
-              <ul class="flex flex-col gap-1">
-                {entry.items.map((item) => (
-                  <li>
-                    <span class="first-letter:uppercase">{item.name}</span>
-                    {item.severity && <span class="text-muted-foreground"> · {severityLabel.get(item.severity)}</span>}
-                  </li>
-                ))}
-              </ul>
-              {entry.note && (
-                <p class="break-words">
-                  <span class="text-sm text-muted-foreground">{copy.noteLabel}:</span> {entry.note}
+      <>
+        <a href="/wizyta/os-czasu" class:list={linkClass}>
+          {TIMELINE_COPY.timelineLink}
+        </a>
+        <ul class="flex flex-col gap-3">
+          {entries.map((entry) => {
+            const deadline = deadlineOf(entry);
+            return (
+              <li
+                data-entry-id={entry.id}
+                class:list={cn(
+                  "flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm",
+                  entry.id === highlightedId && "border-primary ring-2 ring-primary",
+                )}
+              >
+                <p class="text-lg font-semibold">
+                  <time datetime={entry.occurredAt}>{formatWarsawDateTime(entry.occurredAt)}</time>
                 </p>
-              )}
-              {deadline && (
-                <p class="text-sm text-muted-foreground">{copy.correctableUntil.replace("{do}", deadline)}</p>
-              )}
-              {/* In both window states: once it is closed, the entry's screen still changes the note. */}
-              <a href={`/dzienniczek/${entry.id}`} class:list={linkClass}>
-                {deadline ? JOURNAL_COPY.entry.open : JOURNAL_COPY.entry.openClosed}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+                <ul class="flex flex-col gap-1">
+                  {entry.items.map((item) => (
+                    <li>
+                      <span class="first-letter:uppercase">{item.name}</span>
+                      {item.severity && (
+                        <span class="text-muted-foreground"> · {severityLabel.get(item.severity)}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {entry.note && (
+                  <p class="break-words">
+                    <span class="text-sm text-muted-foreground">{copy.noteLabel}:</span> {entry.note}
+                  </p>
+                )}
+                {deadline && (
+                  <p class="text-sm text-muted-foreground">{copy.correctableUntil.replace("{do}", deadline)}</p>
+                )}
+                {/* In both window states: once it is closed, the entry's screen still changes the note. */}
+                <a href={`/dzienniczek/${entry.id}`} class:list={linkClass}>
+                  {deadline ? JOURNAL_COPY.entry.open : JOURNAL_COPY.entry.openClosed}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </>
     )}
   </div>
 </AppLayout>

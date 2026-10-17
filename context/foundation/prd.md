@@ -41,7 +41,7 @@ Kierunek rozwoju poza pierwszą wersją: osoby starsze przyjmujące kilka leków
 
 ### Secondary
 
-- Oś czasu: objawy i leki zestawione w czasie, w formie wizualnej albo raportu do wygenerowania.
+- Oś czasu: objawy i leki zestawione w czasie, w formie wizualnej albo raportu do wygenerowania (FR-013).
 
 ### Guardrails
 
@@ -160,6 +160,11 @@ Poniższe historie są sformatowaniem przepływu pierwszej sesji zapisanego w `s
 
 - FR-011: Użytkowniczka może wyświetlić sekcję „Wizyta" (do 2026-10-09 nazywaną „Do omówienia z lekarzem"; nowa nazwa jest krótsza w menu na telefonie i dalej wskazuje wizytę u lekarza), zbierającą wykryte możliwe kolizje i złożone pytania o zbieżność objawów z okresami dawkowania — jedno aktualne pytanie na objaw. Pusta sekcja lub jej część mówi, skąd bierze się brak treści, i nie brzmi jak potwierdzenie bezpieczeństwa. Rozszerzone 16.10.2026, S-05 (#108); wcześniej odłożone w pyt. 7: na górze sekcji lista bieżących leków — każdy bieżący lek raz, z nazwą, mocą i postacią (gdy znane z rejestru), datą, od której obowiązuje bieżąca dawka, i dawką; alfabetycznie, nigdy według kolizji (FR-012). Pytania do lekarza zwinięte poza najnowszym; sekcję możliwych interakcji można zwinąć w całości, jej tytuł podaje liczbę kolizji, a nota o charakterze poglądowym stoi przy tytule i zostaje widoczna także po zwinięciu. Nienaruszone: sekcja niczego nie liczy od nowa — lista powstaje z tych samych okresów dawkowania co pytania; jedno aktualne pytanie na objaw; pusty stan nie brzmi jak potwierdzenie bezpieczeństwa; FR-007 (nota przy każdej karcie kolizji) i FR-010 bez zmian. Priority: must-have
   > Socratic: Kontrargumenty rozważone: sekcja duplikuje treść widoczną przy lekach; lekarz nie przeczyta długiego zestawienia. Rozstrzygnięcie: podniesiona z nice-to-have do must-have. Produkt istnieje dla momentu wizyty, a po zmianie kształtu FR-010 sekcja nie liczy niczego nowego — zbiera gotowe zdania.
+
+### Oś czasu
+
+- FR-013: Użytkowniczka może otworzyć stronę osi czasu z sekcji „Wizyta” i z „Dziennika”. Okresy dawkowania wszystkich leków stoją na jednej wspólnej osi, w kolejności daty rozpoczęcia (przy tej samej dacie alfabetycznie), nigdy według kolizji ani objawów (FR-012). Pod lekami wpisy jednego objawu, wybranego przez użytkowniczkę — na start żaden objaw nie jest wybrany. Leki można zawęzić; gdy część jest ukryta, strona mówi to wprost. Zakres: 90 dni, rok albo całość. Pod wykresem lista tekstowa tych samych danych. Stała nota: oś pokazuje daty, nie związki. Dodane 17.10.2026, S-09 (#112); wcześniej kryterium drugorzędne (`## Success Criteria`). Nienaruszone: FR-012 (oś nie łączy objawu z lekiem w obrazie, nie wyróżnia zbieżności), FR-004 i FR-005 (historia okresów bez zmian, ekran tylko czyta), FR-010 (pytania bez zmian), dane wyłącznie z konta pod RLS, żadna nazwa leku ani objawu w adresie. Priority: nice-to-have
+  > Rozstrzygnięcie autorki: ciekawy dodatek dla zainteresowanych, nie podstawowa funkcja — stąd nice-to-have.
 
 ## Non-Functional Requirements
 

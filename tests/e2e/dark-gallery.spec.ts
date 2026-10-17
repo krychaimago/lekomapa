@@ -13,6 +13,7 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
+import { TIMELINE_COPY } from "../../src/lib/copy/timeline";
 import { pickSymptom } from "./journal-helpers";
 
 const GALLERY_DIR = path.join("test-results", "dark-gallery");
@@ -277,6 +278,27 @@ const ENTRIES: Entry[] = [
       await expect(interactions).toHaveAttribute("open", "");
       await interactions.locator("summary").click();
       await expect(interactions).not.toHaveAttribute("open");
+    },
+  },
+  // The timeline as it opens: every medication, the hint in place of a symptom row. The gallery data (3 medications
+  // from 2 days ago, 1 entry of one symptom) shows neither dense marks, several months nor the ranges "Rok" and
+  // "Całość"; those are checked by hand (plan step 3.6).
+  { page: "wizyta/os-czasu", session: true, path: () => "/wizyta/os-czasu" },
+  // The journal symptom chosen in the drop-down: its row of marks replaces the hint.
+  {
+    page: "wizyta/os-czasu",
+    state: "symptom-selected",
+    session: true,
+    path: () => "/wizyta/os-czasu",
+    prepare: async (page) => {
+      await page
+        .getByRole("combobox", { name: TIMELINE_COPY.symptomLabel, exact: true })
+        .selectOption({ label: JOURNAL_SYMPTOM });
+      const chart = page.locator("section").filter({ has: page.getByRole("img", { name: TIMELINE_COPY.chartLabel }) });
+      await expect(chart.getByText(JOURNAL_SYMPTOM, { exact: true }).filter({ visible: true })).toHaveCount(1);
+      await expect(chart.getByText(TIMELINE_COPY.symptomHint, { exact: true }).filter({ visible: true })).toHaveCount(
+        0,
+      );
     },
   },
   { page: "konto", session: true, path: () => "/konto" },
