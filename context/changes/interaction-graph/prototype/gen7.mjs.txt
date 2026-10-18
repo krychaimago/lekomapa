@@ -1,0 +1,18 @@
+import { writeFileSync } from "node:fs";
+import { layout } from "./proto.mjs";
+import { meds, render } from "./common.mjs";
+const V = {
+  p2: { jy: 0.1, ch: 98 },
+  a: { ch: 100, jy: 0.4, jx: 0.35 },
+  b: { ch: 100, jy: 0.35, jx: 0.32, offsets: [0, 0.45, 0.2] },
+  c: { ch: 100, jy: 0.35, jx: 0.32, offsets: [0, 0.45, 0.2], cellShift: 0.5 },
+};
+const extra = { id: "med-new-13", name: "Kalipoz prolongatum", i: 12 };
+const out = {}, moved = {};
+for (const [k, o] of Object.entries(V)) {
+  const a = layout(meds, 3, o), b = layout([...meds, extra], 3, o);
+  out[k] = render(a, { maxWidth: 384, cardInner: 294, font: 15 });
+  moved[k] = a.nodes.filter((n, i) => n.x !== b.nodes[i].x || n.y !== b.nodes[i].y).length;
+}
+writeFileSync("maps7.json", JSON.stringify({ ...out, moved }));
+console.log(moved);

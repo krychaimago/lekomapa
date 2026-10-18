@@ -428,3 +428,83 @@ export interface TimelineSymptomEntries {
     severity: SymptomSeverity | null;
   }[];
 }
+
+// ---------------------------------------------------------------------------
+// Interaction graph under the medication list (S-10, FR-014), built by src/lib/services/interaction-graph.ts.
+// Two layouts, each in its own fixed coordinate system (phone 360 units wide, wide 576); the component scales the one
+// it shows. A medication's place comes from the history of arrivals and departures and its id, never from
+// interactions or its name (FR-012).
+
+/** One medication of the account as the graph replays its history: when it was added and when its end was saved. */
+export interface InteractionGraphHistoryItem {
+  id: string;
+  /** `medications.created_at`, ISO timestamp. */
+  createdAt: string;
+  /** `medications.discontinued_at` (moment the end was saved, set by the database), never `discontinued_on`. */
+  discontinuedAt: string | null;
+}
+
+export interface InteractionGraphInput {
+  /** Every medication of the account, ended ones included. */
+  history: InteractionGraphHistoryItem[];
+  /** Current medications, the same rows the list shows. */
+  current: { id: string; name: string }[];
+  /** Rows of `medication_interactions()`; they never move a point (FR-012). */
+  interactions: MedicationInteraction[];
+  /** Today in Polish time, ISO `YYYY-MM-DD`. Part of the contract; the layout does not depend on it. */
+  today: string;
+}
+
+/** One current medication on the graph. */
+export interface InteractionGraphNode {
+  id: string;
+  name: string;
+}
+
+/** One line between two medications forming at least one checked pair; `a` < `b` by id. */
+export interface InteractionGraphEdge {
+  a: string;
+  b: string;
+}
+
+/** The centre of a medication's point in one layout. */
+export interface InteractionGraphPoint {
+  id: string;
+  x: number;
+  y: number;
+}
+
+/** One edge drawn in one layout. */
+export interface InteractionGraphLine extends InteractionGraphEdge {
+  /** SVG path `d` of a quadratic curve: only the letters M and Q, spaces and numbers. */
+  path: string;
+}
+
+/** One layout of the graph in its own coordinate system (`viewBox` width × height). */
+export interface InteractionGraphLayout {
+  width: number;
+  height: number;
+  /** One per node, in the order of `InteractionGraphModel.nodes`. */
+  points: InteractionGraphPoint[];
+  /** One per edge, in the order of `InteractionGraphModel.edges`. */
+  lines: InteractionGraphLine[];
+}
+
+/** A medication the selected one may interact with, and every distinct description of their pairs. */
+export interface InteractionGraphPartner {
+  id: string;
+  name: string;
+  descriptions: string[];
+}
+
+export interface InteractionGraphModel {
+  /** Alphabetical by name (Polish collation) — the order of the buttons, never by interactions. */
+  nodes: InteractionGraphNode[];
+  edges: InteractionGraphEdge[];
+  /** For every node id: its partners alphabetically; empty when it forms no checked pair. */
+  partners: Record<string, InteractionGraphPartner[]>;
+  /** Layout "C", 360 units wide: shown while the graph card is narrower than 480 px. */
+  phone: InteractionGraphLayout;
+  /** Layout "10", 576 units wide: shown when the graph card is at least 480 px wide. */
+  wide: InteractionGraphLayout;
+}

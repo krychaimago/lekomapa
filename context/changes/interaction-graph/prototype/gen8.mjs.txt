@@ -1,0 +1,13 @@
+import { writeFileSync } from "node:fs";
+import { layout } from "./proto.mjs";
+import { meds, render } from "./common.mjs";
+const C = { ch: 100, jy: 0.35, jx: 0.32, cellShift: 0.5 };
+const out = {
+  phone: render(layout(meds, 3, { ...C, offsets: [0, 0.45, 0.2] }), { maxWidth: 384, cardInner: 294, font: 15 }),
+  w5: render(layout(meds, 5, { ...C, offsets: [0, 0.45, 0.2, 0.6, 0.3], rows: 3 }), { cardInner: 544, font: 15 }),
+  w6: render(layout(meds, 6, { ...C, offsets: [0, 0.45, 0.2, 0.6, 0.3, 0.5], rows: 2, stride: 5 }), { cardInner: 544, font: 15 }),
+  w5big: render(layout(meds, 5, { ...C, offsets: [0, 0.45, 0.2, 0.6, 0.3], rows: 3 }), { cardInner: 734, font: 17 }),
+  w6big: render(layout(meds, 6, { ...C, offsets: [0, 0.45, 0.2, 0.6, 0.3, 0.5], rows: 2, stride: 5 }), { cardInner: 734, font: 17 }),
+};
+writeFileSync("maps8.json", JSON.stringify(out));
+console.log("ok");

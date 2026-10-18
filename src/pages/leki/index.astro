@@ -1,18 +1,24 @@
 ---
 // List of current medications (S-02). Newest start date first; a medication in a checked pair carries the amber
 // flag, which never changes the order (FR-012). The note and the "no flag is not safe" sentence stay under the list
-// whatever it holds. Ended medications live on /leki/zakonczone; a link with their number sits under the note.
+// whatever it holds. Under them the interaction graph (S-10, FR-014, section #graf), which shows current medications
+// only, so it sits above the link to ended ones (/leki/zakonczone, with their number). The graph is built by
+// buildInteractionGraph from the same current medications and interaction rows as the list, plus a light read of the
+// account's medication history (id and the two timestamps) that keeps each point's place stable. A failed history read
+// replaces only the graph with an error text; the list keeps working.
 import AppLayout from "@/layouts/AppLayout.astro";
 import { badgeVariants } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import InteractionGraph from "@/components/medications/InteractionGraph";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
 import { MEDICATION_COPY } from "@/lib/copy/medications";
 import { formatCorrectionDeadline } from "@/lib/services/journal";
+import { buildInteractionGraph } from "@/lib/services/interaction-graph";
 import { formatIsoDate, orderMedications, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import { reportError } from "@/lib/observability/report";
 import { cn } from "@/lib/utils";
-import type { DosagePeriod, Medication, MedicationInteraction } from "@/types";
+import type { DosagePeriod, InteractionGraphModel, Medication, MedicationInteraction } from "@/types";
 
 type MedicationRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
   // End of the medication's correction window (S-05), read from the database so the banner agrees with the guard.
@@ -20,6 +26,13 @@ type MedicationRow = Pick<Medication, "id" | "product_name" | "created_at"> & {
   // Each period carries its own window end: a dose change opens a new window on a medication added long ago.
   dosage_periods: (Pick<DosagePeriod, "started_on"> & { correction_window_ends_at: string | null })[];
 };
+
+// One row of the account's medication history for the graph; `discontinued_at` is stamped by the database.
+interface HistoryRow {
+  id: string;
+  created_at: string;
+  discontinued_at: string | null;
+}
 
 const copy = MEDICATION_COPY.list;
 const addedId = Astro.url.searchParams.get("dodano");
@@ -31,14 +44,19 @@ let rows: MedicationRow[] = [];
 let flagged = new Set<string>();
 // Number of ended medications for the link under the note; null when unknown, and then the link is not shown.
 let endedCount: number | null = null;
+let interactionRows: MedicationInteraction[] = [];
+// History for the graph; null when its read failed, and then the graph shows its error text instead.
+let history: HistoryRow[] | null = null;
+let today = "";
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (supabase) {
-  const today = todayInWarsaw();
+  today = todayInWarsaw();
   // Same "current" rule as medication_interactions(): not discontinued, or discontinued after today (Polish time).
   // RLS limits both reads to the signed-in person.
   // The ended count is a separate head-only query: its failure hides the link and never breaks the list.
-  const [medications, interactions, ended] = await Promise.all([
+  // The graph history reads every medication of the account, ended ones included (RLS), only ids and timestamps.
+  const [medications, interactions, ended, graphHistory] = await Promise.all([
     supabase
       .from("medications")
       .select(
@@ -48,7 +66,19 @@ if (supabase) {
       .overrideTypes<MedicationRow[], { merge: false }>(),
     supabase.rpc("medication_interactions"),
     supabase.from("medications").select("id", { count: "exact", head: true }).not("discontinued_on", "is", null),
+    supabase
+      .from("medications")
+      .select("id, created_at, discontinued_at")
+      // Fixed order, so a cut at PostgREST's max_rows would always drop the same rows and the map would not move.
+      .order("created_at")
+      .order("id")
+      .overrideTypes<HistoryRow[], { merge: false }>(),
   ]);
+  if (graphHistory.error) {
+    reportError("medications.graph-history", { code: graphHistory.error.code, route: Astro.routePattern });
+  } else {
+    history = graphHistory.data;
+  }
   if (ended.error) {
     reportError("medications.count-ended", { code: ended.error.code, route: Astro.routePattern });
   } else {
@@ -65,7 +95,7 @@ if (supabase) {
   } else {
     rows = medications.data;
     // Untyped client: the setof result is typed as a single row, so the rows are cast here.
-    const interactionRows = (interactions.data ?? []) as MedicationInteraction[];
+    interactionRows = (interactions.data ?? []) as MedicationInteraction[];
     flagged = new Set(interactionRows.map((row) => row.medication_id));
   }
 } else {
@@ -102,6 +132,20 @@ const items = orderMedications(
     };
   }),
 );
+// The graph takes the same current medications and interaction rows as the list; null below two medications.
+const graphModel: InteractionGraphModel | null =
+  history === null
+    ? null
+    : buildInteractionGraph({
+        history: history.map((row) => ({
+          id: row.id,
+          createdAt: row.created_at,
+          discontinuedAt: row.discontinued_at,
+        })),
+        current: items.map((item) => ({ id: item.id, name: item.name })),
+        interactions: interactionRows,
+        today,
+      });
 const addedVisible = addedId !== null && items.some((item) => item.id === addedId);
 // "Until when" after adding: the window of the medication (its first period is saved in the same call, so it ends at
 // the same moment). Shown only while the window is open, compared with the server's clock.
@@ -188,6 +232,29 @@ const addedDeadline =
       <p>{INTERACTION_COPY.note}</p>
       <p>{INTERACTION_COPY.noWarningIsNotSafe}</p>
     </div>
+
+    {!loadFailed && (
+      <section id="graf" aria-labelledby="graph-title" class="flex scroll-mt-6 flex-col gap-3">
+        <h2 id="graph-title" class="text-xl font-semibold">
+          {INTERACTION_COPY.graphTitle}
+        </h2>
+        {history === null ? (
+          <p
+            role="alert"
+            class="rounded-lg border border-destructive-border bg-destructive-surface px-4 py-3 text-destructive"
+          >
+            {INTERACTION_COPY.graphLoadError}
+          </p>
+        ) : graphModel ? (
+          <>
+            <p class="text-sm text-muted-foreground">{INTERACTION_COPY.graphHint}</p>
+            <InteractionGraph client:visible model={graphModel} />
+          </>
+        ) : (
+          <p class="text-sm text-muted-foreground">{INTERACTION_COPY.graphTooFewMedications}</p>
+        )}
+      </section>
+    )}
 
     {endedCount !== null && endedCount > 0 && (
       <a href="/leki/zakonczone" class="text-primary underline underline-offset-4 hover:no-underline">

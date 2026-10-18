@@ -1,0 +1,49 @@
+const NAMES = ["Ibuprom Max", "Acenocumarol WZF 4 mg", "Ramipril Polpharma", "Asertin 50", "Valsacor 160",
+  "Areplex", "Amlozek 5", "Atorvasterol 20", "Bisocard 5", "Polprazol 20", "Apap Extra", "Indapen SR"];
+const PAIRS = [[1,0],[1,5],[1,3],[6,7],[6,8],[0,5],[0,2],[0,3],[0,4],[5,3],[2,4]];
+const meds = NAMES.map((name, i) => ({ id: `med-${i * 7919 + 13}-${name.length}`, name, i }));
+const SEL = 0;
+// Bend chosen so the curve keeps clear of every other point: candidates from a gentle arc to a strong one, on
+// both sides, starting from the side the pair's hash prefers; the first clear one wins, else the clearest.
+function curve(a, b, w, h, nodes) {
+  const t = Math.abs(Math.sin((a.i + 1) * (b.i + 3)));
+  const side = ((a.i + b.i) % 2) ? 1 : -1;
+  const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+  const others = nodes.filter((n) => n !== a && n !== b);
+  const CLEAR = 9 + 8;
+  let best = null;
+  for (const f of [0.18 + t * 0.06, 0.3, 0.12, 0.42, 0.06, 0.55]) for (const sg of [side, -side]) {
+    const bend = L * f * sg;
+    const cx = Math.max(0, Math.min(w, (a.x + b.x) / 2 - dy / L * bend)), cy = Math.max(0, Math.min(h, (a.y + b.y) / 2 + dx / L * bend));
+    let clear = Infinity;
+    for (let k = 1; k < 40; k++) {
+      const u = k / 40, x = (1 - u) ** 2 * a.x + 2 * (1 - u) * u * cx + u * u * b.x, y = (1 - u) ** 2 * a.y + 2 * (1 - u) * u * cy + u * u * b.y;
+      for (const n of others) clear = Math.min(clear, Math.hypot(x - n.x, y - n.y));
+    }
+    const d = `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+    if (clear >= CLEAR) return d;
+    if (!best || clear > best.clear) best = { d, clear };
+  }
+  return best.d;
+}
+function render(model, { maxWidth = null, cardInner, font, pairs = PAIRS }) {
+  const W = maxWidth ? Math.min(maxWidth, cardInner) : cardInner, s = W / model.width, H = model.height * s;
+  const by = new Map(model.nodes.map((n) => [n.i, n]));
+  const live = pairs.filter(([a, b]) => by.has(a) && by.has(b));
+  const partners = new Set(live.filter(([a, b]) => a === SEL || b === SEL).map(([a, b]) => (a === SEL ? b : a)));
+  const faint = [], hot = [];
+  for (const [a, b] of live) ((a === SEL || b === SEL) ? hot : faint).push(curve(by.get(a), by.get(b), model.width, model.height, model.nodes));
+  let svg = `<svg viewBox="0 0 ${model.width} ${model.height}" width="${W}" height="${H}" aria-hidden="true" style="position:absolute;inset:0;overflow:visible">`;
+  svg += `<path d="${faint.join(" ")}" fill="none" stroke="var(--input)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>`;
+  svg += `<path d="${hot.join(" ")}" fill="none" stroke="var(--interaction-border)" stroke-width="6" stroke-linecap="round"/><path d="${hot.join(" ")}" fill="none" stroke="var(--interaction-foreground)" stroke-width="1.5" stroke-linecap="round"/>`;
+  let labels = "";
+  for (const n of model.nodes) {
+    const sel = n.i === SEL, par = partners.has(n.i), dim = !sel && !par;
+    svg += sel ? `<circle cx="${n.x}" cy="${n.y}" r="15" fill="var(--accent)"/><circle cx="${n.x}" cy="${n.y}" r="9" fill="var(--primary)"/>`
+      : `<circle cx="${n.x}" cy="${n.y}" r="9" fill="${par ? "var(--interaction)" : "var(--card)"}" stroke="${par ? "var(--interaction-foreground)" : "var(--input)"}" stroke-width="${par ? 2 : 1.5}" opacity="${dim ? 0.5 : 1}"/>`;
+    labels += `<span class="node${sel ? " sel" : ""}${dim ? " dim" : ""}" style="left:${n.x * s}px;top:${n.y * s - 10}px;width:${90 * s}px;font-size:${font}px">${n.name}</span>`;
+  }
+  return `<div class="graphcard" style="width:${cardInner + 32}px"><div class="stage" style="width:${W}px;height:${H}px">${svg}</svg>${labels}</div></div>`;
+}
+
+export { NAMES, PAIRS, meds, render };

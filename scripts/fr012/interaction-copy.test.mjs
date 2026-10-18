@@ -11,9 +11,10 @@ import { INTERACTION_COPY } from "../../src/lib/copy/interactions.ts";
 import { forbiddenWordsIn } from "../rpl/pairs.mjs";
 import { FORBIDDEN_SENTENCES } from "./corpus.mjs";
 
-// The one field allowed to hit a stem, and the only stem it may hit: the product must say outright that no
-// warning does not mean "safe" (prd.md:49), and that sentence cannot be written without the word.
-const EXCEPTIONS = { noWarningIsNotSafe: ["bezpieczn"] };
+// The only fields allowed to hit a stem, and the only stem they may hit: the product must say outright that no
+// warning (on the list) and no line (on the graph, FR-014) do not mean "safe" (prd.md:49), and those sentences
+// cannot be written without the word.
+const EXCEPTIONS = { noWarningIsNotSafe: ["bezpieczn"], graphNoLineIsNotSafe: ["bezpieczn"] };
 
 // → [[path, text]] for every string in the module. Any other value type fails loudly: a function or number
 // would hide text from the filter.
@@ -40,11 +41,13 @@ test("no interaction text hits a forbidden stem, except the named exception", ()
   }
 });
 
-test("the exception is narrow: noWarningIsNotSafe hits only its named stem", () => {
-  assert.deepEqual(forbiddenWordsIn(INTERACTION_COPY.noWarningIsNotSafe), EXCEPTIONS.noWarningIsNotSafe);
-  // Without the named stem the sentence is clean — no second forbidden word hides behind the exception.
-  const withoutStem = INTERACTION_COPY.noWarningIsNotSafe.replace(/bezpieczn\p{L}*/giu, "");
-  assert.deepEqual(forbiddenWordsIn(withoutStem), []);
+test("the exceptions are narrow: each sentence hits only its named stem", () => {
+  for (const [key, stems] of Object.entries(EXCEPTIONS)) {
+    assert.deepEqual(forbiddenWordsIn(INTERACTION_COPY[key]), stems, key);
+    // Without the named stem the sentence is clean — no second forbidden word hides behind the exception.
+    const withoutStem = INTERACTION_COPY[key].replace(/bezpieczn\p{L}*/giu, "");
+    assert.deepEqual(forbiddenWordsIn(withoutStem), [], key);
+  }
 });
 
 test("the note and the no-warning sentence exist, and the latter is a negation", () => {
@@ -52,6 +55,37 @@ test("the note and the no-warning sentence exist, and the latter is a negation",
   assert.notEqual(INTERACTION_COPY.noWarningIsNotSafe.trim(), "");
   assert.match(INTERACTION_COPY.noWarningIsNotSafe, /(^|\s)nie(\s|$)/i);
   assert.ok(!FORBIDDEN_SENTENCES.safety.includes(INTERACTION_COPY.noWarningIsNotSafe));
+});
+
+// The graph (S-10, FR-014) says outright that no line does not mean "safe", like the list does for no flag.
+test("the no-line sentence of the graph exists and is a negation", () => {
+  assert.notEqual(INTERACTION_COPY.graphNoLineIsNotSafe.trim(), "");
+  assert.match(INTERACTION_COPY.graphNoLineIsNotSafe, /(^|\s)nie(\s|$)/i);
+  assert.ok(!FORBIDDEN_SENTENCES.safety.includes(INTERACTION_COPY.graphNoLineIsNotSafe));
+});
+
+test("every text of the graph exists, and the partner template carries the name marker", () => {
+  const graphKeys = [
+    "graphTitle",
+    "graphHint",
+    "graphLabel",
+    "graphNoSelection",
+    "graphPartner",
+    "graphStatusOne",
+    "graphStatusMany",
+    "graphTooFewMedications",
+    "graphNoLineIsNotSafe",
+    "graphLoadError",
+    "graphVisitLink",
+  ];
+  for (const key of graphKeys) {
+    assert.equal(typeof INTERACTION_COPY[key], "string", key);
+    assert.notEqual(INTERACTION_COPY[key].trim(), "", key);
+  }
+  assert.ok(INTERACTION_COPY.graphPartner.includes("{nazwa}"));
+  assert.ok(INTERACTION_COPY.graphStatusOne.includes("{nazwa}"));
+  assert.ok(INTERACTION_COPY.graphStatusMany.includes("{nazwa}"));
+  assert.ok(INTERACTION_COPY.graphStatusMany.includes("{liczba}"));
 });
 
 // The absence text describes what was checked (pairs among current medications), never the medicine itself:

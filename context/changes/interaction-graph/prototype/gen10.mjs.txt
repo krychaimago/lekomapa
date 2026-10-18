@@ -1,0 +1,20 @@
+import { writeFileSync } from "node:fs";
+import { layout as layoutOld } from "./proto.mjs";
+import { layout } from "./proto5.mjs";
+import { meds, render } from "./common.mjs";
+const extra = { id: "med-new-13", name: "Kalipoz prolongatum", i: 12 };
+const V = {
+  w1: (ms) => layoutOld(ms, 5, { ch: 100, jy: 0.35, jx: 0.32, cellShift: 0.5, offsets: [0, 0.45, 0.2, 0.6, 0.3], rows: 3 }),
+  w3: (ms) => layout(ms, 5, { pick: "spread", jx: 0.4, jy: 0.45 }),
+  w4: (ms) => layout(ms, 5, { grid: "hex", ch: 110, jx: 0.22, jy: 0.25, stride: 7 }),
+  w5: (ms) => layout(ms, 5, { grid: "hex", ch: 110, pick: "spread", jx: 0.3, jy: 0.35 }),
+};
+const out = {}, moved = {};
+for (const [k, f] of Object.entries(V)) {
+  const a = f(meds), b = f([...meds, extra]);
+  moved[k] = a.nodes.filter((n, i) => n.x !== b.nodes[i].x || n.y !== b.nodes[i].y).length;
+  out[k] = render(a, { cardInner: 544, font: 15 });
+  out[k + "big"] = render(a, { cardInner: 734, font: 17 });
+}
+writeFileSync("maps10.json", JSON.stringify({ ...out, moved }));
+console.log(moved);
