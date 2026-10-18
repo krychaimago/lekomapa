@@ -476,3 +476,133 @@ test("an ended medication is not a node, and its rows draw no line", () => {
   assert.equal(model.partners[id(2)], undefined);
   assert.deepEqual(model.partners[id(1)], []);
 });
+
+// The column (#126): one medication per row, alphabetically. Units are 1/16 rem: a row is 48 (3 rem), the gutter for
+// the arcs 80 (5 rem). Row i has its point at y = 48 × i + 24, every point at the same x.
+const columnPath = (path) => {
+  const match = /^M (-?[\d.]+) (-?[\d.]+) C (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)$/.exec(
+    path,
+  );
+  assert.ok(match, path);
+  return match.slice(1).map(Number);
+};
+
+test("the column is 80 units wide and 48 units tall per current medication", () => {
+  const model = build(account(many(12, 4)));
+  assert.equal(model.column.width, 80);
+  // 12 medications, every fourth ended: 9 current.
+  assert.equal(model.column.height, 9 * 48);
+});
+
+test("column points go alphabetically in Polish, one per row, all at the same x", () => {
+  const model = build(
+    account([
+      [1, "Zyrtec", "2026-10-01T08:00:00Z"],
+      [2, "Łzawin", "2026-10-02T08:00:00Z"],
+      [3, "Lakcid", "2026-10-03T08:00:00Z"],
+      [4, "Apap", "2026-10-04T08:00:00Z"],
+      [5, "Ćmin", "2026-10-05T08:00:00Z"],
+    ]),
+  );
+  assert.deepEqual(
+    model.column.points.map((point) => point.id),
+    [id(4), id(5), id(3), id(2), id(1)],
+  );
+  assert.deepEqual(
+    model.column.points.map((point) => point.y),
+    [24, 72, 120, 168, 216],
+  );
+  const [first] = model.column.points;
+  assert.ok(first.x > 0 && first.x < 80, String(first.x));
+  for (const point of model.column.points) assert.equal(point.x, first.x);
+});
+
+test("interactions do not move a column point or change the column's height (FR-012)", () => {
+  const rows = many(10);
+  const plain = build(account(rows));
+  const linked = build(account(rows), [
+    interaction(1, 9, "Opis.", "pair-1"),
+    interaction(9, 1, "Opis.", "pair-1"),
+    interaction(3, 4, "Opis.", "pair-2"),
+    interaction(4, 3, "Opis.", "pair-2"),
+  ]);
+  assert.deepEqual(linked.column.points, plain.column.points);
+  assert.equal(linked.column.height, plain.column.height);
+});
+
+test("the history does not change the column: only the current medications and their names count", () => {
+  const added = build(
+    account([
+      [1, "Zyrtec", "2026-10-01T08:00:00Z"],
+      [2, "Apap", "2026-10-02T08:00:00Z"],
+      [3, "Lakcid", "2026-10-03T08:00:00Z"],
+    ]),
+  );
+  // Same three current medications, added in a different order, with two ended ones in between.
+  const reordered = build(
+    account([
+      [3, "Lakcid", "2026-09-01T08:00:00Z"],
+      [7, "Ibuprom", "2026-09-02T08:00:00Z", "2026-09-20T08:00:00Z"],
+      [1, "Zyrtec", "2026-09-03T08:00:00Z"],
+      [8, "Acenokumarol", "2026-09-04T08:00:00Z", "2026-09-21T08:00:00Z"],
+      [2, "Apap", "2026-09-05T08:00:00Z"],
+    ]),
+  );
+  assert.deepEqual(reordered.column, added.column);
+});
+
+test("every column arc runs from one point of its pair to the other, bending left within the gutter", () => {
+  const pairs = [];
+  for (let n = 1; n <= 20; n += 1) {
+    const other = ((n * 7) % 20) + 1;
+    if (other === n) continue;
+    pairs.push(interaction(n, other, `Opis ${String(n)}.`, `pair-${String(n)}`));
+  }
+  const model = build(account(many(20)), pairs);
+  assert.equal(model.column.lines.length, model.edges.length);
+  const at = new Map(model.column.points.map((point) => [point.id, point]));
+  for (const line of model.column.lines) {
+    const [x0, y0, c1x, c1y, c2x, c2y, x1, y1] = columnPath(line.path);
+    const [a, b] = [at.get(line.a), at.get(line.b)];
+    assert.deepEqual([x0, y0], [a.x, a.y], line.path);
+    assert.deepEqual([x1, y1], [b.x, b.y], line.path);
+    assert.equal(c1x, c2x, line.path);
+    assert.equal(c1y, a.y, line.path);
+    assert.equal(c2y, b.y, line.path);
+    assert.ok(c1x >= 0 && c1x < a.x, line.path);
+  }
+});
+
+test("a column arc bends further left the more rows it spans", () => {
+  const model = build(
+    account([
+      [1, "Apap", "2026-10-01T08:00:00Z"],
+      [2, "Ibuprom", "2026-10-02T08:00:00Z"],
+      [3, "Zyrtec", "2026-10-03T08:00:00Z"],
+    ]),
+    [interaction(1, 2, "Opis 1.", "pair-1"), interaction(1, 3, "Opis 2.", "pair-2")],
+  );
+  const isPair = (line, ids) => ids.includes(line.a) && ids.includes(line.b);
+  const arcX = (ids) => columnPath(model.column.lines.find((line) => isPair(line, ids)).path)[2];
+  // Point at 80 − 15 = 65; the arc reaches 10 + 0.18 per unit between the rows to the left of it.
+  // Adjacent rows (48 apart): 65 − (10 + 48 × 0.18) = 46.4; two rows (96 apart): 65 − (10 + 96 × 0.18) = 37.7.
+  assert.equal(arcX([id(1), id(2)]), 46.4);
+  assert.equal(arcX([id(1), id(3)]), 37.7);
+});
+
+test("an ended medication has no row in the column and draws no arc", () => {
+  const model = build(
+    account([
+      [1, "Ibuprom", "2026-10-01T08:00:00Z"],
+      [2, "Acenokumarol", "2026-10-02T08:00:00Z", "2026-10-10T08:00:00Z"],
+      [3, "Apap", "2026-10-03T08:00:00Z"],
+    ]),
+    [interaction(1, 2, "Opis."), interaction(2, 1, "Opis.")],
+  );
+  assert.deepEqual(
+    model.column.points.map((point) => point.id),
+    [id(3), id(1)],
+  );
+  assert.equal(model.column.height, 2 * 48);
+  assert.deepEqual(model.column.lines, []);
+});

@@ -2,10 +2,15 @@
 // and texts — no markup, no colours, no Supabase. No `@/` imports and no reportError, so
 // scripts/medications/interaction-graph.test.mjs loads this file directly under `node --experimental-strip-types`.
 //
-// Two layouts are computed for every render and the component shows one by the width of the graph card:
-//   - phone (layout "C", 360 units wide): 3 columns of 108 units, rows 100 units apart;
-//   - wide (layout "10", 576 units wide, card ≥ 480 px): 4 columns of 135 units, rows 105 units apart.
-// Both were approved on mockups (context/changes/interaction-graph/prototype/) and reproduce their geometry.
+// Three layouts are computed for every render and the component shows one by the width of the graph card's content,
+// measured in rem so that a larger text size counts as less room:
+//   - column (below 18.25 rem, 292 px at the default text size): one medication per row, alphabetically, pairs drawn
+//     as arcs on the left; units are 1/16 rem, so the arcs meet the points at every text size (issue 126);
+//   - phone (layout "C", 360 units wide, from 18.25 rem to 30 rem): 3 columns of 108 units, rows 100 units apart;
+//   - wide (layout "10", 576 units wide, from 30 rem — 480 px at the default text size): 4 columns of 135 units, rows
+//     105 units apart.
+// Phone and wide were approved on mockups (context/archive/2026-10-17-interaction-graph/), the column on
+// context/changes/graph-narrow-column/prototype/graf-luzny-uklad.html (version 8); each reproduces its geometry.
 //
 // Fields. Every render replays the account's history: a medication arriving (`createdAt`) takes the lowest free field
 // number; a medication ending (`discontinuedAt`, the moment the end was saved, never the backdatable
@@ -22,6 +27,9 @@
 // FR-012 in the layout: a place comes only from the history and the ids. Interactions draw lines between points and
 // fill `partners`; they never move a point, never change its size and never change the order of nodes. The name does
 // not move a point either: the component fits the text with CSS.
+//
+// The column takes no history: a row is the medication's place in the alphabetical order of nodes, so adding one
+// moves the rows below it down, and interactions still move nothing.
 //
 // Lines: a quadratic curve whose bend grows with its length, the side and the first bend taken from a hash of the
 // pair of ids; if it passes too close to another medication's point, stronger and gentler bends on both sides are
@@ -40,11 +48,22 @@ import type {
 
 /** Width of the phone coordinate system (`viewBox`). */
 export const GRAPH_PHONE_WIDTH = 360;
-/** Width of the wide coordinate system (`viewBox`), used when the graph card is at least 480 px wide. */
+/** Width of the wide coordinate system (`viewBox`), used when the graph card's content is at least 30 rem wide. */
 export const GRAPH_WIDE_WIDTH = 576;
+/** Height of one column row, in 1/16 rem: room for a two-line name at 14 px (3 rem). */
+export const GRAPH_COLUMN_ROW = 48;
+/** Width of the column's strip for points and arcs, in 1/16 rem (5 rem). */
+export const GRAPH_COLUMN_GUTTER = 80;
+// Column points stand this far from the strip's right edge: the radius of the selected point's glow (15).
+const COLUMN_POINT_INSET = 15;
+// A column arc bends left by 10 units plus 0.18 of the distance between its rows, keeping 8 units from the left edge.
+const COLUMN_ARC_BASE = 10;
+const COLUMN_ARC_GROWTH = 0.18;
+const COLUMN_ARC_MARGIN = 8;
 
 // A medication button, in units: 90 wide and, with a two-line name, 72 px tall — about 88 units at 0.82 px per unit
-// (a 360 px phone, and the wide layout from a 480 px card on). The button starts 10 px above the point.
+// (a 360 px phone, and the wide layout from 30 rem of card content on — 480 px at the default text size). The button
+// starts 10 px above the point.
 export const GRAPH_BUTTON_WIDTH = 90;
 export const GRAPH_BUTTON_HEIGHT = 88;
 export const GRAPH_BUTTON_TOP = 10 / 0.82;
@@ -378,6 +397,29 @@ function buildLayout(
   return { width, height, points, lines };
 }
 
+// One row per node in the order of `nodes`; an arc is a cubic curve leaving and entering its points horizontally, both
+// control points at the same x on the left of the points, never past the strip's left edge.
+function buildColumn(nodes: InteractionGraphNode[], edges: InteractionGraphEdge[]): InteractionGraphLayout {
+  const x = GRAPH_COLUMN_GUTTER - COLUMN_POINT_INSET;
+  const points: InteractionGraphPoint[] = nodes.map((node, row) => ({
+    id: node.id,
+    x,
+    y: (row + 0.5) * GRAPH_COLUMN_ROW,
+  }));
+  const pointById = new Map(points.map((point) => [point.id, point]));
+  const lines: InteractionGraphLine[] = [];
+  for (const edge of edges) {
+    const a = pointById.get(edge.a);
+    const b = pointById.get(edge.b);
+    if (!a || !b) continue;
+    const out = Math.min(x - COLUMN_ARC_MARGIN, COLUMN_ARC_BASE + Math.abs(b.y - a.y) * COLUMN_ARC_GROWTH);
+    const cx = String(round(x - out));
+    const path = `M ${String(a.x)} ${String(a.y)} C ${cx} ${String(a.y)} ${cx} ${String(b.y)} ${String(b.x)} ${String(b.y)}`;
+    lines.push({ a: edge.a, b: edge.b, path });
+  }
+  return { width: GRAPH_COLUMN_GUTTER, height: nodes.length * GRAPH_COLUMN_ROW, points, lines };
+}
+
 export function buildInteractionGraph(input: InteractionGraphInput): InteractionGraphModel | null {
   if (input.current.length < 2) return null;
 
@@ -427,5 +469,6 @@ export function buildInteractionGraph(input: InteractionGraphInput): Interaction
     partners,
     phone: buildLayout(GRAPH_PHONE_WIDTH, nodes, replayed.phone, edges),
     wide: buildLayout(GRAPH_WIDE_WIDTH, nodes, replayed.wide, edges),
+    column: buildColumn(nodes, edges),
   };
 }

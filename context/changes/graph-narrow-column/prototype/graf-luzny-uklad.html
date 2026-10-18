@@ -1,0 +1,283 @@
+<title>Luźny układ grafu</title>
+<style>
+/* Layout: page of phone frames, one per concept; controls on top set width and text size for all of them. Tokens copied from lekomapa src/styles/global.css. */
+:root{--background:#f7f8f4;--foreground:#1e241f;--card:#ffffff;--primary:#2c4a33;--primary-foreground:#ffffff;--muted-foreground:#4c534c;--accent:#dce9df;--accent-border:#b9d0c0;--interaction:#fbebc8;--interaction-foreground:#5a3f08;--interaction-border:#e6ce96;--border:#e3e5dc;--input:#cbd2c7;--frame:#e9ece4;--ring:#2c4a33}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--background:#141915;--foreground:#e8ebe4;--card:#1c221d;--primary:#b4d6bc;--primary-foreground:#13201a;--muted-foreground:#b4bcb1;--accent:#263a2c;--accent-border:#3d5a45;--interaction:#3a2e14;--interaction-foreground:#f2d9a0;--interaction-border:#6b5424;--border:#2e352f;--input:#4a534a;--frame:#0e120f;--ring:#b4d6bc;color-scheme:dark}}
+:root[data-theme="dark"]{--background:#141915;--foreground:#e8ebe4;--card:#1c221d;--primary:#b4d6bc;--primary-foreground:#13201a;--muted-foreground:#b4bcb1;--accent:#263a2c;--accent-border:#3d5a45;--interaction:#3a2e14;--interaction-foreground:#f2d9a0;--interaction-border:#6b5424;--border:#2e352f;--input:#4a534a;--frame:#0e120f;--ring:#b4d6bc;color-scheme:dark}
+body{background:var(--background);color:var(--foreground);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:flex;flex-direction:column;gap:28px}
+h1{font-size:28px;margin:0;text-wrap:balance}
+h2{font-size:18px;margin:0;text-wrap:balance}
+p{margin:0}
+.lead{max-width:68ch;color:var(--muted-foreground)}
+.facts{display:flex;flex-direction:column;gap:6px;max-width:72ch;padding:0;margin:0;list-style:none}
+.facts li{padding-left:14px;position:relative}
+.facts li::before{content:"";position:absolute;left:0;top:.65em;width:6px;height:6px;border-radius:50%;background:var(--primary)}
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--background);padding-block:10px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center}
+.seg{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg .lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-foreground)}
+.seg button,.toggle{border:1px solid var(--border);background:var(--card);color:var(--foreground);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}
+button:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:28px 24px;align-items:start}
+.concept{display:flex;flex-direction:column;gap:10px;min-width:0}
+.concept header{display:flex;flex-direction:column;gap:4px}
+.num{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-foreground)}
+.desc{color:var(--muted-foreground);font-size:14px}
+.locks{font-size:14px}
+.locks b{font-weight:600}
+.badge{align-self:flex-start;font-size:13px;padding:2px 10px;border-radius:999px;border:1px solid var(--accent-border);background:var(--accent);font-variant-numeric:tabular-nums}
+.badge.bad{background:var(--interaction);color:var(--interaction-foreground);border-color:var(--interaction-border)}
+.frame{background:var(--frame);border-radius:14px;padding:12px;overflow-x:auto}
+.phone{margin:0 auto;background:var(--background);border-radius:10px;padding:16px;box-sizing:border-box}
+.phone .h{font-weight:600;font-size:calc(16px*var(--s));margin-bottom:8px}
+.gcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;box-sizing:border-box}
+.stage{position:relative;margin:0}
+.stage svg{position:absolute;inset:0;overflow:visible}
+.node{position:absolute;box-sizing:border-box;background:none;border:0;color:var(--foreground);font:inherit;cursor:pointer;border-radius:6px;padding:calc(24px*var(--s)) 2px calc(12px*var(--s));font-size:calc(12px*var(--s));line-height:1.5;text-align:center;overflow-wrap:break-word}
+.node span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.node.side{padding:4px 4px 4px 26px;text-align:left;min-height:44px;display:flex;align-items:center}
+.node.col{font-size:calc(14px*var(--s));line-height:1.43}
+.node.pill{border:1px solid var(--input);background:var(--card)}
+.node.tile{border:1px solid var(--border);background:var(--card);padding-top:calc(26px*var(--s))}
+.node.sel span{font-weight:600}
+.node.dim{color:var(--muted-foreground)}
+.node.num{padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;font-size:calc(13px*var(--s));color:var(--foreground)}
+.legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:calc(14px*var(--s))}
+.legend button{display:flex;gap:10px;align-items:center;width:100%;min-height:44px;background:none;border:0;border-radius:6px;color:var(--foreground);font:inherit;text-align:left;cursor:pointer;padding:0 4px}
+.legend .n{display:inline-flex;align-items:center;justify-content:center;min-width:1.9em;height:1.9em;border-radius:50%;border:1.5px solid var(--input);font-weight:600;font-variant-numeric:tabular-nums}
+.legend .sel .n{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}
+.legend .par .n{background:var(--interaction);border-color:var(--interaction-foreground)}
+.hint{font-size:calc(13px*var(--s));color:var(--muted-foreground);margin-top:8px}
+.today{outline:2px dashed var(--interaction-foreground);outline-offset:-2px}
+.ov{outline:2px dashed var(--interaction-foreground);outline-offset:-1px}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h1>Luźny układ grafu (#126)</h1>
+      <p class="lead">Dziesięć wersji układu, który włączy się tylko wtedy, gdy na ekranie brakuje miejsca: wąski telefon albo powiększony tekst. Przy 360 px i zwykłym tekście zostaje dzisiejszy układ, a na komputerze nic się nie zmienia.</p>
+    </div>
+    <button class="toggle" id="theme" type="button">Tryb ciemny</button>
+  </header>
+
+  <ul class="facts">
+    <li>Dane: 12 leków z konta testowego, 8 par. Kliknij lek, żeby zobaczyć jego linie.</li>
+    <li>Licznik nad każdą makietą mierzy przyciski na żywo: ile par leków nachodzi na siebie przy wybranych ustawieniach.</li>
+    <li>Ryzyko czasu procesora (#127): dzisiejszy graf dla każdego leku szuka wolnego miejsca. Wszystkie wersje poniżej stawiają lek w stałej kratce według numeru pola, więc nic nie szukają. Dochodzi narysowanie trzeciej wersji, a to zmierzę przed kodem.</li>
+    <li>Lek dostaje kratkę według kolejności dodania, jak dziś. Nowy lek nikogo nie przesuwa.</li>
+  </ul>
+
+  <div class="controls" role="group" aria-label="Ustawienia makiet">
+    <div class="seg" id="w"><span class="lbl">Ekran</span><button type="button" data-v="320" aria-pressed="true">320 px</button><button type="button" data-v="360" aria-pressed="false">360 px</button></div>
+    <div class="seg" id="s"><span class="lbl">Tekst</span><button type="button" data-v="1" aria-pressed="false">100%</button><button type="button" data-v="1.25" aria-pressed="true">125%</button><button type="button" data-v="1.5" aria-pressed="false">150%</button></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const DATA = {"nodes":[{"id":"02","name":"Acenocumarol WZF 4 mg","field":1},{"id":"07","name":"Amlozek 5","field":6},{"id":"11","name":"Apap","field":10},{"id":"06","name":"Areplex","field":5},{"id":"04","name":"Asertin 50","field":3},{"id":"08","name":"Atorvasterol 20","field":7},{"id":"09","name":"Bisocard 5","field":8},{"id":"01","name":"Ibuprom Max","field":0},{"id":"12","name":"Indapen SR","field":11},{"id":"10","name":"Polprazol 20","field":9},{"id":"03","name":"Ramipril Polpharma","field":2},{"id":"05","name":"Valsacor 160","field":4}],"edges":[["01","02"],["01","03"],["01","04"],["01","05"],["01","06"],["03","05"],["07","08"],["07","09"]],"phone":{"h":588.1,"p":{"02":[183.2,334.5],"07":[49,242.1],"11":[184.7,426.7],"06":[290.6,384.1],"04":[82.8,405.1],"08":[193.7,89.5],"09":[300.7,234.1],"01":[70.1,60.2],"12":[288,481],"10":[72,500.3],"03":[309.2,79.1],"05":[188.9,221.7]}}};
+const partners = {};
+DATA.nodes.forEach(n => partners[n.id] = new Set());
+DATA.edges.forEach(([a,b]) => { partners[a].add(b); partners[b].add(a); });
+const hash = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
+
+let W = 320, S = 1.25;
+const selected = {};
+
+// Every concept: (w = stage width px, s = text scale) -> { h, items: {id: {x, y, b:{l,t,w,h?}, kind}}, arcs?, numbered?, linesOnSelect? }
+// Button with a two-line name: 72 px at 100% text, as measured on the app in #126.
+const H2 = s => Math.ceil(72 * s);
+const GAP = 8;
+function grid2(w, s, o = {}) {
+  const colW = w / 2, pitch = H2(s) + GAP + (o.jit || 0), items = {};
+  for (const n of DATA.nodes) {
+    const c = n.field % 2, r = Math.floor(n.field / 2);
+    const bw = o.bw ? o.bw(colW) : colW - 6;
+    let x = colW * (c + 0.5), y = 14 + r * pitch + (o.stagger && c ? pitch / 2 : 0);
+    if (o.jit) { x += (hash(n.id + "x") - 0.5) * (colW - bw); y += hash(n.id + "y") * o.jit; }
+    items[n.id] = { x, y, b: { l: x - bw / 2, t: y - 10, w: bw } };
+  }
+  const rows = Math.ceil(DATA.nodes.length / 2);
+  return { h: 14 + (rows - 1) * pitch + (o.stagger ? pitch / 2 : 0) + H2(s) + 4, items };
+}
+
+const CONCEPTS = [
+  { title: "Dziś: układ C", today: true,
+    desc: "Punkt odniesienia. Odstępy rzędów maleją z ekranem, a przycisk ma stałą wysokość w px. Makieta liczy mniej nachodzeń niż pomiar w prawdziwej aplikacji z #126 (320 px, tekst 125%: tam 10 par).",
+    locks: "Nic. To stan obecny i zostaje przy 360 px i zwykłym tekście.",
+    build(w, s) {
+      const k = w / 360, items = {};
+      for (const n of DATA.nodes) { const [px, py] = DATA.phone.p[n.id]; const x = px*k, y = py*k, bw = 90*k; items[n.id] = { x, y, b: { l: x - bw/2, t: y - 10, w: bw } }; }
+      return { h: DATA.phone.h * k, items };
+    } },
+  { title: "Dwie kolumny",
+    desc: "Najprostsza krata: dwie kolumny, rząd tak wysoki jak przycisk z dwiema liniami tekstu przy bieżącym rozmiarze.",
+    locks: "Graf wyraźnie dłuższy: 6 rzędów przy 12 lekach. Mapa przestaje wyglądać jak mapa, a zaczyna jak lista.",
+    build: (w, s) => grid2(w, s) },
+  { title: "Szachownica",
+    desc: "Dwie kolumny, prawa przesunięta o pół rzędu. Linie między kolumnami nie biegną poziomo po napisach.",
+    locks: "Tyle samo wysokości co krata, ale układ mniej sztywny.",
+    build: (w, s) => grid2(w, s, { stagger: true }) },
+  { title: "Rozrzut w dwóch kolumnach",
+    desc: "Dwie kolumny z drobnym przesunięciem każdego leku (z jego identyfikatora). Najbliżej charakteru dzisiejszej mapy.",
+    locks: "Nieco wyższy niż krata, bo zapas na przesunięcie wchodzi w odstęp rzędów.",
+    build: (w, s) => grid2(w, s, { jit: Math.round(16 * s), bw: c => c * 0.8 }) },
+  { title: "Trzy kolumny, wyższe rzędy",
+    desc: "Zostają trzy kolumny jak dziś, rośnie tylko odstęp rzędów razem z tekstem.",
+    locks: "Najkrótszy graf, ale kolumna ma ok. 84 px, więc długie nazwy łamią się w środku słowa.",
+    build(w, s) {
+      const colW = w / 3, pitch = H2(s) + GAP, items = {};
+      for (const n of DATA.nodes) { const c = n.field % 3, r = Math.floor(n.field / 3); const x = colW*(c+0.5), y = 14 + r*pitch, bw = colW - 4; items[n.id] = { x, y, b: { l: x - bw/2, t: y - 10, w: bw } }; }
+      return { h: 14 + 3*pitch + H2(s) + 4, items };
+    } },
+  { title: "Nazwa obok punktu",
+    desc: "Dwie kolumny, punkt po lewej, nazwa po prawej. Przycisk niższy, bo nazwa nie stoi pod punktem.",
+    locks: "Inny kształt przycisku niż w dzisiejszym grafie: dwa wyglądy tego samego elementu w produkcie.",
+    build(w, s) {
+      const colW = w / 2, hh = Math.max(44, Math.ceil(36*s + 8)), pitch = hh + GAP, items = {};
+      for (const n of DATA.nodes) { const c = n.field % 2, r = Math.floor(n.field / 2); const x = colW*c + 14, y = r*pitch + hh/2; items[n.id] = { x, y, kind: "side", b: { l: x - 12, t: y - hh/2, w: colW - 6, h: hh } }; }
+      return { h: 6*pitch, items };
+    } },
+  { title: "Kapsułki",
+    desc: "Jak „nazwa obok punktu”, ale każdy lek w obramowanej kapsułce. Linie chowają się pod kapsułkami.",
+    locks: "Najwyraźniejsze pola dotyku. Linie widać tylko między kapsułkami, krótsze odcinki znikają.",
+    build(w, s) {
+      const colW = w / 2, hh = Math.max(44, Math.ceil(36*s + 8)), pitch = hh + GAP + 4, items = {};
+      for (const n of DATA.nodes) { const c = n.field % 2, r = Math.floor(n.field / 2); const x = colW*c + 16, y = r*pitch + hh/2; items[n.id] = { x, y, kind: "side pill", b: { l: x - 14, t: y - hh/2, w: colW - 6, h: hh } }; }
+      return { h: 6*pitch, items };
+    } },
+  { title: "Wąż",
+    desc: "Jedna ścieżka leków na przemian lewo–prawo. Sąsiedzi w pionie są oddaleni o dwa kroki, więc graf jest gęstszy niż krata.",
+    locks: "Linie między dalekimi lekami są długie i przecinają środek. Przy wielu lekach ścieżka robi się długa.",
+    build(w, s) {
+      const step = (H2(s) + GAP) / 2 + 2, bw = w * 0.44 - 4, items = {};
+      for (const n of DATA.nodes) { const x = w * (n.field % 2 ? 0.72 : 0.28), y = 14 + n.field * step; items[n.id] = { x, y, b: { l: x - bw/2, t: y - 10, w: bw } }; }
+      return { h: 14 + 11*step + H2(s) + 4, items };
+    } },
+  { title: "Jedna kolumna z łukami",
+    desc: "Wybrana. Leki jeden pod drugim alfabetycznie, jak kolejność klawisza Tab. Równe wiersze na nazwę w dwóch liniach, nazwa 14 px, pary rysowane łukami po lewej stronie punktów.",
+    locks: "Najczytelniejszy przy dużym tekście, ale to już diagram, nie mapa. Łuki przy wielu parach nakładają się na siebie.",
+    build(w, s) {
+      const x = 62, items = {}; let y = 0, rows = DATA.nodes; // alphabetical, as the Tab order (decision 18.10.2026)
+      // Equal rows sized for a two-line name at 14 px (3 rem), decision 18.10.2026.
+      const hh = Math.round(48 * s);
+      for (const n of rows) { items[n.id] = { x, y: y + hh/2, kind: "side col", b: { l: x - 12, t: y, w: w - x + 12, h: hh } }; y += hh; }
+      return { h: y, items, arcs: true };
+    } },
+  { title: "Numery i lista",
+    desc: "Na mapie same punkty z numerami, nazwy w liście pod spodem. Numery idą alfabetycznie, jak dziś kolejność przycisków.",
+    locks: "Nazwa leku nie stoi przy punkcie: trzeba patrzeć raz na mapę, raz na listę.",
+    build(w, s) {
+      const cols = s > 1.3 ? 3 : 4, colW = w / cols, d = Math.max(44, Math.ceil(30*s)), pitch = d + 18, items = {};
+      DATA.nodes.forEach((n, i) => { const c = n.field % cols, r = Math.floor(n.field / cols); const x = colW*(c+0.5) + (r % 2 ? colW*0.18 : -colW*0.18) * (c === 0 || c === cols-1 ? 0 : 1), y = d/2 + 6 + r*pitch; items[n.id] = { x, y, kind: "num", label: i + 1, b: { l: x - d/2, t: y - d/2, w: d, h: d } }; });
+      return { h: Math.ceil(12/cols) * pitch, items, numbered: true };
+    } },
+  { title: "Kafelki, linie po wybraniu",
+    desc: "Dwie kolumny obramowanych kafelków. Linie pojawiają się dopiero po wybraniu leku i tylko jego.",
+    locks: "Bez wyboru nie widać od razu, które leki mają pary. Z tego powodu przy każdym kafelku z parą zostaje bursztynowy punkt.",
+    build(w, s) { const g = grid2(w, s, { bw: c => c - 8 }); for (const k in g.items) g.items[k].kind = "tile"; return { ...g, linesOnSelect: true }; } },
+];
+
+function curve(a, b, id) {
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, side = hash(id) < 0.5 ? -1 : 1, bend = 0.2 * len * side;
+  const cx = (a.x + b.x) / 2 - dy / len * bend, cy = (a.y + b.y) / 2 + dx / len * bend;
+  return `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+}
+function arc(a, b) {
+  const out = Math.min(a.x - 8, 10 + Math.abs(b.y - a.y) * 0.18);
+  return `M${a.x},${a.y} C${a.x - out},${a.y} ${b.x - out},${b.y} ${b.x},${b.y}`;
+}
+
+function render(ci) {
+  const c = CONCEPTS[ci], el = document.getElementById("c" + ci), sel = selected[ci] ?? null;
+  const L = c.build(W, S), part = sel ? partners[sel] : new Set();
+  const NS = "http://www.w3.org/2000/svg";
+  const stage = el.querySelector(".stage");
+  stage.style.width = W + "px"; stage.style.height = Math.ceil(L.h) + "px";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("width", W); svg.setAttribute("height", Math.ceil(L.h)); svg.setAttribute("aria-hidden", "true");
+  const base = [], hi = [];
+  for (const [a, b] of DATA.edges) {
+    const d = L.arcs ? arc(L.items[a], L.items[b]) : curve(L.items[a], L.items[b], a + b);
+    (sel && (a === sel || b === sel) ? hi : base).push(d);
+  }
+  const path = (d, stroke, wdt, op) => { const p = document.createElementNS(NS, "path"); p.setAttribute("d", d.join(" ")); p.setAttribute("fill", "none"); p.setAttribute("stroke", stroke); p.setAttribute("stroke-width", wdt); p.setAttribute("stroke-linecap", "round"); if (op) p.setAttribute("opacity", op); svg.appendChild(p); };
+  if (base.length && !(L.linesOnSelect)) path(base, "var(--input)", 1.5, sel ? 0.5 : 1);
+  if (hi.length) { path(hi, "var(--interaction-border)", 6); path(hi, "var(--interaction-foreground)", 1.5); }
+  if (!L.numbered) for (const n of DATA.nodes) {
+    const p = L.items[n.id], isSel = n.id === sel, isPar = part.has(n.id), dim = sel && !isSel && !isPar;
+    if (isSel) { const g = document.createElementNS(NS, "circle"); g.setAttribute("cx", p.x); g.setAttribute("cy", p.y); g.setAttribute("r", 15); g.setAttribute("fill", "var(--accent)"); svg.appendChild(g); }
+    const k = document.createElementNS(NS, "circle"); k.setAttribute("cx", p.x); k.setAttribute("cy", p.y); k.setAttribute("r", 9);
+    const hasPair = L.linesOnSelect && partners[n.id].size > 0 && !sel;
+    k.setAttribute("fill", isSel ? "var(--primary)" : isPar || hasPair ? "var(--interaction)" : "var(--card)");
+    k.setAttribute("stroke", isSel ? "var(--primary)" : isPar || hasPair ? "var(--interaction-foreground)" : "var(--input)");
+    k.setAttribute("stroke-width", isPar ? 2 : 1.5); if (dim) k.setAttribute("opacity", 0.5);
+    svg.appendChild(k);
+  }
+  stage.replaceChildren(svg);
+  const group = document.createElement("div"); group.setAttribute("role", "group"); group.setAttribute("aria-label", "Leki na grafie");
+  for (const n of DATA.nodes) {
+    const p = L.items[n.id], isSel = n.id === sel, isPar = part.has(n.id), dim = sel && !isSel && !isPar;
+    const bt = document.createElement("button"); bt.type = "button";
+    bt.className = "node " + (p.kind || "") + (isSel ? " sel" : "") + (dim ? " dim" : "");
+    bt.setAttribute("aria-pressed", isSel);
+    Object.assign(bt.style, { left: p.b.l + "px", top: p.b.t + "px", width: p.b.w + "px" });
+    if (p.b.h) bt.style.height = p.b.h + "px";
+    if (p.kind === "num") {
+      bt.textContent = p.label; bt.setAttribute("aria-label", n.name);
+      bt.style.background = isSel ? "var(--primary)" : isPar ? "var(--interaction)" : "var(--card)";
+      bt.style.color = isSel ? "var(--primary-foreground)" : "var(--foreground)";
+      bt.style.border = `${isPar ? 2 : 1.5}px solid ${isSel ? "var(--primary)" : isPar ? "var(--interaction-foreground)" : "var(--input)"}`;
+      if (dim) bt.style.opacity = 0.5;
+    } else { const sp = document.createElement("span"); sp.textContent = n.name; bt.appendChild(sp); }
+    bt.addEventListener("click", () => { selected[ci] = sel === n.id ? null : n.id; render(ci); });
+    group.appendChild(bt);
+  }
+  stage.appendChild(group);
+  const extra = el.querySelector(".extra"); extra.replaceChildren();
+  if (L.numbered) {
+    const ul = document.createElement("ul"); ul.className = "legend";
+    DATA.nodes.forEach((n, i) => { const li = document.createElement("li"); const b = document.createElement("button"); b.type = "button"; b.className = (n.id === sel ? "sel" : part.has(n.id) ? "par" : ""); b.setAttribute("aria-pressed", n.id === sel); b.innerHTML = `<span class="n">${i + 1}</span><span></span>`; b.lastChild.textContent = n.name; b.addEventListener("click", () => { selected[ci] = sel === n.id ? null : n.id; render(ci); }); li.appendChild(b); ul.appendChild(li); });
+    extra.appendChild(ul);
+  }
+  if (L.linesOnSelect && !sel) { const h = document.createElement("p"); h.className = "hint"; h.textContent = "Wybierz lek, żeby zobaczyć jego możliwe interakcje."; extra.appendChild(h); }
+  // Measure real button boxes, as the issue did.
+  const rects = [...group.children].map(b => b.getBoundingClientRect());
+  let pairs = 0; const hit = new Set();
+  for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
+    const a = rects[i], b = rects[j];
+    if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5) { pairs++; hit.add(i); hit.add(j); }
+  }
+  hit.forEach(i => group.children[i].classList.add("ov"));
+  const badge = el.querySelector(".badge");
+  badge.textContent = pairs ? `Nachodzi: ${pairs} ${pairs === 1 ? "para" : pairs < 5 ? "pary" : "par"}` : "Nic nie nachodzi";
+  badge.classList.toggle("bad", pairs > 0);
+  el.querySelector(".phone").style.width = (W) + "px";
+  el.querySelector(".gh").textContent = `Wysokość grafu: ${Math.round(L.h)} px`;
+}
+
+const grid = document.getElementById("grid");
+CONCEPTS.forEach((c, i) => {
+  const a = document.createElement("article"); a.className = "concept"; a.id = "c" + i;
+  a.innerHTML = `<header><span class="num">${i === 0 ? "Odniesienie" : "Wersja " + i}</span><h2></h2><p class="desc"></p><p class="locks"><b>Przesądza:</b> <span></span></p></header>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="badge"></span><span class="desc gh"></span></div>
+    <div class="frame"><div class="phone"><div class="h">Wykres interakcji</div><div class="gcard"><div class="stage"></div><div class="extra"></div></div></div></div>`;
+  a.querySelector("h2").textContent = c.title; a.querySelector(".desc").textContent = c.desc; a.querySelector(".locks span").textContent = c.locks;
+  grid.appendChild(a);
+});
+// The phone frame is the viewport: 16 px page padding + 16 px card padding + 1 px border on each side.
+function all() { document.documentElement.style.setProperty("--s", S); CONCEPTS.forEach((_, i) => render(i)); }
+const setupSeg = (id, set) => document.getElementById(id).addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; [...e.currentTarget.querySelectorAll("button")].forEach(x => x.setAttribute("aria-pressed", x === b)); set(Number(b.dataset.v)); all(); });
+let VW = 320;
+setupSeg("w", v => { VW = v; W = v - 66; });
+setupSeg("s", v => { S = v; });
+W = VW - 66;
+// Phone frame width = viewport; stage = viewport minus paddings.
+const origRender = render;
+render = function (ci) { origRender(ci); document.querySelector("#c" + ci + " .phone").style.width = VW + "px"; };
+document.getElementById("theme").addEventListener("click", () => { const r = document.documentElement; const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark ? "light" : "dark"; document.getElementById("theme").textContent = dark ? "Tryb ciemny" : "Tryb jasny"; });
+all();
+</script>
