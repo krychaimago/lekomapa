@@ -51,12 +51,12 @@ const showGraphLink = summary !== null && summary.currentMedications.length >= 2
           <p>{copy.intro}</p>
         </PaperNote>
         <div class="flex flex-wrap gap-6 px-1">
-          <PaperNote paper="accent" tilt="2" class="p-3 pt-5">
+          <PaperNote paper="accent" tape="sidebar" tilt="2" class="p-3 pt-5">
             <a href="/leki/nowy" class:list={buttonVariants()}>
               {copy.introAddMedication}
             </a>
           </PaperNote>
-          <PaperNote paper="accent" tilt="-2" class="p-3 pt-5">
+          <PaperNote paper="accent" tape="sidebar" tilt="-2" class="p-3 pt-5">
             <a href="/dzienniczek/nowy" class:list={buttonVariants()}>
               {copy.introAddSymptom}
             </a>
