@@ -292,12 +292,12 @@ Brak migracji bazy: graf czyta istniejące kolumny pod istniejącym RLS.
 
 #### Automated
 
-- [x] 3.1 Test E2E przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/interaction-graph.spec.ts`
-- [x] 3.2 Test E2E pada, gdy panel nie pokazuje noty (sprawdzone celowym zepsuciem i cofnięciem)
-- [x] 3.3 Galeria generuje zrzuty grafu: `DARK_GALLERY=1 npx playwright test tests/e2e/dark-gallery.spec.ts`
-- [x] 3.4 Pełne testy przechodzą: `npm test`
+- [x] 3.1 Test E2E przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/interaction-graph.spec.ts` — 320da9b
+- [x] 3.2 Test E2E pada, gdy panel nie pokazuje noty (sprawdzone celowym zepsuciem i cofnięciem) — 320da9b
+- [x] 3.3 Galeria generuje zrzuty grafu: `DARK_GALLERY=1 npx playwright test tests/e2e/dark-gallery.spec.ts` — 320da9b
+- [x] 3.4 Pełne testy przechodzą: `npm test` — 320da9b
 
 #### Manual
 
-- [x] 3.5 Autorka przegląda zrzuty grafu w trybie jasnym i ciemnym
-- [x] 3.6 Mediana LCP `/leki` ≤ 2,5 s, zapisana w `change.md`
+- [x] 3.5 Autorka przegląda zrzuty grafu w trybie jasnym i ciemnym — 320da9b
+- [x] 3.6 Mediana LCP `/leki` ≤ 2,5 s, zapisana w `change.md` — 320da9b
