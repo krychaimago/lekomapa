@@ -290,10 +290,10 @@ Kolumna jest liniowa względem liczby leków i par. Dochodzi render trzeciej sce
 
 #### Automated
 
-- [x] 3.1 Test E2E grafu przechodzi przeciw lokalnemu Supabase
-- [x] 3.2 Cały zestaw E2E przechodzi
-- [x] 3.3 Testy jednostkowe, typy i lint przechodzą
+- [x] 3.1 Test E2E grafu przechodzi przeciw lokalnemu Supabase — a865797
+- [x] 3.2 Cały zestaw E2E przechodzi — a865797
+- [x] 3.3 Testy jednostkowe, typy i lint przechodzą — a865797
 
 #### Manual
 
-- [x] 3.4 Test E2E pada, gdy próg kolumny zostanie cofnięty do pikseli
+- [x] 3.4 Test E2E pada, gdy próg kolumny zostanie cofnięty do pikseli — a865797

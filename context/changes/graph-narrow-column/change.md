@@ -1,7 +1,7 @@
 ---
 change_id: graph-narrow-column
 title: Graf leków w jednej kolumnie, gdy brakuje miejsca (#126)
-status: implementing
+status: implemented
 created: 2026-10-18
 updated: 2026-10-18
 archived_at: null
