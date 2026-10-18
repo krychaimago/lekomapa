@@ -1,0 +1,12 @@
+import { writeFileSync } from "node:fs";
+import { place, CONCEPTS } from "./proto6.mjs";
+import { meds, render } from "./common.mjs";
+const extra = { id: "med-new-13", name: "Kalipoz prolongatum", i: 12 };
+const out = [];
+for (const [k, c] of Object.entries(CONCEPTS)) {
+  const a = place(meds, c), b = place([...meds, extra], c);
+  const moved = a.nodes.filter((n, i) => n.x !== b.nodes[i].x || n.y !== b.nodes[i].y).length;
+  out.push({ k, title: c.title, note: c.note, moved, html: render(a, { cardInner: 544, font: 15 }) });
+}
+writeFileSync("maps11.json", JSON.stringify(out));
+console.log(out.map((o) => o.k + ":" + o.moved).join(" "));

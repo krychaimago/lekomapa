@@ -1,0 +1,11 @@
+import { writeFileSync } from "node:fs";
+import { layout } from "./proto.mjs";
+import { meds, render } from "./common.mjs";
+const C6 = { jy: 0.35, jx: 0.32, cellShift: 0.5, offsets: [0, 0.45, 0.2, 0.6, 0.3, 0.5], rows: 2, stride: 5 };
+const out = {};
+for (const ch of [100, 135, 165]) {
+  const m = layout(meds, 6, { ...C6, ch });
+  out[`s${ch}`] = render(m, { cardInner: 544, font: 15 });
+  out[`b${ch}`] = render(m, { cardInner: 734, font: 17 });
+}
+writeFileSync("maps9.json", JSON.stringify(out));

@@ -273,31 +273,31 @@ Brak migracji bazy: graf czyta istniejące kolumny pod istniejącym RLS.
 
 #### Automated
 
-- [x] 2.1 Testy przechodzą, w tym bramka kolorów i testy tytułów i parametrów adresu: `npm test`
-- [x] 2.2 Typy przechodzą: `npm run typecheck`
-- [x] 2.3 Lint przechodzi: `npm run lint`
-- [x] 2.4 Build przechodzi: `npm run build`
+- [x] 2.1 Testy przechodzą, w tym bramka kolorów i testy tytułów i parametrów adresu: `npm test` — f771cec
+- [x] 2.2 Typy przechodzą: `npm run typecheck` — f771cec
+- [x] 2.3 Lint przechodzi: `npm run lint` — f771cec
+- [x] 2.4 Build przechodzi: `npm run build` — f771cec
 
 #### Manual
 
-- [x] 2.5 Na telefonie (360 px) graf wygląda jak makieta A2: mapa, delikatne neutralne linie (nie zielone), zielony wybór, bursztynowe podświetlenie
-- [x] 2.6 Dotknięcie leku, przełączenie na inny i odznaczenie działają; panel pokazuje opisy z notą
-- [x] 2.7 Lek zostaje w tym samym miejscu po dodaniu nowego leku
-- [x] 2.8 Tryb ciemny: graf czytelny, delikatne linie widoczne na tle karty, interakcja nie wygląda jak alarm
-- [x] 2.9 Przy jednym leku zamiast grafu stoi zdanie
-- [x] 2.10 Odnośnik z „Wizyty” prowadzi do grafu
-- [x] 2.11 Klawiatura: Tab przechodzi po lekach alfabetycznie, Enter/spacja wybiera i odznacza
+- [x] 2.5 Na telefonie (360 px) graf wygląda jak makieta A2: mapa, delikatne neutralne linie (nie zielone), zielony wybór, bursztynowe podświetlenie — f771cec
+- [x] 2.6 Dotknięcie leku, przełączenie na inny i odznaczenie działają; panel pokazuje opisy z notą — f771cec
+- [x] 2.7 Lek zostaje w tym samym miejscu po dodaniu nowego leku — f771cec
+- [x] 2.8 Tryb ciemny: graf czytelny, delikatne linie widoczne na tle karty, interakcja nie wygląda jak alarm — f771cec
+- [x] 2.9 Przy jednym leku zamiast grafu stoi zdanie — f771cec
+- [x] 2.10 Odnośnik z „Wizyty” prowadzi do grafu — f771cec
+- [x] 2.11 Klawiatura: Tab przechodzi po lekach alfabetycznie, Enter/spacja wybiera i odznacza — f771cec
 
 ### Phase 3: Test przeglądarkowy i pomiary
 
 #### Automated
 
-- [ ] 3.1 Test E2E przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/interaction-graph.spec.ts`
-- [ ] 3.2 Test E2E pada, gdy panel nie pokazuje noty (sprawdzone celowym zepsuciem i cofnięciem)
-- [ ] 3.3 Galeria generuje zrzuty grafu: `DARK_GALLERY=1 npx playwright test tests/e2e/dark-gallery.spec.ts`
-- [ ] 3.4 Pełne testy przechodzą: `npm test`
+- [x] 3.1 Test E2E przechodzi na lokalnym Supabase: `npx playwright test tests/e2e/interaction-graph.spec.ts`
+- [x] 3.2 Test E2E pada, gdy panel nie pokazuje noty (sprawdzone celowym zepsuciem i cofnięciem)
+- [x] 3.3 Galeria generuje zrzuty grafu: `DARK_GALLERY=1 npx playwright test tests/e2e/dark-gallery.spec.ts`
+- [x] 3.4 Pełne testy przechodzą: `npm test`
 
 #### Manual
 
-- [ ] 3.5 Autorka przegląda zrzuty grafu w trybie jasnym i ciemnym
-- [ ] 3.6 Mediana LCP `/leki` ≤ 2,5 s, zapisana w `change.md`
+- [x] 3.5 Autorka przegląda zrzuty grafu w trybie jasnym i ciemnym
+- [x] 3.6 Mediana LCP `/leki` ≤ 2,5 s, zapisana w `change.md`

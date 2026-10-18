@@ -1,0 +1,69 @@
+// Prototype: two new desktop ideas. Not app code.
+// grid "c": columns at different heights + per-field offset (variant C); grid "hex": every other row moved by half a
+// column (honeycomb). pick "jitter": random spot in the field; pick "spread": of many spots in the field, the one
+// farthest from medications already standing (fills holes locally, never moves anyone).
+const CW = 108, BOX_W = 90, BOX_H = 88, TOP = 10 / 0.82, GAP = 4;
+function hash(s, salt) {
+  let h = 2166136261 ^ salt;
+  for (let k = 0; k < s.length; k++) {
+    h ^= s.charCodeAt(k);
+    h = Math.imul(h, 16777619);
+  }
+  h ^= h >>> 13;
+  h = Math.imul(h, 0x5bd1e995);
+  h ^= h >>> 15;
+  return (h >>> 0) / 4294967295;
+}
+export function layout(meds, cols, o) {
+  const { ch = 100, jx = 0.32, jy = 0.35, rows = 3, stride = 7, grid = "c", pick = "jitter", offsets = [0, 0.45, 0.2, 0.6, 0.3] } = o;
+  const hex = grid === "hex";
+  const width = cols * CW + 36 + (hex ? CW / 2 : 0), block = cols * rows;
+  const box = (p) => ({ l: p.x - BOX_W / 2, r: p.x + BOX_W / 2, t: p.y - TOP, b: p.y - TOP + BOX_H });
+  const hits = (p, placed) =>
+    placed.some((q) => {
+      const a = box(p), b = box(q);
+      return a.l < b.r && b.l < a.r && a.t < b.b + GAP && b.t < a.b + GAP;
+    });
+  const clampX = (x) => Math.max(BOX_W / 2 + 4, Math.min(width - BOX_W / 2 - 4, x));
+  const placed = [];
+  meds.forEach((m, f) => {
+    const b = Math.floor(f / block), cell = (f * stride) % block;
+    const col = cell % cols, row = rows * b + Math.floor(cell / cols);
+    let cx, cy;
+    if (hex) {
+      cx = 18 + CW * (col + 0.5) + (row % 2 ? CW / 2 : 0);
+      cy = 40 + ch * row;
+    } else {
+      const shift = row % 2 ? CW * 0.28 : -CW * 0.12;
+      const lift = ch * (offsets[col] + 0.5 * (((cell * 5 + 3) % 7) / 6 - 0.5));
+      cx = 18 + CW * (col + 0.5) + shift;
+      cy = 26 + lift + ch * row + ch * 0.3;
+    }
+    let p = null;
+    if (pick === "spread") {
+      let best = null;
+      for (let i = 0; i < 40; i++) {
+        const c = { x: clampX(cx + (hash(m.id, 2 + 2 * i) - 0.5) * 2 * jx * CW), y: Math.max(26, cy + (hash(m.id, 3 + 2 * i) - 0.5) * 2 * jy * ch) };
+        if (hits(c, placed)) continue;
+        let score = Infinity;
+        for (const q of placed) score = Math.min(score, Math.hypot((c.x - q.x) * 0.8, c.y - q.y));
+        if (!best || score > best.score) best = { ...c, score };
+      }
+      if (best) p = { x: best.x, y: best.y };
+    } else {
+      for (let i = 0; i < 24 && !p; i++) {
+        const s = 1 - i / 24;
+        const c = { x: clampX(cx + (hash(m.id, 2 + 2 * i) - 0.5) * 2 * jx * CW * s), y: Math.max(26, cy + (hash(m.id, 3 + 2 * i) - 0.5) * 2 * jy * ch * s) };
+        if (!hits(c, placed)) p = c;
+      }
+    }
+    for (let r = 6; !p; r += 6)
+      for (let a = 0; a < 360 && !p; a += 15) {
+        const c = { x: clampX(cx + r * Math.cos((a * Math.PI) / 180)), y: Math.max(26, cy + r * Math.sin((a * Math.PI) / 180)) };
+        if (!hits(c, placed)) p = c;
+      }
+    placed.push({ ...m, ...p });
+  });
+  const height = Math.max(...placed.map((p) => p.y - TOP + BOX_H)) + 12;
+  return { width, height, nodes: placed };
+}

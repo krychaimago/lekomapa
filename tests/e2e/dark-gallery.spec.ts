@@ -13,6 +13,7 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
+import { INTERACTION_COPY } from "../../src/lib/copy/interactions";
 import { TIMELINE_COPY } from "../../src/lib/copy/timeline";
 import { pickSymptom } from "./journal-helpers";
 
@@ -143,6 +144,31 @@ const ENTRIES: Entry[] = [
     path: () => "/warunki/akceptacja",
   },
   { page: "leki/index", state: "with-interaction", session: true, path: () => "/leki" },
+  // The interaction graph (S-10) with the medication of the checked pair touched: it is pressed, its partner and line
+  // highlighted, and the panel under the graph shows the partner card with the note.
+  {
+    page: "leki/index",
+    state: "graph-selected",
+    session: true,
+    path: () => "/leki",
+    prepare: async (page) => {
+      const graph = page.getByRole("group", { name: INTERACTION_COPY.graphLabel });
+      await graph.scrollIntoViewIfNeeded();
+      await waitForIslands(page);
+      const node = graph.getByRole("button", { name: `${RUN_MARKER} A`, exact: true });
+      await node.click();
+      await expect(node).toHaveAttribute("aria-pressed", "true");
+      await expect(
+        page.getByRole("region", { name: `${RUN_MARKER} A` }).getByText(INTERACTION_COPY.note, { exact: true }),
+      ).toBeVisible();
+      // The pointer would stay on the button and the screenshot would show its hover state; scrolled back to the top,
+      // or the full-page shot draws the sticky header where the graph was scrolled into view.
+      await page.mouse.move(0, 0);
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+      });
+    },
+  },
   { page: "leki/zakonczone", state: "with-ended", session: true, path: () => "/leki/zakonczone" },
   { page: "leki/nowy", session: true, path: () => "/leki/nowy" },
   { page: "leki/nowy/z-ulotki", session: true, path: () => "/leki/nowy/z-ulotki" },
