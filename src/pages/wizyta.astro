@@ -9,6 +9,7 @@
 // (FR-012). No URL parameters: links lead only to fixed routes, the timeline (S-09) and the graph anchor /leki#graf
 // (S-10) among them.
 import AppLayout from "@/layouts/AppLayout.astro";
+import PaperNote from "@/components/PaperNote.astro";
 import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { DOCTOR_QUESTION_COPY } from "@/lib/copy/doctor-question";
@@ -45,15 +46,21 @@ const showGraphLink = summary !== null && summary.currentMedications.length >= 2
         {copy.loadError}
       </p>
     ) : summary.showIntro ? (
-      <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-        <p>{copy.intro}</p>
-        <div class="flex flex-wrap gap-3">
-          <a href="/leki/nowy" class:list={buttonVariants()}>
-            {copy.introAddMedication}
-          </a>
-          <a href="/dzienniczek/nowy" class:list={buttonVariants({ variant: "outline" })}>
-            {copy.introAddSymptom}
-          </a>
+      <section class="flex flex-col gap-8 pt-3">
+        <PaperNote paper="card" tilt="-1" class="p-6">
+          <p>{copy.intro}</p>
+        </PaperNote>
+        <div class="flex flex-wrap gap-6 px-1">
+          <PaperNote paper="accent" tilt="2" class="p-3 pt-5">
+            <a href="/leki/nowy" class:list={buttonVariants()}>
+              {copy.introAddMedication}
+            </a>
+          </PaperNote>
+          <PaperNote paper="accent" tilt="-2" class="p-3 pt-5">
+            <a href="/dzienniczek/nowy" class:list={buttonVariants()}>
+              {copy.introAddSymptom}
+            </a>
+          </PaperNote>
         </div>
       </section>
     ) : (
