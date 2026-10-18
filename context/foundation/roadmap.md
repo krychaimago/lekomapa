@@ -214,8 +214,8 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **Parallel with:** S-06, S-07, S-09
 - **Blockers:** —
 - **Unknowns:**
-  - Źródło ilustracji i ich licencja (własne SVG, zestaw na wolnej licencji). — Owner: użytkowniczka. Block: no.
-  - Które ekrany: puste stany listy leków, dziennika i „Wizyty”, wygląd notatki we wpisie. — Owner: plan (`/10x-ui`). Block: no.
+  - Źródło ilustracji i ich licencja (własne SVG, zestaw na wolnej licencji). — Owner: użytkowniczka. Block: no. **Rozstrzygnięte 18.10.2026:** kształty CSS (karteczki z taśmą, kierunek F), bez zewnętrznych zasobów i bez licencji do pilnowania.
+  - Które ekrany: puste stany listy leków, dziennika i „Wizyty”, wygląd notatki we wpisie. — Owner: plan (`/10x-ui`). Block: no. **Rozstrzygnięte 18.10.2026:** pusta lista leków, pusty dzienniczek, wstęp „Wizyty”, notatka we wpisie oraz lewa strona rozkładówki — wszystkie 6 ekranów wejściowych.
 - **Risk:** Ryzyko rozrostu — „elementy graficzne” łatwo staje się przebudową wszystkich ekranów; zakres zamyka się na pustych stanach i wyglądzie notatek, a wykresy należą do S-09 i S-10. Po S-03 i S-05, bo te dwa ekrany jeszcze się zmienią. Ilustracja nie może straszyć ani sugerować zagrożenia (FR-012); kolory wyłącznie z tokenów, w obu trybach.
 - **Termin:** zapasowy.
 - **Status:** in-progress

@@ -221,34 +221,34 @@ Brak migracji bazy.
 
 #### Automated
 
-- [x] 1.1 Bramka kolorów i reszta testów jednostkowych przechodzą: `npm test`
-- [x] 1.2 Lint przechodzi: `npm run lint`
-- [x] 1.3 Typy przechodzą: `npm run typecheck`
-- [x] 1.4 Build przechodzi: `npm run build`
-- [x] 1.5 E2E karty wpisu i Wizyty zielone przeciw lokalnemu Supabase: `npx playwright test severity-on-phone visit-readable`
+- [x] 1.1 Bramka kolorów i reszta testów jednostkowych przechodzą: `npm test` — 1507880
+- [x] 1.2 Lint przechodzi: `npm run lint` — 1507880
+- [x] 1.3 Typy przechodzą: `npm run typecheck` — 1507880
+- [x] 1.4 Build przechodzi: `npm run build` — 1507880
+- [x] 1.5 E2E karty wpisu i Wizyty zielone przeciw lokalnemu Supabase: `npx playwright test severity-on-phone visit-readable` — 1507880
 
 #### Manual
 
-- [x] 1.6 Pusta lista leków, pusty dzienniczek i pusta Wizyta wyglądają jak plansze F-leki, F-dziennik, F-wizyta w trybie jasnym
-- [x] 1.7 Te same trzy ekrany w trybie ciemnym: karteczki odróżniają się od tła, taśma widoczna, tekst czytelny
-- [x] 1.8 Wpis z notatką (także z notatką 200 znaków) wygląda jak plansza F-notatka w obu trybach, tekst się nie wylewa
-- [x] 1.9 Na telefonie (ok. 375 px) karteczki mieszczą się bez poziomego przewijania, obrót nie ucina tekstu
-- [x] 1.10 Czytnik ekranu nie odczytuje taśmy ani tylnej kartki
+- [x] 1.6 Pusta lista leków, pusty dzienniczek i pusta Wizyta wyglądają jak plansze F-leki, F-dziennik, F-wizyta w trybie jasnym — 1507880
+- [x] 1.7 Te same trzy ekrany w trybie ciemnym: karteczki odróżniają się od tła, taśma widoczna, tekst czytelny — 1507880
+- [x] 1.8 Wpis z notatką (także z notatką 200 znaków) wygląda jak plansza F-notatka w obu trybach, tekst się nie wylewa — 1507880
+- [x] 1.9 Na telefonie (ok. 375 px) karteczki mieszczą się bez poziomego przewijania, obrót nie ucina tekstu — 1507880
+- [x] 1.10 Czytnik ekranu nie odczytuje taśmy ani tylnej kartki — 1507880
 
 ### Phase 2: Karteczki na rozkładówce i zapis decyzji
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe, w tym kontrast i bramka kolorów: `npm test`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
-- [ ] 2.3 Typy przechodzą: `npm run typecheck`
-- [ ] 2.4 Build przechodzi: `npm run build`
-- [ ] 2.5 E2E ścieżek wejściowych zielone przeciw lokalnemu Supabase: `npx playwright test signin-lands-on-medications theme seed`
+- [x] 2.1 Testy jednostkowe, w tym kontrast i bramka kolorów: `npm test`
+- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.3 Typy przechodzą: `npm run typecheck`
+- [x] 2.4 Build przechodzi: `npm run build`
+- [x] 2.5 E2E ścieżek wejściowych zielone przeciw lokalnemu Supabase: `npx playwright test signin-lands-on-medications theme seed`
 
 #### Manual
 
-- [ ] 2.6 Logowanie na dużym ekranie wygląda jak plansza F (komputer) w trybie jasnym i ciemnym
-- [ ] 2.7 Logowanie na telefonie wygląda jak plansza F (telefon), pierwszy ekran nadal krótki
-- [ ] 2.8 Pozostałe 5 ekranów rozkładówki (rejestracja, sprawdź skrzynkę, potwierdzenie, konto usunięte, akceptacja warunków) pokazuje te same karteczki bez rozjechania formularza
-- [ ] 2.9 Formularz logowania wysłany w prawdziwej przeglądarce działa (zalogowanie przechodzi)
-- [ ] 2.10 Reguła w `CLAUDE.md` i notki w `design-draft.md` oraz roadmapie są zgodne z decyzjami tego planu
+- [x] 2.6 Logowanie na dużym ekranie wygląda jak plansza F (komputer) w trybie jasnym i ciemnym
+- [x] 2.7 Logowanie na telefonie wygląda jak plansza F (telefon), pierwszy ekran nadal krótki
+- [x] 2.8 Pozostałe 5 ekranów rozkładówki (rejestracja, sprawdź skrzynkę, potwierdzenie, konto usunięte, akceptacja warunków) pokazuje te same karteczki bez rozjechania formularza
+- [x] 2.9 Formularz logowania wysłany w prawdziwej przeglądarce działa (zalogowanie przechodzi)
+- [x] 2.10 Reguła w `CLAUDE.md` i notki w `design-draft.md` oraz roadmapie są zgodne z decyzjami tego planu
