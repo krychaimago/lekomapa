@@ -69,6 +69,9 @@ if (supabase) {
     supabase
       .from("medications")
       .select("id, created_at, discontinued_at")
+      // Fixed order, so a cut at PostgREST's max_rows would always drop the same rows and the map would not move.
+      .order("created_at")
+      .order("id")
       .overrideTypes<HistoryRow[], { merge: false }>(),
   ]);
   if (graphHistory.error) {

@@ -129,12 +129,17 @@ test.describe("interaction graph on the medication list", () => {
     await page.goto("/leki");
     const graph = await openGraph(page);
     const button = (name: string) => graph.getByRole("button", { name, exact: true });
-    const panel = page.locator("[aria-live=polite]").filter({ hasText: INTERACTION_COPY.graphNoLineIsNotSafe });
+    // The graph section holds the panel; the live region announces only a short status, never the cards.
+    const panel = page.locator("#graf");
+    const status = panel.getByRole("status");
+    // Visible text of the panel; the status repeats some of it for the screen reader.
+    const shown = (text: string) => panel.getByRole("paragraph").and(panel.getByText(text, { exact: true }));
 
     // Every current medication is a button, none pressed, and the panel says nothing is selected.
     await expect(graph.getByRole("button")).toHaveCount(ALL.length);
     await expect(graph.locator('button[aria-pressed="true"]')).toHaveCount(0);
-    await expect(panel.getByText(INTERACTION_COPY.graphNoSelection, { exact: true })).toBeVisible();
+    await expect(shown(INTERACTION_COPY.graphNoSelection)).toBeVisible();
+    await expect(status).toHaveText(INTERACTION_COPY.graphNoSelection);
 
     // At phone width the medication buttons never overlap, the long name included. Soft, so one run lists every
     // overlapping pair and still checks the selection below; the test fails all the same.
@@ -168,6 +173,13 @@ test.describe("interaction graph on the medication list", () => {
     await expect(ibuprofenPanel.getByText(INTERACTION_COPY.note, { exact: true })).toHaveCount(
       IBUPROFEN_PARTNERS.length,
     );
+    // The screen reader hears the name and the partner count once, without the cards and their notes.
+    await expect(status).toHaveText(
+      INTERACTION_COPY.graphStatusMany
+        .replace("{nazwa}", IBUPROFEN.name)
+        .replace("{liczba}", String(IBUPROFEN_PARTNERS.length)),
+    );
+    await expect(status.locator("li")).toHaveCount(0);
 
     // Unfold the acenocoumarol card: the pair's description, word for word, with the note still under it.
     const acenocoumarolCard = cards.filter({ hasText: partnerHeading(ACENOCOUMAROL.name) });
@@ -183,12 +195,13 @@ test.describe("interaction graph on the medication list", () => {
     const noPairPanel = panel.getByRole("region", { name: NO_PAIR.name });
     await expect(noPairPanel.getByText(INTERACTION_COPY.noInteractionsForMedication, { exact: true })).toBeVisible();
     await expect(noPairPanel.getByRole("listitem")).toHaveCount(0);
+    await expect(status).toHaveText(`${NO_PAIR.name}: ${INTERACTION_COPY.noInteractionsForMedication}`);
     await expect(panel.getByRole("region", { name: IBUPROFEN.name })).toHaveCount(0);
 
     // Touch it again: nothing is selected.
     await button(NO_PAIR.name).click();
     await expect(graph.locator('button[aria-pressed="true"]')).toHaveCount(0);
-    await expect(panel.getByText(INTERACTION_COPY.graphNoSelection, { exact: true })).toBeVisible();
+    await expect(shown(INTERACTION_COPY.graphNoSelection)).toBeVisible();
     await expect(panel.getByRole("region")).toHaveCount(0);
 
     // The long name is selectable too, and the panel carries it in full.

@@ -252,6 +252,16 @@ Brak migracji bazy: graf czyta istniejące kolumny pod istniejącym RLS.
 - Deduplikacja par: `src/lib/services/visit-summary.ts:59-77`
 - Wzorzec E2E z parami: `tests/e2e/medication-interactions-compact.spec.ts`
 
+## Zmiany po fazie 3
+
+Układ grafu przerobiony w fazie 3 po makietach, za akceptacją autorki (18.10.2026). Szczegóły i decyzje: `change.md`, sekcje „Stan na 18.10.2026 — układ grafu przerobiony po makietach” i „Pomiar limitu CPU grafu”. Obowiązuje kod w `src/lib/services/interaction-graph.ts`; poniższe zapisy planu są nieaktualne:
+
+- „Ten sam obraz na każdym ekranie”, „siatka ma zawsze 3 kolumny”, `viewBox` 360 (Critical Implementation Details) — są dwa układy: telefon (wersja C, 360 jednostek, 3 kolumny) i komputer (koncepcja 10, 576 jednostek, 4 kolumny). Układ komputera włącza się, gdy karta grafu ma ok. 514 px szerokości (480 px treści karty plus wewnętrzny margines i ramka), przełącza go container query.
+- „Miejsce wynika tylko z kolejności i id” (Implementation Approach) — miejsce zależy też od leków stojących na mapie w chwili dodania (odtworzenie historii z kolizjami przycisków). Interakcje nadal nie wpływają na miejsce (FR-012). Brzmienie FR-014 w PRD poprawione.
+- Kształt modelu z fazy 1 (`width`, `height`, `nodes{x,y}`, `edges{path}`, rząd ok. 90 jednostek, przesunięcie co drugiego rzędu) — model ma dwa układy `phone` i `wide`, każdy z `width`, `height`, `points`, `lines`; `nodes` bez współrzędnych.
+- „13 leków → 5 rzędów” (testy fazy 1) — nie dotyczy nowego układu; test wzrostu wysokości: impl-review F4.
+- „Jeden przycisk na lek” (faza 2) — dwa przyciski na lek, po jednym w każdym układzie; widoczny i dostępny dla czytnika jest tylko jeden.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.

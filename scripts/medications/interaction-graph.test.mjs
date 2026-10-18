@@ -102,6 +102,14 @@ test("the phone layout is 360 units wide and the wide layout 576", () => {
   assert.equal(model.wide.width, 576);
 });
 
+test("more medications give a taller graph, in both layouts", () => {
+  const small = build(account(many(6)));
+  const large = build(account(many(24)));
+  for (const layout of LAYOUTS) {
+    assert.ok(large[layout].height > small[layout].height, layout);
+  }
+});
+
 test("medications take fields in the order they were added, not by name or input order", () => {
   const rows = [
     [3, "Apap", "2026-10-03T08:00:00Z"],

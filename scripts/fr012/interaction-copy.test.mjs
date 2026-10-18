@@ -71,6 +71,8 @@ test("every text of the graph exists, and the partner template carries the name 
     "graphLabel",
     "graphNoSelection",
     "graphPartner",
+    "graphStatusOne",
+    "graphStatusMany",
     "graphTooFewMedications",
     "graphNoLineIsNotSafe",
     "graphLoadError",
@@ -81,6 +83,9 @@ test("every text of the graph exists, and the partner template carries the name 
     assert.notEqual(INTERACTION_COPY[key].trim(), "", key);
   }
   assert.ok(INTERACTION_COPY.graphPartner.includes("{nazwa}"));
+  assert.ok(INTERACTION_COPY.graphStatusOne.includes("{nazwa}"));
+  assert.ok(INTERACTION_COPY.graphStatusMany.includes("{nazwa}"));
+  assert.ok(INTERACTION_COPY.graphStatusMany.includes("{liczba}"));
 });
 
 // The absence text describes what was checked (pairs among current medications), never the medicine itself:

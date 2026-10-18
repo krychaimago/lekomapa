@@ -204,6 +204,16 @@ export default function InteractionGraph({ model }: Props) {
     setSelectedId((current) => (current === id ? null : id));
   };
   const stage = { nodes: model.nodes, selectedId: selected?.id ?? null, partnerIds, onToggle };
+  // The only text announced on a selection: the name and the partner count, never the cards, so the note is not read
+  // once per partner on every press. The cards stay outside the live region for the reader to walk through.
+  const status =
+    selected === null
+      ? INTERACTION_COPY.graphNoSelection
+      : partners.length === 0
+        ? `${selected.name}: ${INTERACTION_COPY.noInteractionsForMedication}`
+        : (partners.length === 1 ? INTERACTION_COPY.graphStatusOne : INTERACTION_COPY.graphStatusMany)
+            .replace("{nazwa}", selected.name)
+            .replace("{liczba}", String(partners.length));
 
   return (
     <div className="flex flex-col gap-4">
@@ -216,7 +226,10 @@ export default function InteractionGraph({ model }: Props) {
         </div>
       </div>
 
-      <div aria-live="polite" className="flex flex-col gap-3">
+      <p role="status" aria-live="polite" className="sr-only">
+        {status}
+      </p>
+      <div className="flex flex-col gap-3">
         {selected === null ? (
           <p className="text-muted-foreground text-sm">{INTERACTION_COPY.graphNoSelection}</p>
         ) : (
