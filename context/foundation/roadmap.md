@@ -9,7 +9,7 @@ main_goal: quality
 top_blocker: time
 milestone_id: szlif-i-czytelnosc-ekranow
 milestone_seq: 2
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: lekomapa
@@ -21,7 +21,7 @@ milestone_status: open
 
 ## Milestone
 
-**M-2: Szlif i czytelność ekranów** — Status: open
+**M-2: Szlif i czytelność ekranów** — Status: done
 
 - **Intent:** Aplikacja z M-1 jest gotowa do oddania; M-2 poprawia to, co już jest — czytelność ekranów przy dużej ilości danych, wygoda na telefonie, rozpoznawalny wygląd — a dopiero potem dokłada nowe funkcje. Każda pozycja to dodatek: wchodzi osobnym PR-em, dopiero gdy jest skończona, więc `main` przez cały czas zostaje w stanie do oddania.
 - **Source materials:** opis autorki z 14.10.2026 (punkty zakresu poniżej); `context/foundation/prd.md` (v1) — `## Success Criteria` (oś czasu jako kryterium drugorzędne) i pozycje `## Parked` z M-1 (lista bieżących leków w „Wizycie”, oś czasu, eksport).
@@ -332,6 +332,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 ## Milestone History
 
 - **M-1: MVP — od leku do materiału na wizytę** (`mvp-material-na-wizyte`) — closed 2026-10-14. Pełny przepływ od dodania leku ze znacznikiem możliwej kolizji, przez dzienniczek i pytania do lekarza, po sekcję „Wizyta”, wraz z kontem, odzyskiwaniem dostępu, trybem ciemnym, własnym nadawcą maili i śledzeniem błędów — 6 fundamentów i 11 plasterków `done`. Treść roadmapy M-1: commit `68a936b`.
+- **M-2: Szlif i czytelność ekranów** (`szlif-i-czytelnosc-ekranow`) — closed 2026-10-18. Czytelniejsze ekrany przy dużej ilości danych, wygoda na telefonie i rozpoznawalny wygląd — ikona, karteczki w pustych stanach, oś czasu leków i objawów oraz graf możliwych interakcji; 11 plasterków `done` (S-01–S-10, S-12), S-11 (eksport danych) zaparkowany decyzją autorki 17.10.2026.
 
 ## Done
 
