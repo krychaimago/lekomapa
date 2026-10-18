@@ -15,7 +15,8 @@ interface Props {
 }
 
 // Radius of a point and of the glow around the selected one, in viewBox units. The phone stage never grows past 384 px
-// (max-w-sm), so one unit is at most about 1.07 px there; the wide stage starts at 480 px for 576 units.
+// (max-w-sm), so one unit is at most about 1.07 px there; the wide stage starts at 480 px of card content
+// (about 514 px of the whole card) for 576 units.
 const POINT_RADIUS = 9;
 const GLOW_RADIUS = 15;
 // Width of a medication button in viewBox units, the width the layout keeps buttons apart by (GRAPH_BUTTON_WIDTH in
@@ -188,9 +189,9 @@ function GraphStage({ layout, nodes, selectedId, partnerIds, onToggle, className
 
 // Interaction graph under the medication list (S-10, FR-014). The geometry comes ready from buildInteractionGraph in
 // two layouts; this component draws both and keeps which medication is selected, shared by the two. A container query
-// on the card shows exactly one: the phone layout below 480 px of card width, the wide one from 480 px on. The other
-// is display:none, so it is out of the accessibility tree and the tab order, and the server's HTML already shows the
-// right one without JS. Every medication is a real button in alphabetical order, so Tab walks the names and Enter or
+// on the card shows exactly one: the phone layout below 480 px of card content (about 514 px of the whole card, padding
+// and border included), the wide one from there on. The other is display:none, so it is out of the accessibility tree
+// and the tab order, and the server's HTML already shows the right one without JS. Every medication is a real button in alphabetical order, so Tab walks the names and Enter or
 // space selects. Points never move or change size with the selection or with interactions (FR-012): only colours
 // change. Colours come only from tokens through var(--…), so the dark mode follows the token blocks.
 export default function InteractionGraph({ model }: Props) {

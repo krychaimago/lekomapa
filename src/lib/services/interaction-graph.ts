@@ -4,7 +4,8 @@
 //
 // Two layouts are computed for every render and the component shows one by the width of the graph card:
 //   - phone (layout "C", 360 units wide): 3 columns of 108 units, rows 100 units apart;
-//   - wide (layout "10", 576 units wide, card ≥ 480 px): 4 columns of 135 units, rows 105 units apart.
+//   - wide (layout "10", 576 units wide, card content ≥ 480 px, about 514 px of the whole card): 4 columns of 135
+//     units, rows 105 units apart.
 // Both were approved on mockups (context/changes/interaction-graph/prototype/) and reproduce their geometry.
 //
 // Fields. Every render replays the account's history: a medication arriving (`createdAt`) takes the lowest free field
@@ -40,11 +41,12 @@ import type {
 
 /** Width of the phone coordinate system (`viewBox`). */
 export const GRAPH_PHONE_WIDTH = 360;
-/** Width of the wide coordinate system (`viewBox`), used when the graph card is at least 480 px wide. */
+/** Width of the wide coordinate system (`viewBox`), used from 480 px of graph card content
+ * (about 514 px of the whole card, padding and border included). */
 export const GRAPH_WIDE_WIDTH = 576;
 
 // A medication button, in units: 90 wide and, with a two-line name, 72 px tall — about 88 units at 0.82 px per unit
-// (a 360 px phone, and the wide layout from a 480 px card on). The button starts 10 px above the point.
+// (a 360 px phone, and the wide layout from 480 px of card content on). The button starts 10 px above the point.
 export const GRAPH_BUTTON_WIDTH = 90;
 export const GRAPH_BUTTON_HEIGHT = 88;
 export const GRAPH_BUTTON_TOP = 10 / 0.82;
