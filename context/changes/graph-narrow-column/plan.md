@@ -264,27 +264,27 @@ Kolumna jest liniowa względem liczby leków i par. Dochodzi render trzeciej sce
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe przechodzą: `npm test`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Lint przechodzi: `npm run lint`
+- [x] 1.1 Testy jednostkowe przechodzą: `npm test` — 2e9b445
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — 2e9b445
+- [x] 1.3 Lint przechodzi: `npm run lint` — 2e9b445
 
 ### Phase 2: Kolumna w komponencie i progi w jednostkach tekstu
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe przechodzą, w tym bramka kolorów i zakresu `destructive`: `npm test`
-- [ ] 2.2 Typy przechodzą: `npm run typecheck`
-- [ ] 2.3 Lint przechodzi: `npm run lint`
-- [ ] 2.4 Build przechodzi: `npm run build`
-- [ ] 2.5 Pomiar: konta 12 + 0 i 20 + 20 z medianą ≤ 7 ms, wynik 30 + 60 zapisany w `change.md`
+- [x] 2.1 Testy jednostkowe przechodzą, w tym bramka kolorów i zakresu `destructive`: `npm test`
+- [x] 2.2 Typy przechodzą: `npm run typecheck`
+- [x] 2.3 Lint przechodzi: `npm run lint`
+- [x] 2.4 Build przechodzi: `npm run build`
+- [x] 2.5 Pomiar: konta 12 + 0 i 20 + 20 z medianą ≤ 7 ms, wynik 30 + 60 zapisany w `change.md`
 
 #### Manual
 
-- [ ] 2.6 Przy 320 px i tekście 100% kolumna zgodna z makietą (wersja 8)
-- [ ] 2.7 Przy 360 px i tekście 125% kolumna, przy 360 px i tekście 100% dzisiejszy układ telefonu
-- [ ] 2.8 Na komputerze graf wygląda jak przed zmianą
-- [ ] 2.9 Wybór leku w kolumnie podświetla łuki i pokazuje karty par z notą
-- [ ] 2.10 Tryb ciemny: kolumna czytelna
+- [x] 2.6 Przy 320 px i tekście 100% kolumna zgodna z makietą (wersja 8)
+- [x] 2.7 Przy 360 px i tekście 125% kolumna, przy 360 px i tekście 100% dzisiejszy układ telefonu
+- [x] 2.8 Na komputerze graf wygląda jak przed zmianą
+- [x] 2.9 Wybór leku w kolumnie podświetla łuki i pokazuje karty par z notą
+- [x] 2.10 Tryb ciemny: kolumna czytelna
 
 ### Phase 3: Testy E2E i komentarze
 

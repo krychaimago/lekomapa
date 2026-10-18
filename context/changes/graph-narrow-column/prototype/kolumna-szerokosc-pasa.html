@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kolumna — szerokość pasa łuków</title>
+<style>
+  :root {
+    --bg: #f5f4f0; --card: #ffffff; --border: #e6e3dc; --fg: #1d1d1b; --muted: #6b6a66;
+    --line: #e4e2dc; --sel: #2d4a35; --glow: #dfe6dd; --amber: #6b4a00; --amber-fill: #fde9c3; --amber-glow: #ecd09a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--fg);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 24px; max-width: 60rem; }
+  .grid { display: flex; flex-wrap: wrap; gap: 28px; }
+  figure { margin: 0; width: 320px; }
+  figcaption { font-size: 14px; margin-bottom: 8px; min-height: 4.2em; }
+  figcaption b { display: block; font-size: 15px; }
+  /* 320 px screen: 16 px page gutter, card border + 16 px padding — about 254 px of card content. */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 16px 8px; }
+  .stage { position: relative; }
+  .stage svg { position: absolute; top: 0; left: 0; overflow: visible; }
+  .row { display: flex; align-items: center; height: 48px; font-size: 14px; line-height: 1.25; }
+  .row span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .row.sel span { font-weight: 600; }
+  .row.dim span { color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Kolumna: ile miejsca na łuki</h1>
+<p class="lead">Ekran 320 px, tekst 100%, 12 leków, wybrany Acenocumarol. Im szerszy pas łuków, tym mniej spłaszczone łuki — ale tym mniej miejsca na nazwę, więc więcej nazw łamie się na dwie linie. Kolory przybliżone, w kodzie zostaną tokeny.</p>
+<div class="grid" id="grid"></div>
+
+<script>
+const NAMES = ["Acenocumarol WZF 4 mg", "Amlozek 5", "Apap", "Areplex", "Asertin 50", "Atorvasterol 20",
+  "Bisocard 5", "Ibuprom Max", "Indapen SR", "Kalipoz prolongatum 750 mg", "Metformax 850", "Polpril 5"];
+const EDGES = [[0, 3], [0, 4], [0, 7], [1, 5], [6, 8], [7, 10], [2, 9]];
+const SELECTED = 0;
+const ROW = 48, INSET = 15, MARGIN = 8, CARD = 254;
+
+// Arc depth: "grow" = bend grows with the distance between rows (today's rule); "lanes" = each pair gets its own track,
+// a pair spanning another one goes further left, so arcs nest instead of piling up.
+const VARIANTS = [
+  { name: "1. Dziś — pas 3,5 rem (56 px)", note: "Stan z fazy 2, do porównania.", gutter: 56, mode: "grow", base: 10, growth: 0.18 },
+  { name: "2. Pas 5 rem (80 px)", note: "Ta sama reguła wygięcia, więcej miejsca.", gutter: 80, mode: "grow", base: 10, growth: 0.18 },
+  { name: "3. Pas 6,5 rem (104 px)", note: "Łuki wyraźnie okrągłe, nazwy jeszcze w jednej linii.", gutter: 104, mode: "grow", base: 10, growth: 0.25 },
+  { name: "4. Pas 8 rem (128 px)", note: "Prawie półokręgi; długie nazwy w dwóch liniach.", gutter: 128, mode: "grow", base: 12, growth: 0.3 },
+  { name: "5. Pas 40% karty", note: "Szerokość pasa rośnie z kartą, a nie z tekstem.", gutter: Math.round(CARD * 0.4), mode: "grow", base: 12, growth: 0.3 },
+  { name: "6. Pas 5 rem, tory", note: "Każda para na swoim torze: dłuższa para obejmuje krótszą, łuki się nie zlewają.", gutter: 80, mode: "lanes" },
+  { name: "7. Pas 6,5 rem, tory", note: "Jak 6, więcej odstępu między torami.", gutter: 104, mode: "lanes" },
+  { name: "8. Pas 8 rem, tory", note: "Jak 6, tory najszerzej rozstawione.", gutter: 128, mode: "lanes" },
+  { name: "9. Pas 6,5 rem, półokręgi", note: "Wygięcie = połowa odległości, do krawędzi pasa.", gutter: 104, mode: "grow", base: 6, growth: 0.5 },
+  { name: "10. Pas 5 rem, mocne wygięcie", note: "Wąski pas, ale krótkie pary też wyraźnie wygięte.", gutter: 80, mode: "grow", base: 18, growth: 0.4 },
+];
+
+function lanes(edges) {
+  const sorted = edges.map((e, i) => ({ i, lo: Math.min(...e), hi: Math.max(...e) })).sort((a, b) => (a.hi - a.lo) - (b.hi - b.lo));
+  const lane = [];
+  for (const e of sorted) {
+    let l = 1;
+    for (const p of sorted) if (lane[p.i] && p.lo < e.hi && e.lo < p.hi) l = Math.max(l, lane[p.i] + 1);
+    lane[e.i] = l;
+  }
+  return lane;
+}
+
+function render(v) {
+  const x = v.gutter - INSET;
+  const h = NAMES.length * ROW;
+  const y = (i) => (i + 0.5) * ROW;
+  const partners = new Set(EDGES.filter((e) => e.includes(SELECTED)).flat());
+  const laneOf = v.mode === "lanes" ? lanes(EDGES) : null;
+  const maxLane = laneOf ? Math.max(...laneOf) : 1;
+  const step = laneOf ? Math.min(14, (x - MARGIN - 6) / maxLane) : 0;
+  let lines = "", hi = "";
+  EDGES.forEach((e, i) => {
+    const [a, b] = e;
+    const out = laneOf ? 6 + laneOf[i] * step : Math.min(x - MARGIN, v.base + Math.abs(y(b) - y(a)) * v.growth);
+    const cx = x - out;
+    const d = `M ${x} ${y(a)} C ${cx} ${y(a)} ${cx} ${y(b)} ${x} ${y(b)}`;
+    if (e.includes(SELECTED)) hi += `<path d="${d}" fill="none" stroke="var(--amber-glow)" stroke-width="6"/><path d="${d}" fill="none" stroke="var(--amber)" stroke-width="2"/>`;
+    else lines += `<path d="${d}" fill="none" stroke="var(--line)" stroke-width="2"/>`;
+  });
+  let pts = "";
+  NAMES.forEach((_, i) => {
+    if (i === SELECTED) pts += `<circle cx="${x}" cy="${y(i)}" r="15" fill="var(--glow)"/><circle cx="${x}" cy="${y(i)}" r="9" fill="var(--sel)"/>`;
+    else if (partners.has(i)) pts += `<circle cx="${x}" cy="${y(i)}" r="9" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>`;
+    else pts += `<circle cx="${x}" cy="${y(i)}" r="9" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>`;
+  });
+  const nameLeft = v.gutter;
+  const rows = NAMES.map((n, i) => {
+    const cls = i === SELECTED ? "sel" : partners.has(i) ? "" : "dim";
+    return `<div class="row ${cls}" style="padding-left:${nameLeft}px"><span>${n}</span></div>`;
+  }).join("");
+  return `<figure><figcaption><b>${v.name}</b>${v.note}</figcaption><div class="card"><div class="stage">
+    <svg width="${v.gutter}" height="${h}" viewBox="0 0 ${v.gutter} ${h}" aria-hidden="true">${lines}${hi}${pts}</svg>${rows}</div></div></figure>`;
+}
+
+document.getElementById("grid").innerHTML = VARIANTS.map(render).join("");
+</script>
+</body>
+</html>

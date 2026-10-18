@@ -478,7 +478,7 @@ test("an ended medication is not a node, and its rows draw no line", () => {
 });
 
 // The column (#126): one medication per row, alphabetically. Units are 1/16 rem: a row is 48 (3 rem), the gutter for
-// the arcs 56 (3.5 rem). Row i has its point at y = 48 × i + 24, every point at the same x.
+// the arcs 80 (5 rem). Row i has its point at y = 48 × i + 24, every point at the same x.
 const columnPath = (path) => {
   const match = /^M (-?[\d.]+) (-?[\d.]+) C (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)$/.exec(
     path,
@@ -487,9 +487,9 @@ const columnPath = (path) => {
   return match.slice(1).map(Number);
 };
 
-test("the column is 56 units wide and 48 units tall per current medication", () => {
+test("the column is 80 units wide and 48 units tall per current medication", () => {
   const model = build(account(many(12, 4)));
-  assert.equal(model.column.width, 56);
+  assert.equal(model.column.width, 80);
   // 12 medications, every fourth ended: 9 current.
   assert.equal(model.column.height, 9 * 48);
 });
@@ -513,7 +513,7 @@ test("column points go alphabetically in Polish, one per row, all at the same x"
     [24, 72, 120, 168, 216],
   );
   const [first] = model.column.points;
-  assert.ok(first.x > 0 && first.x < 56, String(first.x));
+  assert.ok(first.x > 0 && first.x < 80, String(first.x));
   for (const point of model.column.points) assert.equal(point.x, first.x);
 });
 

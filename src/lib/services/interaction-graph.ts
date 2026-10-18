@@ -52,8 +52,8 @@ export const GRAPH_PHONE_WIDTH = 360;
 export const GRAPH_WIDE_WIDTH = 576;
 /** Height of one column row, in 1/16 rem: room for a two-line name at 14 px (3 rem). */
 export const GRAPH_COLUMN_ROW = 48;
-/** Width of the column's strip for points and arcs, in 1/16 rem (3.5 rem). */
-export const GRAPH_COLUMN_GUTTER = 56;
+/** Width of the column's strip for points and arcs, in 1/16 rem (5 rem). */
+export const GRAPH_COLUMN_GUTTER = 80;
 // Column points stand this far from the strip's right edge: the radius of the selected point's glow (15).
 const COLUMN_POINT_INSET = 15;
 // A column arc bends left by 10 units plus 0.18 of the distance between its rows, keeping 8 units from the left edge.
