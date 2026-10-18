@@ -272,28 +272,28 @@ Kolumna jest liniowa względem liczby leków i par. Dochodzi render trzeciej sce
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe przechodzą, w tym bramka kolorów i zakresu `destructive`: `npm test`
-- [x] 2.2 Typy przechodzą: `npm run typecheck`
-- [x] 2.3 Lint przechodzi: `npm run lint`
-- [x] 2.4 Build przechodzi: `npm run build`
-- [x] 2.5 Pomiar: konta 12 + 0 i 20 + 20 z medianą ≤ 7 ms, wynik 30 + 60 zapisany w `change.md`
+- [x] 2.1 Testy jednostkowe przechodzą, w tym bramka kolorów i zakresu `destructive`: `npm test` — 0bd883b
+- [x] 2.2 Typy przechodzą: `npm run typecheck` — 0bd883b
+- [x] 2.3 Lint przechodzi: `npm run lint` — 0bd883b
+- [x] 2.4 Build przechodzi: `npm run build` — 0bd883b
+- [x] 2.5 Pomiar: konta 12 + 0 i 20 + 20 z medianą ≤ 7 ms, wynik 30 + 60 zapisany w `change.md` — 0bd883b
 
 #### Manual
 
-- [x] 2.6 Przy 320 px i tekście 100% kolumna zgodna z makietą (wersja 8)
-- [x] 2.7 Przy 360 px i tekście 125% kolumna, przy 360 px i tekście 100% dzisiejszy układ telefonu
-- [x] 2.8 Na komputerze graf wygląda jak przed zmianą
-- [x] 2.9 Wybór leku w kolumnie podświetla łuki i pokazuje karty par z notą
-- [x] 2.10 Tryb ciemny: kolumna czytelna
+- [x] 2.6 Przy 320 px i tekście 100% kolumna zgodna z makietą (wersja 8) — 0bd883b
+- [x] 2.7 Przy 360 px i tekście 125% kolumna, przy 360 px i tekście 100% dzisiejszy układ telefonu — 0bd883b
+- [x] 2.8 Na komputerze graf wygląda jak przed zmianą — 0bd883b
+- [x] 2.9 Wybór leku w kolumnie podświetla łuki i pokazuje karty par z notą — 0bd883b
+- [x] 2.10 Tryb ciemny: kolumna czytelna — 0bd883b
 
 ### Phase 3: Testy E2E i komentarze
 
 #### Automated
 
-- [ ] 3.1 Test E2E grafu przechodzi przeciw lokalnemu Supabase
-- [ ] 3.2 Cały zestaw E2E przechodzi
-- [ ] 3.3 Testy jednostkowe, typy i lint przechodzą
+- [x] 3.1 Test E2E grafu przechodzi przeciw lokalnemu Supabase
+- [x] 3.2 Cały zestaw E2E przechodzi
+- [x] 3.3 Testy jednostkowe, typy i lint przechodzą
 
 #### Manual
 
-- [ ] 3.4 Test E2E pada, gdy próg kolumny zostanie cofnięty do pikseli
+- [x] 3.4 Test E2E pada, gdy próg kolumny zostanie cofnięty do pikseli

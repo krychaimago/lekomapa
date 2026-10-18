@@ -279,7 +279,8 @@ function ColumnStage({ layout, nodes, selectedId, partnerIds, onToggle }: Omit<S
 // query on the card's content, in rem so that a larger text size counts as less room, shows exactly one: the column
 // below 18.375 rem (294 px at the default text size), the phone layout "C" from 18.375 rem to 30 rem, the wide layout
 // "10" from 30 rem (480 px at the default text size). The other two are display:none, so they are out of the
-// accessibility tree and the tab order, and the server's HTML already shows the right one without JS. Every medication is a real button in alphabetical order, so Tab walks the names and Enter or
+// accessibility tree and the tab order, and the server's HTML already shows the right one without JS. `data-graph-scene` names
+// each layout for tests/e2e/interaction-graph.spec.ts. Every medication is a real button in alphabetical order, so Tab walks the names and Enter or
 // space selects. Points never move or change size with the selection or with interactions (FR-012): only colours
 // change. Colours come only from tokens through var(--…), so the dark mode follows the token blocks.
 export default function InteractionGraph({ model }: Props) {
@@ -307,13 +308,13 @@ export default function InteractionGraph({ model }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="border-border bg-card text-card-foreground @container rounded-xl border px-4 pt-4 pb-14 shadow-sm">
-        <div className="@min-[18.375rem]:hidden">
+        <div data-graph-scene="column" className="@min-[18.375rem]:hidden">
           <ColumnStage layout={model.column} {...stage} />
         </div>
-        <div className="hidden @min-[18.375rem]:block @min-[30rem]:hidden">
+        <div data-graph-scene="phone" className="hidden @min-[18.375rem]:block @min-[30rem]:hidden">
           <GraphStage layout={model.phone} className="max-w-sm" {...stage} />
         </div>
-        <div className="hidden @min-[30rem]:block">
+        <div data-graph-scene="wide" className="hidden @min-[30rem]:block">
           <GraphStage layout={model.wide} {...stage} />
         </div>
       </div>
