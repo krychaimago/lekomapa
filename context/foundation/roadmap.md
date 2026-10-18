@@ -9,7 +9,7 @@ main_goal: quality
 top_blocker: time
 milestone_id: szlif-i-czytelnosc-ekranow
 milestone_seq: 2
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: lekomapa
@@ -21,7 +21,7 @@ milestone_status: open
 
 ## Milestone
 
-**M-2: Szlif i czytelność ekranów** — Status: open
+**M-2: Szlif i czytelność ekranów** — Status: done
 
 - **Intent:** Aplikacja z M-1 jest gotowa do oddania; M-2 poprawia to, co już jest — czytelność ekranów przy dużej ilości danych, wygoda na telefonie, rozpoznawalny wygląd — a dopiero potem dokłada nowe funkcje. Każda pozycja to dodatek: wchodzi osobnym PR-em, dopiero gdy jest skończona, więc `main` przez cały czas zostaje w stanie do oddania.
 - **Source materials:** opis autorki z 14.10.2026 (punkty zakresu poniżej); `context/foundation/prd.md` (v1) — `## Success Criteria` (oś czasu jako kryterium drugorzędne) i pozycje `## Parked` z M-1 (lista bieżących leków w „Wizycie”, oś czasu, eksport).
@@ -53,20 +53,20 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done        |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done        |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done        |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done        |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | in-progress |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | done        |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | done        |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | parked      |
-| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done        |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ------ |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done   |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done   |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done   |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done   |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done   |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done   |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done   |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | done   |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | done   |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | done   |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | parked |
+| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done   |
 
 ## Streams
 
@@ -218,7 +218,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Które ekrany: puste stany listy leków, dziennika i „Wizyty”, wygląd notatki we wpisie. — Owner: plan (`/10x-ui`). Block: no. **Rozstrzygnięte 18.10.2026:** pusta lista leków, pusty dzienniczek, wstęp „Wizyty”, notatka we wpisie oraz lewa strona rozkładówki — wszystkie 6 ekranów wejściowych.
 - **Risk:** Ryzyko rozrostu — „elementy graficzne” łatwo staje się przebudową wszystkich ekranów; zakres zamyka się na pustych stanach i wyglądzie notatek, a wykresy należą do S-09 i S-10. Po S-03 i S-05, bo te dwa ekrany jeszcze się zmienią. Ilustracja nie może straszyć ani sugerować zagrożenia (FR-012); kolory wyłącznie z tokenów, w obu trybach.
 - **Termin:** zapasowy.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-09: Oś czasu leków i objawów
 
@@ -325,10 +325,14 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **Górny blok zajmuje większość ekranu przy powiększonym tekście** — Why parked: wydzielone 17.10.2026 z S-12 (impl-review `mobile-header-sticky`, F1). Pomiar: przy 320 px i tekście 200% przyklejony pasek demo z nagłówkiem ma 392 z 568 px wysokości ekranu, na treść zostaje 176 px. Kierunek do rozważenia: pasek demo nieprzyklejony albo zwinięty na telefonie.
 - **Ogłoszenie „Część leków jest ukryta.” w czytniku ekranu na osi czasu** — Why parked: wydzielone 17.10.2026 z S-09 (impl-review `medication-symptom-timeline`, F3); wersja demonstracyjna, PRD `## Non-Goals` (formalna zgodność ze standardami dostępności). Pomiar: iPhone, Safari, VoiceOver — po odznaczeniu leku komunikat nie pada, czytany jest tylko przycisk „Pokaż wszystkie”. Warianty powrotu: `aria-describedby` na przycisku (ok. 30 min); stała podpowiedź przy każdym polu leku plus przycisk (ok. 1 h, bez JavaScriptu, zalecany); region `aria-live` ze skryptem (2–3 h, kończy zasadę „oś bez JavaScriptu” także dla S-10).
 - **Czas liczenia grafu na `/leki` przy długiej historii leków** — Why parked: decyzja autorki 18.10.2026 (impl-review `interaction-graph`, F1; #127 zamknięte). Problem pojawi się dopiero przy bardzo dużej liczbie leków obecnych i zakończonych. Pomiar (`node scripts/medications/graph-render-bench.mjs`, Mac autorki, mediana): 20 obecnych + 60 zakończonych — 7,0 ms; 30 + 60 — 9,5–10,1 ms przy limicie 10 ms CPU na darmowym planie Workers. Przekroczenie to błąd 1102 na całej liście leków. Odwieszenie: alarm `cron.exceeded-cpu` w Sentry. Warianty powrotu: szybsze odtwarzanie historii — zakończony lek tylko zajmuje pole bez szukania dokładnego miejsca (ok. pół dnia, sprawdzić testami stabilności, czy obecne leki się nie przesuwają); płatny plan Workers 5 USD/mies. (zdejmuje limit też z osi czasu). Każda zmiana `src/lib/services/interaction-graph.ts` albo `InteractionGraph.tsx` wymaga ręcznego biegu pomiaru.
+- **Przełącznik trybu kasuje niezapisane formularze** — Why parked: decyzja autorki 18.10.2026 (zgłoszenie z 16.10.2026, ręczne sprawdzenie fazy 2 `severity-next-to-symptom`); dotyczy całej aplikacji, nie jednego ekranu, więc osobna zmiana i osobny PR. Błąd sprzed S-06 (od `dark-mode` p2, `3f954c0`): `src/components/ThemeToggle.astro` wysyła formularz `POST /api/preferences/theme` z przekierowaniem 303, strona się przeładowuje i każdy niezapisany formularz (wpis w dzienniku, dodawanie leku) traci wpisane dane. Wybrany wariant powrotu (optymalny): przełącznik zmienia klasę `dark` bez przeładowania, preferencja nadal zapisywana tym samym `POST` do ciasteczka; bez JavaScriptu działa jak dziś. Bez drugiego mechanizmu (localStorage) — wymaga dopisku w regule trybu w `CLAUDE.md`. Odrzucone: ostrzeżenie `beforeunload` (dane i tak giną), szkice formularzy w przeglądarce (dane zdrowotne po stronie przeglądarki).
+- **Jednakowe strzałki zwijania** — Why parked: decyzja autorki 18.10.2026 (ustalenie z 17.10.2026, ręczne sprawdzenie fazy 3 S-09); zmiana wyglądu w kilku ekranach, więc osobna zmiana i osobny PR. Ustalony wzór: strzałka `›` po lewej stronie etykiety, obrót o 90° po rozwinięciu (grupy objawów w `src/components/journal/SymptomPicker.tsx`, oś czasu w `src/components/timeline/TimelineView.astro`). Do przerobienia: interakcje w `src/pages/wizyta.astro` i `src/pages/leki/[id].astro` (strzałka `⌄` po prawej, obrót o 180°) oraz `src/components/journal/DoctorQuestionCard.astro` (domyślny trójkąt przeglądarki, 2 miejsca). Do tego czasu każda nowa zwijana sekcja dostaje `›` po lewej.
+- **Brak powrotu do „Wizyty” z osi czasu i grafu** — Why parked: decyzja autorki 18.10.2026 (zgłoszenie z ręcznego sprawdzenia fazy 1 S-08). Z `/wizyta` do osi czasu (`/wizyta/os-czasu`) albo grafu (`/leki#graf`) nie ma drogi z powrotem poza zakładką w menu; przy grafie menu podświetla „Leki”. Oś czasu otwiera się też z „Dziennika”, a graf żyje na `/leki`, więc stały link „Wróć do Wizyty” byłby błędny — strona musi wiedzieć, skąd przyszła użytkowniczka (np. stała flaga `?z=wizyta`, wymaga świadomego wpisu w `ALLOWED_URL_PARAMS`). Zmiana wyglądu: najpierw makieta.
 
 ## Milestone History
 
 - **M-1: MVP — od leku do materiału na wizytę** (`mvp-material-na-wizyte`) — closed 2026-10-14. Pełny przepływ od dodania leku ze znacznikiem możliwej kolizji, przez dzienniczek i pytania do lekarza, po sekcję „Wizyta”, wraz z kontem, odzyskiwaniem dostępu, trybem ciemnym, własnym nadawcą maili i śledzeniem błędów — 6 fundamentów i 11 plasterków `done`. Treść roadmapy M-1: commit `68a936b`.
+- **M-2: Szlif i czytelność ekranów** (`szlif-i-czytelnosc-ekranow`) — closed 2026-10-18. Czytelniejsze ekrany przy dużej ilości danych, wygoda na telefonie i rozpoznawalny wygląd — ikona, karteczki w pustych stanach, oś czasu leków i objawów oraz graf możliwych interakcji; 11 plasterków `done` (S-01–S-10, S-12), S-11 (eksport danych) zaparkowany decyzją autorki 17.10.2026.
 
 ## Done
 
@@ -344,3 +348,4 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **S-12: Użytkowniczka może na telefonie przewijać treść ekranu, a nagłówek ze znakiem, przełącznikiem trybu i „Wyloguj się” zostaje na górze ekranu, pod paskiem wersji demonstracyjnej.** — Archived 2026-10-17 → `context/archive/2026-10-16-mobile-header-sticky/`. Lesson: —.
 - **S-09: Użytkowniczka może zobaczyć na jednej osi czasu okresy dawkowania swoich leków i wpisy objawów.** — Archived 2026-10-17 → `context/archive/2026-10-17-medication-symptom-timeline/`. Lesson: —.
 - **S-10: Użytkowniczka może zobaczyć swoje bieżące leki jako punkty, z linią między każdą parą, która może wchodzić w interakcję.** — Archived 2026-10-18 → `context/archive/2026-10-17-interaction-graph/`. Lesson: —.
+- **S-08: Użytkowniczka może korzystać z ekranów z ilustracjami w pustych stanach i z wyglądem notatek w dzienniku, zamiast pustych kart z samym tekstem.** — Archived 2026-10-18 → `context/archive/2026-10-18-friendly-visuals/`. Lesson: —.
