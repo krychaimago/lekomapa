@@ -53,20 +53,20 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done        |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done        |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done        |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done        |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed    |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | done        |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | in-progress |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | parked      |
-| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done        |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status   |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | -------- |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done     |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done     |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done     |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done     |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done     |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | done     |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | done     |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | parked   |
+| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done     |
 
 ## Streams
 
@@ -249,7 +249,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Miejsce grafu: szczegóły leku, „Wizyta” czy osobny ekran. — Owner: użytkowniczka przy planie. Block: no.
 - **Risk:** Nowa funkcja — wymaga jawnej zmiany PRD (nowe FR; graf nie występuje w PRD). FR-012 dotyczy tu samego układu, nie tylko tekstu: ani wielkość, ani położenie punktu nie mogą zależeć od liczby kolizji. Najszybszy i zgodny z FR-012 układ: punkty na okręgu w stałej kolejności alfabetycznej. Odrzucony układ siłowy (punkty same się rozkładają) — lek z największą liczbą kolizji ląduje na środku, a to jest porządkowanie według podejrzenia. Nota poglądowa przy grafie (FR-007); brak linii nie oznacza bezpieczeństwa i graf musi to mówić. Korzysta ze sposobu rysowania z S-09.
 - **Termin:** zapasowy.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-11: Eksport własnych danych
 
@@ -342,3 +342,4 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 - **S-07: Użytkowniczka może przejrzeć wiele możliwych kolizji leku bez długiego przewijania.** — Archived 2026-10-16 → `context/archive/2026-10-16-medication-interactions-compact/`. Lesson: —.
 - **S-12: Użytkowniczka może na telefonie przewijać treść ekranu, a nagłówek ze znakiem, przełącznikiem trybu i „Wyloguj się” zostaje na górze ekranu, pod paskiem wersji demonstracyjnej.** — Archived 2026-10-17 → `context/archive/2026-10-16-mobile-header-sticky/`. Lesson: —.
 - **S-09: Użytkowniczka może zobaczyć na jednej osi czasu okresy dawkowania swoich leków i wpisy objawów.** — Archived 2026-10-17 → `context/archive/2026-10-17-medication-symptom-timeline/`. Lesson: —.
+- **S-10: Użytkowniczka może zobaczyć swoje bieżące leki jako punkty, z linią między każdą parą, która może wchodzić w interakcję.** — Archived 2026-10-18 → `context/archive/2026-10-17-interaction-graph/`. Lesson: —.
