@@ -476,7 +476,10 @@ export interface InteractionGraphPoint {
 
 /** One edge drawn in one layout. */
 export interface InteractionGraphLine extends InteractionGraphEdge {
-  /** SVG path `d` of a quadratic curve: only the letters M and Q, spaces and numbers. */
+  /**
+   * SVG path `d`: only letters, spaces and numbers — M and Q (a quadratic curve) in the phone and wide layouts, M and
+   * C (a cubic arc) in the column.
+   */
   path: string;
 }
 
@@ -503,8 +506,13 @@ export interface InteractionGraphModel {
   edges: InteractionGraphEdge[];
   /** For every node id: its partners alphabetically; empty when it forms no checked pair. */
   partners: Record<string, InteractionGraphPartner[]>;
-  /** Layout "C", 360 units wide: shown while the graph card is narrower than 480 px. */
+  /** Layout "C", 360 units wide: shown while the graph card's content is from 18.375 rem to 30 rem wide. */
   phone: InteractionGraphLayout;
-  /** Layout "10", 576 units wide: shown when the graph card is at least 480 px wide. */
+  /** Layout "10", 576 units wide: shown from 30 rem of the card's content (480 px at the default text size). */
   wide: InteractionGraphLayout;
+  /**
+   * One medication per row, alphabetically, in units of 1/16 rem: shown while the card's content is narrower than
+   * 18.375 rem (294 px at the default text size). `points` in the order of `nodes`, `lines` in the order of `edges`.
+   */
+  column: InteractionGraphLayout;
 }
