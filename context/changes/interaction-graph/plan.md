@@ -260,33 +260,33 @@ Brak migracji bazy: graf czyta istniejące kolumny pod istniejącym RLS.
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe i FR-012 przechodzą: `npm test`
-- [x] 1.2 Typy przechodzą: `npm run typecheck`
-- [x] 1.3 Lint przechodzi: `npm run lint`
+- [x] 1.1 Testy jednostkowe i FR-012 przechodzą: `npm test` — 22a46cf
+- [x] 1.2 Typy przechodzą: `npm run typecheck` — 22a46cf
+- [x] 1.3 Lint przechodzi: `npm run lint` — 22a46cf
 
 #### Manual
 
-- [x] 1.4 Autorka czyta FR-014 w PRD i akceptuje brzmienie
-- [x] 1.5 Autorka czyta nowe teksty w `src/lib/copy/interactions.ts` i akceptuje brzmienie
+- [x] 1.4 Autorka czyta FR-014 w PRD i akceptuje brzmienie — 22a46cf
+- [x] 1.5 Autorka czyta nowe teksty w `src/lib/copy/interactions.ts` i akceptuje brzmienie — 22a46cf
 
 ### Phase 2: Graf na liście leków
 
 #### Automated
 
-- [ ] 2.1 Testy przechodzą, w tym bramka kolorów i testy tytułów i parametrów adresu: `npm test`
-- [ ] 2.2 Typy przechodzą: `npm run typecheck`
-- [ ] 2.3 Lint przechodzi: `npm run lint`
-- [ ] 2.4 Build przechodzi: `npm run build`
+- [x] 2.1 Testy przechodzą, w tym bramka kolorów i testy tytułów i parametrów adresu: `npm test`
+- [x] 2.2 Typy przechodzą: `npm run typecheck`
+- [x] 2.3 Lint przechodzi: `npm run lint`
+- [x] 2.4 Build przechodzi: `npm run build`
 
 #### Manual
 
-- [ ] 2.5 Na telefonie (360 px) graf wygląda jak makieta A2: mapa, delikatne neutralne linie (nie zielone), zielony wybór, bursztynowe podświetlenie
-- [ ] 2.6 Dotknięcie leku, przełączenie na inny i odznaczenie działają; panel pokazuje opisy z notą
-- [ ] 2.7 Lek zostaje w tym samym miejscu po dodaniu nowego leku
-- [ ] 2.8 Tryb ciemny: graf czytelny, delikatne linie widoczne na tle karty, interakcja nie wygląda jak alarm
-- [ ] 2.9 Przy jednym leku zamiast grafu stoi zdanie
-- [ ] 2.10 Odnośnik z „Wizyty” prowadzi do grafu
-- [ ] 2.11 Klawiatura: Tab przechodzi po lekach alfabetycznie, Enter/spacja wybiera i odznacza
+- [x] 2.5 Na telefonie (360 px) graf wygląda jak makieta A2: mapa, delikatne neutralne linie (nie zielone), zielony wybór, bursztynowe podświetlenie
+- [x] 2.6 Dotknięcie leku, przełączenie na inny i odznaczenie działają; panel pokazuje opisy z notą
+- [x] 2.7 Lek zostaje w tym samym miejscu po dodaniu nowego leku
+- [x] 2.8 Tryb ciemny: graf czytelny, delikatne linie widoczne na tle karty, interakcja nie wygląda jak alarm
+- [x] 2.9 Przy jednym leku zamiast grafu stoi zdanie
+- [x] 2.10 Odnośnik z „Wizyty” prowadzi do grafu
+- [x] 2.11 Klawiatura: Tab przechodzi po lekach alfabetycznie, Enter/spacja wybiera i odznacza
 
 ### Phase 3: Test przeglądarkowy i pomiary
 

@@ -1,0 +1,206 @@
+import { useId, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { INTERACTION_COPY } from "@/lib/copy/interactions";
+import { cn } from "@/lib/utils";
+import type { InteractionGraphModel, InteractionGraphPartner } from "@/types";
+
+interface Props {
+  model: InteractionGraphModel;
+}
+
+// Radius of a point and of the glow around the selected one, in viewBox units. The container never grows past 384 px
+// (max-w-sm), so one unit is at most about 1.07 px and a point stays under 10 px on screen.
+const POINT_RADIUS = 9;
+const GLOW_RADIUS = 15;
+// Width of a medication button in viewBox units: narrower than a column (108) by the scatter of two neighbours
+// (2 × 9), so buttons of the same row never overlap.
+const BUTTON_WIDTH = 90;
+
+// One card under the graph, folded at the start: the partner's name toggles the descriptions, the note stays in view
+// when folded.
+function PartnerCard({ partner }: { partner: InteractionGraphPartner }) {
+  const [open, setOpen] = useState(false);
+  const bodyId = useId();
+  return (
+    <li className="border-interaction-border bg-interaction text-interaction-foreground flex flex-col gap-2 rounded-xl border p-3">
+      <Button
+        type="button"
+        variant="ghost"
+        aria-expanded={open}
+        aria-controls={bodyId}
+        className="hover:text-interaction-foreground h-auto min-h-11 w-full justify-start px-1 text-left font-semibold whitespace-normal hover:bg-transparent"
+        onClick={() => {
+          setOpen((current) => !current);
+        }}
+      >
+        <ChevronRight
+          aria-hidden="true"
+          className={cn("shrink-0 transition-transform motion-reduce:transition-none", open && "rotate-90")}
+        />
+        <span>{INTERACTION_COPY.graphPartner.replace("{nazwa}", partner.name)}</span>
+      </Button>
+      <div id={bodyId} hidden={!open} className="flex flex-col gap-2 px-1">
+        {partner.descriptions.map((description) => (
+          <p key={description}>{description}</p>
+        ))}
+      </div>
+      <p className="px-1 text-sm">{INTERACTION_COPY.note}</p>
+    </li>
+  );
+}
+
+// Interaction graph under the medication list (S-10, FR-014). The geometry comes ready from buildInteractionGraph;
+// this component only draws it and keeps which medication is selected. Lines and points live in an aria-hidden SVG;
+// every medication is a real button in alphabetical order, so Tab walks the names and Enter or space selects. Points
+// never move or change size with the selection or with interactions (FR-012): only colours change. Colours come only
+// from tokens through var(--…), so the dark mode follows the token blocks.
+export default function InteractionGraph({ model }: Props) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const titleId = useId();
+
+  const selected = selectedId === null ? null : (model.nodes.find((node) => node.id === selectedId) ?? null);
+  const partners = selected ? (model.partners[selected.id] ?? []) : [];
+  const partnerIds = new Set(partners.map((partner) => partner.id));
+
+  // Lines grouped by state into a few paths, never one element per pair.
+  const faint: string[] = [];
+  const highlighted: string[] = [];
+  for (const edge of model.edges) {
+    if (selected && (edge.a === selected.id || edge.b === selected.id)) highlighted.push(edge.path);
+    else faint.push(edge.path);
+  }
+
+  const percentX = (value: number) => `${(value / model.width) * 100}%`;
+  const percentY = (value: number) => `${(value / model.height) * 100}%`;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="border-border bg-card text-card-foreground rounded-xl border px-4 pt-4 pb-14 shadow-sm">
+        <div
+          className="relative mx-auto w-full max-w-sm"
+          style={{ aspectRatio: `${String(model.width)} / ${String(model.height)}` }}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox={`0 0 ${String(model.width)} ${String(model.height)}`}
+            className="absolute inset-0 size-full overflow-visible"
+          >
+            {faint.length > 0 && (
+              <path
+                d={faint.join(" ")}
+                fill="none"
+                stroke="var(--input)"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                opacity={selected ? 0.5 : 1}
+              />
+            )}
+            {highlighted.length > 0 && (
+              <>
+                <path
+                  d={highlighted.join(" ")}
+                  fill="none"
+                  stroke="var(--interaction-border)"
+                  strokeWidth={6}
+                  strokeLinecap="round"
+                />
+                <path
+                  d={highlighted.join(" ")}
+                  fill="none"
+                  stroke="var(--interaction-foreground)"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                />
+              </>
+            )}
+            {model.nodes.map((node) => {
+              const isSelected = node.id === selected?.id;
+              const isPartner = partnerIds.has(node.id);
+              const dimmed = selected !== null && !isSelected && !isPartner;
+              if (isSelected) {
+                return (
+                  <g key={node.id}>
+                    <circle cx={node.x} cy={node.y} r={GLOW_RADIUS} fill="var(--accent)" />
+                    <circle cx={node.x} cy={node.y} r={POINT_RADIUS} fill="var(--primary)" />
+                  </g>
+                );
+              }
+              return (
+                <circle
+                  key={node.id}
+                  cx={node.x}
+                  cy={node.y}
+                  r={POINT_RADIUS}
+                  fill={isPartner ? "var(--interaction)" : "var(--card)"}
+                  stroke={isPartner ? "var(--interaction-foreground)" : "var(--input)"}
+                  strokeWidth={isPartner ? 2 : 1.5}
+                  opacity={dimmed ? 0.5 : 1}
+                />
+              );
+            })}
+          </svg>
+
+          <div role="group" aria-label={INTERACTION_COPY.graphLabel}>
+            {model.nodes.map((node) => {
+              const isSelected = node.id === selected?.id;
+              const isPartner = partnerIds.has(node.id);
+              const dimmed = selected !== null && !isSelected && !isPartner;
+              return (
+                <button
+                  key={node.id}
+                  type="button"
+                  data-graph-node={node.id}
+                  aria-pressed={isSelected}
+                  // The button starts at the top of the point and holds the name under it: the touch target covers
+                  // both and stays at least 44 px tall.
+                  className={cn(
+                    "absolute flex min-h-11 -translate-x-1/2 -translate-y-[10px] cursor-pointer flex-col items-center rounded-md px-0.5 pt-6 pb-0.5",
+                    "focus-visible:ring-ring outline-none focus-visible:ring-[3px]",
+                  )}
+                  style={{ left: percentX(node.x), top: percentY(node.y), width: percentX(BUTTON_WIDTH) }}
+                  onClick={() => {
+                    setSelectedId((current) => (current === node.id ? null : node.id));
+                  }}
+                >
+                  <span
+                    className={cn(
+                      "line-clamp-2 w-full pb-px text-center text-xs leading-normal break-words",
+                      isSelected && "font-semibold",
+                      dimmed && "text-muted-foreground",
+                    )}
+                  >
+                    {node.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div aria-live="polite" className="flex flex-col gap-3">
+        {selected === null ? (
+          <p className="text-muted-foreground text-sm">{INTERACTION_COPY.graphNoSelection}</p>
+        ) : (
+          // Keyed by the medication, so cards fold again after switching the selection.
+          <section key={selected.id} aria-labelledby={titleId} className="flex flex-col gap-3">
+            <h3 id={titleId} className="font-semibold break-words">
+              {selected.name}
+            </h3>
+            {partners.length > 0 ? (
+              <ul className="flex flex-col gap-3">
+                {partners.map((partner) => (
+                  <PartnerCard key={partner.id} partner={partner} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm">{INTERACTION_COPY.noInteractionsForMedication}</p>
+            )}
+          </section>
+        )}
+        <p className="text-muted-foreground text-sm">{INTERACTION_COPY.graphNoLineIsNotSafe}</p>
+      </div>
+    </div>
+  );
+}
