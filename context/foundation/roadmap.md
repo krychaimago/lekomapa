@@ -3,7 +3,7 @@ project: lekomapa
 version: 3
 status: draft
 created: 2026-09-21
-updated: 2026-10-17
+updated: 2026-10-18
 prd_version: 1
 main_goal: quality
 top_blocker: time
@@ -53,20 +53,20 @@ Użytkowniczka przyjmuje kilka leków przepisanych przez różnych lekarzy i ża
 
 ## At a glance
 
-| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status   |
-| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | -------- |
-| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done     |
-| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done     |
-| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done     |
-| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done     |
-| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done     |
-| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done     |
-| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done     |
-| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed |
-| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | done     |
-| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | proposed |
-| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | blocked  |
-| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done     |
+| ID   | Change ID                        | Outcome (użytkowniczka może …)                                                    | Prerequisites | PRD refs                     | Status      |
+| ---- | -------------------------------- | --------------------------------------------------------------------------------- | ------------- | ---------------------------- | ----------- |
+| S-01 | delete-account-button-emphasis   | od razu rozpoznać „Usuń konto” jako akcję nieodwracalną                           | —             | MS-01, FR-001                | done        |
+| S-02 | journal-tab-rename               | widzieć w menu krótką zakładkę „Dziennik”                                         | —             | MS-02                        | done        |
+| S-03 | dashboard-landing                | po zalogowaniu trafić od razu na listę leków                                      | —             | MS-08                        | done        |
+| S-04 | app-icon                         | rozpoznać lekomapę po ikonie w karcie, na pasku bocznym i na ekranie telefonu     | —             | MS-09                        | done        |
+| S-05 | visit-readable-with-current-meds | przeczytać „Wizytę” przy wielu danych, z listą bieżących leków z dawkami          | —             | MS-05, MS-11, FR-011, FR-007 | done        |
+| S-06 | severity-next-to-symptom         | wybrać nasilenie przy samym objawie, także na telefonie                           | —             | MS-06, FR-008                | done        |
+| S-07 | medication-interactions-compact  | przejrzeć wiele możliwych kolizji leku bez długiego przewijania                   | —             | MS-04, FR-006, FR-007        | done        |
+| S-08 | friendly-visuals                 | korzystać z ekranów, które nie są puste, z ilustracjami i wyglądem notatek        | S-03, S-05    | MS-10                        | proposed    |
+| S-09 | medication-symptom-timeline      | zobaczyć leki i objawy na jednej osi czasu                                        | S-05          | MS-03                        | done        |
+| S-10 | interaction-graph                | zobaczyć leki jako punkty i linie między parami, które mogą wchodzić w interakcję | S-09          | MS-07, FR-006, FR-007        | in-progress |
+| S-11 | data-export                      | pobrać własne dane z aplikacji                                                    | —             | MS-12                        | parked      |
+| S-12 | mobile-header-sticky             | na telefonie mieć „Wyloguj się” i przełącznik trybu zawsze w zasięgu              | —             | MS-13                        | done        |
 
 ## Streams
 
@@ -77,7 +77,7 @@ Pomoc nawigacyjna — grupuje pozycje dzielące łańcuch wymagań wstępnych al
 | A      | Szybkie poprawki      | `S-01` ∥ `S-02` ∥ `S-03` ∥ `S-04` ∥ `S-12` | Pierwsze, bo małe i widoczne od razu; każda osobnym PR-em. `S-12` dopisana 15.10.2026 ze zgłoszenia #120.                 |
 | B      | Wizyta i wizualizacje | `S-05` → `S-09` → `S-10`                   | Gwiazda przewodnia, potem nowe funkcje; `S-09` wybiera sposób rysowania, `S-10` z niego korzysta.                         |
 | C      | Czytelność ekranów    | `S-06` ∥ `S-07` → `S-08`                   | `S-06` i `S-07` niezależne; `S-08` dołącza do A przy `S-03` i do B przy `S-05`, bo ilustracje trafiają w ich puste stany. |
-| D      | Dane na zewnątrz      | `S-11`                                     | Tylko jeśli zostanie czas; zablokowane do rozstrzygnięcia zasady z PRD o danych, które „nie opuszczają produktu”.         |
+| D      | Dane na zewnątrz      | `S-11`                                     | Zaparkowane 17.10.2026; zablokowane do rozstrzygnięcia zasady z PRD o danych, które „nie opuszczają produktu”.            |
 
 ## Baseline
 
@@ -249,13 +249,13 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Miejsce grafu: szczegóły leku, „Wizyta” czy osobny ekran. — Owner: użytkowniczka przy planie. Block: no.
 - **Risk:** Nowa funkcja — wymaga jawnej zmiany PRD (nowe FR; graf nie występuje w PRD). FR-012 dotyczy tu samego układu, nie tylko tekstu: ani wielkość, ani położenie punktu nie mogą zależeć od liczby kolizji. Najszybszy i zgodny z FR-012 układ: punkty na okręgu w stałej kolejności alfabetycznej. Odrzucony układ siłowy (punkty same się rozkładają) — lek z największą liczbą kolizji ląduje na środku, a to jest porządkowanie według podejrzenia. Nota poglądowa przy grafie (FR-007); brak linii nie oznacza bezpieczeństwa i graf musi to mówić. Korzysta ze sposobu rysowania z S-09.
 - **Termin:** zapasowy.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-11: Eksport własnych danych
 
 - **Outcome:** Użytkowniczka może pobrać swoje leki z okresami dawkowania i wpisy dzienniczka jako plik.
 - **Change ID:** `data-export`
-- **Issue:** #114
+- **Issue:** — (#114 usunięte 17.10.2026 przy parkowaniu)
 - **PRD refs:** MS-12
 - **Prerequisites:** —
 - **Parallel with:** każda pozycja M-2
@@ -265,7 +265,7 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
   - Format — Owner: plan. Block: no. Najszybszy: JSON. Optymalny: CSV. Najlepszy: PDF do pokazania lekarzowi.
 - **Risk:** Nowa funkcja — wymaga nowego FR i zmiany zasady z PRD. Granice nienaruszone: brak zdalnego udostępniania lekarzowi (`## Non-Goals` — plik powstaje na urządzeniu właścicielki, bez wysyłki), izolacja danych per-konto, bezpowrotne usunięcie konta, nazwa pliku i adres bez nazwy leku czy objawu. Tylko jeśli zostanie czas.
 - **Termin:** tylko jeśli zostanie czas.
-- **Status:** blocked
+- **Status:** parked
 
 ### S-12: Przyklejony nagłówek na telefonie
 
@@ -296,15 +296,16 @@ Brak. Wspólne podłoże osi czasu i grafu — sposób rysowania — wybiera `S-
 | S-08       | `friendly-visuals`                 | Ilustracje w pustych stanach i wygląd notatek    | no                    | zapasowy; czeka na S-03, S-05                                        | #111  |
 | S-09       | `medication-symptom-timeline`      | Oś czasu leków i objawów                         | no                    | zapasowy; czeka na S-05; nowe FR                                     | #112  |
 | S-10       | `interaction-graph`                | Graf leków i możliwych interakcji                | no                    | zapasowy; czeka na S-09; nowe FR                                     | #113  |
-| S-11       | `data-export`                      | Eksport własnych danych                          | no                    | tylko jeśli zostanie czas; zablokowane pytaniem 1                    | #114  |
+| S-11       | `data-export`                      | Eksport własnych danych                          | no                    | zaparkowane 17.10.2026; zablokowane pytaniem 1                       | —     |
 | S-12       | `mobile-header-sticky`             | Przyklejony nagłówek na telefonie                | yes                   | przed 04.11; błąd zgłoszony 15.10.2026                               | #120  |
 
 ## Open Roadmap Questions
 
-1. **Czy eksport danych przez właścicielkę konta mieści się w zasadzie „dane nie opuszczają produktu”?** — Owner: użytkowniczka. Block: S-11 (#114).
+1. **Czy eksport danych przez właścicielkę konta mieści się w zasadzie „dane nie opuszczają produktu”?** — Owner: użytkowniczka. Block: S-11 (zaparkowane 17.10.2026).
 
 ## Parked
 
+- **Eksport własnych danych (S-11, `data-export`)** — Why parked: decyzja autorki 17.10.2026; pozycja „tylko jeśli zostanie czas”, nadal zablokowana pytaniem 1 z `## Open Roadmap Questions`. Odwieszenie: status w tabeli i sekcji S-11 z powrotem na `blocked`, nowe issue.
 - **Osobny ekran „Start” po zalogowaniu** — Why parked: odrzucony 14.10.2026 przy S-03; piąta zakładka na telefonie i trzecia kopia listy leków. Dodanie później to nowa trasa, bez przeróbek.
 - **Integracja z zewnętrzną bazą interakcji** — Why parked: PRD `## Non-Goals`; reguły pochodzą wyłącznie ze zbioru dostarczonego z produktem.
 - **Przypomnienia o przyjęciu dawki** — Why parked: PRD `## Non-Goals`; produkt służy rozumieniu zestawu leków, nie pilnowaniu rutyny.

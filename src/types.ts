@@ -428,3 +428,61 @@ export interface TimelineSymptomEntries {
     severity: SymptomSeverity | null;
   }[];
 }
+
+// ---------------------------------------------------------------------------
+// Interaction graph under the medication list (S-10, FR-014), built by src/lib/services/interaction-graph.ts.
+// Coordinates are in a fixed system 360 units wide; the component scales it. A medication's place comes from the
+// order medications were added and its id, never from interactions or its name (FR-012).
+
+/** One medication of the account as the graph replays its history: when it was added and when its end was saved. */
+export interface InteractionGraphHistoryItem {
+  id: string;
+  /** `medications.created_at`, ISO timestamp. */
+  createdAt: string;
+  /** `medications.discontinued_at` (moment the end was saved, set by the database), never `discontinued_on`. */
+  discontinuedAt: string | null;
+}
+
+export interface InteractionGraphInput {
+  /** Every medication of the account, ended ones included. */
+  history: InteractionGraphHistoryItem[];
+  /** Current medications, the same rows the list shows. */
+  current: { id: string; name: string }[];
+  /** Rows of `medication_interactions()`; they never move a point (FR-012). */
+  interactions: MedicationInteraction[];
+  /** Today in Polish time, ISO `YYYY-MM-DD`. Part of the contract; the layout does not depend on it. */
+  today: string;
+}
+
+/** One current medication on the graph: the centre of its point. */
+export interface InteractionGraphNode {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+}
+
+/** One line between two medications forming at least one checked pair; `a` < `b` by id. */
+export interface InteractionGraphEdge {
+  a: string;
+  b: string;
+  /** SVG path `d` of a quadratic curve: only the letters M and Q, spaces and numbers. */
+  path: string;
+}
+
+/** A medication the selected one may interact with, and every distinct description of their pairs. */
+export interface InteractionGraphPartner {
+  id: string;
+  name: string;
+  descriptions: string[];
+}
+
+export interface InteractionGraphModel {
+  width: number;
+  height: number;
+  /** Alphabetical by name (Polish collation) — the order of the buttons, never by interactions. */
+  nodes: InteractionGraphNode[];
+  edges: InteractionGraphEdge[];
+  /** For every node id: its partners alphabetically; empty when it forms no checked pair. */
+  partners: Record<string, InteractionGraphPartner[]>;
+}
