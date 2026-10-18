@@ -103,12 +103,15 @@ Strona podzielona pionowo na dwie połowy, złudzenie otwartego dzienniczka z ci
 - Lewa strona w kolorze `#CFC9B4`: nazwa produktu, nagłówek, trzy ogólne zdania o tym, do czego produkt służy, nota o prywatności na dole.
 - Prawa strona biała: nagłówek powitalny i formularz.
 - Formularz zawsze po prawej. Wariant lustrzany odrzucony.
+- **Od S-08 (`friendly-visuals`)** trzy zdania stoją na trzech karteczkach (`src/components/PaperNote.astro`, plansza F). To świadome odstępstwo od zasady „treść na bieli, paleta tylko na ramie” — zaakceptowane przez autorkę 18.10.2026.
 
 Kontrast między stronami w wersji wzmocnionej — różnica jasności około 1,5 : 1 zamiast 1,2 : 1, co jest progiem widoczności dla kogoś z obniżoną wrażliwością na kontrast.
 
 ### Logowanie na telefonie
 
 Rozkładówka rozkłada się na dwie strefy jedna nad drugą: kolorowa góra zamiast lewej kartki, biały dół zamiast prawej. Kreska między stronami staje się krawędzią między strefami. Trzy zdania o produkcie znikają — pierwszy ekran ma być krótki.
+
+Od S-08 (`friendly-visuals`) nagłówek kolorowej góry stoi na karteczce (plansza F, telefon); zdania dalej znikają. Świadome odstępstwo zaakceptowane przez autorkę 18.10.2026.
 
 ### Wnętrze aplikacji
 

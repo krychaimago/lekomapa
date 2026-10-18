@@ -1,0 +1,92 @@
+---
+// A paper note from the S-08 "F · Karteczki" mockups (boards F-leki, F-dziennik, F-wizyta, F-notatka:
+// https://claude.ai/artifact/67bdzF6SH5KYRcYrf22QbZ): a card or accent sheet with a strip of tape, a slight tilt and a
+// soft shadow. The one place that draws it, so the surfaces do not repeat its classes and drift apart.
+// No React: nothing here holds state or handles events. Colors are token classes only (and var(--token) in the ruled
+// lines), so the dark mode follows the .dark token block. The text on the note uses the paper's own foreground token,
+// whose pair is measured by scripts/tokens/contrast.mjs. The tape and the back sheet are decoration: aria-hidden.
+// Tilts stay within ±3 degrees: a larger turn makes the text harder to read. A static turn is not motion, so it needs
+// no motion-reduce variant.
+import { cn } from "@/lib/utils";
+
+type Tilt = "-3" | "-2" | "-1.5" | "-1" | "0" | "1" | "1.5" | "2" | "3";
+
+interface Props {
+  paper: "card" | "accent";
+  tape?: "accent" | "sidebar" | "none";
+  tapePosition?: "center" | "start";
+  tilt?: Tilt;
+  // Lines as in a notebook, one every 30 px (F-dziennik); the text keeps the same line height.
+  ruled?: boolean;
+  // A second accent sheet behind the note, turned about +3 degrees (F-leki).
+  backSheet?: boolean;
+  // Classes for the note itself (padding, width), merged with cn().
+  class?: string;
+}
+
+const {
+  paper,
+  tape = "accent",
+  tapePosition = "center",
+  tilt = "0",
+  ruled = false,
+  backSheet = false,
+  class: className,
+} = Astro.props;
+
+// Literal classes only, so Tailwind finds every one of them in this file.
+const TILT_CLASS: Record<Tilt, string> = {
+  "-3": "-rotate-3",
+  "-2": "-rotate-2",
+  "-1.5": "-rotate-[1.5deg]",
+  "-1": "-rotate-1",
+  "0": "",
+  "1": "rotate-1",
+  "1.5": "rotate-[1.5deg]",
+  "2": "rotate-2",
+  "3": "rotate-3",
+};
+
+const PAPER_CLASS = {
+  card: "bg-card text-card-foreground",
+  accent: "bg-accent text-accent-foreground",
+} as const;
+
+const TAPE_CLASS = {
+  accent: "bg-accent-border/85",
+  sidebar: "bg-sidebar-border/85",
+} as const;
+
+const noteClass = cn(
+  "relative rounded-[4px] p-4 shadow-md",
+  PAPER_CLASS[paper],
+  TILT_CLASS[tilt],
+  ruled &&
+    "bg-[image:repeating-linear-gradient(to_bottom,transparent_0,transparent_29px,var(--accent-border)_29px,var(--accent-border)_30px)] leading-[30px]",
+  className,
+);
+
+const tapeClass =
+  tape === "none"
+    ? null
+    : cn(
+        "pointer-events-none absolute -top-[11px] h-[22px] w-20",
+        TAPE_CLASS[tape],
+        tapePosition === "center" ? "left-1/2 -translate-x-1/2" : "left-3",
+      );
+---
+
+{backSheet ? (
+  <div class="relative">
+    <div aria-hidden="true" class="absolute inset-0 rotate-3 rounded-[4px] bg-accent shadow-md" />
+    <div class:list={noteClass}>
+      {tapeClass && <span aria-hidden="true" class:list={tapeClass} />}
+      <slot />
+    </div>
+  </div>
+) : (
+  <div class:list={noteClass}>
+    {tapeClass && <span aria-hidden="true" class:list={tapeClass} />}
+    <slot />
+  </div>
+)}

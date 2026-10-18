@@ -7,6 +7,7 @@
 // account's medication history (id and the two timestamps) that keeps each point's place stable. A failed history read
 // replaces only the graph with an error text; the list keeps working.
 import AppLayout from "@/layouts/AppLayout.astro";
+import PaperNote from "@/components/PaperNote.astro";
 import { badgeVariants } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import InteractionGraph from "@/components/medications/InteractionGraph";
@@ -189,11 +190,13 @@ const addedDeadline =
         {copy.loadError}
       </p>
     ) : items.length === 0 ? (
-      <section class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-        <p class="mb-4">{copy.empty}</p>
-        <a href="/leki/nowy" class:list={buttonVariants()}>
-          {copy.add}
-        </a>
+      <section class="pt-3">
+        <PaperNote paper="card" tilt="-1.5" backSheet class="p-6">
+          <p class="mb-4">{copy.empty}</p>
+          <a href="/leki/nowy" class:list={buttonVariants()}>
+            {copy.add}
+          </a>
+        </PaperNote>
       </section>
     ) : (
       <ul class="flex flex-col gap-3">
