@@ -239,16 +239,16 @@ Brak migracji bazy.
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe, w tym kontrast i bramka kolorów: `npm test`
-- [x] 2.2 Lint przechodzi: `npm run lint`
-- [x] 2.3 Typy przechodzą: `npm run typecheck`
-- [x] 2.4 Build przechodzi: `npm run build`
-- [x] 2.5 E2E ścieżek wejściowych zielone przeciw lokalnemu Supabase: `npx playwright test signin-lands-on-medications theme seed`
+- [x] 2.1 Testy jednostkowe, w tym kontrast i bramka kolorów: `npm test` — 169070b
+- [x] 2.2 Lint przechodzi: `npm run lint` — 169070b
+- [x] 2.3 Typy przechodzą: `npm run typecheck` — 169070b
+- [x] 2.4 Build przechodzi: `npm run build` — 169070b
+- [x] 2.5 E2E ścieżek wejściowych zielone przeciw lokalnemu Supabase: `npx playwright test signin-lands-on-medications theme seed` — 169070b
 
 #### Manual
 
-- [x] 2.6 Logowanie na dużym ekranie wygląda jak plansza F (komputer) w trybie jasnym i ciemnym
-- [x] 2.7 Logowanie na telefonie wygląda jak plansza F (telefon), pierwszy ekran nadal krótki
-- [x] 2.8 Pozostałe 5 ekranów rozkładówki (rejestracja, sprawdź skrzynkę, potwierdzenie, konto usunięte, akceptacja warunków) pokazuje te same karteczki bez rozjechania formularza
-- [x] 2.9 Formularz logowania wysłany w prawdziwej przeglądarce działa (zalogowanie przechodzi)
-- [x] 2.10 Reguła w `CLAUDE.md` i notki w `design-draft.md` oraz roadmapie są zgodne z decyzjami tego planu
+- [x] 2.6 Logowanie na dużym ekranie wygląda jak plansza F (komputer) w trybie jasnym i ciemnym — 169070b
+- [x] 2.7 Logowanie na telefonie wygląda jak plansza F (telefon), pierwszy ekran nadal krótki — 169070b
+- [x] 2.8 Pozostałe 5 ekranów rozkładówki (rejestracja, sprawdź skrzynkę, potwierdzenie, konto usunięte, akceptacja warunków) pokazuje te same karteczki bez rozjechania formularza — 169070b
+- [x] 2.9 Formularz logowania wysłany w prawdziwej przeglądarce działa (zalogowanie przechodzi) — 169070b
+- [x] 2.10 Reguła w `CLAUDE.md` i notki w `design-draft.md` oraz roadmapie są zgodne z decyzjami tego planu — 169070b
