@@ -22,6 +22,8 @@ Issue #126: przyciski leków na grafie (`/leki`, S-10) nachodzą na siebie przy 
 - Żadne dwa przyciski leków nie nachodzą na siebie przy 320 px, 360 px i tekście 100% / 125% / 150%.
 - Wybór leku, karty par, komunikat dla czytnika ekranu i nota działają tak samo we wszystkich trzech układach (wspólny stan).
 
+> Sprostowanie po impl-review (F1, 18.10.2026): próg kolumny obniżony z 18,375 rem (294 px) do 18,25 rem (292 px). Przy 360 px treść karty ma dokładnie 294 px, więc pasek przewijania albo ułamek piksela przełączał telefon na kolumnę; teraz zostają 2 px zapasu. Liczby 18,375 w blokach faz opisują stan sprzed poprawki.
+
 Weryfikacja: testy jednostkowe kolumny, test E2E przy 320 px i przy tekście 125%, pomiar `graph-render-bench.mjs`, ręczne porównanie z makietą.
 
 ### Key Discoveries:
@@ -105,6 +107,8 @@ Serwis liczy trzeci układ: kolumnę. Testy jednostkowe ustalają jego kontrakt,
 - historia (kolejność dodania, zakończone leki) nie zmienia kolumny — tylko zbiór obecnych leków i ich nazwy,
 - każdy łuk zaczyna się w punkcie jednego leku pary i kończy w punkcie drugiego, a jego punkty kontrolne leżą w przedziale `[0, x punktu)`,
 - zakończony lek nie ma wiersza i nie rysuje łuku.
+
+> Sprostowanie po impl-review (F4, 18.10.2026): `GRAPH_COLUMN_GUTTER = 80` (5 rem), nie 56 — decyzja autorki z ręcznego sprawdzenia fazy 2, opis w `change.md`. Liczby 56 w tym planie opisują stan sprzed tej decyzji.
 
 ### Success Criteria:
 
@@ -198,6 +202,9 @@ Test przeglądarkowy pilnuje, że przy wąskim ekranie i dużym tekście nic nie
   - 412 px + 125% (ok. 318 px treści karty): widoczna kolumna, nic nie nachodzi — próg w px pokazałby telefon,
   - 640 px + 125% (ok. 558 px treści karty): widoczny telefon, nie komputer — próg w px pokazałby komputer.
 - 360 px + 150%: widoczna kolumna, żadne dwa przyciski nie nachodzą (pokrycie „150%” z Desired End State).
+
+> Sprostowanie po impl-review (F3, 18.10.2026): przy 412 px + 125% treść karty ma ok. 330 px (412 − 2×20 − 2×20 − 2), nie 318 px. Wynik przypadku bez zmian — 330 px leży między progami.
+
 - Asercje przez `getByRole` / `data-graph-node`, bez `waitForTimeout`.
 
 #### 2. Komentarze o progach

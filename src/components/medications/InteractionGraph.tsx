@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
-import { GRAPH_COLUMN_GUTTER, GRAPH_COLUMN_ROW } from "@/lib/services/interaction-graph";
+import { GRAPH_BUTTON_WIDTH, GRAPH_COLUMN_GUTTER, GRAPH_COLUMN_ROW } from "@/lib/services/interaction-graph";
 import { cn } from "@/lib/utils";
 import type {
   InteractionGraphLayout,
@@ -20,10 +20,6 @@ interface Props {
 // (480 px at the default text size) for 576 units; in the column one unit is always 1/16 rem.
 const POINT_RADIUS = 9;
 const GLOW_RADIUS = 15;
-// Width of a medication button in viewBox units, the width the layout keeps buttons apart by (GRAPH_BUTTON_WIDTH in
-// src/lib/services/interaction-graph.ts).
-const BUTTON_WIDTH = 90;
-
 // Distance of a column button's left edge from the left of its point, in column units (1/16 rem): the button covers
 // the point, as in the mockup (context/changes/graph-narrow-column/prototype/graf-luzny-uklad.html, version 8).
 const COLUMN_BUTTON_REACH = 12;
@@ -188,7 +184,7 @@ function GraphStage({ layout, nodes, selectedId, partnerIds, onToggle, className
                 "absolute flex min-h-11 -translate-x-1/2 -translate-y-[10px] cursor-pointer flex-col items-center rounded-md px-0.5 pt-6 pb-0.5",
                 "focus-visible:ring-ring outline-none focus-visible:ring-[3px]",
               )}
-              style={{ left: percentX(point.x), top: percentY(point.y), width: percentX(BUTTON_WIDTH) }}
+              style={{ left: percentX(point.x), top: percentY(point.y), width: percentX(GRAPH_BUTTON_WIDTH) }}
               onClick={() => {
                 onToggle(node.id);
               }}
@@ -277,7 +273,8 @@ function ColumnStage({ layout, nodes, selectedId, partnerIds, onToggle }: Omit<S
 // Interaction graph under the medication list (S-10, FR-014). The geometry comes ready from buildInteractionGraph in
 // three layouts; this component draws all three and keeps which medication is selected, shared by them. A container
 // query on the card's content, in rem so that a larger text size counts as less room, shows exactly one: the column
-// below 18.375 rem (294 px at the default text size), the phone layout "C" from 18.375 rem to 30 rem, the wide layout
+// below 18.25 rem (292 px at the default text size, 2 px under the card content of a 360 px phone, so a scrollbar or
+// a fraction of a pixel keeps layout "C" there), the phone layout "C" from 18.25 rem to 30 rem, the wide layout
 // "10" from 30 rem (480 px at the default text size). The other two are display:none, so they are out of the
 // accessibility tree and the tab order, and the server's HTML already shows the right one without JS. `data-graph-scene` names
 // each layout for tests/e2e/interaction-graph.spec.ts. Every medication is a real button in alphabetical order, so Tab walks the names and Enter or
@@ -308,10 +305,10 @@ export default function InteractionGraph({ model }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="border-border bg-card text-card-foreground @container rounded-xl border px-4 pt-4 pb-14 shadow-sm">
-        <div data-graph-scene="column" className="@min-[18.375rem]:hidden">
+        <div data-graph-scene="column" className="@min-[18.25rem]:hidden">
           <ColumnStage layout={model.column} {...stage} />
         </div>
-        <div data-graph-scene="phone" className="hidden @min-[18.375rem]:block @min-[30rem]:hidden">
+        <div data-graph-scene="phone" className="hidden @min-[18.25rem]:block @min-[30rem]:hidden">
           <GraphStage layout={model.phone} className="max-w-sm" {...stage} />
         </div>
         <div data-graph-scene="wide" className="hidden @min-[30rem]:block">

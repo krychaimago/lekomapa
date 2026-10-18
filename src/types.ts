@@ -506,13 +506,13 @@ export interface InteractionGraphModel {
   edges: InteractionGraphEdge[];
   /** For every node id: its partners alphabetically; empty when it forms no checked pair. */
   partners: Record<string, InteractionGraphPartner[]>;
-  /** Layout "C", 360 units wide: shown while the graph card's content is from 18.375 rem to 30 rem wide. */
+  /** Layout "C", 360 units wide: shown while the graph card's content is from 18.25 rem to 30 rem wide. */
   phone: InteractionGraphLayout;
   /** Layout "10", 576 units wide: shown from 30 rem of the card's content (480 px at the default text size). */
   wide: InteractionGraphLayout;
   /**
    * One medication per row, alphabetically, in units of 1/16 rem: shown while the card's content is narrower than
-   * 18.375 rem (294 px at the default text size). `points` in the order of `nodes`, `lines` in the order of `edges`.
+   * 18.25 rem (292 px at the default text size). `points` in the order of `nodes`, `lines` in the order of `edges`.
    */
   column: InteractionGraphLayout;
 }

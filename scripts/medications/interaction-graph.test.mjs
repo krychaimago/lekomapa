@@ -562,13 +562,32 @@ test("every column arc runs from one point of its pair to the other, bending lef
   assert.equal(model.column.lines.length, model.edges.length);
   const at = new Map(model.column.points.map((point) => [point.id, point]));
   for (const line of model.column.lines) {
-    const [x0, y0, c1x, , c2x, , x1, y1] = columnPath(line.path);
+    const [x0, y0, c1x, c1y, c2x, c2y, x1, y1] = columnPath(line.path);
     const [a, b] = [at.get(line.a), at.get(line.b)];
     assert.deepEqual([x0, y0], [a.x, a.y], line.path);
     assert.deepEqual([x1, y1], [b.x, b.y], line.path);
     assert.equal(c1x, c2x, line.path);
+    assert.equal(c1y, a.y, line.path);
+    assert.equal(c2y, b.y, line.path);
     assert.ok(c1x >= 0 && c1x < a.x, line.path);
   }
+});
+
+test("a column arc bends further left the more rows it spans", () => {
+  const model = build(
+    account([
+      [1, "Apap", "2026-10-01T08:00:00Z"],
+      [2, "Ibuprom", "2026-10-02T08:00:00Z"],
+      [3, "Zyrtec", "2026-10-03T08:00:00Z"],
+    ]),
+    [interaction(1, 2, "Opis 1.", "pair-1"), interaction(1, 3, "Opis 2.", "pair-2")],
+  );
+  const isPair = (line, ids) => ids.includes(line.a) && ids.includes(line.b);
+  const arcX = (ids) => columnPath(model.column.lines.find((line) => isPair(line, ids)).path)[2];
+  // Point at 80 − 15 = 65; the arc reaches 10 + 0.18 per unit between the rows to the left of it.
+  // Adjacent rows (48 apart): 65 − (10 + 48 × 0.18) = 46.4; two rows (96 apart): 65 − (10 + 96 × 0.18) = 37.7.
+  assert.equal(arcX([id(1), id(2)]), 46.4);
+  assert.equal(arcX([id(1), id(3)]), 37.7);
 });
 
 test("an ended medication has no row in the column and draws no arc", () => {

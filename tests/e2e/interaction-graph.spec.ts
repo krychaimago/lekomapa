@@ -271,15 +271,15 @@ test.describe("interaction graph on the medication list", () => {
     const visibleGraph = page.getByRole("group", { name: INTERACTION_COPY.graphLabel });
     await expect(page.locator("[data-graph-scene]")).toHaveCount(3);
 
-    // Card content = viewport minus the page and card margins, which grow with the text. "column" below 18.375 rem,
-    // "phone" from 18.375 rem, "wide" from 30 rem.
+    // Card content = viewport minus the page and card margins, which grow with the text. "column" below 18.25 rem,
+    // "phone" from 18.25 rem, "wide" from 30 rem.
     const cases = [
       { width: 320, text: 100, layout: "column" },
       // A regression of the threshold the other way: at the default text size a 360 px phone keeps layout "C".
       { width: 360, text: 100, layout: "phone" },
       { width: 1280, text: 100, layout: "wide" },
       { width: 360, text: 125, layout: "column" },
-      // About 318 px of card content: a threshold of 294 px would show the phone layout.
+      // About 330 px of card content: a threshold of 292 px would show the phone layout.
       { width: 412, text: 125, layout: "column" },
       // About 558 px of card content: a threshold of 480 px would show the wide layout.
       { width: 640, text: 125, layout: "phone" },

@@ -1,7 +1,7 @@
 ---
 change_id: graph-narrow-column
 title: Graf leków w jednej kolumnie, gdy brakuje miejsca (#126)
-status: implemented
+status: impl_reviewed
 created: 2026-10-18
 updated: 2026-10-18
 archived_at: null
@@ -19,6 +19,7 @@ Ustalenia z autorką (18.10.2026):
 - Progi w jednostkach tekstu (rem), oba: kolumna poniżej ok. 294 px treści karty przy zwykłym tekście, układ komputera od 480 px przy zwykłym tekście (przy 125% od ok. 600 px). Komentarze z #128 do ponownej poprawki.
 - Ryzyko czasu procesora (#127): pierwsza faza planu to pomiar `scripts/medications/graph-render-bench.mjs`. Przekroczenie progu 7 ms przy koncie 20 + 20 = stop i rozmowa z autorką przed dalszą pracą.
 - Szerokość pasa łuków w kolumnie (sprawdzenie ręczne fazy 2, 18.10.2026): 5 rem (`GRAPH_COLUMN_GUTTER = 80`) zamiast 3,5 rem z planu — przy 3,5 rem łuki były spłaszczone. Wariant 2 z makiety `prototype/kolumna-szerokosc-pasa.html`. Przesądza: mniej miejsca na nazwę, dłuższe nazwy zawijają się do drugiej linii (zaakceptowane).
+- Próg kolumny po impl-review (F1, 18.10.2026): 18,25 rem (292 px przy zwykłym tekście) zamiast 18,375 rem. Przy telefonie 360 px treść karty ma dokładnie 294 px — próg na samej krawędzi przełączał na kolumnę przy pasku przewijania. Przesądza: ekran 358–359 px pokazuje układ „C”, nie kolumnę.
 
 ## Pomiar czasu procesora
 

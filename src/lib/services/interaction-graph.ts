@@ -4,9 +4,9 @@
 //
 // Three layouts are computed for every render and the component shows one by the width of the graph card's content,
 // measured in rem so that a larger text size counts as less room:
-//   - column (below 18.375 rem, 294 px at the default text size): one medication per row, alphabetically, pairs drawn
+//   - column (below 18.25 rem, 292 px at the default text size): one medication per row, alphabetically, pairs drawn
 //     as arcs on the left; units are 1/16 rem, so the arcs meet the points at every text size (issue 126);
-//   - phone (layout "C", 360 units wide, from 18.375 rem to 30 rem): 3 columns of 108 units, rows 100 units apart;
+//   - phone (layout "C", 360 units wide, from 18.25 rem to 30 rem): 3 columns of 108 units, rows 100 units apart;
 //   - wide (layout "10", 576 units wide, from 30 rem — 480 px at the default text size): 4 columns of 135 units, rows
 //     105 units apart.
 // Phone and wide were approved on mockups (context/archive/2026-10-17-interaction-graph/), the column on
