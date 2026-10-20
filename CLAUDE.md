@@ -141,102 +141,36 @@ Warunki, których z pliku nie widać: `ci` nie zbuduje się bez sekretów repozy
 `context/foundation/` — PRD, shape-notes, tech-stack, lessons. `context/changes/` — zmiany w toku.
 
 Skille nie zapisują do `context/archive/`. Zarchiwizowane zmiany są niezmienne — jeśli docelowa ścieżka zaczyna się od `context/archive/`, przerwij i otwórz nową zmianę przez `/10x-new`.
-<!-- BEGIN @przeprogramowani/10x-cli -->
 
-## Moduł 1, Lekcja 5 — infrastruktura i pierwszy deploy
+### Deploy
 
-Platforma wybrana i wdrożona: **Cloudflare Workers**, ścieżka `npx wrangler deploy` — nigdy `wrangler pages deploy`. Decyzja, historia operacyjna, zasady dostępu agenta do produkcji i rejestr ryzyk: `context/foundation/infrastructure.md`. Zatwierdzony plan pierwszego wdrożenia: `context/deployment/deploy-plan.md`.
+Cloudflare Workers, wyłącznie `npx wrangler deploy` — nigdy `wrangler pages deploy`. Decyzja, historia operacyjna, zasady dostępu agenta do produkcji i rejestr ryzyk: `context/foundation/infrastructure.md`. Plan pierwszego wdrożenia: `context/deployment/deploy-plan.md`.
 
-Materiał lekcyjny (router zadań, pięć kryteriów agent-friendly, cross-check antybiasowy): `docs/10xdevs/m1l5-infra.md` — treść jednorazowa, nie kontrakt projektu.
+### Przepływ zmiany
 
-## Moduł 2, Lekcja 1 — roadmapa MVP
+Łańcuch: `/10x-roadmap` → `/10x-new` → `/10x-plan` → `/10x-plan-review` → `/10x-implement` (albo `/10x-tdd`, `/10x-e2e`) → `/10x-impl-review` → po merge'u `/10x-archive`.
 
-`/10x-roadmap` czyta `context/foundation/prd.md` (plus `tech-stack.md`, `infrastructure.md`, `context/deployment/deploy-plan.md`, jeśli są) i pisze `context/foundation/roadmap.md`. Odpalaj przed zakładaniem folderów zmian — `/10x-new` przychodzi w kolejnej lekcji.
+- Roadmapa (`context/foundation/roadmap.md`) to pionowe plasterki widoczne dla użytkowniczki, bez dat i story pointów. Praca pozioma tylko jako enabler, który nazywa odblokowywany kamień milowy.
+- `/10x-plan` jest domyślnym startem. `/10x-frame` i `/10x-research` tylko przy niejasnym problemie albo blokującym braku wiedzy.
+- `/10x-tdd` dla fazy, w której da się z góry nazwać pierwszą padającą asercję, a kodu produkcyjnego jeszcze nie ma. Konfiguracja, wygląd, infrastruktura i faza z istniejącym kodem idą przez `/10x-implement`.
+- Raport `/10x-impl-review` ląduje w `context/changes/<change-id>/reviews/impl-review.md`. Przegląd sam nie zmienia kodu — edycje wyłącznie w triage'u, na wyraźny wybór naprawy. Świadome pominięcie findingu jest pełnoprawnym wynikiem; „zapisz jako regułę” idzie przez `/10x-lesson`.
+- Wyniki podagentów i raportów to hipotezy do sprawdzenia, nie fakty. Przy F-01 jeden finding był przeceniony, a proponowana naprawa drugiego wywróciłaby bramkę — RLS w PostgREST nie zwraca błędu, tylko pusty wynik.
 
-Granice roadmapy:
-- domyślnie pionowe plasterki: efekt widoczny dla użytkowniczki, przecinający UI, dane, logikę i integracje,
-- praca pozioma tylko jako ograniczony enabler, który nazywa odblokowywany kamień milowy,
-- żadnych sierocych zadań poziomych („zbuduj całą bazę", „wszystkie endpointy", „cały UI") przed pierwszym przepływem widocznym dla użytkowniczki,
-- roadmapa to nie kalendarz — bez dat, story pointów i prędkości sprintu, chyba że poprosisz o osobny artefakt planistyczny.
+### Testy
 
-Materiał lekcyjny (router zadań, pełna lista ścieżek): `docs/10xdevs/m2l1-roadmap.md` — treść jednorazowa, nie kontrakt projektu.
-
-## Moduł 2, Lekcja 2 — od roadmapy do pierwszego strumienia
-
-Łańcuch zmiany: `/10x-roadmap` → `/10x-new` → `/10x-plan` → `/10x-plan-review` → `/10x-implement` → (po merge'u) `/10x-archive`.
-
-- `/10x-new <change-id>` — po wybraniu pozycji z roadmapy, przed planowaniem. Tworzy `context/changes/<change-id>/change.md`: jedna tożsamość dla planu, implementacji, commitów i późniejszego review.
-- `/10x-plan <change-id>` — czyta roadmapę, dokumenty z `context/foundation/` i kod; pisze `plan.md` (fazy, kontrakty plików, kryteria sukcesu, `## Progress`) oraz `plan-brief.md`.
-- `/10x-plan-review <change-id>` — bramka przed dotknięciem kodu: brak stanu końcowego, słabe kontrakty, zepsuty `## Progress`, dryf zakresu.
-- `/10x-implement <change-id> phase <n>` — jedna faza naraz: weryfikacja, bramka manualna, commit, wpis SHA do `## Progress`.
-
-Granice:
-- `/10x-plan` jest domyślnym startem po wyborze pozycji z roadmapy. `/10x-frame` i `/10x-research` to ścieżki eskalacji przy niejasnym problemie albo blokującym braku wiedzy — nie rytuał na każdą zmianę.
-- Ta lekcja nie jest budową całego produktu. Wystarczy jeden strumień zaplanowany i częściowo wdrożony.
-- Review wdrożonego diffa należy do lekcji 3 (`/10x-impl-review`).
-
-Materiał lekcyjny (router zadań, pełna lista ścieżek): `docs/10xdevs/m2l2-implementation.md` — treść jednorazowa, nie kontrakt projektu. Wymieniony tam `docs/reference/contract-surfaces.md` nie istnieje w tym repozytorium.
-
-## Moduł 2, Lekcja 3 — przegląd wdrożonego kodu
-
-Pełny łańcuch zmiany z lekcją 3: `/10x-roadmap` → `/10x-new` → `/10x-plan` → `/10x-plan-review` → `/10x-implement` → **`/10x-impl-review`** → (po merge'u) `/10x-archive`.
-
-- `/10x-impl-review <change-id>` — bramka po implementacji, przed merge'em. Zestawia wdrożony diff z planem i wystawia scorecard w sześciu wymiarach: zgodność z planem, dyscyplina zakresu, bezpieczeństwo i jakość, architektura, spójność wzorców, kryteria sukcesu. Potem triage finding po findingu.
-- Zakres: pojedyncza faza (`phase <n>`) albo cały plan. Bez argumentu bierze najnowszą zmianę o statusie `implementing` lub `implemented`.
-- Raport ląduje w `context/changes/<change-id>/reviews/impl-review.md`, a `change.md` dostaje `status: impl_reviewed`. Dzieje się to niezależnie od tego, czy triage odbędzie się od razu — dlatego `/10x-archive` i `/10x-status` widzą przegląd.
-- Triage wznawia się podaniem ścieżki raportu: `/10x-impl-review context/changes/<change-id>/reviews/impl-review.md`. Findingi z `Decision: PENDING` czekają.
-
-Granice:
-- Świadome pominięcie findingu jest pełnoprawnym wynikiem przeglądu, nie porażką. Waga (jak źle, jeśli zignorować) i wpływ (ile uwagi wymaga decyzja) to dwie różne osie.
-- „Zapisz jako regułę projektu" jest trzecim wyjściem obok naprawy i pominięcia — trafia do `context/foundation/lessons.md` przez `/10x-lesson`.
-- Przegląd sam z siebie nie zmienia kodu. Edycje powstają wyłącznie w triage'u, na wyraźny wybór naprawy.
-- Wyniki podagentów i raportu są hipotezami do sprawdzenia, nie faktami. Przy F-01 jeden finding okazał się przeceniony (usuwanie leku jest w zakresie FR-005, brakowało tylko ograniczenia oknem korekty), a proponowana naprawa drugiego wywróciłaby bramkę — pomiar pokazał, że RLS w PostgREST nie zwraca błędu, tylko pusty wynik.
-
-Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji — w katalogu są tylko m1l5, m2l1 i m2l2.
-
-## Moduł 3, Lekcja 2 — od planu testów do testów
-
-Faza z `context/foundation/test-plan.md` idzie zwykłym łańcuchem: `/10x-test-plan` → `/10x-new` → `/10x-research` → `/10x-plan` → `/10x-implement` albo `/10x-tdd`.
-
-- `/10x-tdd <change-id> phase <n>` — wariant `/10x-implement` z testem pisanym przed kodem (red → green → refactor). Czyta ten sam `plan.md`, zapisuje ten sam `## Progress`, kończy fazę tym samym commitem. Fazy obu skilli można przeplatać.
-- Kiedy `/10x-tdd`: faza, dla której da się z góry nazwać pierwszą padającą asercję, a kodu produkcyjnego jeszcze nie ma. Konfiguracja, szkielet, wygląd, infrastruktura oraz faza z już napisanym kodem idą przez `/10x-implement`. Skill sam przerywa, gdy implementacja istnieje.
-- `.claude/prompts/m3l2-ad-hoc-testing.md` — testy pojedynczego pliku poza pełnym łańcuchem. Oczekiwany wynik ustalany z PRD i tech-stacku, nie z kodu; przy niejasności prompt każe pytać zamiast zgadywać.
-
-Granice:
-- `/10x-tdd` nie instaluje runnera ani nie konfiguruje CI. W repozytorium runnerem jest wbudowany `node --test` (`npm test`, pliki `scripts/**/*.test.mjs`) — Vitest nie jest zainstalowany.
+- Runner: wbudowany `node --test` (`npm test`, pliki `scripts/**/*.test.mjs`). Vitest nie jest zainstalowany.
 - Asercja sprawdza obserwowalny wynik, nie wewnętrzne wywołania i nie wartość policzoną tą samą logiką co testowany kod. Pokrycie linii nie dowodzi, że test złapie regresję.
-- Testy mutacyjne (Stryker) z lekcji są bramką jakości asercji. W repozytorium nie są skonfigurowane — dodanie to osobna decyzja z kosztem, nie przy okazji.
+- Testy mutacyjne (Stryker): `npm run test:mutation`, lokalnie i ręcznie, zakres `mutate` w `stryker.config.json`. Nie są bramką CI.
+- Testy pojedynczego pliku poza łańcuchem zmiany: `.claude/prompts/m3l2-ad-hoc-testing.md`. Oczekiwany wynik z PRD i tech-stacku, nie z kodu.
+- Hooki agenta: `.claude/settings.json` (konfiguracja przez `/10x-configure-hook`, scalana, nie nadpisywana). Hooki gita to `.husky/pre-commit` z `lint-staged` — bez zmian. Hook końca tury nie może blokować na czystym drzewie.
 
-Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji.
+### Testy E2E (Playwright)
 
-## Moduł 3, Lekcja 3 — hooki agenta
+Testy w `tests/e2e/`, ustalenia w `context/foundation/test-stack.md`. Nowy test przez `/10x-e2e`, jedno ryzyko z `context/foundation/test-plan.md` naraz — wyłącznie ryzyko, które przecina kilka granic (auth, routing, API, baza). Reguły jakości testów żyją w `references/e2e-quality-rules.md` skilli — nie dopisuj ich tutaj.
 
-`/10x-configure-hook` zamienia bramki z sekcji „Quality Gates” w `context/foundation/test-plan.md` na hooki Claude Code, które odpalają się w trakcie pracy agenta. Odpalaj po `/10x-test-plan`.
-
-- Moment wg szybkości: po każdej edycji (sprawdza tylko edytowany plik) → koniec tury (cały projekt, np. `npm run typecheck`) → pre-commit → pre-push → CI.
-- Hook ma sens tylko wtedy, gdy jego komunikat dociera do agenta kanałem, który harness czyta dla tego zdarzenia. Skill uruchamia każdy skrypt na celowo zepsutym pliku i na czystym, zanim go odda.
-- Istniejąca konfiguracja w `.claude/settings.json` jest scalana, nie nadpisywana; diff pokazany przed zapisem.
-
-Granice:
-- Skill nie zmienia hooków gita. Pre-commit to `.husky/pre-commit` z `lint-staged` (`eslint --fix`, prettier) — zostaje bez zmian.
-- Hook końca tury nie może blokować na czystym drzewie. Po świeżym klonie `npx astro sync` przed pierwszym biegiem (patrz `### Po świeżym klonie`), inaczej lint i typecheck są czerwone bez powodu.
-
-Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji. Reguła `CLAUDE-m3l3-hooks` pominięta przez CLI (lokalne zmiany w tym pliku) — ta sekcja ją zastępuje.
-
-## Moduł 3, Lekcja 4 — testy E2E (Playwright)
-
-Testy przeglądarkowe łapią to, czego nie widzą hooki i testy jednostkowe: dane, które nie przetrwają pełnej ścieżki, zepsutą nawigację, regresje tylko w wyrenderowanym UI.
-
-- `/10x-e2e-setup` — jednorazowo, ponowne uruchomienie niczego nie zmienia. Instaluje `@playwright/test`, pisze `playwright.config.ts` (`webServer` na build + preview, projekt `setup` logujący raz do `storageState`), zielony test seed dla prawdziwego ryzyka, podpina `playwright-cli`, zapisuje ustalenia w `context/foundation/test-stack.md`.
-- `/10x-e2e <change-id> [phase <n>] | <risk-id>` — rodzeństwo `/10x-implement` i `/10x-tdd`: ten sam `plan.md` i `## Progress`. Jedno ryzyko naraz: plan → generowanie → przegląd → weryfikacja, że test pada, gdy ryzyko wystąpi.
-- Zaczynaj od ryzyka, nie od stron: 2–3 ryzyka z `test-plan.md` przecinające kilka granic (auth, routing, API, baza). Resztę zostaw testom jednostkowym i smoke.
-- Reguły jakości testów E2E (`getByRole` zamiast CSS/XPath, izolowane testy z unikalnymi danymi i sprzątaniem, czekanie na stan zamiast `waitForTimeout`, asercje biznesowe) żyją w `references/e2e-quality-rules.md` skilli — nie dopisuj ich do tego pliku.
-
-Granice:
-- Przed biegiem zatrzymaj stary podgląd i sprawdź, że port jest wolny — przy `reuseExistingServer` Playwright po cichu testuje stary build (patrz lesson „Zatrzymaj stary podgląd”).
-- Bieg idzie do lokalnego Supabase, nigdy do produkcji — `.env` wskazuje produkcję (patrz lesson „Lokalne bramki sprawdź…”). Żadnych nazw leków ani dawek w URL także w testach.
+- Przed biegiem zatrzymaj stary podgląd i sprawdź, że port jest wolny — przy `reuseExistingServer` Playwright po cichu testuje stary build.
+- Bieg idzie do lokalnego Supabase, nigdy do produkcji — `.env` wskazuje produkcję. Żadnych nazw leków ani dawek w URL także w testach.
 - Nie commituj `playwright/.auth/` ani pliku env z `E2E_USERNAME` / `E2E_PASSWORD`.
 
-Materiał lekcyjny: CLI nie wgrał pliku do `docs/10xdevs/` dla tej lekcji. Reguła `CLAUDE-m3l4` pominięta przez CLI (lokalne zmiany w tym pliku) — ta sekcja ją zastępuje.
-
+<!-- BEGIN @przeprogramowani/10x-cli -->
 <!-- END @przeprogramowani/10x-cli -->

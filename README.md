@@ -6,7 +6,27 @@ Osobisty dzienniczek leków i objawów. Użytkowniczka zapisuje przyjmowane prep
 
 Pełne wymagania: [`context/foundation/prd.md`](context/foundation/prd.md). Ustalenia z sesji planistycznej wraz z odrzuconymi wariantami: [`context/foundation/shape-notes.md`](context/foundation/shape-notes.md). Reguły dla agentów AI pracujących w repozytorium: [`CLAUDE.md`](CLAUDE.md) (`AGENTS.md` to symlink do tego samego pliku).
 
-Status: wersja pierwsza w budowie. Gotowa jest warstwa uwierzytelniania ze startera (FR-001, FR-002); logika leków, dzienniczka i kolizji dopiero powstaje.
+## Status
+
+Wersja pierwsza gotowa — wymagania FR-001–FR-014 z PRD wdrożone, kamień milowy M-2 z [`context/foundation/roadmap.md`](context/foundation/roadmap.md) zamknięty (eksport danych, S-11, odłożony). Co działa:
+
+- **Konto** — rejestracja z akceptacją warunków, logowanie, odzyskiwanie dostępu, usunięcie konta razem ze wszystkimi danymi.
+- **Leki** — dodanie po nazwie handlowej (skład z rejestru leków) albo z ulotki, zmiana dawki zamykająca okres i otwierająca nowy, poprawka w oknie korekty, odstawienie z datą, usunięcie pozycji dodanej przez pomyłkę.
+- **Możliwe kolizje** — znacznik przy leku, szczegóły z notą poglądową, graf leków i par, które mogą wchodzić w interakcję.
+- **Dziennik** — wpisy o samopoczuciu z objawami i nasileniem, poprawka i usunięcie w oknie korekty.
+- **Wizyta** — bieżące leki z dawkami i pytania do lekarza złożone z okresów dawkowania i wpisów o objawie; oś czasu leków i objawów.
+
+Dane każdego konta odizolowane przez RLS; niezmienność historii pilnuje baza (wyzwalacze, ograniczenia). Ryzyka i testy, które je pokrywają: [`context/foundation/test-plan.md`](context/foundation/test-plan.md), sekcja [Testy](#testy).
+
+## Co jest tu trudne
+
+Na ekranie lekomapa wygląda jak prosty dzienniczek. Najważniejsze gwarancje siedzą w bazie i w bramkach CI, nie w interfejsie:
+
+- **Historia nie kłamie.** Zmiana dawki zamyka okres i otwiera nowy, zamiast nadpisać stary — inaczej oś czasu pokazałaby, że lek był brany w dawce, w której nie był. Okresy jednego leku nie mogą na siebie nachodzić (`exclude using gist` w [`20260922120000_medication_schema.sql`](supabase/migrations/20260922120000_medication_schema.sql)), a rdzeń wpisu po zamknięciu 24-godzinnego okna korekty jest nie do zmiany ani usunięcia — także przez usunięcie rodzica czy przepięcie wiersza pod inny lek. Pilnują tego wyzwalacze w bazie, więc błąd w aplikacji historii nie przepisze ([`20261005120000_correction_window.sql`](supabase/migrations/20261005120000_correction_window.sql), [`20261009120000_journal_correction.sql`](supabase/migrations/20261009120000_journal_correction.sql)).
+- **Produkt informuje, nie diagnozuje — i pilnuje tego test.** Każdy opis możliwej kolizji musi zawierać „może mieć związek” i nie może zawierać słów stwierdzających przyczynę ani zaleceń (`REQUIRED_WORDING`, `FORBIDDEN_WORDS` w [`scripts/rpl/pairs.mjs`](scripts/rpl/pairs.mjs)). Przypadki testowe w [`scripts/fr012/corpus.mjs`](scripts/fr012/corpus.mjs) są napisane z PRD, nie skopiowane z walidatora, a testy w [`scripts/fr012/`](scripts/fr012/) obejmują teksty UI leków, dziennika, kolizji, „Wizyty” i osi czasu.
+- **Dane zdrowotne każdego konta są odizolowane — sprawdzane dla każdej operacji osobno.** [`supabase/tests/account_isolation_checks.sql`](supabase/tests/account_isolation_checks.sql) sprawdza na dwóch kontach odczyt, zapis, zmianę, przepięcie wiersza pod cudze konto i usunięcie. Listy tabel nie ma wpisanej ręcznie — test wyprowadza ją z katalogu bazy, więc nowa tabela bez zabezpieczeń wywraca bramkę sama. Niezmienniki schematu (RLS na każdej tabeli, polityka na każdą operację, kaskada usuwająca dane razem z kontem): [`supabase/tests/schema_invariants_checks.sql`](supabase/tests/schema_invariants_checks.sql).
+- **Bramki sprawdzają same siebie.** Test, który zawsze przechodzi, niczego nie dowodzi. CI podsuwa celowo zepsute schematy z [`scripts/db-checks/probes/`](scripts/db-checks/probes/) — np. tabelę bez RLS albo bez kaskady — i wymaga, żeby sprawdzenia padły z konkretnym komunikatem ([`.github/workflows/ci.yml`](.github/workflows/ci.yml), job `smoke`).
+- **Pytanie do lekarza złożone z osi czasu.** [`composeDoctorQuestion`](src/lib/services/doctor-question.ts) zestawia wpisy o objawie z okresami dawkowania leków przyjmowanych w tym czasie, a [`buildInteractionGraph`](src/lib/services/interaction-graph.ts) odtwarza historię leków, żeby pokazać pary, które mogą wchodzić w interakcję. Wynikiem jest materiał na wizytę, nie diagnoza.
 
 ## Stack
 
