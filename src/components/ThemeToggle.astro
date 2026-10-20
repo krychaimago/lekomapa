@@ -1,6 +1,8 @@
 ---
 // Header icon that switches to the mode opposite to the one on screen, on every interior screen.
-// No React: a plain form POST to /api/preferences/theme, which sets the cookie and returns here.
+// No React: a plain form POST to /api/preferences/theme, which sets the cookie and returns here. With JavaScript the
+// script below sends the same POST in the background and switches the `dark` class in place, so the page is not
+// reloaded and a half-filled form on it (journal entry, new medication) keeps what was typed.
 // Both buttons are rendered; the `dark` class on <html> decides which one shows (dark:hidden / hidden dark:inline-flex),
 // so the right one is visible from the first byte also when the preference is "system". Never a colored dark: class.
 import { buttonVariants } from "@/components/ui/button";
@@ -23,7 +25,7 @@ const iconButtonClass = cn(
 );
 ---
 
-<form method="POST" action="/api/preferences/theme" class:list={className}>
+<form method="POST" action="/api/preferences/theme" class:list={className} data-theme-toggle>
   <input type="hidden" name="returnTo" value={returnTo} />
   <button
     type="submit"
@@ -74,3 +76,9 @@ const iconButtonClass = cn(
     </svg>
   </button>
 </form>
+
+<script>
+  import { initThemeToggles } from "@/lib/theme-toggle";
+
+  initThemeToggles(document);
+</script>

@@ -23,7 +23,10 @@ const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
     {theme === "system" && <script is:inline>
       (() => {
         const query = window.matchMedia("(prefers-color-scheme: dark)");
-        const apply = () => document.documentElement.classList.toggle("dark", query.matches);
+        const root = document.documentElement;
+        // The header icon can switch to "light" or "dark" without a reload (ThemeToggle.astro); from then on the
+        // device setting no longer applies.
+        const apply = () => root.dataset.theme === "system" && root.classList.toggle("dark", query.matches);
         apply();
         query.addEventListener("change", apply);
       })();
