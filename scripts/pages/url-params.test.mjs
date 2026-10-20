@@ -34,6 +34,8 @@ const ALLOWED_URL_PARAMS = new Set([
   "zmieniono",
   "cofnieto",
   "zakonczenie",
+  // Fixed origin flag of a shared screen: "wizyta" or "dziennik" only (src/lib/back-link.ts).
+  "z",
   // Ids (uuid) of a registry product, medication, period or journal entry.
   "wariant",
   "dodano",

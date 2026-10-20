@@ -2,7 +2,7 @@
 // context/changes/interaction-graph/plan.md, phase 3). The graph is a React island on /leki fed by the account's
 // medications and medication_interactions(), so only the rendered page proves it: touching a medication presses only
 // that one and lists its partners, each with the note, and the pair's description as the rule set stores it; touching
-// another medication switches the selection; touching it again clears it. The link from "Wizyta" lands on /leki#graf
+// another medication switches the selection; touching it again clears it. The link from "Wizyta" lands on /leki?z=wizyta#graf
 // with the graph in view, medication buttons never overlap at phone width (also with a long hand-typed name), and no
 // address ever carries a medication name. Modeled on tests/e2e/medication-interactions-compact.spec.ts.
 //
@@ -244,7 +244,7 @@ test.describe("interaction graph on the medication list", () => {
       .locator("[data-visit-interactions]")
       .getByRole("link", { name: INTERACTION_COPY.graphVisitLink, exact: true })
       .click();
-    await expect(page).toHaveURL(/\/leki#graf$/);
+    await expect(page).toHaveURL(/\/leki\?z=wizyta#graf$/);
     await expect(page.getByRole("group", { name: INTERACTION_COPY.graphLabel })).toBeInViewport();
 
     // No address the page asked for carries a medication name or substance (raw or URL-encoded), or this run's
