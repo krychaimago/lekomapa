@@ -58,6 +58,11 @@ const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
       </Banner>
     ))}
     <slot />
+    <script>
+      import { installPolishValidation } from "@/lib/form-validation";
+
+      installPolishValidation(document);
+    </script>
   </body>
 </html>
 
