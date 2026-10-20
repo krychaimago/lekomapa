@@ -13,8 +13,8 @@ export const MEDICATION_COPY = {
     empty: "Nie masz jeszcze żadnego leku. Dodaj pierwszy, który przyjmujesz.",
     since: "od {data}",
     added: "Dodano lek.",
-    // `{do}` is formatCorrectionDeadline: "jutra (06.10), godz. 21:14", "dziś (05.10), godz. 21:14" or
-    // "23.10, godz. 21:14" (Polish time). `{nazwa}` is the medication's name, so the banner says which one it means.
+    // `{do}` is formatCorrectionDeadline: "jutra (06.10.2026), godz. 21:14", "dziś (05.10.2026), godz. 21:14" or
+    // "23.10.2026, godz. 21:14" (Polish time). `{nazwa}` is the medication's name, so the banner says which one it means.
     addedWithDeadline: "Dodano lek {nazwa}. Dawkowanie możesz poprawić do {do} w szczegółach leku.",
     // Under each medication whose dosage period is still in its correction window; the latest such window.
     correctableUntil: "Dawkowanie możesz poprawić do {do}",
