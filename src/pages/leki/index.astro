@@ -6,6 +6,7 @@
 // buildInteractionGraph from the same current medications and interaction rows as the list, plus a light read of the
 // account's medication history (id and the two timestamps) that keeps each point's place stable. A failed history read
 // replaces only the graph with an error text; the list keeps working.
+import { BACK_HREF, backOriginOf } from "@/lib/back-link";
 import AppLayout from "@/layouts/AppLayout.astro";
 import PaperNote from "@/components/PaperNote.astro";
 import { badgeVariants } from "@/components/ui/badge";
@@ -37,6 +38,8 @@ interface HistoryRow {
 
 const copy = MEDICATION_COPY.list;
 const addedId = Astro.url.searchParams.get("dodano");
+// The graph opened from "Wizyta" (`?z=wizyta#graf`) shows a way back above its title.
+const fromVisit = backOriginOf(Astro.url) === "wizyta";
 // Banner after deleting an item added by mistake; the flag carries no data.
 const deleted = Astro.url.searchParams.get("usunieto") === "1";
 
@@ -238,6 +241,11 @@ const addedDeadline =
 
     {!loadFailed && (
       <section id="graf" aria-labelledby="graph-title" class="flex scroll-mt-6 flex-col gap-3">
+        {fromVisit && (
+          <a href={BACK_HREF.wizyta} class="self-start text-primary underline underline-offset-4 hover:no-underline">
+            {INTERACTION_COPY.graphBackToVisit}
+          </a>
+        )}
         <h2 id="graph-title" class="text-xl font-semibold">
           {INTERACTION_COPY.graphTitle}
         </h2>

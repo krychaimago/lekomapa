@@ -8,6 +8,9 @@
 
 export const TIMELINE_COPY = {
   title: "Oś czasu",
+  // Back links above the title, by where the timeline was opened from (`?z=`, src/lib/back-link.ts).
+  backToVisit: "Wróć do Wizyty",
+  backToJournal: "Wróć do dziennika",
   intro: "Okresy brania leków i wpisy wybranego objawu na jednej osi dat.",
   rangeLegend: "Okres",
   range90d: "90 dni",

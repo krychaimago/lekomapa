@@ -15,15 +15,25 @@ import { todayInWarsaw } from "@/lib/services/medications";
 import { buildTimeline } from "@/lib/services/timeline";
 import { loadTimelineData } from "@/lib/services/timeline-data";
 import { createClient } from "@/lib/supabase";
+import { BACK_HREF, backOriginOf } from "@/lib/back-link";
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 const result = supabase ? await loadTimelineData(supabase) : ({ error: true } as const);
 const model = "error" in result ? null : buildTimeline({ ...result, today: todayInWarsaw() });
 if (!model) Astro.response.status = 500;
+
+// Same "Wróć do …" link as the other inner screens, only when the flag says where the timeline was opened from.
+const origin = backOriginOf(Astro.url);
+const backText = origin === "wizyta" ? copy.backToVisit : copy.backToJournal;
 ---
 
 <AppLayout title={copy.title}>
   <div class="mx-auto flex max-w-3xl flex-col gap-6">
+    {origin && (
+      <a href={BACK_HREF[origin]} class="self-start text-primary underline underline-offset-4 hover:no-underline">
+        {backText}
+      </a>
+    )}
     <div class="flex flex-col gap-2">
       <h1 class="text-3xl font-bold">{copy.title}</h1>
       <p class="text-muted-foreground">{copy.intro}</p>

@@ -66,9 +66,12 @@ async function saveSymptom(page: Page, symptom: string, occurredLocal: string) {
   await page.waitForURL(new RegExp(`/dzienniczek\\?dodano=${UUID}$`));
 }
 
-// The filters never touch the address: no parameter, no fragment, nothing but the fixed path.
+// The filters never touch the address: nothing but the fixed path and the fixed origin flag of the way in
+// (`?z=wizyta`, src/lib/back-link.ts), no fragment.
 async function expectPlainTimelineUrl(page: Page) {
-  await expect(page).toHaveURL((url) => url.pathname === TIMELINE_PATH && url.search === "" && url.hash === "");
+  await expect(page).toHaveURL(
+    (url) => url.pathname === TIMELINE_PATH && url.search === "?z=wizyta" && url.hash === "",
+  );
 }
 
 // Every range is rendered in both layouts and CSS shows one, so every check counts only what is visible.

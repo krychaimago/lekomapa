@@ -35,4 +35,6 @@ export const INTERACTION_COPY = {
   graphLoadError: "Nie udało się wczytać grafu. Lista leków powyżej działa bez zmian.",
   // Link from the "Wizyta" section to the graph on /leki#graf.
   graphVisitLink: "Zobacz leki na grafie",
+  // Above the graph title when it was opened from "Wizyta" (`?z=wizyta`).
+  graphBackToVisit: "Wróć do Wizyty",
 } as const;
