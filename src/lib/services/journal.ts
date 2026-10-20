@@ -147,20 +147,20 @@ function nextIsoDay(iso: string): string {
   return new Date(Date.UTC(year, month - 1, day) + MS_PER_DAY).toISOString().slice(0, 10);
 }
 
-// "DD.MM" from an ISO date.
-function dayMonth(iso: string): string {
-  const [, month, day] = iso.split("-");
-  return `${day}.${month}`;
+// "DD.MM.YYYY" from an ISO date. Always with the year, also next to "dziś"/"jutra" (author's rule, 20.10.2026).
+function polishDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return `${day}.${month}.${year}`;
 }
 
-// End of a correction window as the user reads it, in Polish time: "dziś (05.10), godz. 21:14", "jutra (06.10),
-// godz. 21:14" (genitive, for "do jutra"), otherwise "23.10, godz. 21:14". The date next to "dziś"/"jutra" settles
+// End of a correction window as the user reads it, in Polish time: "dziś (05.10.2026), godz. 21:14",
+// "jutra (06.10.2026), godz. 21:14" (genitive, for "do jutra"), otherwise "23.10.2026, godz. 21:14". The date next to "dziś"/"jutra" settles
 // which day is meant around midnight. `nowIso` is the server's (or browser's) now, passed in so the result is
 // testable.
 export function formatCorrectionDeadline(endsAtIso: string, nowIso: string): string {
   const ends = warsawParts(new Date(endsAtIso));
   const today = warsawParts(new Date(nowIso)).date;
-  const date = dayMonth(ends.date);
+  const date = polishDate(ends.date);
   if (ends.date === today) return `dziś (${date}), godz. ${ends.time}`;
   if (ends.date === nextIsoDay(today)) return `jutra (${date}), godz. ${ends.time}`;
   return `${date}, godz. ${ends.time}`;
