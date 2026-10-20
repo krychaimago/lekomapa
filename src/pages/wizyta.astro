@@ -8,6 +8,7 @@
 // question is open. The page never says a medication causes a symptom and never suggests stopping or changing a dose
 // (FR-012). No URL parameters: links lead only to fixed routes, the timeline (S-09) and the graph anchor /leki#graf
 // (S-10) among them.
+import CollapseChevron from "@/components/CollapseChevron.astro";
 import AppLayout from "@/layouts/AppLayout.astro";
 import PaperNote from "@/components/PaperNote.astro";
 import DoctorQuestionCard from "@/components/journal/DoctorQuestionCard.astro";
@@ -96,29 +97,18 @@ const showGraphLink = summary !== null && summary.currentMedications.length >= 2
 
         <section data-visit-interactions aria-labelledby="visit-interactions-title" class="flex flex-col gap-3">
           {summary.interactions.length > 0 ? (
-            <details open class="group">
+            <details open>
               <summary
                 class:list={[
-                  "grid min-h-11 cursor-pointer list-none grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 rounded-md",
+                  "grid min-h-11 cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1 rounded-md",
                   "outline-none focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
                 ]}
               >
+                <CollapseChevron class="size-5" />
                 <h2 id="visit-interactions-title" class="text-xl font-semibold">
                   {fill(copy.interactionsHeadingCount, { liczba: summary.interactions.length })}
                 </h2>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-6 shrink-0 transition-transform group-open:rotate-180"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-                <span class="col-span-2 text-sm text-muted-foreground">{INTERACTION_COPY.note}</span>
+                <span class="col-start-2 text-sm text-muted-foreground">{INTERACTION_COPY.note}</span>
               </summary>
               <div class="mt-3 flex flex-col gap-3">
                 <ul class="flex flex-col gap-3">
