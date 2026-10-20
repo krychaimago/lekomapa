@@ -56,6 +56,26 @@ test("icon: in dark mode on /leki the light-mode button switches back and stays 
   await expect(page.getByRole("button", { name: "Włącz tryb ciemny" })).toBeVisible();
 });
 
+test("icon: switching mode keeps a half-filled journal entry and still saves the choice", async ({ page }) => {
+  // Reported 16.10.2026: the icon reloaded the page, and every value typed into an unsaved form was lost.
+  await page.goto("/dzienniczek/nowy");
+  const html = page.locator("html");
+  const note = page.getByRole("textbox", { name: /Notatka/ });
+  await note.fill("Wpis e2e przed zmianą trybu");
+  // A marker on window survives only if the page is not loaded again.
+  await page.evaluate(() => Object.assign(window, { e2eNoReload: true }));
+
+  await page.getByRole("button", { name: "Włącz tryb ciemny" }).click();
+
+  await expect(html).toHaveClass(DARK_CLASS);
+  await expect(page.getByRole("button", { name: "Włącz tryb jasny" })).toBeVisible();
+  await expect(note).toHaveValue("Wpis e2e przed zmianą trybu");
+  expect(await page.evaluate(() => (window as unknown as { e2eNoReload?: boolean }).e2eNoReload)).toBe(true);
+
+  // The choice reached the cookie: the next screen comes from the server already dark.
+  await expect.poll(async () => (await page.request.get("/leki")).text()).toMatch(SERVER_DARK_HTML);
+});
+
 test("system: without a saved choice the page follows the device setting, also while open", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/leki");
