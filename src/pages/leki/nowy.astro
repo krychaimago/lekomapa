@@ -15,7 +15,7 @@ import AppLayout from "@/layouts/AppLayout.astro";
 import AddMedicationForm from "@/components/medications/AddMedicationForm";
 import RegistrySearch from "@/components/medications/RegistrySearch";
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
-import { MAX_DRAFT_TEXT_LENGTH, readRegistrySearch } from "@/lib/medication-draft";
+import { MAX_DRAFT_TEXT_LENGTH, readRegistrySearch, writeRegistrySearch } from "@/lib/medication-draft";
 import {
   type RegistryNameGroup,
   type RegistrySubstanceRow,
@@ -67,6 +67,9 @@ if (supabase && requestedVariant) {
     reportError("registry.read-product", { code: productError.code, route: Astro.routePattern });
   } else if (data) {
     name = data.product_name;
+    // A suggestion picked with JavaScript leads here without a search POST; keep its name as the search draft, so
+    // "not in the registry" opens the leaflet form with the product name already filled in.
+    writeRegistrySearch(Astro.cookies, userId, name, Astro.url.protocol === "https:");
   } else {
     unknownVariant = true;
   }
