@@ -4,6 +4,7 @@
 // medication's name, never by suspicion (FR-012). Each interaction card is folded to its heading (S-07); the note
 // stays outside the fold, so it is visible at every card whether folded or not (FR-007). RLS limits every read to
 // the signed-in person, so another account's medication reads as missing and gets the same 404 as an unknown id.
+import CollapseChevron from "@/components/CollapseChevron.astro";
 import { z } from "zod";
 import AppLayout from "@/layouts/AppLayout.astro";
 import { INTERACTION_COPY } from "@/lib/copy/interactions";
@@ -383,28 +384,17 @@ const linkClass = "text-primary underline underline-offset-4 hover:no-underline"
                   class="flex flex-col gap-2 rounded-xl border border-interaction-border bg-interaction p-4 text-interaction-foreground"
                 >
                   {/* No link in the summary: it is a button itself, a link inside would be a second target. */}
-                  <details class="group">
+                  <details>
                     <summary
                       class:list={[
-                        "grid min-h-11 cursor-pointer list-none grid-cols-[1fr_auto] items-center gap-x-3 rounded-md",
+                        "grid min-h-11 cursor-pointer list-none grid-cols-[auto_1fr] items-center gap-x-3 rounded-md",
                         "outline-none focus-visible:ring-[3px] focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
                       ]}
                     >
+                      <CollapseChevron />
                       <span class="min-w-0 font-semibold break-words">
                         {fill(INTERACTION_COPY.withMedication, { nazwa: item.otherName })}
                       </span>
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="size-6 shrink-0 transition-transform group-open:rotate-180"
-                      >
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
                     </summary>
                     <div class="mt-2 flex flex-col gap-2">
                       <p>{item.description}</p>

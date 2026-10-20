@@ -1,0 +1,28 @@
+---
+// The one chevron of every collapsible section: `›` on the left of the label, turned 90° when the section is open
+// (same as the symptom groups in src/components/journal/SymptomPicker.tsx). Must be a direct child of a <summary>:
+// the rotation reads the nearest <details>, so a section nested in another one (DoctorQuestionCard) turns on its own.
+import { cn } from "@/lib/utils";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<svg
+  aria-hidden="true"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class:list={cn(
+    "size-4 shrink-0 transition-transform motion-reduce:transition-none [details[open]>summary>&]:rotate-90",
+    className,
+  )}
+>
+  <path d="m9 18 6-6-6-6"></path>
+</svg>
