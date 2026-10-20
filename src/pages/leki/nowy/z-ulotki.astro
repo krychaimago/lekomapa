@@ -4,14 +4,15 @@
 // travels in the address (lesson "Żadna nazwa leku ani dawka w adresie URL"); the page reads only:
 //   ?error=  a code from the save route, looked up in MEDICATION_COPY.apiErrors.
 // The typed product name, substance and date come from the leaflet draft cookie (HttpOnly, short-lived, this account
-// only), written by POST /api/medications after a failed save and by POST /api/medications/draft. The dose is never
-// put back. A draft with `unmatched: true` is the "no match" state: the typed substance is not in the dictionary, so
-// the page lists similar names and offers "save without checking" (the only way to save it without a code). Each
+// only; the product name, until one is typed here, from the registry search draft), written by POST /api/medications
+// after a failed save and by POST /api/medications/draft. The dose is never put back. A draft with `unmatched: true` is
+// the "no match" state: the typed substance is not in the dictionary, so the page lists similar names and offers
+// "save without checking" (the only way to save it without a code). Each
 // similar name is a button in its own POST form to the draft route, which puts that name into the substance field.
 import AppLayout from "@/layouts/AppLayout.astro";
 import AddLeafletMedicationForm from "@/components/medications/AddLeafletMedicationForm";
 import { MEDICATION_COPY, apiErrorMessage } from "@/lib/copy/medications";
-import { readLeafletDraft } from "@/lib/medication-draft";
+import { readLeafletDraft, readRegistrySearch } from "@/lib/medication-draft";
 import { similarSubstances, todayInWarsaw } from "@/lib/services/medications";
 import { createClient } from "@/lib/supabase";
 import { reportError } from "@/lib/observability/report";
@@ -21,7 +22,10 @@ const error = apiErrorMessage(Astro.url.searchParams.get("error"));
 // The page is protected, so a user is always signed in here; the draft is read only for that account.
 const userId = Astro.locals.user?.id ?? "";
 const draft = readLeafletDraft(Astro.cookies, userId);
-const productName = draft?.productName ?? "";
+// Before the first leaflet draft, the product name is the one just searched on /leki/nowy (the search draft cookie,
+// path /leki/nowy, reaches this page too), so it need not be typed twice. Still editable.
+const draftName = draft?.productName ?? "";
+const productName = draftName !== "" ? draftName : (readRegistrySearch(Astro.cookies, userId)?.q ?? "");
 const substanceName = draft?.substanceName ?? "";
 const unmatched = draft?.unmatched && substanceName ? substanceName : "";
 const today = todayInWarsaw();
