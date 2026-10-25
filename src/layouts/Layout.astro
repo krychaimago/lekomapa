@@ -7,9 +7,12 @@ import { THEME_COOKIE, parseThemePreference } from "@/lib/theme";
 
 interface Props {
   title?: string;
+  /** Page color under and past the content. The auth spread passes "card", so a phone taller than the form and
+      Safari's overscroll bounce show the form's color, not a darker band below it. */
+  surface?: "background" | "card";
 }
 
-const { title = "lekomapa" } = Astro.props;
+const { title = "lekomapa", surface = "background" } = Astro.props;
 
 // The server draws <html> in the chosen mode from the first byte: "dark" gets the class, "light" does not,
 // and "system" leaves it to the inline script below, which follows prefers-color-scheme.
@@ -39,7 +42,7 @@ const theme = parseThemePreference(Astro.cookies.get(THEME_COOKIE)?.value);
     <meta name="apple-mobile-web-app-title" content="lekomapa" />
     <title>{title}</title>
   </head>
-  <body>
+  <body class:list={{ "bg-card": surface === "card" }}>
     {/* One sticky block for every top bar: the browser stacks a layout's slotted bar right under the demo bar,
         so nothing needs to know the demo bar's height, which wraps to 2-3 lines on phones. */}
     <div class="sticky top-0 z-50">
